@@ -2,8 +2,8 @@
 
 Personal knowledge engine for the Nebius x NVIDIA hackathon. Development is in
 progress. The current blocks capture UTF-8 files, import a labeled seed corpus and
-receive Telegram text and prepare source sections/links. Model extraction, graph placement and refreshers are
-not implemented yet.
+receive Telegram text and prepare source sections/links. Atomic claim extraction is also available. Entity extraction, graph placement
+and refreshers are not implemented yet.
 
 ## Local setup
 
@@ -143,6 +143,97 @@ The source hash is checked before parsing. If preparation fails after capture,
 the bot says the original was saved and preparation can be retried with the CLI.
 These document fields are provisional until the team agrees the shared schema.
 
+## Block 5 — AI triage through Backboard (development)
+
+Nebius access is pending. Backboard currently supplies triage through the small
+`JsonModel` interface; the rest of the pipeline does not depend on its API.
+This temporary route alone does not fulfill the hackathon's required Nebius
+runtime usage. NVIDIA model and Nebius integration remain submission work.
+
+Add these settings to your **real `.env`**, keeping your Telegram settings:
+
+```dotenv
+TRIAGE_PROVIDER=backboard
+BACKBOARD_API_KEY=your_actual_key_here
+BACKBOARD_LLM_PROVIDER=openai
+BACKBOARD_MODEL=gpt-4o-mini
+```
+
+This uses the model through Backboard; a separate OpenAI key is not needed.
+Provider/model availability depends on your Backboard account. Change the model
+settings if necessary. `TRIAGE_PROVIDER=off` disables remote triage while keeping
+capture and preparation working. Restart the bot after configuration changes.
+
+Substantive conversations, brainstorming and Q&A should be kept too; triage judges
+content rather than rejecting chat format. Each forwarded Telegram message is
+currently processed independently. Paste the relevant exchange as one message
+when context matters. Automatic conversation grouping and a manual Keep override
+are not implemented yet. The triage-v2 rubric is cached separately from v1.
+
+After capture/preparation, enabled triage sends **only the note text** to
+Backboard and asks for five fields: keep, kind, durability_class, split_digest
+and a short reason. Memory and web search are off, with a new conversation per
+call; Backboard can still retain conversation history. The source text is
+untrusted data and does not control system instructions or invoke tools.
+
+A validated result is saved under `triage/<item_id>.json`, including the source
+hash, prompt version, requested/actual model and reported token usage. Existing
+results are reused for the same source/prompt/model. Raw captures never change,
+even for a skip decision. Token usage describes the final response; retry
+usage may be additional. Invalid output gets at most one retry; service/auth
+errors stop without deleting the original. Inputs over 60,000 characters wait
+for later section processing rather than being silently truncated.
+
+To triage a saved item manually (replace the ID):
+
+```bash
+python -m engine.triage .local-vault/telegram --item-id YOUR_ITEM_ID
+```
+
+Omit `--item-id` to process all captures. `--force` repeats model calls even when
+results exist and can incur additional usage. A classification is a model
+judgment, not factual verification. Digest splitting is only flagged, not yet
+performed; claim extraction is the next stage below and graph integration is pending.
+
+API reference: [Backboard send message](https://docs.backboard.io/concepts/messages).
+
+## Block 6 — claims with exact source references
+
+For a keep decision, Telegram makes one additional model call to extract at most
+25 central atomic claims. Skip means no extraction call, not deletion. Each claim
+has its own kind and durability, so a mixed article can contain a foundational
+principle and a short-lived forecast. The model is instructed to preserve modal
+words such as “may”, negations, conditions, dates and speaker attribution.
+
+Python numbers nonblank source lines and sends them as passages. The model
+returns a statement and a supporting passage ID. Python validates that ID and
+stores the original passage character boundaries, without asking the model to
+copy quotes. Repeated lines have distinct IDs. A passage reference does not
+prove the statement follows from it. `half_life_days` is mapped
+deterministically from each claim's durability class (720/180/30/7 days).
+Confidence describes the model's confidence in extraction, not factual accuracy
+or author trust. Passage selection alone does not prove the paraphrase is entailed;
+semantic faithfulness still needs human evaluation. Claims are not fact-checked.
+
+Results are in `extractions/<item_id>.json`, with stable claim IDs, source/section
+references, prompt/model versions and reported usage. Successful results are
+cached. At most one retry is allowed for malformed JSON, invalid fields or a
+invalid passage ID; failures preserve capture, preparation and triage.
+Memory/search remain off. Usage records cover the final response; retries can
+incur additional usage. No new API key or package is needed.
+
+Process an existing item (triage is reused if cached):
+
+```bash
+python -m engine.extract .local-vault/telegram --item-id YOUR_ITEM_ID
+```
+
+`--force` repeats extraction even if cached. This is a **claim-only intermediate
+record**, pending Kirill's shared Extraction schema. People/organization
+extraction, embeddings, actual digest splitting and Victor's graph.apply are not
+implemented in this block. The source text must remain available to resolve
+claim references.
+
 ## Check the blocks
 
 ```bash
@@ -157,7 +248,7 @@ message identity, conflict protection and blank input.
 1. Agree the shared RawItem/Extraction contracts with the team.
 2. Expand seed labels/topics and multi-format parsing coverage.
 3. Extend Telegram capture to files/voice once parser contracts are ready.
-4. Parse and extract claims, then call Victor's graph interface.
+4. Add entities/embeddings, then integrate Victor's graph interface.
 
 ## License
 
