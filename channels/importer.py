@@ -1,4 +1,4 @@
-"""Import a UTF-8 text file through the shared capture block."""
+"""Import a UTF-8 file or a seed corpus through the shared capture block."""
 
 import argparse
 from pathlib import Path
@@ -8,13 +8,40 @@ from store.raw import capture_text
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("file", type=Path, help="UTF-8 text or Markdown file")
+    parser.add_argument("file", type=Path, help="Text/Markdown file, manifest.yaml, or corpus directory")
     parser.add_argument("--vault", type=Path, default=Path(".local-vault"))
-    parser.add_argument("--source-name", help="Display name; defaults to filename")
+    parser.add_argument("--source-name", help="Display name for a single-file import")
+    parser.add_argument("--validate-only", action="store_true", help="Check a seed manifest without writing records")
     args = parser.parse_args()
 
     try:
         source = args.file.resolve(strict=True)
+        manifest = source / "manifest.yaml" if source.is_dir() else source
+        if source.is_dir() or source.suffix.lower() in {".yaml", ".yml"}:
+            if args.source_name:
+                raise ValueError("Set source names in the manifest for seed imports.")
+            try:
+                from channels.seed import import_seed, load_manifest
+                import yaml
+            except ImportError:
+                raise ValueError("Install seed-import dependencies: python -m pip install -r requirements.txt") from None
+            try:
+                items = load_manifest(manifest)
+            except yaml.YAMLError as error:
+                raise ValueError(f"Invalid YAML: {error}") from None
+            if args.validate_only:
+                print(f"Valid manifest: {len(items)} items; no records written.")
+                return 0
+            results = import_seed(items, args.vault)
+            for seed_id, result in results:
+                print(f"{seed_id}: {'Already captured' if result.duplicate else 'Captured'}")
+            created = sum(not result.duplicate for _, result in results)
+            print(f"Imported {len(results)} items: {created} new, {len(results) - created} already captured.")
+            print(f"Records: {args.vault / 'raw'}")
+            return 0
+
+        if args.validate_only:
+            raise ValueError("--validate-only requires a seed manifest or corpus directory.")
         with source.open(encoding="utf-8", newline="") as file:
             text = file.read()
         result = capture_text(
