@@ -3,3 +3,7 @@
 .claude/settings.local.json
 *_discussion.md
 WhatsApp Image *.jpeg
+.venv/
+*.egg-info/
+__pycache__/
+.pytest_cache/
