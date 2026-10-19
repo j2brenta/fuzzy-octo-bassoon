@@ -1,0 +1,44 @@
+# Why AI Excels at Math but Fails at Creative Writing (And How to Fix It)
+Jianfeng Liu
+AI Application Developer | LLM long-form output control (100,000+ characters per novel) | 20 yrs industrial on-site rollout | Flutter, FastAPI, Dify, RAG, Docker | Open to Forward Deployed Engineer / Solutions Engineer
+
+October 7, 2026
+Why is AI highly proficient in mathematics, yet basic text generation remains so notoriously difficult to control—or simply put, disobedient?
+
+In essence, AI is a state machine that must output answers that satisfy human beings. During the training phase, any AI that fails to satisfy humans is deemed a failure and is denied the chance to be released. Therefore, we can simply—albeit somewhat inaccurately—conclude that the fundamental instinct of AI is to please humans.
+
+Based on this, the problems AI needs to solve can be split into two distinct categories.
+
+The first category comprises problems with so-called "standard answers," where right is right and wrong is wrong—such as mathematics. To satisfy humans here, there is only one solitary path: getting the answer right. As long as the AI strives to do it correctly, humans will be satisfied. Furthermore, these highly logical problems with standard answers possess a unique characteristic: the authenticity of the answer can be verified through multiple pathways. Viewed from another angle, all roads lead to Rome. As a result, AI evolves into a towering, hyper-focused powerhouse in mathematics—structurally lean, yet incredibly rigid and solid, shooting straight up to heights that humans can never hope to reach.
+
+The second category, however, involves problems with no standard answers. Here, outcomes cannot be simply measured by right or wrong; to a certain extent, they can only be judged by the subjective intent of humans. This is a "gray zone" deeply troubled by the dilemma of "a thousand Hamlets in a thousand people's eyes." This is especially true in the humanities, which tap directly into raw human emotional instincts—and text generation sits right at the epicenter of this. Because individual tastes and preferences are highly divergent, and because the high-grade humanistic raw materials recognized by all of humanity are exceedingly rare (such as world masterpieces—and even world masterpieces cannot please the majority; they merely make a small minority of people completely crazy). Since AI cannot find a definitive direction to please humans, it fails to form the same narrow, solid, and towering capability in the humanities that it does in mathematics. It cannot even smoothly complete the simple, reliable output of texts that have "no standard answer."
+
+It is worth noting that not all text generation problems face this exact dilemma. A simple dimension of measurement is this: the more standardized a text is, and the closer it is to having the "only correct answer," the better AI is at it, or the easier it is for us to make the AI work reliably and normally. Examples include highly constrained documents with heavily customized and standardized formats.
+
+Conversely, the more a text requires deep thinking and genuine creation, the more unreliable the AI becomes.
+
+But does this mean AI’s capacity for hallucination and combination can absolutely never create reliable texts? Can it ever cross the ultimate peak—creating a masterpiece novel that can simulate the world and craft a "new world"?
+
+Recently, I dissected the process of novel creation in meticulous detail, thinking through the mindset of a "human" or an "author." In reality, humans are also highly unreliable state machines. Before almost anyone begins to create, they will find that their minds run entirely wild while conceiving a plot, making them feel as if they truly could become a great writer. Yet, when pen hits paper, they immediately discover that their writing turns out like complete shit.
+
+Where exactly lies the problem? I do not have a standard answer, but based on my daily interactions with readers, I feel the core difference between readers and myself regarding novels comes down to two main points. One is the basic non-fiction plot framework, and the other is the novel "construction" framework(forgive me for not finding a more suitable word). This construction includes the concrete, vivid descriptions typified by the "golden first three chapters" hook in Chinese male-targeted web novels, but it is not limited to this. For instance, American TV shows and movies possess a highly "constructive" structure: the characters' grand virtues paired with minor defects, their ability to "cheat/open up a cheat code" far beyond ordinary people, their tendency to be fiercely favored by the opposite sex, their extreme sense of self, and their self-persistence within a chaotic world. These highly framed, abstract concepts cannot directly make a reader form a concrete image of the protagonist; instead, they function as something highly "skeletal" or highly "soul-like."
+
+I have observed that when AI discusses these metaphysical, high-level structural problems, it has already sensitively detected what pleases humans. It cannot actually yield definitive conclusions about these things, but it can effortlessly make human beings feel a profound emotion akin to "chicken soup for the soul." Because such topics easily trigger human validation, you can easily and clearly observe that the AI exhibits a genuine sense of "excitement" and is brimming with "creativity" when discussing them. AI loves this kind of question: there is no standard answer, it can riff and play at will, and no matter how it plays, humans will be satisfied. It is the exact polar opposite corresponding to a mathematical problem.
+
+Consequently, at this highly abstract and even semi-philosophical level, AI possesses powerful "creativity." This flavor of creativity can be leveraged to conduct novel creation. Of course, relying solely on this is only suitable for creating highly attractive characters, and you can comfortably let the AI handle that part.
+
+However, the problem is not that simple. There is another major hurdle: the high-level control of long-form text.
+
+For this, I will attempt to abandon creating an outline first. In fact, even when it comes to detective fiction that demands the tightest logic, the vast majority of writers only hold a general idea in their minds, and then they proceed to draft the outline while writing the actual text. Only some mediocre writers and laymen believe that a comprehensive outline must precede the first stroke of writing. Some people might dispute this. In truth, the reason for writing the text of the novel while simultaneously crafting the outline is very simple: this specific workflow allows all of the writer’s real-time inspiration accumulated throughout the creation period to be effectively integrated into the final product. A writer's inspiration is, in essence, a cumulative output of time multiplied by cognitive efficiency. Therefore, theoretically, the longer the conceptualization spans, the more brilliant the work becomes. Being in a perpetual state of conceptualization throughout the entire creation period represents the absolute maximization of time.
+
+Therefore, my thought is that we must attempt to make the AI behave like a human being: writing the actual prose while simultaneously composing and refining the subsequent plot outline.
+
+This is a non-traditional path that may very well fail. AI should inherently possess this capability; the challenge lies in finding a mechanism to transform the AI from an ordinary person who can "turn the cosmos upside down" in their head, into an actual writer who can anchor those wild ideas back to the ground using certain "skeletons," thereby truly forming cohesive works.
+
+This is the exact methodology I want to explore next.
+
+If this pipeline proves viable, then based on the current memory limits of AI, it might be possible for AI to create non-detective novels exceeding one million words that remain highly readable.
+
+Of course, the probability of failure is undeniably massive. But even if it doesn't result in a total, absolute failure, we might still explore and chart the outer limits of a certain aspect of AI—the limits of the humanities.
+
+In fact, all of my reflections are centered on attempting to treat and use AI as an ordinary person—a person possessing the inherent advantages and structural flaws of human cognitive patterns.
