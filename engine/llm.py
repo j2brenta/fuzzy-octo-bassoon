@@ -40,6 +40,7 @@ class BackboardModel:
     model_provider: str = "openai"
     model_name: str = "gpt-4o-mini"
     provider: str = field(default="backboard", init=False)
+    timeout_seconds: int = 45
 
     def complete_json(self, system_prompt: str, content: str) -> ModelReply:
         payload = {
@@ -61,7 +62,7 @@ class BackboardModel:
             method="POST",
         )
         try:
-            with urlopen(request, timeout=45) as response:
+            with urlopen(request, timeout=self.timeout_seconds) as response:
                 body = response.read(1_000_001)
             if len(body) > 1_000_000:
                 raise ModelError("Backboard response exceeded the expected size.")
@@ -122,3 +123,18 @@ def client_from_environment() -> JsonModel | None:
     if not model_provider or not model_name:
         raise ModelError("BACKBOARD_LLM_PROVIDER and BACKBOARD_MODEL must not be blank.")
     return BackboardModel(key, model_provider, model_name)
+
+
+def judge_client_from_environment() -> JsonModel | None:
+    """Separate opt-in model for source-faithfulness review."""
+    provider = os.environ.get("JUDGE_PROVIDER", "off").strip().lower()
+    if provider in {"", "off"}:
+        return None
+    if provider != "backboard":
+        raise ModelError("JUDGE_PROVIDER must be backboard or off.")
+    key = os.environ.get("BACKBOARD_API_KEY", "").strip()
+    model_provider = os.environ.get("BACKBOARD_JUDGE_LLM_PROVIDER", "anthropic").strip()
+    model_name = os.environ.get("BACKBOARD_JUDGE_MODEL", "claude-opus-5-5").strip()
+    if not key or not model_provider or not model_name:
+        raise ModelError("Configure BACKBOARD_API_KEY and nonblank judge model settings.")
+    return BackboardModel(key, model_provider, model_name, timeout_seconds=180)

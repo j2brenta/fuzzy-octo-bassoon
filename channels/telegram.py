@@ -25,9 +25,10 @@ from dotenv import load_dotenv
 
 from store.raw import CaptureResult, capture_text
 from engine.parse import parse_capture
-from engine.llm import ModelError, client_from_environment
+from engine.llm import ModelError, client_from_environment, judge_client_from_environment
 from engine.triage import TriageError, triage_capture
 from engine.extract import ExtractionError, extract_capture
+from engine.judge import JudgeError, judge_capture
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -201,8 +202,28 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         lines.append(f"- [{claim['kind']} | {claim['durability_class']}] {statement}")
     if len(extraction.claims) > 3:
         lines.append("More claims are saved in the local extraction record.")
-    lines.append("Quotes were matched to the original; claims are not independently fact-checked.")
+    lines.append("References point to original passages; claims are not independently fact-checked.")
     await message.answer("\n".join(lines))
+    try:
+        judge_client = judge_client_from_environment()
+        if judge_client is None:
+            return
+        reviewed = await asyncio.to_thread(judge_capture, result.path, judge_client)
+    except (ModelError, JudgeError, ExtractionError) as error:
+        await message.answer(f"Claims saved; automated quality review is pending. {error}")
+        return
+    except (OSError, ValueError):
+        await message.answer("Claims saved; automated quality review could not be saved. Review remains pending.")
+        return
+    review = reviewed.review
+    passed = sum(row["verdict"] == "supported" for row in review["claims"])
+    label = "accepted" if review["status"] == "accepted" else "needs revision"
+    await message.answer(
+        f"AI quality review: {label} | {passed}/{len(review['claims'])} claims supported | "
+        f"{len(review['omitted_concepts'])} major omission(s).\n"
+        f"{review['summary']}\n"
+        "This checks faithfulness to your source, not whether the source is true."
+    )
 
 
 async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:
