@@ -126,6 +126,9 @@ class TelegramCaptureTests(unittest.TestCase):
 
 class TelegramHandlerTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        model_patch = patch("channels.telegram.client_from_environment", return_value=None)
+        model_patch.start()
+        self.addCleanup(model_patch.stop)
         self.directory = TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.vault = Path(self.directory.name) / 'vault'

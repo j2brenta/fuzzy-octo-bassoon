@@ -25,6 +25,9 @@ from dotenv import load_dotenv
 
 from store.raw import CaptureResult, capture_text
 from engine.parse import parse_capture
+from engine.llm import ModelError, client_from_environment
+from engine.triage import TriageError, triage_capture
+from engine.extract import ExtractionError, extract_capture
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -155,8 +158,51 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     status = "Already prepared" if prepared.reused else "Prepared"
     await message.answer(
         f"{status}: {prepared.section_count} text section(s), {prepared.link_count} link(s). "
-        "Links were identified, not downloaded. AI extraction comes next."
+        "Links were identified, not downloaded."
     )
+    try:
+        client = client_from_environment()
+        if client is None:
+            return
+        decision = await asyncio.to_thread(triage_capture, result.path, client)
+    except (ModelError, TriageError) as error:
+        await message.answer(f"Original saved and prepared; AI triage is pending. {error}")
+        return
+    except (OSError, ValueError) as error:
+        logger.error("Telegram triage storage failed (%s).", type(error).__name__)
+        await message.answer("Original saved and prepared; could not save the AI triage result. Please retry later.")
+        return
+    labels = decision.labels
+    action = "keep" if labels["keep"] else "skip"
+    status = "Cached triage" if decision.reused else "AI triage"
+    await message.answer(
+        f"{status}: {action} | {labels['kind']} | {labels['durability_class']}\n"
+        f"{labels['reason']}\n"
+        "This is a model judgment; the original is retained."
+    )
+    if not labels["keep"]:
+        await message.answer("Claim extraction skipped by triage. Your original remains saved.")
+        return
+    try:
+        extraction = await asyncio.to_thread(extract_capture, result.path, client)
+    except (ModelError, ExtractionError) as error:
+        await message.answer(f"Your original and triage are saved; claim extraction is pending. {error}")
+        return
+    except (OSError, ValueError) as error:
+        logger.error("Telegram claim extraction storage failed (%s).", type(error).__name__)
+        await message.answer("Your original and triage are saved; could not save extracted claims. Please retry later.")
+        return
+    status = "Cached extraction" if extraction.reused else "Extracted"
+    lines = [f"{status}: {len(extraction.claims)} claim(s) with source references."]
+    for claim in extraction.claims[:3]:
+        statement = claim["statement"]
+        if len(statement) > 200:
+            statement = statement[:197] + "..."
+        lines.append(f"- [{claim['kind']} | {claim['durability_class']}] {statement}")
+    if len(extraction.claims) > 3:
+        lines.append("More claims are saved in the local extraction record.")
+    lines.append("Quotes were matched to the original; claims are not independently fact-checked.")
+    await message.answer("\n".join(lines))
 
 
 async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:
