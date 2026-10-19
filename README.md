@@ -1,16 +1,17 @@
 # Refresher
 
 Personal knowledge engine for the Nebius x NVIDIA hackathon. Development is in
-progress. The current block captures UTF-8 text files; model extraction,
+progress. The current blocks capture UTF-8 text files and import a labeled seed corpus; model extraction,
 Telegram, graph placement and refreshers are not implemented yet.
 
 ## Local setup
 
-Use Python 3.11 or newer. No third-party packages are needed for this block.
+Use Python 3.11 or newer. Single-file capture uses the standard library; seed manifests use PyYAML.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
 ## Block 1 — capture text and provenance
@@ -35,13 +36,25 @@ than replacing the original. Edit/version handling is a later contract decision.
 
 The capture envelope is provisional pending the shared RawItem schema.
 The file path is the importer's source identity; moving a file makes it a
-different source. This block supports only UTF-8 text/Markdown, not attachments
-or the planned seed manifest. Its original `save_text` exercise remains available.
+different source. Both import paths support only UTF-8 text/Markdown, not attachments. Its original `save_text` exercise remains available.
 
 `.local-vault/` is ignored by Git. It is a local practice vault, not the personal
 Obsidian vault. Do not commit private captured content.
 
-## Check the block
+## Block 2 — labeled seed imports
+
+```bash
+python -m channels.importer eval/seed_corpus --validate-only
+python -m channels.importer eval/seed_corpus --vault .local-vault/seed
+```
+
+The manifest describes seven originals: four supplied samples and a synthetic
+original/repost/correction sequence. Metadata enters the same capture function;
+expected labels remain separate for future evaluation. Repeating the import
+creates no additional records. See [the seed guide](eval/seed_corpus/README.md)
+for fixture provenance, simulated channel IDs and current limitations.
+
+## Check the blocks
 
 ```bash
 python -m unittest discover -v
@@ -53,7 +66,7 @@ message identity, conflict protection and blank input.
 ## Next blocks
 
 1. Agree the shared RawItem/Extraction contracts with the team.
-2. Add the seed manifest and expected labels to file ingestion.
+2. Expand seed labels/topics and multi-format parsing coverage.
 3. Connect Telegram to the same capture function.
 4. Parse and extract claims, then call Victor's graph interface.
 

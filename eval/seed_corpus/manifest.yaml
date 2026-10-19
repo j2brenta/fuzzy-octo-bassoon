@@ -1,88 +1,111 @@
-# Seed corpus: one entry per file in originals/.
-# The importer reads only: format, status, and the RawItem overrides
-#   (channel, source_name, author_hint, forwarded_by, captured_at, published_at, url, kind).
-# `expect` is for the eval (extraction, relation and graph tests); the importer ignores it.
-# Formats: telegram_desktop | linkedin_paste | plain | email | binary (auto-detected when omitted).
-
-timezone: Europe/Berlin
-
-defaults:
-  channel: telegram
-  source_name: Saved Messages
-
+schema_version: 1
+corpus_id: refresher-seed-v1
+# Labels are expected FUTURE processing results, not results already computed.
+# Synthetic items intentionally arrive in reverse event-time order.
 items:
-  tg_people_to_follow.md:
-    author_hint: {name: AI assistant}
-    expect:
-      kind: list
-      durability: reference
-      authors: []
-      people: [Jack Lindsey, Chris Olah, Josh Batson, Sam Marks, Sebastian Farquhar, Yarin Gal,
-               Adam Tauman Kalai, Owain Evans, Stephen Fleming, Arvind Narayanan, Sayash Kapoor,
-               Beth Barnes, Andrej Karpathy, Azalia Mirhoseini, Shreya Shankar, Hamel Husain, Eugene Yan]
-      organizations: [Anthropic, OpenAI, OATML, UCL, Princeton, METR, Stanford, UC Berkeley, Truthful AI]
-      claims_min: 15
-
-  tg_introspection.md:
-    author_hint: {name: AI assistant}
-    expect:
-      relations:
-        - {type: DUPLICATES, of: tg_people_to_follow.md}
-      notes: Same message as tg_people_to_follow.md sent 8 s later without the intro line. Exact hash differs.
-
-  tg_messy_life_econ.md:
-    author_hint: {name: AI assistant}
-    expect:
-      kind: list
-      durability: reference
-      authors: []
-      people: [Ha-Joon Chang, Dani Rodrik, James Robinson, Daron Acemoglu, Matthew Jackson, Brian Arthur,
-               César Hidalgo, Sendhil Mullainathan, Raghuram Rajan, Abhijit Banerjee, Esther Duflo,
-               Steve Keen, Stephanie Kelton, Herman Daly, Mark Granovetter, Viviana Zelizer,
-               Richard Swedberg, Fernando Fajnzylber, Justin Yifu Lin, Benno Ndulu, Shoshana Zuboff,
-               Nick Srnicek, Raj Chetty]
-      claims_min: 20
-      notes: >
-        AI-generated answer; some affiliations look wrong or dated (e.g. Benno Ndulu, Ha-Joon Chang).
-        Good test for enrichment overriding low-trust claims.
-
-  tg_memory_redis.md:
-    format: plain
-    captured_at: 2026-10-19T11:52:00  # file time; the original send time is unknown
-    expect:
+  - id: demo-correction
+    file: originals/demo_correction.txt
+    channel: telegram
+    source_id: seed:demo-organizer
+    source_name: Synthetic demo organizer
+    message_id: correction-1
+    captured_at: "2026-10-19T10:00:00+00:00"
+    published_at: "2026-10-16T09:00:00+00:00"
+    author_hint: {name: Demo Organizer}
+    synthetic: true
+    expected:
       kind: announcement
       durability: ephemeral
-      authors: []
-      people: [Samuel Agbede, Evangelos Resvanis]
-      organizations: [Redis]
-      notes: Event agenda; each speaker's name follows their talk, not precedes it.
+      claim_count: 1
+      current_claim: "Workshop starts at 16:00 UTC on 25 October 2026."
+      relations: [{type: SUPERSEDES, target: demo-original}]
 
-  tg_eli5.md:
-    format: plain
-    source_name: Мысли Рвачева (t.me/rvnikita_blog)
-    author_hint: {name: Nikita Rvachev, handle: rvnikita_blog}
-    url: https://t.me/rvnikita_blog/1899
-    captured_at: 2026-10-19T14:20:00  # file time; the original send time is unknown
-    expect:
-      language: ru
+  - id: demo-repost
+    file: originals/demo_repost.txt
+    channel: telegram
+    source_id: seed:demo-reposts
+    source_name: Synthetic repost channel
+    message_id: repost-1
+    captured_at: "2026-10-19T10:01:00+00:00"
+    published_at: "2026-10-15T09:10:00+00:00"
+    forwarded_by: Demo Forwarder
+    synthetic: true
+    expected:
+      kind: announcement
+      durability: ephemeral
+      claim_count: 1
+      relations: [{type: DUPLICATES, target: demo-original}]
+
+  - id: demo-original
+    file: originals/demo_original.txt
+    channel: telegram
+    source_id: seed:demo-organizer
+    source_name: Synthetic demo organizer
+    message_id: original-1
+    captured_at: "2026-10-19T10:02:00+00:00"
+    published_at: "2026-10-15T09:00:00+00:00"
+    author_hint: {name: Demo Organizer}
+    synthetic: true
+    expected:
+      kind: announcement
+      durability: ephemeral
+      claim_count: 1
+      superseded: true
+      relations: []
+
+  - id: people-list
+    file: originals/tg_people_to_follow.md
+    channel: telegram
+    source_id: seed:supplied-forwards
+    source_name: Supplied Telegram forwards (simulated)
+    message_id: supplied-people-list
+    forwarded_by: Kirill R
+    synthetic: false
+    notes: "Original author and timestamp timezone unknown. Labels require team review."
+    expected:
+      label_status: draft
+      author: null
       kind: post
-      durability: news
-      authors: [Nikita Rvachev]
-      people: [Thariq Shihipar]
-      organizations: [Anthropic]
-      links: [https://x.com/trq212/status/2090884854590382515]
-      notes: Channel repost without a Telegram header. Install commands and hashtags are not claims.
+      relations: []
 
-  linkedin_why_ai_excels_in_math.md:
-    format: linkedin_paste  # author and published_at are parsed from the paste
-    url: https://www.linkedin.com/pulse/why-ai-excels-math-fails-creative-writing-how-fix-jianfeng-liu-heeyc
-    captured_at: 2026-10-19T14:20:00  # file time
-    expect:
-      kind: article
-      durability: reference
-      authors: [Jianfeng Liu]
-      people: []
-      claims_min: 8
-      notes: >
-        Opinion essay, several layers: why models do well on verifiable tasks, why they drift on open-ended text,
-        and the author's plan to write the outline alongside the prose. Headline line belongs to the author profile.
+  - id: introspection-list
+    file: originals/tg_introspection.md
+    channel: telegram
+    source_id: seed:supplied-forwards
+    source_name: Supplied Telegram forwards (simulated)
+    message_id: supplied-introspection-list
+    forwarded_by: Kirill R
+    synthetic: false
+    expected:
+      label_status: draft
+      author: null
+      kind: post
+      relations: [{type: DUPLICATES, target: people-list}]
+
+  - id: redis-talks
+    file: originals/tg_memory_redis.md
+    channel: telegram
+    source_id: seed:supplied-talks
+    source_name: Supplied Redis talk descriptions (simulated)
+    message_id: supplied-redis-talks
+    synthetic: false
+    expected:
+      label_status: draft
+      author: null
+      people: [Samuel Agbede, Evangelos Resvanis]
+      kind: post
+      relations: []
+
+  - id: economics-list
+    file: originals/tg_messy_life_econ.md
+    channel: telegram
+    source_id: seed:supplied-forwards
+    source_name: Supplied Telegram forwards (simulated)
+    message_id: supplied-economics-list
+    forwarded_by: Kirill R
+    synthetic: false
+    expected:
+      label_status: draft
+      author: null
+      kind: post
+      relations: []

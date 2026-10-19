@@ -45,6 +45,10 @@ def capture_text(
     source_id: str,
     source_name: str,
     message_id: str | None = None,
+    captured_at: str | None = None,
+    published_at: str | None = None,
+    author_hint: dict[str, str] | None = None,
+    forwarded_by: str | None = None,
 ) -> CaptureResult:
     """Capture text with provenance; repeat deliveries reuse the original record.
 
@@ -59,6 +63,16 @@ def capture_text(
     if message_id is not None and not message_id.strip():
         raise ValueError("Message ID must not be blank when provided.")
 
+    captured_at = normalize_timestamp(captured_at) if captured_at is not None else datetime.now(timezone.utc).isoformat()
+    published_at = normalize_timestamp(published_at) if published_at is not None else None
+    if author_hint is not None and (
+        not isinstance(author_hint, dict)
+        or not all(isinstance(k, str) and isinstance(v, str) for k, v in author_hint.items())
+    ):
+        raise ValueError("Author hint must contain text keys and values.")
+    if forwarded_by is not None and (not isinstance(forwarded_by, str) or not forwarded_by.strip()):
+        raise ValueError("Forwarder must be nonblank text when provided.")
+
     content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
     identity = [channel, source_id, message_id, None if message_id else content_hash]
     item_id = hashlib.sha256(json.dumps(identity).encode("utf-8")).hexdigest()
@@ -69,9 +83,10 @@ def capture_text(
         "source_id": source_id,
         "source_name": source_name,
         "message_id": message_id,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
-        "published_at": None,
-        "author_hint": None,
+        "captured_at": captured_at,
+        "published_at": published_at,
+        "author_hint": author_hint,
+        "forwarded_by": forwarded_by,
         "url": None,
         "kind": "text",
         "text": text,
@@ -114,3 +129,16 @@ def capture_text(
         temporary_path.unlink(missing_ok=True)
 
     return CaptureResult(file_path, item_id, duplicate)
+
+
+def normalize_timestamp(value: str) -> str:
+    """Require an explicit timezone and store equivalent UTC time."""
+    if not isinstance(value, str):
+        raise ValueError("Timestamps must be ISO 8601 text with a timezone.")
+    try:
+        timestamp = datetime.fromisoformat(value)
+    except ValueError:
+        raise ValueError("Timestamps must be ISO 8601 text with a timezone.") from None
+    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+        raise ValueError("Timestamps must include a timezone, such as +00:00.")
+    return timestamp.astimezone(timezone.utc).isoformat()
