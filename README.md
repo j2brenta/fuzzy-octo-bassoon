@@ -1,8 +1,9 @@
 # Refresher
 
 Personal knowledge engine for the Nebius x NVIDIA hackathon. Development is in
-progress. The current blocks capture UTF-8 files, import a labeled seed corpus and
-receive Telegram text and prepare source sections/links. Atomic claim extraction is also available. Entity extraction, graph placement
+progress. The application captures UTF-8 files and Telegram text, imports a labeled seed
+corpus, prepares source sections and links, extracts claims, and runs automated
+quality review with bounded corrections. Entity extraction, graph placement
 and refreshers are not implemented yet.
 
 ## Local setup
@@ -15,7 +16,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## Block 1 — capture text and provenance
+## Capture text and provenance
 
 Run from the repository root:
 
@@ -42,7 +43,7 @@ different source. Both import paths support only UTF-8 text/Markdown, not attach
 `.local-vault/` is ignored by Git. It is a local practice vault, not the personal
 Obsidian vault. Do not commit private captured content.
 
-## Block 2 — labeled seed imports
+## Labeled seed imports
 
 ```bash
 python -m channels.importer eval/seed_corpus --validate-only
@@ -55,13 +56,13 @@ expected labels remain separate for future evaluation. Repeating the import
 creates no additional records. See [the seed guide](eval/seed_corpus/README.md)
 for fixture provenance, simulated channel IDs and current limitations.
 
-## Block 3 — Telegram text capture
+## Telegram text capture
 
 The bot uses aiogram long polling, so it can run on your laptop without a public
 server. It accepts text in a private conversation with its configured owner.
 Text is stored once in the top-level `text` field. Telegram-specific metadata
 (sender, forwarding details, formatting and link previews) stays under
-`channel_metadata`; it does not repeat the message text. Attachments, edits, channel subscriptions and extraction are future work.
+`channel_metadata`; it does not repeat the message text. Attachments, edits and channel subscriptions are future work.
 
 ### Connect your bot
 
@@ -109,7 +110,7 @@ Text is stored once in the top-level `text` field. Telegram-specific metadata
 - Files, photos (even with captions) and voice are rejected explicitly; their
   attachments are not silently discarded. Edited messages are not processed.
 - This is a raw-capture acknowledgment, not a filing, deduplication or graph
-  verdict. Graph relations and AI extraction are still pending.
+  verdict. AI processing follows capture; graph relations are still pending.
 - One polling process per token. Existing webhooks are detected, not deleted.
 - Owner ID is required for capture; other users and group messages are not saved.
   No bot credentials are needed for automated tests.
@@ -117,7 +118,7 @@ Text is stored once in the top-level `text` field. Telegram-specific metadata
 See [aiogram polling docs](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)
 and [Telegram bot setup](https://core.telegram.org/bots/tutorial#obtain-your-bot-token).
 
-## Block 4 — prepare captured text and links
+## Prepare captured text and links
 
 Telegram now acknowledges capture first, then reports prepared section/link
 counts. Link identification does not fetch pages, PDFs or YouTube transcripts.
@@ -143,7 +144,7 @@ The source hash is checked before parsing. If preparation fails after capture,
 the bot says the original was saved and preparation can be retried with the CLI.
 These document fields are provisional until the team agrees the shared schema.
 
-## Block 5 — AI triage through Backboard (development)
+## AI triage through Backboard
 
 Nebius access is pending. Backboard currently supplies triage through the small
 `JsonModel` interface; the rest of the pipeline does not depend on its API.
@@ -168,7 +169,7 @@ Substantive conversations, brainstorming and Q&A should be kept too; triage judg
 content rather than rejecting chat format. Each forwarded Telegram message is
 currently processed independently. Paste the relevant exchange as one message
 when context matters. Automatic conversation grouping and a manual Keep override
-are not implemented yet. The triage-v2 rubric is cached separately from v1.
+are not implemented yet. Triage caches depend on the rubric version.
 
 After capture/preparation, enabled triage sends **only the note text** to
 Backboard and asks for five fields: keep, kind, durability_class, split_digest
@@ -197,95 +198,119 @@ performed; claim extraction is the next stage below and graph integration is pen
 
 API reference: [Backboard send message](https://docs.backboard.io/concepts/messages).
 
-## Block 6 — claims with exact source references
+## Claims and automated quality review
 
-For a keep decision, Telegram makes one additional model call to extract at most
-25 central atomic claims. Skip means no extraction call, not deletion. Each claim
-has its own kind and durability, so a mixed article can contain a foundational
-principle and a short-lived forecast. The model is instructed to preserve modal
-words such as “may”, negations, conditions, dates and speaker attribution.
+For a keep decision, the extractor produces at most 25 atomic claims. Each has a
+statement, kind, durability, confidence and exact source references. Attribution,
+uncertainty, dates, conditions and negations should be preserved. Durability maps
+to half-life days: foundation 720, reference 180, news 30 and ephemeral 7.
+Confidence concerns extraction faithfulness, not factual accuracy or author trust.
 
-Python numbers nonblank source lines and sends them as passages. The model
-returns a statement and a supporting passage ID. Python validates that ID and
-stores the original passage character boundaries, without asking the model to
-copy quotes. Repeated lines have distinct IDs. A passage reference does not
-prove the statement follows from it. `half_life_days` is mapped
-deterministically from each claim's durability class (720/180/30/7 days).
-Confidence describes the model's confidence in extraction, not factual accuracy
-or author trust. Passage selection alone does not prove the paraphrase is entailed;
-semantic faithfulness still needs human evaluation. Claims are not fact-checked.
+Python numbers nonblank source lines. New model outputs use
+`evidence_passage_ids`, a list of 1–5 distinct supporting passage IDs. Python
+validates every reference and stores exact character spans in source order.
+Several passages may supply attribution or qualifications for one atomic idea;
+they do not justify merging unrelated ideas. Legacy singular references remain
+readable. Stored `evidence` is an object for one span or a list for several; use
+`evidence_spans(claim)` for both. Single-span IDs remain stable; multi-span IDs
+depend on all ordered spans. Source text remains necessary to resolve references.
 
-Results are in `extractions/<item_id>.json`, with stable claim IDs, source/section
-references, prompt/model versions and reported usage. Successful results are
-cached. At most one retry is allowed for malformed JSON, invalid fields or a
-invalid passage ID; failures preserve capture, preparation and triage.
-Memory/search remain off. Usage records cover the final response; retries can
-incur additional usage. No new API key or package is needed.
+### Configuration
 
-Process an existing item (triage is reused if cached):
+The strong review model is separate from the extraction model. Add these settings
+to the existing `.env`, using the same Backboard key:
 
-```bash
-python -m engine.extract .local-vault/telegram --item-id YOUR_ITEM_ID
+```dotenv
+JUDGE_PROVIDER=backboard
+BACKBOARD_JUDGE_LLM_PROVIDER=anthropic
+BACKBOARD_JUDGE_MODEL=claude-opus-5-5
 ```
 
-`--force` repeats extraction even if cached. This is a **claim-only intermediate
-record**, pending Kirill's shared Extraction schema. People/organization
-extraction, embeddings, actual digest splitting and Victor's graph.apply are not
-implemented in this block. The source text must remain available to resolve
-claim references.
+`JUDGE_PROVIDER=off` disables review. Restart after code or configuration changes.
+Judge requests allow up to 180 seconds. Source text and claims are sent to
+Backboard in fresh conversations with memory and web search off.
 
-## Check the blocks
+### Workflow and limits
+
+1. Judge every claim for source support, cited passages, attribution, lost
+   qualifications, duplicates, atomicity, clear label errors and major omissions.
+2. If claims have errors, make one strong-model correction and judge it again.
+3. If all claims are supported but central ideas are missing, make one additive
+   coverage pass: retain existing claims and IDs, append at most 25 new claims,
+   then judge the full set. Expanded results have a 50-claim limit.
+4. If the remaining claim errors concern citations only, repair those references
+   once and judge again. Python prevents changes to wording, labels or confidence
+   and preserves unflagged claims.
+
+Python requires exactly one review per claim and validates omission passage IDs.
+`accepted` requires every claim to be supported with no reported major omissions.
+Other valid results remain `needs_revision`; malformed or unavailable results
+remain pending. Telegram sends a final quality-review reply automatically.
+There is no loop that keeps retrying until a model approves.
+
+Each JSON-producing step can retry once for invalid output. Service errors stop
+without a blind retry. Completed unchanged results are cached by source, parent
+artifact/review hashes, prompt versions and model settings. A saved candidate can
+resume at review after interruption. Reported usage covers the final response of
+each step; retries incur additional usage. Judge decisions can vary; correction
+and judging with the same model can share errors. This is a source-faithfulness
+assessment, not independent factual verification.
+
+### Local records
+
+| Folder | Contents |
+|---|---|
+| `raw/` | Original text and provenance |
+| `documents/` | Prepared sections and links |
+| `triage/` | Keep/skip judgment and labels |
+| `extractions/`, `reviews/` | Initial claims and their review |
+| `repairs/`, `repair-reviews/` | Corrected claims and their review |
+| `coverage/`, `coverage-reviews/` | Expanded claims and their review |
+| `evidence/`, `evidence-reviews/` | Citation-only repairs and their review |
+
+These are working pipeline records under `.local-vault/telegram/`, not document
+drafts. Later stages depend on earlier records for cache reuse and provenance.
+Original captures remain unchanged. Formats are provisional until the team agrees
+the shared RawItem/Extraction contracts.
+
+### Process saved items
+
+Run from the repository root, replacing `ITEM_ID`:
+
+```bash
+python -m engine.extract .local-vault/telegram --item-id ITEM_ID
+python -m engine.quality .local-vault/telegram --item-id ITEM_ID
+```
+
+The first command extracts after triage; the second runs the full quality
+workflow. Neither sends Telegram messages. Isolated commands are also available:
+
+```bash
+python -m engine.judge .local-vault/telegram --item-id ITEM_ID
+python -m engine.evidence .local-vault/telegram --item-id ITEM_ID --candidate coverage
+```
+
+For citation repair, `--candidate` also accepts `extractions` or `repairs`. The
+matching prior review must exist and refer to that exact candidate. Extraction
+and judge commands support `--force`, which repeats calls even with a cache.
+
+## Validation
 
 ```bash
 python -m unittest discover -v
 ```
 
-Checks cover exact content preservation, safe retries, independent sources,
-message identity, conflict protection and blank input.
+Tests cover capture integrity, source identity, Telegram behavior, parsing,
+provider failures, claim validation, review completeness, bounded corrections,
+coverage, multi-passage references and caches. They make no live API calls.
 
-## Next blocks
+## Remaining work
 
-1. Agree the shared RawItem/Extraction contracts with the team.
-2. Expand seed labels/topics and multi-format parsing coverage.
-3. Extend Telegram capture to files/voice once parser contracts are ready.
-4. Add entities/embeddings, then integrate Victor's graph interface.
+Agree shared schemas; add entities, embeddings and multi-format parsing; integrate
+Victor's graph interface and Kirill's retrieval/refresher work. Entity extraction,
+graph promotion, digest splitting, attachment ingestion and external fact-checking
+remain unimplemented. Nebius runtime and NVIDIA model integration remain planned.
 
 ## License
 
 Apache-2.0; see [LICENSE](LICENSE).
-
-
-## Block 7 — automated extraction review
-
-After extraction, a separate Backboard model compares every claim with the original
-source. The configured judge is Anthropic `claude-opus-5-5`, selected from Backboard's
-model catalog. The extraction model stays separately configurable. Set
-`JUDGE_PROVIDER=backboard`, `BACKBOARD_JUDGE_LLM_PROVIDER=anthropic` and
-`BACKBOARD_JUDGE_MODEL=claude-opus-5-5` in `.env`; the same `BACKBOARD_API_KEY`
-is used. Set `JUDGE_PROVIDER=off` to disable the extra call.
-
-The judge checks source support, cited passages, attribution, lost qualifications,
-duplicate ideas, atomicity, clear label errors, and major omitted concepts. Python
-requires exactly one review for every claim, validates issue codes and omission
-passage IDs, and computes `accepted` only when every claim is supported and no
-major omissions are reported. All other valid reviews are `needs_revision`.
-Malformed or unavailable reviews remain pending; they never imply acceptance.
-This is an AI assessment of source faithfulness, not independent factual verification.
-
-Telegram automatically sends a fifth quality-review reply. Original captures and
-extractions are preserved; review does not rewrite or delete claims. Detailed
-reviews are saved separately under `reviews/<item_id>.json`, including requested
-and actual models, prompt version, extraction hash and reported usage. Changed
-extractions or judge settings invalidate the review cache. There is one retry for
-invalid judge JSON, no blind retry for service errors. Judge requests allow up to
-180 seconds. Reported usage covers the final response only; retries cost extra.
-Memory and web search stay off. Source and claims are sent to Backboard for review.
-No automatic correction or graph promotion is implemented in this block.
-
-Review existing extractions without resending them through the extractor:
-
-```bash
-python -m engine.judge .local-vault/telegram --item-id ITEM_ID
-```
-
-Omit `--item-id` to review all existing extractions. Cached reviews are reused.

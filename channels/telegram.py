@@ -28,7 +28,8 @@ from engine.parse import parse_capture
 from engine.llm import ModelError, client_from_environment, judge_client_from_environment
 from engine.triage import TriageError, triage_capture
 from engine.extract import ExtractionError, extract_capture
-from engine.judge import JudgeError, judge_capture
+from engine.judge import JudgeError
+from engine.quality import QualityError, quality_capture
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -208,8 +209,9 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         judge_client = judge_client_from_environment()
         if judge_client is None:
             return
-        reviewed = await asyncio.to_thread(judge_capture, result.path, judge_client)
-    except (ModelError, JudgeError, ExtractionError) as error:
+        quality = await asyncio.to_thread(quality_capture, result.path, judge_client)
+        reviewed = quality.reviewed
+    except (ModelError, JudgeError, ExtractionError, QualityError) as error:
         await message.answer(f"Claims saved; automated quality review is pending. {error}")
         return
     except (OSError, ValueError):
@@ -222,7 +224,10 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         f"AI quality review: {label} | {passed}/{len(review['claims'])} claims supported | "
         f"{len(review['omitted_concepts'])} major omission(s).\n"
         f"{review['summary']}\n"
-        "This checks faithfulness to your source, not whether the source is true."
+        + ("One automatic correction was applied and reviewed.\n" if quality.corrected else "")
+        + ("One coverage pass added missing source-backed ideas and was reviewed.\n" if quality.expanded else "")
+        + ("Source citations were repaired and reviewed.\n" if quality.citations_repaired else "")
+        + "This checks faithfulness to your source, not whether the source is true."
     )
 
 
