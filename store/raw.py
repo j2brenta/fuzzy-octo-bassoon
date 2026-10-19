@@ -49,6 +49,7 @@ def capture_text(
     published_at: str | None = None,
     author_hint: dict[str, str] | None = None,
     forwarded_by: str | None = None,
+    channel_metadata: dict | None = None,
 ) -> CaptureResult:
     """Capture text with provenance; repeat deliveries reuse the original record.
 
@@ -73,6 +74,12 @@ def capture_text(
     if forwarded_by is not None and (not isinstance(forwarded_by, str) or not forwarded_by.strip()):
         raise ValueError("Forwarder must be nonblank text when provided.")
 
+    if channel_metadata is not None:
+        if not isinstance(channel_metadata, dict):
+            raise ValueError("Channel metadata must be a mapping.")
+        # Validate before creating any files; channel adapters must pass JSON data.
+        json.dumps(channel_metadata, ensure_ascii=False, allow_nan=False)
+
     content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
     identity = [channel, source_id, message_id, None if message_id else content_hash]
     item_id = hashlib.sha256(json.dumps(identity).encode("utf-8")).hexdigest()
@@ -87,6 +94,7 @@ def capture_text(
         "published_at": published_at,
         "author_hint": author_hint,
         "forwarded_by": forwarded_by,
+        "channel_metadata": channel_metadata,
         "url": None,
         "kind": "text",
         "text": text,

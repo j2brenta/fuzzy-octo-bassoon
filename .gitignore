@@ -11,3 +11,8 @@ __pycache__/
 
 # Local practice vault; captured content stays off Git
 .local-vault/
+
+# Local credentials
+.env
+.env.*
+!.env.example
