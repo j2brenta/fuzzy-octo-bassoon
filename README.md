@@ -1,10 +1,11 @@
 # Refresher
 
 Personal knowledge engine for the Nebius x NVIDIA hackathon. Development is in
-progress. The application captures UTF-8 files and Telegram text, imports a labeled seed
-corpus, prepares source sections and links, extracts claims, and runs automated
-quality review with bounded corrections. Entity extraction, graph placement
-and refreshers are not implemented yet.
+progress. The application captures UTF-8 files and Telegram text, imports a
+labeled seed corpus, prepares source sections and links, extracts claims, and runs automated
+quality review with bounded corrections. It also extracts and reviews named entity
+mentions and saves a combined handoff record with a storage-only receipt.
+Graph placement and refreshers are not implemented yet.
 
 ## Local setup
 
@@ -267,6 +268,9 @@ assessment, not independent factual verification.
 | `repairs/`, `repair-reviews/` | Corrected claims and their review |
 | `coverage/`, `coverage-reviews/` | Expanded claims and their review |
 | `evidence/`, `evidence-reviews/` | Citation-only repairs and their review |
+| `entities/`, `entity-reviews/` | Named entity mentions and their review |
+| `processed/` | Combined source, claims, entities and review record |
+| `placements/` | Storage-only handoff receipt; no graph placement |
 
 These are working pipeline records under `.local-vault/telegram/`, not document
 drafts. Later stages depend on earlier records for cache reuse and provenance.
@@ -294,6 +298,83 @@ For citation repair, `--candidate` also accepts `extractions` or `repairs`. The
 matching prior review must exist and refer to that exact candidate. Extraction
 and judge commands support `--force`, which repeats calls even with a cache.
 
+## People, organizations and concepts
+
+Entity extraction identifies up to 40 explicit source mentions, typed as `person`,
+`organization` or `concept`. Names must match the original spelling within each
+cited passage. Python rejects invented expansions, partial-word matches, invalid
+passage IDs and duplicate kind/name pairs, then records exact mention spans.
+Entity IDs are local to an item. Within an article, names that clearly refer to
+the same entity are grouped under the most complete source-written name, with
+short forms in `aliases`. Each mention retains its exact `surface_name` and source
+span. The canonical full-name ID stays stable when aliases are added. Short names
+inside the full name are not counted as extra mentions. Ambiguous names remain
+separate; cross-source identity, authorship, affiliations and relationships are
+not inferred. The independent reviewer checks missed merges and unsafe merges.
+
+Set `ENTITY_EXTRACTION=on` in `.env` to enable this stage. It uses the configured
+strong judge model for extraction and a separate fresh-conversation review.
+`JUDGE_PROVIDER=backboard` and the existing Backboard key are required. Set
+`ENTITY_EXTRACTION=off` to disable it. Restart the bot after changes.
+
+The reviewer checks every entity's type and source context and looks for major
+omissions. Python validates complete review coverage and source-grounded omission
+names. Only a review with all entities supported and no major omissions is
+`accepted`; other valid results are `needs_revision`. Failures remain pending.
+Entity reviews do not change claim-review decisions or promote data into a graph.
+Automatic entity correction is not implemented.
+
+Telegram sends an additional entity-summary reply after claim quality processing.
+This stage normally makes two model calls; each can retry once for invalid output. Extraction retries receive the failed
+output and entry-specific feedback to repair source names/references.
+Service errors stop without blind retries. Source/prompt/model-dependent caches
+prevent repeat calls for unchanged completed results. A pending entity review can
+resume from its saved extraction. Reported usage covers each step's final response.
+
+Entity records and reviews are provisional additions to the team's future shared
+Extraction contract. They are stored in `entities/` and `entity-reviews/`, separate
+from immutable raw sources and claim artifacts. Process one saved item without
+rerunning claim extraction or sending Telegram messages:
+
+```bash
+python -m engine.entities .local-vault/telegram --item-id ITEM_ID
+```
+
+## Combined extraction and storage handoff
+
+After entity review, Telegram packages the selected claims, entities, sections,
+links, source metadata and review findings into `processed/<item_id>.json`. The
+original text and channel metadata remain in raw storage and are referenced by
+path. Inputs carry content fingerprints for provenance and cache invalidation.
+The record is explicitly provisional pending Kirill's shared Extraction schema;
+chunks and embeddings are not yet implemented.
+
+The packager makes no model or network calls. It validates exact evidence and
+entity mentions, review completeness, source hashes and candidate lineage. It
+selects the most advanced valid candidate (initial, correction, coverage, then
+citation repair), rather than relying on file timestamps. A candidate's review
+must match its exact content hash. Missing or stale reviews remain pending;
+rejected judgments and omissions stay visible. An unchanged build reuses its
+record and timestamp. Concurrent input changes abort publication.
+
+`quality_status` is `accepted`, `needs_revision`, `pending` or `skipped`. The quality
+gate passes only for a keep decision with accepted claim and entity reviews.
+The storage-only adapter writes an idempotent receipt under `placements/`, with
+`stored_only` for a passed gate or `pending_quality` otherwise. It always reports
+`graph_applied=false` and assigns no node or edge IDs. It does not implement
+Victor's graph placement logic or claim compatibility with an agreed graph API.
+
+Package saved results and write the receipt locally:
+
+```bash
+python -m engine.package .local-vault/telegram --item-id ITEM_ID
+```
+
+Use `--claims-from extractions|repairs|coverage|evidence` to select a specific valid
+candidate. The command needs no API key and does not rerun models or send Telegram
+messages. With the full AI workflow enabled, Telegram adds a combined-handoff
+reply automatically. Restart the bot after updating its code.
+
 ## Validation
 
 ```bash
@@ -302,14 +383,16 @@ python -m unittest discover -v
 
 Tests cover capture integrity, source identity, Telegram behavior, parsing,
 provider failures, claim validation, review completeness, bounded corrections,
-coverage, multi-passage references and caches. They make no live API calls.
+coverage, multi-passage references, entity mentions, combined records and handoff
+quality gates. They make no live
+API calls.
 
 ## Remaining work
 
-Agree shared schemas; add entities, embeddings and multi-format parsing; integrate
-Victor's graph interface and Kirill's retrieval/refresher work. Entity extraction,
-graph promotion, digest splitting, attachment ingestion and external fact-checking
-remain unimplemented. Nebius runtime and NVIDIA model integration remain planned.
+Agree shared schemas and adapt the provisional handoff; add embeddings and
+multi-format parsing; integrate Victor’s graph interface and
+Kirill’s retrieval/refresher work. Graph promotion, digest splitting, attachment
+ingestion and external fact-checking remain unimplemented. Nebius runtime and NVIDIA model integration remain planned.
 
 ## License
 
