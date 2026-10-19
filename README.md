@@ -253,3 +253,39 @@ message identity, conflict protection and blank input.
 ## License
 
 Apache-2.0; see [LICENSE](LICENSE).
+
+
+## Block 7 — automated extraction review
+
+After extraction, a separate Backboard model compares every claim with the original
+source. The configured judge is Anthropic `claude-opus-5-5`, selected from Backboard's
+model catalog. The extraction model stays separately configurable. Set
+`JUDGE_PROVIDER=backboard`, `BACKBOARD_JUDGE_LLM_PROVIDER=anthropic` and
+`BACKBOARD_JUDGE_MODEL=claude-opus-5-5` in `.env`; the same `BACKBOARD_API_KEY`
+is used. Set `JUDGE_PROVIDER=off` to disable the extra call.
+
+The judge checks source support, cited passages, attribution, lost qualifications,
+duplicate ideas, atomicity, clear label errors, and major omitted concepts. Python
+requires exactly one review for every claim, validates issue codes and omission
+passage IDs, and computes `accepted` only when every claim is supported and no
+major omissions are reported. All other valid reviews are `needs_revision`.
+Malformed or unavailable reviews remain pending; they never imply acceptance.
+This is an AI assessment of source faithfulness, not independent factual verification.
+
+Telegram automatically sends a fifth quality-review reply. Original captures and
+extractions are preserved; review does not rewrite or delete claims. Detailed
+reviews are saved separately under `reviews/<item_id>.json`, including requested
+and actual models, prompt version, extraction hash and reported usage. Changed
+extractions or judge settings invalidate the review cache. There is one retry for
+invalid judge JSON, no blind retry for service errors. Judge requests allow up to
+180 seconds. Reported usage covers the final response only; retries cost extra.
+Memory and web search stay off. Source and claims are sent to Backboard for review.
+No automatic correction or graph promotion is implemented in this block.
+
+Review existing extractions without resending them through the extractor:
+
+```bash
+python -m engine.judge .local-vault/telegram --item-id ITEM_ID
+```
+
+Omit `--item-id` to review all existing extractions. Cached reviews are reused.
