@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d",
+  "source_content_hash": "d0099768b0af8f8b9d289f34d3efea1e36611e33e9c88674470ffd942507399d",
+  "raw_path": "raw/5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-forwards",
+    "source_name": "Supplied Telegram forwards",
+    "message_id": "introspection-list",
+    "captured_at": "2026-10-07T12:13:38+02:00",
+    "published_at": null,
+    "author_hint": {
+      "name": "AI assistant"
+    },
+    "forwarded_by": "Kirill R",
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [
+    {
+      "claim_id": "d6ed8a92fc2aa07f15de38260e439487d03bcda60ad55897dc4e2a0da082f704",
+      "statement": "Semantic entropy detects confabulations by sampling multiple answers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d",
+        "section_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    },
+    {
+      "claim_id": "a5edcdaca96dead69feb038720f6d6442cbeb4de331fc553c908958d43eb3381",
+      "statement": "Models show a limited, context dependent form of introspective awareness.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d",
+        "section_id": "5456e36d18bfd63942f20e75a7a25bc4bbf3778c084e32bed503cf8e4b612e9d:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "1af3142b073eaa0ec5f6944b048e214ad9a0f79dae83831b353572135ed6a09e",
+      "name": "Jack Lindsey",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "5b90f3d286bd203573c612716b8c9a8c80c10d8ce9a42aeca446ee6285fd17e1",
+      "name": "Yarin Gal",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}

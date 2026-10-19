@@ -7,3 +7,4 @@ WhatsApp Image *.jpeg
 *.egg-info/
 __pycache__/
 .pytest_cache/
+.local-vault/

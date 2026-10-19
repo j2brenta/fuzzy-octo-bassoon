@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d",
+  "source_content_hash": "c15ce644b1f84cf2495a4f34b3272d2e7a58955ce4dbdff9d27b8f0afeb480e4",
+  "raw_path": "raw/7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:linkedin",
+    "source_name": "LinkedIn",
+    "message_id": "jianfeng-liu-math",
+    "captured_at": "2026-10-19T14:20:00+02:00",
+    "published_at": "2026-10-07T00:00:00+02:00",
+    "author_hint": {
+      "name": "Jianfeng Liu"
+    },
+    "forwarded_by": null,
+    "url": "https://www.linkedin.com/pulse/why-ai-excels-math-fails-creative-writing-how-fix-jianfeng-liu-heeyc",
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [
+    {
+      "claim_id": "39eefdf20ac91fed4c08dc6fc0956bf190ad70b5f63ae0888d798b04a46e84ce",
+      "statement": "Problems with verifiable answers let models converge, open-ended writing does not.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d",
+        "section_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    },
+    {
+      "claim_id": "c78171fdf2f8a16cc0454c5bc1d3177688ec58ce0765a9f13e372bc207c17c30",
+      "statement": "Writing the outline while writing the prose may let models produce long coherent novels.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d",
+        "section_id": "7a48e32989a94fcf6cd5685572329b6a7516743ed3ebe3857f8660fe4876c69d:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    }
+  ],
+  "entities": [],
+  "triage": {
+    "keep": true,
+    "kind": "article",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}

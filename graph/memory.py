@@ -1,0 +1,204 @@
+"""In-memory GraphStore, replayed from processed extraction records.
+
+Used until the Neo4j store lands and kept afterwards as the test double. The relation check here is a
+lexical baseline (no embeddings yet): near-identical text is a repost, a near-identical claim from a
+different author is a confirmation. Victor's relate.py replaces it.
+"""
+import re
+import unicodedata
+
+from graph.store import ClaimNode, Edge, ItemNode, PersonNode, Placement, SourceNode
+from refresher import scoring
+from refresher.schemas import Extraction, Override
+
+REPOST_SIMILARITY = 0.8  # item text, word 3-gram Jaccard
+CLAIM_SIMILARITY = 0.8  # claim statement, word-set Jaccard
+WORD = re.compile(r"\w+", re.UNICODE)
+
+
+def person_id(name: str) -> str:
+    folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode() or name
+    return "person:" + "-".join(WORD.findall(folded.casefold()))
+
+
+def _words(text: str) -> list[str]:
+    return WORD.findall(text.casefold())
+
+
+def _jaccard(a: set, b: set) -> float:
+    return len(a & b) / len(a | b) if a and b else 0.0
+
+
+def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
+    w = _words(text)
+    return {tuple(w[i:i + n]) for i in range(max(1, len(w) - n + 1))}
+
+
+def _title(text: str, fallback: str) -> str:
+    for line in text.splitlines():
+        line = line.strip().lstrip("#").strip()
+        if line:
+            return line[:80]
+    return fallback
+
+
+class MemoryStore:
+    def __init__(self):
+        self._items: dict[str, ItemNode] = {}
+        self._claims: dict[str, ClaimNode] = {}
+        self._people: dict[str, PersonNode] = {}
+        self._sources: dict[str, SourceNode] = {}
+        self._orgs: dict[str, str] = {}
+        self._edges: list[Edge] = []
+        self.held_back: dict[str, str] = {}  # item id -> reason
+
+    # --- writes ---
+
+    def apply(self, extraction: Extraction, text: str = "") -> Placement:
+        ex, src = extraction, extraction.source
+        if ex.item_id in self._items:
+            return Placement(ex.item_id, "already_placed")
+        if not ex.quality_gate_passed or (ex.triage and not ex.triage.keep):
+            self.held_back[ex.item_id] = "skipped by triage" if ex.triage and not ex.triage.keep else ex.quality_status
+            return Placement(ex.item_id, "held_back")
+
+        item = ItemNode(ex.item_id, src, _title(text, src.source_name or ex.item_id), text,
+                        durability=ex.triage.durability_class if ex.triage else None)
+        self._items[ex.item_id] = item
+        new_edges: list[Edge] = []
+
+        key = f"source:{src.channel}:{src.source_name or src.source_id}"
+        self._sources.setdefault(key, SourceNode(key, src.source_name or src.source_id, src.channel)).items.add(ex.item_id)
+        item.source_key = key
+        new_edges.append(Edge(ex.item_id, "PUBLISHED_IN", key))
+
+        if src.author_hint and src.author_hint.name:
+            author = self._person(src.author_hint.name)
+            if src.author_hint.handle:
+                author.handles.add(src.author_hint.handle)
+            author.authored.add(ex.item_id)
+            item.author_id = author.person_id
+            new_edges.append(Edge(ex.item_id, "AUTHORED_BY", author.person_id))
+        for ent in ex.entities:
+            if ent.kind == "person":
+                pid = person_id(ent.name)
+                if pid == item.author_id:
+                    continue
+                self._person(ent.name).mentioned_in.add(ex.item_id)
+                new_edges.append(Edge(ex.item_id, "MENTIONS", pid))
+            elif ent.kind == "organization":
+                oid = "org:" + "-".join(_words(ent.name))
+                self._orgs.setdefault(oid, ent.name)
+                new_edges.append(Edge(ex.item_id, "MENTIONS", oid))
+
+        # Repost check on the whole item, ordered by event time, not arrival order.
+        shingles = _shingles(text)
+        for other in self._items.values():
+            if other.item_id == ex.item_id or not other.text:
+                continue
+            if _jaccard(shingles, _shingles(other.text)) >= REPOST_SIMILARITY:
+                first, later = sorted((item, other), key=lambda i: (i.source.event_time, i.item_id))
+                later.duplicate_of = first.duplicate_of or first.item_id
+                new_edges.append(Edge(later.item_id, "DUPLICATES", first.item_id,
+                                      "Near-identical text; the later one is a repost."))
+
+        for claim in ex.claims:
+            node = ClaimNode(claim, ex.item_id, claim.durability_class, claim.half_life_days, src.event_time)
+            self._claims[claim.claim_id] = node
+            new_edges += [Edge(claim.claim_id, "FROM", s.section_id) for s in claim.spans]
+            new_edges += self._relate(node)
+
+        self._recount_duplicates()
+        self._edges += new_edges
+        return Placement(ex.item_id, "placed", len(ex.claims), item.author_id, item.duplicate_of,
+                         [e for e in new_edges if e.type in {"DUPLICATES", "SUPPORTS"}])
+
+    def _relate(self, node: ClaimNode) -> list[Edge]:
+        words = set(_words(node.claim.statement))
+        author = self._items[node.item_id].author_id
+        out = []
+        for other in list(self._claims.values()):
+            if other.item_id == node.item_id:
+                continue
+            if _jaccard(words, set(_words(other.claim.statement))) < CLAIM_SIMILARITY:
+                continue
+            first, later = sorted((other, node), key=lambda c: (c.clock_start, c.claim.claim_id))
+            other_author = self._items[other.item_id].author_id
+            reposted = self._items[node.item_id].duplicate_of or self._items[other.item_id].duplicate_of
+            if author and other_author and author != other_author and not reposted:
+                # Independent confirmation: the clock resets to the later sighting and the half-life grows.
+                first.confirmations += 1
+                first.half_life_days = scoring.confirm(first.half_life_days)
+                first.clock_start = max(first.clock_start, later.clock_start)
+                for pid in (author, other_author):
+                    self._people[pid].confirmations += 1
+                out.append(Edge(later.claim.claim_id, "SUPPORTS", first.claim.claim_id,
+                                "Same statement from a different author."))
+            else:
+                out.append(Edge(later.claim.claim_id, "DUPLICATES", first.claim.claim_id,
+                                "Same statement, same or unknown author."))
+        return out
+
+    def _recount_duplicates(self):
+        dup_claims = {e.src for e in self._edges if e.type == "DUPLICATES"}
+        for node in self._claims.values():
+            reposted = self._items[node.item_id].duplicate_of is not None
+            node.duplicate_rank = 1 if reposted or node.claim.claim_id in dup_claims else 0
+
+    def _person(self, name: str) -> PersonNode:
+        pid = person_id(name)
+        return self._people.setdefault(pid, PersonNode(pid, name))
+
+    def apply_override(self, override: Override) -> None:
+        o = override
+        if o.target == "person":
+            person = self._people.get(o.target_id) or self._people.get(person_id(o.target_id))
+            if person is None:
+                return
+            if o.trust is not None:
+                person.trust_pinned = o.trust
+            if o.vote:
+                person.up += o.vote > 0
+                person.down += o.vote < 0
+            return
+        targets = ([self._claims[o.target_id]] if o.target == "claim" and o.target_id in self._claims
+                   else [c for c in self._claims.values() if c.item_id == o.target_id] if o.target == "item" else [])
+        for node in targets:
+            if o.durability_class:
+                node.durability = o.durability_class
+                node.half_life_days = scoring.HALF_LIFE_DAYS[o.durability_class] * scoring.CONFIRM_FACTOR ** node.confirmations
+                node.half_life_days = min(node.half_life_days, scoring.MAX_HALF_LIFE)
+            if o.vote:
+                node.votes += o.vote
+
+    # --- reads ---
+
+    def items(self):
+        return self._items.values()
+
+    def claims(self):
+        return self._claims.values()
+
+    def people(self):
+        return self._people.values()
+
+    def sources(self):
+        return self._sources.values()
+
+    def organizations(self):
+        return dict(self._orgs)
+
+    def edges(self):
+        return list(self._edges)
+
+    def item(self, item_id: str) -> ItemNode:
+        return self._items[item_id]
+
+    def person(self, pid: str) -> PersonNode:
+        return self._people[pid]
+
+    def trust(self, pid: str) -> float:
+        p = self._people[pid]
+        if p.trust_pinned is not None:
+            return p.trust_pinned
+        return scoring.trust_learned(p.confirmations, p.contradictions, p.up, p.down)

@@ -1,0 +1,28 @@
+# Expected labels for tests/fixtures/vault, in ingestion's manifest shape.
+items:
+  - id: people-list
+    channel: telegram
+    source_id: seed:supplied-forwards
+    message_id: people-list
+    expected: {author: AI assistant, kind: post, durability: reference, claim_count: 3,
+               people: [Jack Lindsey, Yarin Gal, Sebastian Farquhar, Hamel Husain], relations: []}
+  - id: introspection-list
+    channel: telegram
+    source_id: seed:supplied-forwards
+    message_id: introspection-list
+    expected: {kind: post, relations: [{type: DUPLICATES, target: people-list}]}
+  - id: redis-talks
+    channel: telegram
+    source_id: seed:supplied-talks
+    message_id: redis-talks
+    expected: {author: null, kind: announcement, durability: ephemeral, people: [Samuel Agbede, Evangelos Resvanis, Raj Chetty]}
+  - id: confirmation
+    channel: telegram
+    source_id: seed:synthetic-confirmation
+    message_id: confirm-1
+    expected: {relations: [{type: SUPPORTS, target: people-list}]}
+  - id: missing
+    channel: telegram
+    source_id: seed:nowhere
+    message_id: none
+    expected: {kind: post}

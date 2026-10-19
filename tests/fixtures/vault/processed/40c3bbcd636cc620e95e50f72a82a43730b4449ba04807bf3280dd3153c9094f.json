@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "raw_path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:rvnikita_blog",
+    "source_name": "Мысли Рвачева",
+    "message_id": "1899",
+    "captured_at": "2026-10-19T14:20:00+02:00",
+    "published_at": null,
+    "author_hint": {
+      "name": "Nikita Rvachev",
+      "handle": "rvnikita_blog"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [],
+  "entities": [],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "news",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "needs_revision",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}
