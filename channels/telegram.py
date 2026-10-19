@@ -30,6 +30,9 @@ from engine.triage import TriageError, triage_capture
 from engine.extract import ExtractionError, extract_capture
 from engine.judge import JudgeError
 from engine.quality import QualityError, quality_capture
+from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities
+from engine.package import PackageError, build_extraction
+from engine.placement import apply_storage_stub
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -229,6 +232,35 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         + ("Source citations were repaired and reviewed.\n" if quality.citations_repaired else "")
         + "This checks faithfulness to your source, not whether the source is true."
     )
+
+    try:
+        entity_client = entity_client_from_environment()
+        if entity_client is None:
+            return
+        entity_result = await asyncio.to_thread(extract_entities, result.path, entity_client)
+        entity_review = await asyncio.to_thread(review_entities, result.path, entity_client, entity_result)
+    except (ModelError, EntityError) as error:
+        await message.answer(f"Claims saved; entity extraction or review is pending. {error}")
+        return
+    except (OSError, ValueError):
+        await message.answer("Claims saved; entity processing could not be saved and remains pending.")
+        return
+    counts = {kind: sum(e["kind"] == kind for e in entity_result.entities) for kind in ("person", "organization", "concept")}
+    label = "accepted" if entity_review.review["status"] == "accepted" else "needs revision"
+    await message.answer(
+        f"Entities: {counts['person']} people | {counts['organization']} organizations | {counts['concept']} concepts.\n"
+        f"AI entity review: {label}.\n{entity_review.review['summary']}\n"
+        "Clear aliases are grouped within this article; cross-source identities and relationships remain unresolved."
+    )
+
+    try:
+        packaged = await asyncio.to_thread(build_extraction, result.path, claims_from=quality.extraction_path.parent.name)
+        placement = await asyncio.to_thread(apply_storage_stub, packaged.path)
+    except (PackageError, ExtractionError, EntityError, JudgeError, TriageError, OSError, ValueError):
+        await message.answer("Claims and entities saved; the combined extraction handoff remains pending.")
+        return
+    message_status = "awaiting the graph adapter" if placement["quality_gate_passed"] else "awaiting quality resolution"
+    await message.answer(f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities; {message_status}. No graph placement has been applied.")
 
 
 async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:
