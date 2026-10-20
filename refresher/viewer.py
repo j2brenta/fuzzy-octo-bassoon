@@ -28,7 +28,16 @@ STAGES = ["raw", "documents", "triage", "extractions", "reviews", "repairs", "re
 # Stages every kept item should reach; the optional correction stages are only listed when present.
 CORE = ["raw", "documents", "triage", "extractions", "reviews", "entities", "entity-reviews", "processed", "placements"]
 CLAIMS = "[.claims[] | {statement, kind, durability_class, confidence}]"
-REVIEW = ".review | {status, summary, flagged: [.claims[] | select(.verdict != \"supported\")], omitted: .omitted_concepts}"
+# A review lists claims (or entities) by id; their text is in the candidate file it reviewed,
+# passed to jq as $c (`jq --slurpfile c <candidate> ...`), so filters can join the two.
+REVIEWED = {"reviews": "extractions", "repair-reviews": "repairs", "coverage-reviews": "coverage",
+            "evidence-reviews": "evidence", "entity-reviews": "entities"}
+REVIEW = ("(($c[0].claims // []) | map({key: .claim_id, value: .statement}) | from_entries) as $text | .review | "
+          "{status, summary: (.summary | gsub(\"(?<id>[0-9a-f]{64})\"; \"«\\($text[.id] // .id)»\")), "
+          "flagged: [.claims[] | select(.verdict != \"supported\") | {statement: $text[.claim_id], verdict, issues, "
+          "reason: (.reason | gsub(\"(?<id>[0-9a-f]{64})\"; \"«\\($text[.id] // .id)»\"))}], "
+          "omitted: .omitted_concepts, "
+          "claims: [.claims[] | \"\\(if .verdict == \"supported\" then \"✓\" else \"✗\" end) \\($text[.claim_id] // .claim_id)\"]}")
 FILTERS = {
     "raw": "{source_name, author_hint, forwarded_by, captured_at, published_at, url, text}",
     "documents": "{sections: [.sections[] | {section_id, kind}], links}",
@@ -36,8 +45,11 @@ FILTERS = {
     "extractions": CLAIMS, "repairs": CLAIMS, "coverage": CLAIMS, "evidence": CLAIMS,
     "reviews": REVIEW, "repair-reviews": REVIEW, "coverage-reviews": REVIEW, "evidence-reviews": REVIEW,
     "entities": "[.entities[] | {name, kind, aliases}]",
-    "entity-reviews": ".review | {status, summary, flagged: [.entities[] | select(.verdict != \"supported\")], "
-                      "omitted: .omitted_entities}",
+    "entity-reviews": "(($c[0].entities // []) | map({key: .entity_id, value: \"\\(.name) (\\(.kind))\"}) | from_entries) as $name"
+                      " | .review | {status, summary, "
+                      "flagged: [.entities[] | select(.verdict != \"supported\") | {entity: $name[.entity_id], verdict, reason}], "
+                      "omitted: .omitted_entities, "
+                      "entities: [.entities[] | \"\\(if .verdict == \"supported\" then \"✓\" else \"✗\" end) \\($name[.entity_id] // .entity_id)\"]}",
     "processed": "{quality_status, quality_gate_passed, claim_candidate, triage, "
                  "claim_review: .reviews.claims.status, entity_review: .reviews.entities.status, "
                  "claims: [.claims[] | .statement], entities: [.entities[] | \"\\(.name) (\\(.kind))\"]}",
@@ -114,10 +126,18 @@ def stages(vault: Path, item_id: str) -> list[dict]:
     return out
 
 
-def run_jq(path: Path, expr: str, color: bool) -> str:
+def candidate(vault: Path, stage: str, path: Path) -> Path | None:
+    """The claims or entities file a review file judged."""
+    other = vault / REVIEWED[stage] / path.name if stage in REVIEWED else None
+    return other if other and other.exists() else None
+
+
+def run_jq(path: Path, expr: str, color: bool, reviewed: Path | None = None) -> str:
     if not shutil.which("jq"):
         return json.dumps(_read(path), ensure_ascii=False, indent=2) + "\n(jq not installed: showing the whole file)\n"
-    done = subprocess.run(["jq", *(["-C"] if color else []), expr, str(path)], capture_output=True, text=True)
+    # $c is always defined so the review filters also work when the candidate file is missing.
+    extra = ["--slurpfile", "c", str(reviewed)] if reviewed else ["--argjson", "c", "[]"]
+    done = subprocess.run(["jq", *(["-C"] if color else []), *extra, expr, str(path)], capture_output=True, text=True)
     return done.stdout if done.returncode == 0 else f"jq error: {done.stderr.strip()}\n"
 
 
@@ -156,7 +176,9 @@ def cited(stage: str, data: dict) -> set[int]:
 
 def output(vault: Path, item_id: str, s: dict, expr: str, color: bool) -> str:
     """jq result, followed by the cited passages for review files."""
-    text = f"$ jq '{expr}' {s['path'].relative_to(vault)}\n" + run_jq(s["path"], expr, color)
+    reviewed = candidate(vault, s["stage"], s["path"])
+    slurp = f"--slurpfile c {reviewed.relative_to(vault)} " if reviewed else ""
+    text = f"$ jq {slurp}'{expr}' {s['path'].relative_to(vault)}\n" + run_jq(s["path"], expr, color, reviewed)
     if s["stage"].endswith("reviews"):
         ids = cited(s["stage"], _read(s["path"]))
         if ids:

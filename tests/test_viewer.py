@@ -59,3 +59,21 @@ def test_cited_passages_come_from_omissions_and_reasons():
     assert viewer.cited("coverage-reviews", review) == {3, 4, 7, 9, 10, 21}
     rows = [{"id": 1, "text": "one"}, {"id": 2, "text": "two"}]
     assert viewer.render_passages(rows, {2}) == "[  2] two\n"
+
+
+def test_review_output_joins_claim_text_from_the_reviewed_candidate(tmp_path):
+    import json
+    vault = tmp_path / "vault"
+    for folder in ("raw", "extractions", "reviews"):
+        (vault / folder).mkdir(parents=True)
+    cid = "a" * 64
+    (vault / "raw" / "x.json").write_text(json.dumps({"text": "one\ntwo\n"}))
+    (vault / "extractions" / "x.json").write_text(json.dumps({"claims": [{"claim_id": cid, "statement": "Two is true."}]}))
+    (vault / "reviews" / "x.json").write_text(json.dumps({"review": {
+        "status": "needs_revision", "summary": f"Claim {cid} cites the wrong line.", "omitted_concepts": [],
+        "claims": [{"claim_id": cid, "verdict": "needs_revision", "issues": ["wrong_evidence"], "reason": "See passage 2."}]}}))
+    s = {"stage": "reviews", "path": vault / "reviews" / "x.json"}
+    out = viewer.output(vault, "x", s, viewer.FILTERS["reviews"], color=False)
+    assert "--slurpfile c extractions/x.json" in out
+    assert '"statement": "Two is true."' in out and "Claim «Two is true.» cites" in out and "✗ Two is true." in out
+    assert "[  2] two" in out
