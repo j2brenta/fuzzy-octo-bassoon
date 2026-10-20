@@ -10,6 +10,7 @@ import re
 
 from dotenv import load_dotenv
 
+from engine.short_ids import restore_reply, short_ids
 from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import source_passages
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
@@ -327,14 +328,15 @@ def review_entities(raw_path: Path, client: JsonModel, extracted: EntityResult) 
                     return EntityReviewResult(destination, checked, True)
         except (ValueError, TypeError, KeyError, AttributeError, EntityError):
             pass
+    to_short, to_long = short_ids([e["entity_id"] for e in entities], "E")
     content = json.dumps({"passages": [{"id": p["id"], "text": p["text"]} for p in source_passages(text)],
-                          "entities": entities}, ensure_ascii=False)
+                          "entities": [{**e, "entity_id": to_short[e["entity_id"]]} for e in entities]}, ensure_ascii=False)
     feedback = ""
     errors = []
     for attempt in range(2):
         try:
             reply = None
-            reply = client.complete_json(REVIEW_PROMPT + feedback, content)
+            reply = restore_reply(client.complete_json(REVIEW_PROMPT + feedback, content), "entity_id", to_long)
             review = validate_entity_review(reply.data, entities, text, raw["item_id"], section)
             break
         except (EntityError, ModelOutputError) as error:

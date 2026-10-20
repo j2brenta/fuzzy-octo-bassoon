@@ -132,8 +132,16 @@ class EntityTests(unittest.TestCase):
         self.assertEqual(len(client.calls), 1)
         payload = json.loads(client.calls[0][1])
         self.assertEqual(len(payload['passages']), 3)
-        self.assertEqual(payload['entities'], result.entities)
+        self.assertEqual(payload['entities'], [{**e, 'entity_id': f'E{n}'} for n, e in enumerate(result.entities, 1)])
         self.assertNotIn('review', payload)
+
+    def test_review_answers_with_short_ids_are_mapped_back(self):
+        result = self.extract()
+        data = entity_review(result.entities)
+        short = {row['entity_id']: f'E{n}' for n, row in enumerate(result.entities, 1)}
+        data['entities'] = [{**row, 'entity_id': short[row['entity_id']]} for row in data['entities']]
+        review = review_entities(self.raw.path, FakeModel([ModelReply(data)]), result).review
+        self.assertEqual([r['entity_id'] for r in review['entities']], [e['entity_id'] for e in result.entities])
 
     def test_review_requires_every_entity_exactly_once(self):
         entities = self.extract().entities

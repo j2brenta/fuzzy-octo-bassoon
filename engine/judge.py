@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, SUPPORTED_PROMPT_VERSIONS, evidence_spans, _cached_claims, source_passages
 from engine.artifacts import save_rejected
+from engine.short_ids import restore_reply, short_ids
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
 
@@ -150,11 +151,13 @@ def judge_capture(
         except (ValueError, KeyError, TypeError, AttributeError, JudgeError):
             pass
     by_span = {(p["start"], p["end"]): p["id"] for p in passages}
+    to_short, to_long = short_ids([c["claim_id"] for c in claims], "C")
     candidates = []
     for claim in claims:
         spans = evidence_spans(claim)
-        candidates.append({k: claim[k] for k in ("claim_id", "statement", "kind", "durability_class")}
-                          | {"evidence_passage_ids": [by_span[(ev["start_char"], ev["end_char"])] for ev in spans]})
+        candidates.append({k: claim[k] for k in ("statement", "kind", "durability_class")}
+                          | {"claim_id": to_short[claim["claim_id"]],
+                             "evidence_passage_ids": [by_span[(ev["start_char"], ev["end_char"])] for ev in spans]})
     content = json.dumps({"passages": [{"id": p["id"], "text": p["text"]} for p in passages], "claims": candidates}, ensure_ascii=False)
     feedback = ""
     errors = []
@@ -163,7 +166,7 @@ def judge_capture(
             reply = None
             budget_instruction = (f"\nThis coverage-expanded candidate permits up to {claim_limit} central claims, instead of 25."
                                   if claim_limit > MAX_CLAIMS else "")
-            reply = client.complete_json(SYSTEM_PROMPT + budget_instruction + feedback, content)
+            reply = restore_reply(client.complete_json(SYSTEM_PROMPT + budget_instruction + feedback, content), "claim_id", to_long)
             review = validate_review(reply.data, claims, passages)
             break
         except (JudgeError, ModelOutputError) as error:
