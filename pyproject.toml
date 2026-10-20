@@ -7,6 +7,7 @@ dependencies = ["pydantic>=2", "pyyaml>=6", "aiogram>=3.31", "python-dotenv>=1.2
 [project.scripts]
 refresher = "refresher.cli:main"
 refresher-seed-raw = "channels.seed_raw:main"
+refresher-view = "refresher.viewer:main"
 
 [dependency-groups]
 dev = ["pytest>=8"]

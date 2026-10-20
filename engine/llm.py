@@ -161,6 +161,8 @@ class NebiusModel:
     provider: str = field(default="nebius", init=False)
     base_url: str = NEBIUS_BASE_URL
     timeout_seconds: int = 120
+    # Reasoning models spend part of the budget thinking; a small cap leaves the answer empty.
+    max_tokens: int = 16384
 
     def complete_json(self, system_prompt: str, content: str) -> ModelReply:
         payload = {
@@ -168,14 +170,20 @@ class NebiusModel:
             "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": content}],
             "response_format": {"type": "json_object"},
             "temperature": 0,
+            "max_tokens": self.max_tokens,
         }
         response_data = _nebius_request(self.api_key, self.base_url, "/chat/completions", payload, self.timeout_seconds)
         try:
-            text = response_data["choices"][0]["message"]["content"]
+            choice = response_data["choices"][0]
+            text = choice["message"]["content"]
         except (KeyError, IndexError, TypeError):
             raise ModelError("Nebius response did not contain model text.") from None
-        if not isinstance(text, str):
-            raise ModelError("Nebius response did not contain model text.")
+        if not isinstance(text, str) or not text.strip():
+            # Usually the reasoning used the whole budget; a retry often succeeds.
+            reason = choice.get("finish_reason") if isinstance(choice, dict) else None
+            raise ModelOutputError(f"Nebius returned no answer text (finish_reason={reason}).")
+        if isinstance(choice, dict) and choice.get("finish_reason") == "length":
+            raise ModelOutputError("Nebius answer was cut off at max_tokens.")
         text = _THINKING.sub("", text).strip()
         fenced = _FENCE.match(text)
         try:

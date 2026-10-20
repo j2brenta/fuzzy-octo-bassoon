@@ -108,6 +108,7 @@ class NebiusTests(unittest.TestCase):
         self.assertEqual(sent.get_header('Authorization'), 'Bearer fixture-secret')
         self.assertEqual(payload['model'], 'nvidia/fixture-nemotron')
         self.assertEqual(payload['response_format'], {'type': 'json_object'})
+        self.assertEqual(payload['max_tokens'], 16384)
         self.assertEqual([m['role'] for m in payload['messages']], ['system', 'user'])
         self.assertNotIn('fixture-secret', repr(client))
         self.assertNotIn('fixture-secret', sent.data.decode())
@@ -119,6 +120,16 @@ class NebiusTests(unittest.TestCase):
         content = '<think>weighing the labels</think>\n```json\n' + json.dumps(LABELS) + '\n```'
         with patch('engine.llm.urlopen', return_value=self.reply(content)):
             self.assertEqual(NebiusModel('fixture', 'm').complete_json('s', 'c').data, LABELS)
+
+    def test_empty_or_truncated_answer_is_retryable(self):
+        empty = FakeResponse({'choices': [{'message': {'content': None, 'reasoning': 'long thoughts'}, 'finish_reason': 'length'}]})
+        with patch('engine.llm.urlopen', return_value=empty):
+            with self.assertRaisesRegex(ModelOutputError, 'finish_reason=length'):
+                NebiusModel('fixture', 'm').complete_json('s', 'c')
+        cut = FakeResponse({'choices': [{'message': {'content': '{"keep": tr'}, 'finish_reason': 'length'}]})
+        with patch('engine.llm.urlopen', return_value=cut):
+            with self.assertRaisesRegex(ModelOutputError, 'cut off'):
+                NebiusModel('fixture', 'm').complete_json('s', 'c')
 
     def test_non_json_and_errors_are_safe(self):
         with patch('engine.llm.urlopen', return_value=self.reply('not JSON')):
