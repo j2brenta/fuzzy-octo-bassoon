@@ -10,6 +10,7 @@ import tempfile
 
 from dotenv import load_dotenv
 
+from engine.artifacts import save_rejected
 from engine.llm import JsonModel, ModelError, ModelOutputError, client_from_environment
 from engine.parse import parse_capture
 
@@ -95,14 +96,17 @@ def triage_capture(raw_path: Path, client: JsonModel, *, force: bool = False) ->
             pass  # Derived data can be rebuilt; raw content is never replaced.
 
     # One retry for invalid model output, never unlimited paid requests.
+    errors = []
     for attempt in range(2):
         try:
+            reply = None
             reply = client.complete_json(SYSTEM_PROMPT, text)
             labels = validate_labels(reply.data)
             break
-        except (TriageError, ModelOutputError):
+        except (TriageError, ModelOutputError) as error:
+            errors.append(save_rejected(raw_path, "triage", attempt, error, reply))
             if attempt == 1:
-                raise TriageError("Model output failed validation twice; original retained.") from None
+                raise TriageError("Model output failed validation twice: " + " | ".join(errors) + " Original retained.") from None
     output = {
         **identity,
         "created_at": datetime.now(timezone.utc).isoformat(),

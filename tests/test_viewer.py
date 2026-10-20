@@ -104,3 +104,16 @@ def test_ignored_candidates_and_their_reviews_are_marked_stale(tmp_path):
     rows = {s["stage"]: s for s in viewer.stages(vault, "x")}
     assert rows["coverage-reviews"]["stale"].startswith("stale (stale_parent)") and rows["coverage-reviews"]["problem"] == ""
     assert viewer.stage_row(rows["coverage"]).startswith("· coverage")
+
+
+def test_rejected_answers_are_listed_with_their_reason(tmp_path):
+    import json
+    vault = tmp_path / "vault"
+    (vault / "raw").mkdir(parents=True)
+    (vault / "rejected" / "entity-reviews").mkdir(parents=True)
+    (vault / "raw" / "x.json").write_text(json.dumps({"text": "t"}))
+    (vault / "rejected" / "entity-reviews" / "x.2.json").write_text(json.dumps(
+        {"stage": "entity-reviews", "attempt": 2, "error": "Entity review must cover every entity exactly once.", "data": {}}))
+    row = next(s for s in viewer.stages(vault, "x") if s["stage"] == "rejected")
+    assert viewer.stage_row(row) == "✗ rejected entity-reviews #2 Entity review must cover every entity exactly once."
+    assert '"attempt": 2' in viewer.output(vault, "x", row, viewer.FILTERS["rejected"], color=False)

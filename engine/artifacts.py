@@ -1,5 +1,6 @@
 """Deterministic artifact identity and atomic JSON publication."""
 
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -26,3 +27,18 @@ def atomic_json(destination: Path, value: dict) -> None:
             temporary.unlink(missing_ok=True)
 
 
+
+
+def save_rejected(raw_path: Path, stage: str, attempt: int, error: Exception, reply=None) -> str:
+    """Keep a rejected model answer under <vault>/rejected/<stage>/ for inspection; the pipeline never reads it.
+
+    Returns the validation message so callers can report every attempt's reason.
+    """
+    raw_path = Path(raw_path)
+    destination = raw_path.parent.parent / "rejected" / stage / f"{raw_path.stem}.{attempt + 1}.json"
+    atomic_json(destination, {
+        "stage": stage, "item_id": raw_path.stem, "attempt": attempt + 1, "error": str(error),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "model": getattr(reply, "actual_model", None), "data": getattr(reply, "data", None),
+    })
+    return str(error)

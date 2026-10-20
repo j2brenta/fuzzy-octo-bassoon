@@ -59,6 +59,7 @@ FILTERS = {
                  "claim_review: .reviews.claims.status, entity_review: .reviews.entities.status, "
                  "claims: [.claims[] | .statement], entities: [.entities[] | \"\\(.name) (\\(.kind))\"]}",
     "placements": "{status, reason, quality_status, graph_applied}",
+    "rejected": "{stage, attempt, error, model, created_at, data}",
 }
 
 
@@ -141,6 +142,11 @@ def stages(vault: Path, item_id: str) -> list[dict]:
             out.append({"stage": s, "path": path, "problem": problem(s, _read(path))})
         elif s in CORE:
             out.append({"stage": s, "path": None, "problem": "missing: this step did not finish"})
+    # Model answers a stage rejected after validation (engine.artifacts.save_rejected); kept for inspection only.
+    for path in sorted((vault / "rejected").glob(f"*/{item_id}.*.json")):
+        data = _read(path)
+        out.append({"stage": "rejected", "label": f"rejected {path.parent.name} #{data.get('attempt', '?')}",
+                    "path": path, "problem": data.get("error", "")})
     return out
 
 
@@ -268,9 +274,10 @@ def item_row(r: dict) -> str:
 
 
 def stage_row(s: dict) -> str:
+    label = s.get("label", s["stage"])
     if s.get("stale"):
-        return f"· {s['stage']:17} {s['stale']}"
-    return f"{'✗' if s['problem'] else '✓'} {s['stage']:17} {s['problem']}"
+        return f"· {label:17} {s['stale']}"
+    return f"{'✗' if s['problem'] else '✓'} {label:17} {s['problem']}"
 
 
 def pick(rows: list[dict], answer: str) -> dict | None:

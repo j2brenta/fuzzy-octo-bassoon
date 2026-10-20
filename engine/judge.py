@@ -12,6 +12,7 @@ import tempfile
 from dotenv import load_dotenv
 
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, SUPPORTED_PROMPT_VERSIONS, evidence_spans, _cached_claims, source_passages
+from engine.artifacts import save_rejected
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
 
@@ -156,16 +157,19 @@ def judge_capture(
                           | {"evidence_passage_ids": [by_span[(ev["start_char"], ev["end_char"])] for ev in spans]})
     content = json.dumps({"passages": [{"id": p["id"], "text": p["text"]} for p in passages], "claims": candidates}, ensure_ascii=False)
     feedback = ""
+    errors = []
     for attempt in range(2):
         try:
+            reply = None
             budget_instruction = (f"\nThis coverage-expanded candidate permits up to {claim_limit} central claims, instead of 25."
                                   if claim_limit > MAX_CLAIMS else "")
             reply = client.complete_json(SYSTEM_PROMPT + budget_instruction + feedback, content)
             review = validate_review(reply.data, claims, passages)
             break
         except (JudgeError, ModelOutputError) as error:
+            errors.append(save_rejected(raw_path, "reviews", attempt, error, reply))
             if attempt == 1:
-                raise JudgeError("Judge output failed validation twice; review remains pending.") from None
+                raise JudgeError("Judge output failed validation twice: " + " | ".join(errors) + " Review remains pending.") from None
             feedback = "\nPrevious output was invalid: " + str(error) + " Regenerate the full review JSON."
     output = {
         **identity, "created_at": datetime.now(timezone.utc).isoformat(),

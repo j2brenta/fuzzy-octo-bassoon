@@ -8,7 +8,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from engine.artifacts import atomic_json, fingerprint
+from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, PROMPT_VERSION as EXTRACT_VERSION, SUPPORTED_PROMPT_VERSIONS, _cached_claims, evidence_spans, source_passages, validate_claims
 from engine.judge import JudgeError, JudgeResult, judge_capture, validate_review
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
@@ -129,14 +129,17 @@ def repair_evidence(raw_path: Path, client: JsonModel, extraction_path: Path, re
             "feedback": [r for r in reviewed.review["claims"] if r["claim_id"] in targets],
         }
         feedback = ""
+        errors = []
         for attempt in range(2):
             try:
+                reply = None
                 reply = client.complete_json(SYSTEM_PROMPT + feedback, json.dumps(payload, ensure_ascii=False))
                 corrected = apply_citations(reply.data, claims, targets, text, raw["item_id"], section_id)
                 break
             except (JudgeError, ExtractionError, ModelOutputError) as error:
+                errors.append(save_rejected(raw_path, "evidence", attempt, error, reply))
                 if attempt == 1:
-                    raise JudgeError("Citation output failed validation twice; earlier results retained.") from None
+                    raise JudgeError("Citation output failed validation twice: " + " | ".join(errors) + " Earlier results retained.") from None
                 feedback = "\nPrevious citation output was invalid: " + str(error) + " Regenerate the full citations JSON."
         output = {
             **identity, "created_at": datetime.now(timezone.utc).isoformat(),

@@ -12,7 +12,7 @@ from engine.extract import ExtractionError, PROMPT_VERSION as EXTRACT_VERSION, S
 from engine.judge import JudgeError, JudgeResult, judge_capture
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
-from engine.artifacts import fingerprint as _fingerprint, atomic_json as _atomic_json
+from engine.artifacts import save_rejected, fingerprint as _fingerprint, atomic_json as _atomic_json
 
 PROMPT_VERSION = "repair-v2"
 REPAIR_PROMPT = EXTRACT_PROMPT + '''
@@ -108,14 +108,17 @@ def quality_capture(raw_path: Path, client: JsonModel) -> QualityResult:
             "previous_claims": original["claims"], "review": initial_review.review,
         }, ensure_ascii=False)
         feedback = ""
+        errors = []
         for attempt in range(2):
             try:
+                reply = None
                 reply = client.complete_json(REPAIR_PROMPT + feedback, content)
                 claims = validate_claims(reply.data, text, raw["item_id"], section_id)
                 break
             except (ExtractionError, ModelOutputError) as error:
+                errors.append(save_rejected(raw_path, "repairs", attempt, error, reply))
                 if attempt == 1:
-                    raise QualityError("Correction output failed validation twice; originals retained.") from None
+                    raise QualityError("Correction output failed validation twice: " + " | ".join(errors) + " Originals retained.") from None
                 feedback = "\nPrevious correction was invalid: " + str(error) + " Regenerate the complete claims JSON."
         output = {
             **identity, "created_at": datetime.now(timezone.utc).isoformat(),

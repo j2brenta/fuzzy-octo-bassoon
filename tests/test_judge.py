@@ -121,11 +121,18 @@ class JudgeTests(unittest.TestCase):
         self.assertIn('Previous output was invalid', client.calls[1][0])
 
     def test_failed_review_never_saves_acceptance(self):
-        client = FakeModel([ModelReply({}), ModelReply({})])
-        with self.assertRaises(JudgeError):
+        client = FakeModel([ModelReply({}), ModelReply({'claims': []})])
+        with self.assertRaises(JudgeError) as failure:
             judge_capture(self.raw.path, client)
         self.assertFalse((self.vault / 'reviews').exists())
         self.assertTrue(self.extraction.path.exists())
+        # Both reasons are reported, and both rejected answers are kept for inspection only.
+        self.assertEqual(str(failure.exception).count(' | '), 1)
+        rejected = sorted((self.vault / 'rejected' / 'reviews').glob('*.json'))
+        self.assertEqual([p.name.rsplit('.', 2)[1] for p in rejected], ['1', '2'])
+        second = json.loads(rejected[1].read_text())
+        self.assertEqual(second['data'], {'claims': []})
+        self.assertIn(second['error'], str(failure.exception))
 
     def test_service_errors_do_not_trigger_blind_retries(self):
         client = FakeModel([ModelError('Service unavailable.')])
