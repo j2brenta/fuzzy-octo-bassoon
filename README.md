@@ -145,26 +145,30 @@ The source hash is checked before parsing. If preparation fails after capture,
 the bot says the original was saved and preparation can be retried with the CLI.
 These document fields are provisional until the team agrees the shared schema.
 
-## AI triage through Backboard
+## AI triage through Nebius Token Factory
 
-Nebius access is pending. Backboard currently supplies triage through the small
-`JsonModel` interface; the rest of the pipeline does not depend on its API.
-This temporary route alone does not fulfill the hackathon's required Nebius
-runtime usage. NVIDIA model and Nebius integration remain submission work.
+Model calls go through the small `JsonModel` interface (`engine/llm.py`). The default
+provider is Nebius Token Factory with NVIDIA Nemotron models, called through its
+OpenAI-compatible chat API in JSON mode. Backboard remains available for development.
 
 Add these settings to your **real `.env`**, keeping your Telegram settings:
 
 ```dotenv
-TRIAGE_PROVIDER=backboard
-BACKBOARD_API_KEY=your_actual_key_here
-BACKBOARD_LLM_PROVIDER=openai
-BACKBOARD_MODEL=gpt-4o-mini
+TRIAGE_PROVIDER=nebius
+JUDGE_PROVIDER=nebius
+NEBIUS_API_KEY=your_actual_key_here
+NEBIUS_MODEL=fast Nemotron model ID (triage, extraction)
+NEBIUS_JUDGE_MODEL=stronger Nemotron model ID (judge, quality, evidence, entities)
 ```
 
-This uses the model through Backboard; a separate OpenAI key is not needed.
-Provider/model availability depends on your Backboard account. Change the model
-settings if necessary. `TRIAGE_PROVIDER=off` disables remote triage while keeping
-capture and preparation working. Restart the bot after configuration changes.
+List the model IDs your key can call with `uv run python -m engine.llm models`.
+`NEBIUS_BASE_URL` overrides the default `https://api.tokenfactory.nebius.com/v1`.
+Thinking blocks and code fences around the JSON answer are stripped.
+
+To use Backboard instead, set `TRIAGE_PROVIDER=backboard` (and `JUDGE_PROVIDER=backboard`)
+with `BACKBOARD_API_KEY`, `BACKBOARD_LLM_PROVIDER` and `BACKBOARD_MODEL`; see `.env.example`.
+`TRIAGE_PROVIDER=off` disables remote triage while keeping capture and preparation working.
+Restart the bot after configuration changes.
 
 Substantive conversations, brainstorming and Q&A should be kept too; triage judges
 content rather than rejecting chat format. Each forwarded Telegram message is
@@ -173,9 +177,9 @@ when context matters. Automatic conversation grouping and a manual Keep override
 are not implemented yet. Triage caches depend on the rubric version.
 
 After capture/preparation, enabled triage sends **only the note text** to
-Backboard and asks for five fields: keep, kind, durability_class, split_digest
-and a short reason. Memory and web search are off, with a new conversation per
-call; Backboard can still retain conversation history. The source text is
+the model and asks for five fields: keep, kind, durability_class, split_digest
+and a short reason. Each call is stateless (on Backboard: memory and web search off, a new conversation per
+call, though Backboard can still retain conversation history). The source text is
 untrusted data and does not control system instructions or invoke tools.
 
 A validated result is saved under `triage/<item_id>.json`, including the source
@@ -219,17 +223,18 @@ depend on all ordered spans. Source text remains necessary to resolve references
 ### Configuration
 
 The strong review model is separate from the extraction model. Add these settings
-to the existing `.env`, using the same Backboard key:
+to the existing `.env`, using the same Nebius key:
 
 ```dotenv
-JUDGE_PROVIDER=backboard
-BACKBOARD_JUDGE_LLM_PROVIDER=anthropic
-BACKBOARD_JUDGE_MODEL=claude-opus-5-5
+JUDGE_PROVIDER=nebius
+NEBIUS_JUDGE_MODEL=stronger Nemotron model ID
 ```
+
+On Backboard, set `JUDGE_PROVIDER=backboard`, `BACKBOARD_JUDGE_LLM_PROVIDER` and `BACKBOARD_JUDGE_MODEL`.
 
 `JUDGE_PROVIDER=off` disables review. Restart after code or configuration changes.
 Judge requests allow up to 180 seconds. Source text and claims are sent to
-Backboard in fresh conversations with memory and web search off.
+the judge model in stateless requests.
 
 ### Workflow and limits
 
@@ -314,7 +319,7 @@ not inferred. The independent reviewer checks missed merges and unsafe merges.
 
 Set `ENTITY_EXTRACTION=on` in `.env` to enable this stage. It uses the configured
 strong judge model for extraction and a separate fresh-conversation review.
-`JUDGE_PROVIDER=backboard` and the existing Backboard key are required. Set
+A configured `JUDGE_PROVIDER` (nebius or backboard) is required. Set
 `ENTITY_EXTRACTION=off` to disable it. Restart the bot after changes.
 
 The reviewer checks every entity's type and source context and looks for major

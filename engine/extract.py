@@ -246,7 +246,7 @@ def main() -> int:
     try:
         client = client_from_environment()
         if client is None:
-            raise ModelError("Configure Backboard in .env before model extraction.")
+            raise ModelError("Set TRIAGE_PROVIDER in .env before model extraction.")
         paths = sorted((args.vault / "raw").glob("*.json"))
         if args.item_id:
             paths = [path for path in paths if path.stem == args.item_id]

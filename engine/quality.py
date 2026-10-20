@@ -138,7 +138,7 @@ def main() -> int:
     try:
         client = judge_client_from_environment()
         if client is None:
-            raise ModelError("Set JUDGE_PROVIDER=backboard to enable quality processing.")
+            raise ModelError("Set JUDGE_PROVIDER=nebius in .env to enable quality processing.")
         # Match filenames rather than interpolating untrusted input into a path.
         paths = [p for p in (args.vault / "raw").glob("*.json") if p.stem == args.item_id]
         if len(paths) != 1:

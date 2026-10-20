@@ -97,7 +97,7 @@ def entity_client_from_environment() -> JsonModel | None:
         raise ModelError("ENTITY_EXTRACTION must be on or off.")
     client = judge_client_from_environment()
     if client is None:
-        raise ModelError("Enable the Backboard judge to use entity extraction and review.")
+        raise ModelError("Set JUDGE_PROVIDER in .env to use entity extraction and review.")
     return client
 
 

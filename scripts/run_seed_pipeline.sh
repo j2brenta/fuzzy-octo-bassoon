@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run ingestion's per-item stages over every captured item in a vault, then build the knowledge base.
 #   scripts/run_seed_pipeline.sh [.local-vault/seed]
-# Needs .env with BACKBOARD_API_KEY (paid calls; results are cached, so reruns are free).
+# Needs .env with NEBIUS_API_KEY, NEBIUS_MODEL and NEBIUS_JUDGE_MODEL (paid calls; results are cached, so reruns are free).
 set -euo pipefail
 VAULT=${1:-.local-vault/seed}
 

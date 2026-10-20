@@ -200,7 +200,7 @@ def main() -> int:
     try:
         client = judge_client_from_environment()
         if client is None:
-            raise ModelError("Set JUDGE_PROVIDER=backboard in .env to enable review.")
+            raise ModelError("Set JUDGE_PROVIDER=nebius in .env to enable review.")
         paths = sorted((args.vault / "raw").glob("*.json"))
         paths = [p for p in paths if (args.vault / "extractions" / p.name).exists() and (not args.item_id or p.stem == args.item_id)]
         if not paths:

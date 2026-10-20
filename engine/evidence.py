@@ -160,7 +160,7 @@ def main() -> int:
     try:
         client = judge_client_from_environment()
         if client is None:
-            raise ModelError("Enable the Backboard judge before repairing citations.")
+            raise ModelError("Set JUDGE_PROVIDER in .env before repairing citations.")
         paths = [p for p in (args.vault / "raw").glob("*.json") if p.stem == args.item_id]
         if len(paths) != 1:
             raise JudgeError("No matching capture found.")

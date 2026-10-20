@@ -142,7 +142,7 @@ def main() -> int:
     try:
         client = client_from_environment()
         if client is None:
-            raise ModelError("Set TRIAGE_PROVIDER=backboard and BACKBOARD_API_KEY in .env first.")
+            raise ModelError("Set TRIAGE_PROVIDER=nebius and NEBIUS_API_KEY in .env first.")
         paths = sorted((args.vault / "raw").glob("*.json"))
         if args.item_id:
             paths = [path for path in paths if path.stem == args.item_id]

@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 from aiogram.types import Message
 
 from channels.telegram import handle_message
-from engine.llm import BackboardModel, ModelError, ModelOutputError, ModelReply, client_from_environment
+from engine.llm import BackboardModel, ModelError, ModelOutputError, ModelReply, NebiusModel, client_from_environment, judge_client_from_environment
 from engine.triage import TriageError, triage_capture, validate_labels
 from store.raw import capture_text
 from tests.test_telegram import message
@@ -90,6 +90,61 @@ class BackboardTests(unittest.TestCase):
                 client_from_environment()
         with patch.dict(os.environ, {'TRIAGE_PROVIDER': 'backboard', 'BACKBOARD_API_KEY': 'fixture', 'BACKBOARD_MODEL': 'chosen-model'}, clear=True):
             self.assertEqual(client_from_environment().model_name, 'chosen-model')
+
+
+class NebiusTests(unittest.TestCase):
+    def reply(self, content):
+        return FakeResponse({'id': 'fixture-request', 'model': 'nvidia/fixture-nemotron',
+                             'choices': [{'message': {'role': 'assistant', 'content': content}}],
+                             'usage': {'prompt_tokens': 10, 'completion_tokens': 20, 'total_tokens': 30}})
+
+    def test_request_uses_openai_chat_json_mode_with_bearer_key(self):
+        client = NebiusModel('fixture-secret', 'nvidia/fixture-nemotron')
+        with patch('engine.llm.urlopen', return_value=self.reply(json.dumps(LABELS))) as request:
+            reply = client.complete_json('system instructions', 'source text')
+        sent = request.call_args.args[0]
+        payload = json.loads(sent.data)
+        self.assertEqual(sent.full_url, 'https://api.tokenfactory.nebius.com/v1/chat/completions')
+        self.assertEqual(sent.get_header('Authorization'), 'Bearer fixture-secret')
+        self.assertEqual(payload['model'], 'nvidia/fixture-nemotron')
+        self.assertEqual(payload['response_format'], {'type': 'json_object'})
+        self.assertEqual([m['role'] for m in payload['messages']], ['system', 'user'])
+        self.assertNotIn('fixture-secret', repr(client))
+        self.assertNotIn('fixture-secret', sent.data.decode())
+        self.assertEqual(reply.data, LABELS)
+        self.assertEqual(reply.usage, {'input_tokens': 10, 'output_tokens': 20, 'total_tokens': 30})
+        self.assertEqual((reply.actual_provider, reply.actual_model, reply.request_id), ('nebius', 'nvidia/fixture-nemotron', 'fixture-request'))
+
+    def test_thinking_block_and_code_fence_are_stripped(self):
+        content = '<think>weighing the labels</think>\n```json\n' + json.dumps(LABELS) + '\n```'
+        with patch('engine.llm.urlopen', return_value=self.reply(content)):
+            self.assertEqual(NebiusModel('fixture', 'm').complete_json('s', 'c').data, LABELS)
+
+    def test_non_json_and_errors_are_safe(self):
+        with patch('engine.llm.urlopen', return_value=self.reply('not JSON')):
+            with self.assertRaises(ModelOutputError):
+                NebiusModel('fixture', 'm').complete_json('s', 'c')
+        error = HTTPError('https://example.com', 401, 'private diagnostic', {}, io.BytesIO(b'private response'))
+        with patch('engine.llm.urlopen', side_effect=error):
+            with self.assertRaises(ModelError) as failure:
+                NebiusModel('fixture-secret', 'm').complete_json('s', 'c')
+        self.assertIn('rejected', str(failure.exception))
+        self.assertNotIn('private', str(failure.exception))
+        self.assertNotIn('fixture-secret', str(failure.exception))
+
+    def test_configuration_selects_nebius_models(self):
+        with patch.dict(os.environ, {'TRIAGE_PROVIDER': 'nebius'}, clear=True):
+            with self.assertRaisesRegex(ModelError, 'NEBIUS_API_KEY'):
+                client_from_environment()
+        with patch.dict(os.environ, {'TRIAGE_PROVIDER': 'nebius', 'NEBIUS_API_KEY': 'fixture'}, clear=True):
+            with self.assertRaisesRegex(ModelError, 'NEBIUS_MODEL'):
+                client_from_environment()
+        env = {'TRIAGE_PROVIDER': 'nebius', 'JUDGE_PROVIDER': 'nebius', 'NEBIUS_API_KEY': 'fixture',
+               'NEBIUS_MODEL': 'fast-model', 'NEBIUS_JUDGE_MODEL': 'judge-model', 'NEBIUS_BASE_URL': 'https://example.test/v1'}
+        with patch.dict(os.environ, env, clear=True):
+            fast, judge = client_from_environment(), judge_client_from_environment()
+        self.assertEqual((fast.provider, fast.model_name, fast.base_url), ('nebius', 'fast-model', 'https://example.test/v1'))
+        self.assertEqual((judge.model_name, judge.timeout_seconds), ('judge-model', 180))
 
 
 class TriageTests(unittest.TestCase):
