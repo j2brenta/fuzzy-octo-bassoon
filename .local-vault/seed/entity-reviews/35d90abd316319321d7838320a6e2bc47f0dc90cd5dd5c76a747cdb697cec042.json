@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "entity_extraction_hash": "ced1c189cda09eb61da2abeb8af8f567a84cc37b9ad7604810598f1c81d1ee6a",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:20:46.518815+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "e98d7e4dc47471b7afcf89b4a4c87dfb402dab0f9970bf6e0513b4a84effb0e2",
+        "verdict": "supported",
+        "reason": "Explicitly named as speaker in passage 1."
+      },
+      {
+        "entity_id": "d05b6e5b6763c8ce5bd33fd6f0cbad5bb02805288000a0702b98574499215df8",
+        "verdict": "supported",
+        "reason": "Named as Anthropic researcher leading model psychiatry team in passage 4."
+      },
+      {
+        "entity_id": "31ac22b5311cca3a8a7a70382b8c4168b02dbb208bb95deb1b46ec6d74ee2982",
+        "verdict": "supported",
+        "reason": "Named as Anthropic interpretability researcher on circuit-tracing in passage 5."
+      },
+      {
+        "entity_id": "369b7541dd76ac970b43ca5745570658ed7eafed6c267e4975a7b5913ac08a03",
+        "verdict": "supported",
+        "reason": "Named as Anthropic interpretability researcher on circuit-tracing in passage 5."
+      },
+      {
+        "entity_id": "92fcc2eba7ddd54e53a48806cea1db2fb5fc31e491435c58f7ca327e6bb77a2e",
+        "verdict": "supported",
+        "reason": "Named as researcher on geometry of truth and auditing in passage 6."
+      },
+      {
+        "entity_id": "7175ad62893c3be9245b6343747d6cdae6318852f90ceb2d73768a974c15b9ff",
+        "verdict": "supported",
+        "reason": "Named as lead author of semantic entropy work in passage 8."
+      },
+      {
+        "entity_id": "df525f2a6de1c8ee862734954fb4d99263f2579fc61b0e2397b440d4fca64194",
+        "verdict": "supported",
+        "reason": "Named as lead author of semantic entropy work and OATML group lead in passage 8."
+      },
+      {
+        "entity_id": "0f143e3d343f48df3506ed43e9b36a359f6661cbfa19489e39b2fa2057846056",
+        "verdict": "supported",
+        "reason": "Named as OpenAI researcher and lead author of 2025 hallucination paper in passage 9."
+      },
+      {
+        "entity_id": "fe74ad04d410e3e71c134966fc416c1a4c1391284e458eb4e1595c4e68efbc20",
+        "verdict": "supported",
+        "reason": "Named as researcher on model self-knowledge and Truthful AI lead in passage 10."
+      },
+      {
+        "entity_id": "69a08e41691171a87f547c8e297f500c3e0fc8b03dbf0d7227125ca891ec4709",
+        "verdict": "supported",
+        "reason": "Named as UCL neuroscientist and author of Know Thyself in passage 12."
+      },
+      {
+        "entity_id": "d2a066e9af65f610262688d38ad086835e275041c3deb04a3d068fb0a47345c5",
+        "verdict": "supported",
+        "reason": "Named as Princeton co-author of agent reliability paper in passage 14."
+      },
+      {
+        "entity_id": "e95d647f266e2dfa3b290a0546a7568e2cc52c53fed7fed6212e0759f33cf4ae",
+        "verdict": "supported",
+        "reason": "Named as Princeton co-author of agent reliability paper in passage 14."
+      },
+      {
+        "entity_id": "44412b10b7dcb86adad6173e03827271d8d59fdb4d7c08b305123983595ce9a1",
+        "verdict": "supported",
+        "reason": "Named as founder of METR in passage 15."
+      },
+      {
+        "entity_id": "02b25d77394f8f61ef1c6b28433a6c7e9aa4bc14211656f9f515a4ddfc1bb610",
+        "verdict": "supported",
+        "reason": "Named as popularizer of march of nines framing in passage 16."
+      },
+      {
+        "entity_id": "d4216625db7045469b7993461cca5034b54ffae3150d56b8fe7f7c3c59e89f62",
+        "verdict": "supported",
+        "reason": "Named as Stanford co-lead of LLM-as-a-Verifier work in passage 17."
+      },
+      {
+        "entity_id": "e63d8b0105558dc0ea7c98fddb7221e094169e302b42bed2d305e4df6f9d0ee6",
+        "verdict": "supported",
+        "reason": "Named as UC Berkeley researcher on LLM pipeline evaluation in passage 19."
+      },
+      {
+        "entity_id": "6a94423b5287c9b8555e3031cf7835bb16efc68c8ee9543d4a3280e38da5d0a7",
+        "verdict": "supported",
+        "reason": "Named as practical voice on building evals for products in passage 20."
+      },
+      {
+        "entity_id": "99c36862eeb14937365f6319b0e94984c3ad1e2a7c78f10cbccc1b6271c0038f",
+        "verdict": "supported",
+        "reason": "Named as writer on LLM evaluation and production patterns in passage 21."
+      },
+      {
+        "entity_id": "e5db4f69110da22db8a0238f3cb4aa6549021498ddab12b3524845f7dbe2ac0d",
+        "verdict": "supported",
+        "reason": "Named as affiliation for multiple researchers in passages 4 and 5."
+      },
+      {
+        "entity_id": "fb39f2304fa97f23b15fc46118d4c988a9f95eb80520e01ad6ba013e25cb29e0",
+        "verdict": "supported",
+        "reason": "Named as affiliation for Adam Tauman Kalai in passage 9."
+      },
+      {
+        "entity_id": "6e4b564acef6495ffc6cf783f9bcdd9705ca8436d753f394c27e837c940c873c",
+        "verdict": "supported",
+        "reason": "Named as research group led by Yarin Gal at Oxford in passage 8."
+      },
+      {
+        "entity_id": "4af2a2765742c76cf041d9e0640e61ecc79df0d71115015659a24ef5b2490884",
+        "verdict": "supported",
+        "reason": "Named as affiliation for Stephen Fleming in passage 12."
+      },
+      {
+        "entity_id": "1621370005d862a3a68cf70d13b4823a96813eec62c0a97f86be552a50346d91",
+        "verdict": "supported",
+        "reason": "Named as affiliation for Narayanan and Kapoor in passage 14."
+      },
+      {
+        "entity_id": "f9a2df53726172c90f844dc884c02c754d8d8c7f910c5aad5e5d83b75799cee0",
+        "verdict": "supported",
+        "reason": "Named as organization founded by Beth Barnes measuring agent horizons in passage 15."
+      },
+      {
+        "entity_id": "93de132c6d645a84d044e21803828bdcdd6e518e31c56d529beb880c07b69b54",
+        "verdict": "supported",
+        "reason": "Named as research nonprofit led by Owain Evans in passage 10."
+      },
+      {
+        "entity_id": "101d7493acdd3ea324e846a70666e49c35f1ede2c134247d3a7daf2b042df524",
+        "verdict": "supported",
+        "reason": "Named as affiliation for Azalia Mirhoseini in passage 17."
+      },
+      {
+        "entity_id": "eda8853c44ffab0ed5be1bbe81580d8035b71e3f6fb9e03a207a468758079e5f",
+        "verdict": "supported",
+        "reason": "Named as affiliation for Shreya Shankar in passage 19."
+      },
+      {
+        "entity_id": "1d6dcd2b2980ddd7c095b04879faad5d8e6f1ddf2ccbacca5cbbfc7fb0c9513a",
+        "verdict": "supported",
+        "reason": "Named as location of OATML group in passage 8."
+      },
+      {
+        "entity_id": "3d50dc4c8b1b0fae3f70ab27ed3839fe650af413fd1f28ca750961ea6e06f6e1",
+        "verdict": "supported",
+        "reason": "Section header in passage 3 representing a thematic grouping."
+      },
+      {
+        "entity_id": "c8c15a69967d5449a3691fad0faab65348656429694b7e3f6b47e9b3735c304a",
+        "verdict": "supported",
+        "reason": "Section header in passage 7 representing a thematic grouping."
+      },
+      {
+        "entity_id": "9323f633c858fb2844c83746022104086df927509121f35c78ca93ff5f986c1d",
+        "verdict": "supported",
+        "reason": "Section header in passage 11 representing a thematic grouping."
+      },
+      {
+        "entity_id": "bc20f54f9c8b240abd38038eda485ef66de2707f39756766dd17a47713f93b23",
+        "verdict": "supported",
+        "reason": "Section header in passage 13 representing a thematic grouping."
+      },
+      {
+        "entity_id": "6a21b1e05126723c8b7ea1b972524f00278989806fe03c56c049affa3f5cb78b",
+        "verdict": "supported",
+        "reason": "Section header in passage 18 representing a thematic grouping."
+      },
+      {
+        "entity_id": "90dafe295135676c4f516e0efeae31a136d3664f9ba71a9e2a6bc67c053a1c8f",
+        "verdict": "supported",
+        "reason": "Technical term used in passages 4 and 12 discussing model self-awareness."
+      },
+      {
+        "entity_id": "ec85e18466870ac19830477a926a3aab1db960972db3f79dff462f65a1f86353",
+        "verdict": "supported",
+        "reason": "Technical term for mechanistic research in passage 5."
+      },
+      {
+        "entity_id": "6bbdccd373a85258a66181ec7cf2c02334238f3fee05859baaad92589b1d5f17",
+        "verdict": "supported",
+        "reason": "Named line of work on truth representation in passage 6."
+      },
+      {
+        "entity_id": "2e72b17338f1265fd24313109b8a88efa3d398a878076d999a8f1a856b267aa9",
+        "verdict": "supported",
+        "reason": "Named method for hallucination detection in passage 8."
+      },
+      {
+        "entity_id": "d844091366e1ee39581e416ed9967b0437a0bb7fa0fa14bda19cf94babdcb771",
+        "verdict": "supported",
+        "reason": "Named framing for reliability progress in passage 16."
+      },
+      {
+        "entity_id": "5fd0254c612654817f5539dc92f163cc17d809be9e3ae7392fabe267568304ee",
+        "verdict": "supported",
+        "reason": "Named verification scaling work in passage 17."
+      },
+      {
+        "entity_id": "c2746db426d217e188fdd186aa75480858eec0961c0302fe32604709196aa001",
+        "verdict": "supported",
+        "reason": "Named search term for verifier research in passage 23."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "transformer-circuits.pub",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          5
+        ]
+      },
+      {
+        "name": "Nature",
+        "kind": "organization",
+        "evidence_passage_ids": [
+          8
+        ]
+      },
+      {
+        "name": "Know Thyself",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      },
+      {
+        "name": "Why Language Models Hallucinate",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          9
+        ]
+      },
+      {
+        "name": "Looking Inward",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          10
+        ]
+      },
+      {
+        "name": "Tell me about yourself",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          10
+        ]
+      },
+      {
+        "name": "Who Validates the Validators?",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          19
+        ]
+      },
+      {
+        "name": "arXiv",
+        "kind": "organization",
+        "evidence_passage_ids": [
+          23
+        ]
+      },
+      {
+        "name": "calibration-versus-discrimination distinction",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      },
+      {
+        "name": "selective prediction",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          23
+        ]
+      }
+    ],
+    "summary": "All 40 extracted entities are well-grounded in the source passages with correct types (person, organization, concept) and no unsafe mergers or invented expansions. The extraction captures all named individuals, their affiliations, and key technical concepts from the article's six thematic sections. Ten notable omissions include specific paper titles, publication venues, and technical distinctions that appear in the text but were not extracted as entities.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a37bca86eff4d382",
+  "usage": {
+    "input_tokens": 13065,
+    "output_tokens": 9362,
+    "total_tokens": 22427
+  },
+  "usage_scope": "final_response_only"
+}

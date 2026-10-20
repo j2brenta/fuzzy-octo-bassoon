@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:28:42.875504+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "thought",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "It is a curated reference list of researchers and works on model introspection, uncertainty, and evaluation, useful for future lookup."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-ab88a493e679f2bb",
+  "usage": {
+    "input_tokens": 1212,
+    "output_tokens": 273,
+    "total_tokens": 1485
+  }
+}

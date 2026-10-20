@@ -1,0 +1,1561 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "raw_path": "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-forwards",
+    "source_name": "Supplied Telegram forwards (simulated)",
+    "message_id": "supplied-people-list",
+    "captured_at": "2026-10-20T07:04:29.904087+00:00",
+    "published_at": null,
+    "author_hint": null,
+    "forwarded_by": "Kirill R",
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 4288
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "2c2e7b502a9729b9bcd7fdac054f7ada34e212e93dcaeb0b07a75b692389f5e2",
+      "statement": "Jack Lindsey leads Anthropic's \"model psychiatry\" team.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "4561aaa8c343f7563fe605cadbec24dfb48ab93e0d11197a56179dc9f755c0ec",
+      "statement": "Jack Lindsey's paper on emergent introspective awareness tests whether models can genuinely observe their own internal states by injecting concepts and checking whether they notice.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "62844514747345a947231ac0c55ef945755cf08f807bbc329f307d5bcc9c20ae",
+      "statement": "His conclusion is that models show at least a limited, functional form of introspective awareness, but he stresses it is highly limited and context‑dependent.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "849c3a459dd111cbc68f7a59e9e09e88fee6b21f94b07294ec1e06121d00ef6c",
+      "statement": "Chris Olah and Josh Batson work on circuit‑tracing research that found the \"can't answer\" default pathway.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 779,
+        "end_char": 1046
+      }
+    },
+    {
+      "claim_id": "e70904c34aef40ea3dc934a3e8b057f9119c28db2e7e71df879858cd73d7a1d8",
+      "statement": "Their publications at transformer‑circuits.pub are the main source for mechanistic explanations of hallucination.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 779,
+        "end_char": 1046
+      }
+    },
+    {
+      "claim_id": "b03b99688b0931da5fe7210bd21ee690688f56a6a76465fad113afded92c0979",
+      "statement": "Sam Marks has worked on how models represent truth internally (the \"geometry of truth\" line of work).",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1047,
+        "end_char": 1195
+      }
+    },
+    {
+      "claim_id": "b2ca0ad0bf4b8dd1e4e0c34054220fb509a89a10800bfa53ebe364f260861ddc",
+      "statement": "Sam Marks has worked on auditing models for hidden objectives.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1047,
+        "end_char": 1195
+      }
+    },
+    {
+      "claim_id": "cf83dfd8d25f48b55b39b0e977743cf4efd0ef6801d1f3d444a95e531e08605e",
+      "statement": "Sebastian Farquhar and Yarin Gal are lead authors of the semantic entropy work published in Nature in 2024.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
+      "statement": "The semantic entropy work is the best‑known method for detecting confabulations by sampling multiple answers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "f1c69c317cf62661fdfa5cb323372b68ce199ad3b243bc750103dd510f3cf212",
+      "statement": "Yarin Gal leads the OATML group at Oxford.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "da4550234a74ae4a41cef8d04d36714590991663d412c121cbf6efefea35cf71",
+      "statement": "Adam Tauman Kalai is lead author of the 2025 paper \"Why Language Models Hallucinate\".",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1466,
+        "end_char": 1704
+      }
+    },
+    {
+      "claim_id": "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "statement": "The paper argues that training and evaluation reward guessing over admitting uncertainty.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1466,
+        "end_char": 1704
+      }
+    },
+    {
+      "claim_id": "673430a11e281f0bee66ba37d645fe09ee8675d7de0c101732c645458e349b1d",
+      "statement": "Owain Evans has done influential work on whether models know what they know and can describe their own learned behaviors.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "a9ca94d4b97d53eb34e58d0b4cea0c76100ea09014e25f37a426c85105e2141c",
+      "statement": "This includes the \"Looking Inward\" and \"Tell me about yourself\" papers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "b15049d3d97b634886f7d520f3918e38b20908be52533d5ecb8cb13b0175f8bc",
+      "statement": "He co‑authored early work on teaching models to express uncertainty in words.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "e444a12b80265e6a1d61195e23a6f2e3d974ee13765dadc40e1f4dca6ad8956f",
+      "statement": "He leads the research nonprofit Truthful AI.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "99dba5e23c9b7b7f87c3de2e8625b795420edfa447a118eab50390a061adf3fa",
+      "statement": "Stephen Fleming is a leading neuroscientist of human metacognition.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "c1ef17eee7e166ca302244969b91f69adc0944757a3fb3b664b1cf15521b14fe",
+      "statement": "Stephen Fleming is the author of the book \"Know Thyself\".",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "200e4b0fbfe3914edc593e168d01ee673d391af65d2a3316372a91af584e1f7e",
+      "statement": "Stephen Fleming has increasingly applied metacognition research to AI.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "503640688c7d6a92b045f83b94f8c4411c29e25a809491961fb2276d08681ba5",
+      "statement": "Arvind Narayanan and Sayash Kapoor wrote the agent reliability paper that borrowed methods from nuclear and aviation safety.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2393,
+        "end_char": 2624
+      }
+    },
+    {
+      "claim_id": "7935ac30df720d7b32f229b911c8f8364dae047e08081148ba8859df74096fa1",
+      "statement": "Their newsletter is often skeptical and data‑driven, a good counterweight to hype.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2393,
+        "end_char": 2624
+      }
+    },
+    {
+      "claim_id": "e12d3872e1553bdc6d8cd01eeac1c0152f605720162a520f07c5cabf9f400d4a",
+      "statement": "METR (founded by Beth Barnes) measures how long a task agents can complete autonomously.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2625,
+        "end_char": 2792
+      }
+    },
+    {
+      "claim_id": "f3e8540736f15aea56085afcb8dbf2aa5e219904ac3da3e024a6a20113ee34e3",
+      "statement": "METR's reports are a key reference for the reliability‑over‑horizon question.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2625,
+        "end_char": 2792
+      }
+    },
+    {
+      "claim_id": "021b50b4a573790fb8a7f368fefef167554c37bccba5ae43ccc0e737d2d46304",
+      "statement": "Andrej Karpathy popularized the \"march of nines\" framing.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2793,
+        "end_char": 2922
+      }
+    },
+    {
+      "claim_id": "e6b8c88f6e9bc55368347cba34f969712e77a85ac183c2e76ecda2f817eeefdd",
+      "statement": "Andrej Karpathy writes clearly about what it takes to move from demos to products.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2793,
+        "end_char": 2922
+      }
+    },
+    {
+      "claim_id": "f04a51cb93ce733c67913bda7a396e8cf8427e49db3655e9db398d611bf1a501",
+      "statement": "Azalia Mirhoseini (Stanford) co-led the LLM-as-a-Verifier work on scaling verification as its own axis.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2923,
+        "end_char": 3028
+      }
+    },
+    {
+      "claim_id": "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502",
+      "statement": "Shreya Shankar (UC Berkeley) researches how to evaluate LLM pipelines, including the paper \"Who Validates the Validators?\" on aligning automated judges with human judgment.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3073,
+        "end_char": 3306
+      }
+    },
+    {
+      "claim_id": "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f",
+      "statement": "Hamel Husain is a practical voice on building evals for real products, focusing on error analysis, reading traces, and designing checks that catch real failures.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3307,
+        "end_char": 3546
+      }
+    },
+    {
+      "claim_id": "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
+      "statement": "Hamel Husain and Shreya Shankar teach together.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3307,
+        "end_char": 3546
+      }
+    },
+    {
+      "claim_id": "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c",
+      "statement": "Eugene Yan writes accessible, practical pieces on LLM evaluation and production patterns.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3547,
+        "end_char": 3638
+      }
+    },
+    {
+      "claim_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "statement": "The author recommends a minimal follow set: Anthropic's interpretability publications for mechanisms, the Princeton newsletter for reliability science, METR for agent capability trends, and Husain and Shankar for engineering practice.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3668,
+        "end_char": 4288
+      }
+    },
+    {
+      "claim_id": "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "statement": "The author states that searching arXiv for terms like \"metacognition,\" \"calibration,\" \"selective prediction,\" and \"process verifier\" will surface new work, much of which has appeared in just the past few months.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3668,
+        "end_char": 4288
+      }
+    },
+    {
+      "claim_id": "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
+      "statement": "The author notes that affiliations change often in this field and recommends checking researchers' latest pages.",
+      "kind": "principle",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 36,
+        "end_char": 177
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "e98d7e4dc47471b7afcf89b4a4c87dfb402dab0f9970bf6e0513b4a84effb0e2",
+      "name": "Kirill R",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 8,
+          "surface_name": "Kirill R"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d05b6e5b6763c8ce5bd33fd6f0cbad5bb02805288000a0702b98574499215df8",
+      "name": "Jack Lindsey",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 216,
+          "end_char": 228,
+          "surface_name": "Jack Lindsey"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "31ac22b5311cca3a8a7a70382b8c4168b02dbb208bb95deb1b46ec6d74ee2982",
+      "name": "Chris Olah",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 781,
+          "end_char": 791,
+          "surface_name": "Chris Olah"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "369b7541dd76ac970b43ca5745570658ed7eafed6c267e4975a7b5913ac08a03",
+      "name": "Josh Batson",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 796,
+          "end_char": 807,
+          "surface_name": "Josh Batson"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "92fcc2eba7ddd54e53a48806cea1db2fb5fc31e491435c58f7ca327e6bb77a2e",
+      "name": "Sam Marks",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 6,
+          "start_char": 1049,
+          "end_char": 1058,
+          "surface_name": "Sam Marks"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "7175ad62893c3be9245b6343747d6cdae6318852f90ceb2d73768a974c15b9ff",
+      "name": "Sebastian Farquhar",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1240,
+          "end_char": 1258,
+          "surface_name": "Sebastian Farquhar"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "df525f2a6de1c8ee862734954fb4d99263f2579fc61b0e2397b440d4fca64194",
+      "name": "Yarin Gal",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1263,
+          "end_char": 1272,
+          "surface_name": "Yarin Gal"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "0f143e3d343f48df3506ed43e9b36a359f6661cbfa19489e39b2fa2057846056",
+      "name": "Adam Tauman Kalai",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 9,
+          "start_char": 1468,
+          "end_char": 1485,
+          "surface_name": "Adam Tauman Kalai"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "fe74ad04d410e3e71c134966fc416c1a4c1391284e458eb4e1595c4e68efbc20",
+      "name": "Owain Evans",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 10,
+          "start_char": 1707,
+          "end_char": 1718,
+          "surface_name": "Owain Evans"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "69a08e41691171a87f547c8e297f500c3e0fc8b03dbf0d7227125ca891ec4709",
+      "name": "Stephen Fleming",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2054,
+          "end_char": 2069,
+          "surface_name": "Stephen Fleming"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d2a066e9af65f610262688d38ad086835e275041c3deb04a3d068fb0a47345c5",
+      "name": "Arvind Narayanan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2395,
+          "end_char": 2411,
+          "surface_name": "Arvind Narayanan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e95d647f266e2dfa3b290a0546a7568e2cc52c53fed7fed6212e0759f33cf4ae",
+      "name": "Sayash Kapoor",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2416,
+          "end_char": 2429,
+          "surface_name": "Sayash Kapoor"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "44412b10b7dcb86adad6173e03827271d8d59fdb4d7c08b305123983595ce9a1",
+      "name": "Beth Barnes",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 15,
+          "start_char": 2644,
+          "end_char": 2655,
+          "surface_name": "Beth Barnes"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "02b25d77394f8f61ef1c6b28433a6c7e9aa4bc14211656f9f515a4ddfc1bb610",
+      "name": "Andrej Karpathy",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 16,
+          "start_char": 2795,
+          "end_char": 2810,
+          "surface_name": "Andrej Karpathy"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d4216625db7045469b7993461cca5034b54ffae3150d56b8fe7f7c3c59e89f62",
+      "name": "Azalia Mirhoseini",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2925,
+          "end_char": 2942,
+          "surface_name": "Azalia Mirhoseini"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e63d8b0105558dc0ea7c98fddb7221e094169e302b42bed2d305e4df6f9d0ee6",
+      "name": "Shreya Shankar",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 19,
+          "start_char": 3075,
+          "end_char": 3089,
+          "surface_name": "Shreya Shankar"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6a94423b5287c9b8555e3031cf7835bb16efc68c8ee9543d4a3280e38da5d0a7",
+      "name": "Hamel Husain",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 20,
+          "start_char": 3309,
+          "end_char": 3321,
+          "surface_name": "Hamel Husain"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "99c36862eeb14937365f6319b0e94984c3ad1e2a7c78f10cbccc1b6271c0038f",
+      "name": "Eugene Yan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 21,
+          "start_char": 3549,
+          "end_char": 3559,
+          "surface_name": "Eugene Yan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e5db4f69110da22db8a0238f3cb4aa6549021498ddab12b3524845f7dbe2ac0d",
+      "name": "Anthropic",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 230,
+          "end_char": 239,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 252,
+          "end_char": 261,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 809,
+          "end_char": 818,
+          "surface_name": "Anthropic"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "fb39f2304fa97f23b15fc46118d4c988a9f95eb80520e01ad6ba013e25cb29e0",
+      "name": "OpenAI",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 9,
+          "start_char": 1487,
+          "end_char": 1493,
+          "surface_name": "OpenAI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6e4b564acef6495ffc6cf783f9bcdd9705ca8436d753f394c27e837c940c873c",
+      "name": "OATML group",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1443,
+          "end_char": 1454,
+          "surface_name": "OATML group"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4af2a2765742c76cf041d9e0640e61ecc79df0d71115015659a24ef5b2490884",
+      "name": "UCL",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2071,
+          "end_char": 2074,
+          "surface_name": "UCL"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "1621370005d862a3a68cf70d13b4823a96813eec62c0a97f86be552a50346d91",
+      "name": "Princeton",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2431,
+          "end_char": 2440,
+          "surface_name": "Princeton"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "f9a2df53726172c90f844dc884c02c754d8d8c7f910c5aad5e5d83b75799cee0",
+      "name": "METR",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 15,
+          "start_char": 2627,
+          "end_char": 2631,
+          "surface_name": "METR"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "93de132c6d645a84d044e21803828bdcdd6e518e31c56d529beb880c07b69b54",
+      "name": "Truthful AI",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 10,
+          "start_char": 2008,
+          "end_char": 2019,
+          "surface_name": "Truthful AI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "101d7493acdd3ea324e846a70666e49c35f1ede2c134247d3a7daf2b042df524",
+      "name": "Stanford",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2944,
+          "end_char": 2952,
+          "surface_name": "Stanford"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "eda8853c44ffab0ed5be1bbe81580d8035b71e3f6fb9e03a207a468758079e5f",
+      "name": "UC Berkeley",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 19,
+          "start_char": 3091,
+          "end_char": 3102,
+          "surface_name": "UC Berkeley"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "1d6dcd2b2980ddd7c095b04879faad5d8e6f1ddf2ccbacca5cbbfc7fb0c9513a",
+      "name": "Oxford",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1458,
+          "end_char": 1464,
+          "surface_name": "Oxford"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "3d50dc4c8b1b0fae3f70ab27ed3839fe650af413fd1f28ca750961ea6e06f6e1",
+      "name": "Introspection and model internals",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 3,
+          "start_char": 179,
+          "end_char": 212,
+          "surface_name": "Introspection and model internals"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c8c15a69967d5449a3691fad0faab65348656429694b7e3f6b47e9b3735c304a",
+      "name": "Uncertainty and hallucination detection",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 7,
+          "start_char": 1197,
+          "end_char": 1236,
+          "surface_name": "Uncertainty and hallucination detection"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "9323f633c858fb2844c83746022104086df927509121f35c78ca93ff5f986c1d",
+      "name": "The cognitive science bridge",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 11,
+          "start_char": 2022,
+          "end_char": 2050,
+          "surface_name": "The cognitive science bridge"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "bc20f54f9c8b240abd38038eda485ef66de2707f39756766dd17a47713f93b23",
+      "name": "Agent reliability and evaluation science",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 13,
+          "start_char": 2351,
+          "end_char": 2391,
+          "surface_name": "Agent reliability and evaluation science"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6a21b1e05126723c8b7ea1b972524f00278989806fe03c56c049affa3f5cb78b",
+      "name": "Engineering practice: evals in production",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 18,
+          "start_char": 3030,
+          "end_char": 3071,
+          "surface_name": "Engineering practice: evals in production"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "90dafe295135676c4f516e0efeae31a136d3664f9ba71a9e2a6bc67c053a1c8f",
+      "name": "metacognition",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 742,
+          "end_char": 755,
+          "surface_name": "metacognition"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2113,
+          "end_char": 2126,
+          "surface_name": "metacognition"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2194,
+          "end_char": 2207,
+          "surface_name": "metacognition"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "ec85e18466870ac19830477a926a3aab1db960972db3f79dff462f65a1f86353",
+      "name": "circuit-tracing",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 849,
+          "end_char": 864,
+          "surface_name": "circuit-tracing"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6bbdccd373a85258a66181ec7cf2c02334238f3fee05859baaad92589b1d5f17",
+      "name": "geometry of truth",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 6,
+          "start_char": 1117,
+          "end_char": 1134,
+          "surface_name": "geometry of truth"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "2e72b17338f1265fd24313109b8a88efa3d398a878076d999a8f1a856b267aa9",
+      "name": "semantic entropy",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1297,
+          "end_char": 1313,
+          "surface_name": "semantic entropy"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d844091366e1ee39581e416ed9967b0437a0bb7fa0fa14bda19cf94babdcb771",
+      "name": "march of nines",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 16,
+          "start_char": 2828,
+          "end_char": 2842,
+          "surface_name": "march of nines"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "5fd0254c612654817f5539dc92f163cc17d809be9e3ae7392fabe267568304ee",
+      "name": "LLM-as-a-Verifier",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2965,
+          "end_char": 2982,
+          "surface_name": "LLM-as-a-Verifier"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c2746db426d217e188fdd186aa75480858eec0961c0302fe32604709196aa001",
+      "name": "process verifier",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 4179,
+          "end_char": 4195,
+          "surface_name": "process verifier"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "article",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides a curated overview of researchers working on model introspection, uncertainty, and evaluation, offering lasting reference value."
+  },
+  "reviews": {
+    "claims": {
+      "status": "pending"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "e98d7e4dc47471b7afcf89b4a4c87dfb402dab0f9970bf6e0513b4a84effb0e2",
+          "verdict": "supported",
+          "reason": "Explicitly named as speaker in passage 1."
+        },
+        {
+          "entity_id": "d05b6e5b6763c8ce5bd33fd6f0cbad5bb02805288000a0702b98574499215df8",
+          "verdict": "supported",
+          "reason": "Named as Anthropic researcher leading model psychiatry team in passage 4."
+        },
+        {
+          "entity_id": "31ac22b5311cca3a8a7a70382b8c4168b02dbb208bb95deb1b46ec6d74ee2982",
+          "verdict": "supported",
+          "reason": "Named as Anthropic interpretability researcher on circuit-tracing in passage 5."
+        },
+        {
+          "entity_id": "369b7541dd76ac970b43ca5745570658ed7eafed6c267e4975a7b5913ac08a03",
+          "verdict": "supported",
+          "reason": "Named as Anthropic interpretability researcher on circuit-tracing in passage 5."
+        },
+        {
+          "entity_id": "92fcc2eba7ddd54e53a48806cea1db2fb5fc31e491435c58f7ca327e6bb77a2e",
+          "verdict": "supported",
+          "reason": "Named as researcher on geometry of truth and auditing in passage 6."
+        },
+        {
+          "entity_id": "7175ad62893c3be9245b6343747d6cdae6318852f90ceb2d73768a974c15b9ff",
+          "verdict": "supported",
+          "reason": "Named as lead author of semantic entropy work in passage 8."
+        },
+        {
+          "entity_id": "df525f2a6de1c8ee862734954fb4d99263f2579fc61b0e2397b440d4fca64194",
+          "verdict": "supported",
+          "reason": "Named as lead author of semantic entropy work and OATML group lead in passage 8."
+        },
+        {
+          "entity_id": "0f143e3d343f48df3506ed43e9b36a359f6661cbfa19489e39b2fa2057846056",
+          "verdict": "supported",
+          "reason": "Named as OpenAI researcher and lead author of 2025 hallucination paper in passage 9."
+        },
+        {
+          "entity_id": "fe74ad04d410e3e71c134966fc416c1a4c1391284e458eb4e1595c4e68efbc20",
+          "verdict": "supported",
+          "reason": "Named as researcher on model self-knowledge and Truthful AI lead in passage 10."
+        },
+        {
+          "entity_id": "69a08e41691171a87f547c8e297f500c3e0fc8b03dbf0d7227125ca891ec4709",
+          "verdict": "supported",
+          "reason": "Named as UCL neuroscientist and author of Know Thyself in passage 12."
+        },
+        {
+          "entity_id": "d2a066e9af65f610262688d38ad086835e275041c3deb04a3d068fb0a47345c5",
+          "verdict": "supported",
+          "reason": "Named as Princeton co-author of agent reliability paper in passage 14."
+        },
+        {
+          "entity_id": "e95d647f266e2dfa3b290a0546a7568e2cc52c53fed7fed6212e0759f33cf4ae",
+          "verdict": "supported",
+          "reason": "Named as Princeton co-author of agent reliability paper in passage 14."
+        },
+        {
+          "entity_id": "44412b10b7dcb86adad6173e03827271d8d59fdb4d7c08b305123983595ce9a1",
+          "verdict": "supported",
+          "reason": "Named as founder of METR in passage 15."
+        },
+        {
+          "entity_id": "02b25d77394f8f61ef1c6b28433a6c7e9aa4bc14211656f9f515a4ddfc1bb610",
+          "verdict": "supported",
+          "reason": "Named as popularizer of march of nines framing in passage 16."
+        },
+        {
+          "entity_id": "d4216625db7045469b7993461cca5034b54ffae3150d56b8fe7f7c3c59e89f62",
+          "verdict": "supported",
+          "reason": "Named as Stanford co-lead of LLM-as-a-Verifier work in passage 17."
+        },
+        {
+          "entity_id": "e63d8b0105558dc0ea7c98fddb7221e094169e302b42bed2d305e4df6f9d0ee6",
+          "verdict": "supported",
+          "reason": "Named as UC Berkeley researcher on LLM pipeline evaluation in passage 19."
+        },
+        {
+          "entity_id": "6a94423b5287c9b8555e3031cf7835bb16efc68c8ee9543d4a3280e38da5d0a7",
+          "verdict": "supported",
+          "reason": "Named as practical voice on building evals for products in passage 20."
+        },
+        {
+          "entity_id": "99c36862eeb14937365f6319b0e94984c3ad1e2a7c78f10cbccc1b6271c0038f",
+          "verdict": "supported",
+          "reason": "Named as writer on LLM evaluation and production patterns in passage 21."
+        },
+        {
+          "entity_id": "e5db4f69110da22db8a0238f3cb4aa6549021498ddab12b3524845f7dbe2ac0d",
+          "verdict": "supported",
+          "reason": "Named as affiliation for multiple researchers in passages 4 and 5."
+        },
+        {
+          "entity_id": "fb39f2304fa97f23b15fc46118d4c988a9f95eb80520e01ad6ba013e25cb29e0",
+          "verdict": "supported",
+          "reason": "Named as affiliation for Adam Tauman Kalai in passage 9."
+        },
+        {
+          "entity_id": "6e4b564acef6495ffc6cf783f9bcdd9705ca8436d753f394c27e837c940c873c",
+          "verdict": "supported",
+          "reason": "Named as research group led by Yarin Gal at Oxford in passage 8."
+        },
+        {
+          "entity_id": "4af2a2765742c76cf041d9e0640e61ecc79df0d71115015659a24ef5b2490884",
+          "verdict": "supported",
+          "reason": "Named as affiliation for Stephen Fleming in passage 12."
+        },
+        {
+          "entity_id": "1621370005d862a3a68cf70d13b4823a96813eec62c0a97f86be552a50346d91",
+          "verdict": "supported",
+          "reason": "Named as affiliation for Narayanan and Kapoor in passage 14."
+        },
+        {
+          "entity_id": "f9a2df53726172c90f844dc884c02c754d8d8c7f910c5aad5e5d83b75799cee0",
+          "verdict": "supported",
+          "reason": "Named as organization founded by Beth Barnes measuring agent horizons in passage 15."
+        },
+        {
+          "entity_id": "93de132c6d645a84d044e21803828bdcdd6e518e31c56d529beb880c07b69b54",
+          "verdict": "supported",
+          "reason": "Named as research nonprofit led by Owain Evans in passage 10."
+        },
+        {
+          "entity_id": "101d7493acdd3ea324e846a70666e49c35f1ede2c134247d3a7daf2b042df524",
+          "verdict": "supported",
+          "reason": "Named as affiliation for Azalia Mirhoseini in passage 17."
+        },
+        {
+          "entity_id": "eda8853c44ffab0ed5be1bbe81580d8035b71e3f6fb9e03a207a468758079e5f",
+          "verdict": "supported",
+          "reason": "Named as affiliation for Shreya Shankar in passage 19."
+        },
+        {
+          "entity_id": "1d6dcd2b2980ddd7c095b04879faad5d8e6f1ddf2ccbacca5cbbfc7fb0c9513a",
+          "verdict": "supported",
+          "reason": "Named as location of OATML group in passage 8."
+        },
+        {
+          "entity_id": "3d50dc4c8b1b0fae3f70ab27ed3839fe650af413fd1f28ca750961ea6e06f6e1",
+          "verdict": "supported",
+          "reason": "Section header in passage 3 representing a thematic grouping."
+        },
+        {
+          "entity_id": "c8c15a69967d5449a3691fad0faab65348656429694b7e3f6b47e9b3735c304a",
+          "verdict": "supported",
+          "reason": "Section header in passage 7 representing a thematic grouping."
+        },
+        {
+          "entity_id": "9323f633c858fb2844c83746022104086df927509121f35c78ca93ff5f986c1d",
+          "verdict": "supported",
+          "reason": "Section header in passage 11 representing a thematic grouping."
+        },
+        {
+          "entity_id": "bc20f54f9c8b240abd38038eda485ef66de2707f39756766dd17a47713f93b23",
+          "verdict": "supported",
+          "reason": "Section header in passage 13 representing a thematic grouping."
+        },
+        {
+          "entity_id": "6a21b1e05126723c8b7ea1b972524f00278989806fe03c56c049affa3f5cb78b",
+          "verdict": "supported",
+          "reason": "Section header in passage 18 representing a thematic grouping."
+        },
+        {
+          "entity_id": "90dafe295135676c4f516e0efeae31a136d3664f9ba71a9e2a6bc67c053a1c8f",
+          "verdict": "supported",
+          "reason": "Technical term used in passages 4 and 12 discussing model self-awareness."
+        },
+        {
+          "entity_id": "ec85e18466870ac19830477a926a3aab1db960972db3f79dff462f65a1f86353",
+          "verdict": "supported",
+          "reason": "Technical term for mechanistic research in passage 5."
+        },
+        {
+          "entity_id": "6bbdccd373a85258a66181ec7cf2c02334238f3fee05859baaad92589b1d5f17",
+          "verdict": "supported",
+          "reason": "Named line of work on truth representation in passage 6."
+        },
+        {
+          "entity_id": "2e72b17338f1265fd24313109b8a88efa3d398a878076d999a8f1a856b267aa9",
+          "verdict": "supported",
+          "reason": "Named method for hallucination detection in passage 8."
+        },
+        {
+          "entity_id": "d844091366e1ee39581e416ed9967b0437a0bb7fa0fa14bda19cf94babdcb771",
+          "verdict": "supported",
+          "reason": "Named framing for reliability progress in passage 16."
+        },
+        {
+          "entity_id": "5fd0254c612654817f5539dc92f163cc17d809be9e3ae7392fabe267568304ee",
+          "verdict": "supported",
+          "reason": "Named verification scaling work in passage 17."
+        },
+        {
+          "entity_id": "c2746db426d217e188fdd186aa75480858eec0961c0302fe32604709196aa001",
+          "verdict": "supported",
+          "reason": "Named search term for verifier research in passage 23."
+        }
+      ],
+      "omitted_entities": [
+        {
+          "name": "transformer-circuits.pub",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            5
+          ]
+        },
+        {
+          "name": "Nature",
+          "kind": "organization",
+          "evidence_passage_ids": [
+            8
+          ]
+        },
+        {
+          "name": "Know Thyself",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            12
+          ]
+        },
+        {
+          "name": "Why Language Models Hallucinate",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            9
+          ]
+        },
+        {
+          "name": "Looking Inward",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            10
+          ]
+        },
+        {
+          "name": "Tell me about yourself",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            10
+          ]
+        },
+        {
+          "name": "Who Validates the Validators?",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            19
+          ]
+        },
+        {
+          "name": "arXiv",
+          "kind": "organization",
+          "evidence_passage_ids": [
+            23
+          ]
+        },
+        {
+          "name": "calibration-versus-discrimination distinction",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            12
+          ]
+        },
+        {
+          "name": "selective prediction",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            23
+          ]
+        }
+      ],
+      "summary": "All 40 extracted entities are well-grounded in the source passages with correct types (person, organization, concept) and no unsafe mergers or invented expansions. The extraction captures all named individuals, their affiliations, and key technical concepts from the article's six thematic sections. Ten notable omissions include specific paper titles, publication venues, and technical distinctions that appear in the text but were not extracted as entities.",
+      "status": "needs_revision"
+    }
+  },
+  "quality_status": "needs_revision",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "claim_candidate": "coverage",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "coverage-reviews/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "91cc8762fcdd65927b1cf63e3c593da8ccea15dd19b12a36b4ecd7feff34efd9",
+    "coverage/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "4fabb50987c34f3225709d2fa36f698d450102da3e2c84ddad71deade9962b47",
+    "documents/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "738bf56c474a52887d70bae99bd4ef762f30478abb2f48e446660d64d731d850",
+    "entities/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "ced1c189cda09eb61da2abeb8af8f567a84cc37b9ad7604810598f1c81d1ee6a",
+    "entity-reviews/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "a13fea84fe71b8139714a5585e2a45e5c17e3744c360bddbcd7dcf7d108455d8",
+    "extractions/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "082e21f10096685b365968e675ac4114af3c443e85603252b05f3c28a315f44c",
+    "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "71ef404075b7581f0584ae1c7f6f2024ba13be29d3e6b48daf775ac54e59084c",
+    "reviews/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "9eaf583ed44fc2423fa05e3f44fc41b8f8d6e14aad38480cff005dc3ce7b63da",
+    "triage/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json": "afcbada8cc02db710051ada868638a314369da90acfb8605222836ab168ed993"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "5c2da2549330be68872c653a539b2d663a5b2fb94bf2d8991c2f7bf1e2fade88",
+  "created_at": "2026-10-20T10:20:46.667378+00:00"
+}

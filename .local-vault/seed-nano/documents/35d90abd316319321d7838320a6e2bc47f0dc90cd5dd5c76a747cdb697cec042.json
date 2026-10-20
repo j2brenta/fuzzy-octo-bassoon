@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "parser_version": "text-v1",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "raw_path": "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "sections": [
+    {
+      "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 4288
+      }
+    }
+  ],
+  "links": []
+}

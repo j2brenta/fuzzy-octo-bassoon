@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "extraction_hash": "4c1ecc44e117c9a6d3b4ff1af932ac83b1a595b83e082cf2a3e148076dbe32bb",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:21:43.095082+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "d91d9356f6b49d62c6061ab68119a52d381fded0f9642eeff30c432113570c7b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 states exactly that Anthropic team often uses the ELI5 skill, where /eli5 explains any topic for beginners via HTML artifact with large pictures and minimal text."
+      },
+      {
+        "claim_id": "92a10ac35b2239c080212d292096345f8c2b794a67f64306be5847d0c722324f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 explicitly says Thariq Shihipar, Claude Code engineer at Anthropic, shared information about ELI5."
+      },
+      {
+        "claim_id": "7216bb3c38a755f4786603769e87864e082fa65b96ad11687b614966e0d20a34",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 confirms ELI5 has not yet become an official plugin and the team is still deciding whether to embed it by default."
+      },
+      {
+        "claim_id": "683a6170ded31c618c57da671f72919fb3955a1dcebd6d79be43bb1032c0a9cd",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 states the plugin can be installed right now via the community marketplace."
+      },
+      {
+        "claim_id": "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 provides the exact command to add the community marketplace."
+      },
+      {
+        "claim_id": "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 provides the exact command to install the ELI5 plugin from the community marketplace."
+      },
+      {
+        "claim_id": "4cb2dd29cf699ec0b821439f08cca71496c8da9f1c2f73c17c7e0e3c9b7e082a",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 lists the internal usage examples: /eli5 how this module works, /eli5 why such tradeoff was chosen, /eli5 what caused the incident."
+      },
+      {
+        "claim_id": "17c28e8b9a0e9f1aece0185af52ed27add5eab2f77af611741d8c26b27af08bd",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 describes ELI5 as a way to quickly restore context on someone else's code or incident analysis without reading docs and logs from scratch."
+      },
+      {
+        "claim_id": "2847cabccafe8788522e4dda4cf642778476af2f67188da29ad7f50eff59e5e1",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 records the author's recent statement that AI makes smart people smarter and dumb people dumber."
+      },
+      {
+        "claim_id": "fffbcc3452f7c092cf2969d41fd90488de9a81ab00c5ccb29769e4a2a2e22ea5",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 calls ELI5 a concrete example of where the boundary lies between learning faster and unlearning to think."
+      },
+      {
+        "claim_id": "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 states that opening /eli5, figuring out a topic in two minutes, and moving on is a way to learn faster."
+      },
+      {
+        "claim_id": "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 states that saying 'I don't understand, do it for me' and not trying to understand is a way to unlearn thinking."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "All 12 claims are fully supported by their cited passages. Each claim accurately reflects the source text, preserving modality, attribution, and conditions. Kinds (fact, how-to, opinion) and durability classes (reference, news) are appropriately assigned. No duplicate claims, missing atomic ideas, or unsupported assertions were found. The review covers all central reusable ideas from the passages.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-b92a8fadbc320a7c",
+  "usage": {
+    "input_tokens": 2616,
+    "output_tokens": 4266,
+    "total_tokens": 6882
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

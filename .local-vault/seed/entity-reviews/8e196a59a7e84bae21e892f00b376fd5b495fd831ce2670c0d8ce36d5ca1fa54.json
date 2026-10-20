@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "entity_extraction_hash": "1a988e9ea7c2f8948abe5fba1d95e423f7fba0e7da3b667df67719bb41f3742f",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:42.180013+00:00",
+  "review": {
+    "entities": [],
+    "omitted_entities": [
+      {
+        "name": "demo workshop",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          1
+        ]
+      }
+    ],
+    "summary": "No entities supplied; omitted entity 'demo workshop' identified from passage 1.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8f1f42f480a6b4ea",
+  "usage": {
+    "input_tokens": 460,
+    "output_tokens": 511,
+    "total_tokens": 971
+  },
+  "usage_scope": "final_response_only"
+}

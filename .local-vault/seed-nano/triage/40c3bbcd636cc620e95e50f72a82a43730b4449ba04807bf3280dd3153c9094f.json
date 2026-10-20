@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "created_at": "2026-10-20T10:36:42.825814+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides substantive explanation of Anthropic's ELI5 plugin usage and its practical benefits, constituting useful technical knowledge."
+  },
+  "attempts": 2,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "request_id": "chatcmpl-650fff6f-3a1c-4fb0-95db-61b3e3491729",
+  "usage": {
+    "input_tokens": 773,
+    "output_tokens": 361,
+    "total_tokens": 1134
+  }
+}

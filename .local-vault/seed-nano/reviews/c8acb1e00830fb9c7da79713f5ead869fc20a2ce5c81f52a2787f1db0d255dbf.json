@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "extraction_hash": "6452844a162c5c73f3699cbddf1fac0d7d680260976e766385ac15deb87b931b",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:44:31.887054+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "25cafbdebf0d7375b70b3dd065691ede48d4a2a9988d97a2e2c4ecafa9979260",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 98 states exactly that these alternative economists would likely predict AI impacts more accurately because they:"
+      },
+      {
+        "claim_id": "69bd1375ce63030126f89d1ae636d7ef24520cdd6688ea4be82080b92ddc6a07",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 99 lists understanding network effects as the first reason."
+      },
+      {
+        "claim_id": "369f9d9dbbee04ef7c3abdf99798d8eab92143328b18574599a57fee0420a52c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 100 lists studying cultural adaptation as the second reason."
+      },
+      {
+        "claim_id": "9e7b3733e1708011bbab9005a15624550bb229c6c8b7a58629d70aa62f60a09d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 101 lists recognizing emergent phenomena as the third reason."
+      },
+      {
+        "claim_id": "fab81e8199543f5364ca7a56ff0530345d8438ab4708fcc7d2ccab2c0f08a3ed",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 102 lists valuing ethnographic insight as the fourth reason."
+      },
+      {
+        "claim_id": "d17c088be58d195b2a3c62b3863306ffd264cd169e08458529c88e57930c718a",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 103 lists embracing methodological pluralism as the fifth reason."
+      },
+      {
+        "claim_id": "ab86dc02e93282313f28868fbfba22826d7fc95965bf6f27967133ad35cf7bb1",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim attributes the view to Ha-Joon Chang but cites only passage 5 (the description) which does not mention the economist; passage 4 provides the name."
+      },
+      {
+        "claim_id": "1b40773ebdd1cd12451b8a50a5236456462fabe50201ab4f72e016384786d044",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 8 (the name) but the statement about 'Economics Rules' advocating methodological pluralism appears in passage 9."
+      },
+      {
+        "claim_id": "6102f0e58d8e0229003ce6d1b2f4f31ca4a3010dbbae1c4910c3dd89e35dbd8f",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 10 (the description) but does not include Dani Rodrik's name; passage 8 provides the name."
+      },
+      {
+        "claim_id": "e835ef27a4cd7bd903e3e48a4a0d0ba5a704db8d7c0fdbdb4b1144edaf9f7e55",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 11 (the description) but does not include Dani Rodrik's name; passage 8 provides the name."
+      },
+      {
+        "claim_id": "ce12b74b54ccdaa3f3f22f6c6525a81afcfc55c4036b652f3045b03a6da052ce",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 17 (the name) but the statement about being a pioneer in social network economics appears in passage 18."
+      },
+      {
+        "claim_id": "b7b011686ff73c1a9d6b0cbb30af2512a76ed7adb2c37cbb2b9f92ad35d5b509",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 19 directly states that 'The Human Network' shows how informal connections drive economic outcomes."
+      },
+      {
+        "claim_id": "392b32ed5acb6afd1fbc27534cb7b3f42485ce2103e1f222cf1eb1bbdba1a52c",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 21 (the name) but the statement about being a complexity economics founder appears in passage 22."
+      },
+      {
+        "claim_id": "2aef0a820332f85fe24f5f2edce982dcd25f9b74b2ea26bcbb3122999748e51e",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 24 directly states that 'The Nature of Technology' is brilliant on emergent innovation."
+      },
+      {
+        "claim_id": "4a52132e878b64976043a320ce756b626a67e30fe24d65c34ebb4b474ff146f3",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Claim cites passage 25 (the name) but the statement about 'Why Information Grows' combining economics with network science appears in passage 26."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 12,
+        "description": "James Robinson (University of Chicago) and 'The Narrow Corridor' exploring how societies balance state and social power with ethnographic insight."
+      },
+      {
+        "passage_id": 30,
+        "description": "Sendhil Mullainathan's research on how cultural context shapes economic behavior and 'Scarcity' showing how social conditions affect cognitive capacity."
+      },
+      {
+        "passage_id": 34,
+        "description": "Raghuram Rajan's 'The Third Pillar' emphasizing community and social institutions, bridging academic theory with practical central banking experience."
+      },
+      {
+        "passage_id": 38,
+        "description": "Abhijit Banerjee & Esther Duflo's development economics grounded in fieldwork, 'Good Economics for Hard Times' incorporating cultural and social factors."
+      },
+      {
+        "passage_id": 43,
+        "description": "Post-Keynesian economists Steve Keen (network effects, cultural dynamics, 'Debunking Economics') and Stephanie Kelton (Modern Monetary Theory, 'The Deficit Myth')."
+      },
+      {
+        "passage_id": 52,
+        "description": "Ecological Economics with Herman Daly studying economy embedded in social and ecological systems, 'Beyond Growth' integrating social and environmental factors."
+      },
+      {
+        "passage_id": 57,
+        "description": "Economic sociologists Mark Granovetter (embeddedness theory, 'Getting a Job'), Viviana Zelizer (cultural meanings, 'Purchase of Intimacy'), Richard Swedberg (entrepreneurship from social networks)."
+      },
+      {
+        "passage_id": 70,
+        "description": "Regional/alternative traditions: Latin American Structuralism (Fernando Fajnzylber), Chinese Institutional Economics (Justin Yifu Lin), African Development Economics (Benno Ndulu)."
+      },
+      {
+        "passage_id": 83,
+        "description": "Contemporary innovators: Shoshana Zuboff on surveillance capitalism, Nick Srnicek on platform capitalism, Raj Chetty on inequality and social dynamics using big data."
+      },
+      {
+        "passage_id": 104,
+        "description": "Institutional challenges faced by alternative economists: harder to publish in top journals, relegated to policy/business schools, less influence on mainstream thinking but often better at predicting real-world outcomes."
+      }
+    ],
+    "summary": "The review covers 15 claims. Six claims about why alternative economists would better predict AI impacts (claims 1-6) are fully supported by passages 98-103. Nine claims about specific economists' contributions (claims 7-15) have mixed support: claims 12 and 14 are directly supported by their cited passages; claims 7, 8, 9, 10, 11, 13, and 15 suffer from wrong_evidence because they cite only the name passage or only the description passage, not both, leaving the attribution unsupported. No duplicate claims were found. Ten major omitted concepts are identified, covering additional economists, schools, and institutional challenges that represent central reusable ideas in the source.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-b2016a098457c553",
+  "usage": {
+    "input_tokens": 4645,
+    "output_tokens": 7364,
+    "total_tokens": 12009
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

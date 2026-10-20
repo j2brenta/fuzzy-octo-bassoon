@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "entity_extraction_hash": "5e55be2334d6d695bacbfa95e76d0647859d684225793668cece49e266b3a889",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:39:40.644760+00:00",
+  "review": {
+    "entities": [],
+    "omitted_entities": [],
+    "summary": "No entities were supplied for review. The single passage mentions a demo workshop scheduled for 25 October 2026 at 14:00 UTC, but no named persons, organizations, or defined concepts are present that would warrant entity extraction.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a809fcef430cb9b8",
+  "usage": {
+    "input_tokens": 460,
+    "output_tokens": 282,
+    "total_tokens": 742
+  },
+  "usage_scope": "final_response_only"
+}

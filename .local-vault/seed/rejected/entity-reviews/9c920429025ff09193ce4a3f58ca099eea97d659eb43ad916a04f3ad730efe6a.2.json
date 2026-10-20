@@ -1,0 +1,183 @@
+{
+  "stage": "entity-reviews",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "attempt": 2,
+  "error": "Entity review contains an unknown or repeated entity ID.",
+  "created_at": "2026-10-20T11:16:11.721076+00:00",
+  "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "data": {
+    "entities": [
+      {
+        "entity_id": "14364ecf132824a84766f933f3783f3876dade817991dd2fee220310ebcd524b",
+        "verdict": "supported",
+        "reason": "Explicitly named as the author in passage 2."
+      },
+      {
+        "entity_id": "ff2a32cd0c7de9aa3a9dd486d9d0c8860614a5f9c9fd6f26a96a7d753034920c",
+        "verdict": "supported",
+        "reason": "Repeatedly referenced as the central subject across passages 5, 6, 8, 9, 10."
+      },
+      {
+        "entity_id": "bd5e1868aab0b3aa1bb56ab949ce854549edb9a8c9d943c814ca73d962d715bb",
+        "verdict": "supported",
+        "reason": "Cited as 'mathematics' in passages 5 and 8, contrasting with humanities."
+      },
+      {
+        "entity_id": "c3b130914a1458c6530f4b9eeb12f82b99361a1520c0fd4cd71b8d8aa178fe70",
+        "verdict": "supported",
+        "reason": "Mentioned as 'humanities' in passages 9 and 23, describing the domain of no standard answers."
+      },
+      {
+        "entity_id": "58e917ee66f3a97a218d280fed32f1be9957c6a9c5d789e3ac64847dfe88017b",
+        "verdict": "supported",
+        "reason": "Referred to as 'text generation' in passages 5, 9, and 10."
+      },
+      {
+        "entity_id": "541c8f7e152f7b0d6c48d63ea2901110efb08b8e98562867a9c3e9ea95a26d31",
+        "verdict": "supported",
+        "reason": "Discussed as 'novel'/'novels' throughout passages 3, 12, 13, 14, 16; alias 'novels' resolved within item."
+      },
+      {
+        "entity_id": "ace3984c071d0501293deb24dd5a70e88ba130e6eb32f1d85b050de0f4df799b",
+        "verdict": "supported",
+        "reason": "Appears as 'LLM' in the author's bio (passage 3)."
+      },
+      {
+        "entity_id": "91ea3784dd9d1711cd27f337e88b273a1f6498f5ae8bc0dccb5a3a775bfff7d1",
+        "verdict": "supported",
+        "reason": "Listed as 'RAG' in the author's bio (passage 3)."
+      },
+      {
+        "entity_id": "e4bc5a2fb0a1ca0581efcbd459bf433b25355142b470b9831470433335f73c86",
+        "verdict": "supported",
+        "reason": "Described as 'state machine' for AI (passage 6) and humans (passage 13); alias 'state machines' resolved."
+      },
+      {
+        "entity_id": "04d8d725e8e40c5cbaf14bfa0d4d97ec48d75eeb5514c9464b5af8cc9b44befa",
+        "verdict": "supported",
+        "reason": "Term 'standard answers' used in passages 8 and 9 to categorize problems."
+      },
+      {
+        "entity_id": "57c87673242d729083cf493100bae9e735483f15e13e123e06f5965383f21c63",
+        "verdict": "supported",
+        "reason": "Labeled 'gray zone' in passage 9 for subjective humanities problems."
+      },
+      {
+        "entity_id": "6bcafcfd7f93c9e861fd3e2d32358567ddf5f615a7bbae5cc3280ca5ad02d265",
+        "verdict": "supported",
+        "reason": "Discussed as 'outline' in the writing process across passages 18 and 19."
+      },
+      {
+        "entity_id": "b9786a2c3f4ac8ac3aa1ca2b1a6f874ed01ac9eb5961a742738a9b85374fd6f8",
+        "verdict": "supported",
+        "reason": "Mentioned as 'detective fiction' in passage 18 as an example of tight logic."
+      },
+      {
+        "entity_id": "c9882a074fcd9952c36e65497c089b420a69ca8e1ece00a0918ce9eb06af0f53",
+        "verdict": "supported",
+        "reason": "Referenced as 'cognitive efficiency' in passage 18 regarding writer inspiration."
+      },
+      {
+        "entity_id": "a2757fa1251fce85fb64c9793751179613823a0085c1868bab06a27d654c7fc5",
+        "verdict": "supported",
+        "reason": "Cited as 'memory limits' of AI in passage 22."
+      },
+      {
+        "entity_id": "c8d06d333f4d77ad0fdee5e0278649af17cf7cc3b9e80d9359d74fc85a3ef525",
+        "verdict": "supported",
+        "reason": "Appears as 'long-form output control' in the author's bio (passage 3)."
+      },
+      {
+        "entity_id": "13a851451d748fd148586f9a3f729df87758a6dd16a4520250c11a1d5f22f1b",
+        "verdict": "supported",
+        "reason": "Mentioned as 'non-detective novels' in passage 22 regarding potential AI output length."
+      },
+      {
+        "entity_id": "df01f02ca408b71b36351d7933217dec2881bb88ac3e776b427e96311c8003e3",
+        "verdict": "supported",
+        "reason": "Referenced as 'human cognitive patterns' in passage 24 as the basis for treating AI as a person."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "human",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          6,
+          13,
+          15,
+          24
+        ]
+      },
+      {
+        "name": "writer",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          13,
+          14,
+          18,
+          20
+        ]
+      },
+      {
+        "name": "reader",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "training phase",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          6
+        ]
+      },
+      {
+        "name": "hallucination",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      },
+      {
+        "name": "creativity",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          15,
+          16
+        ]
+      },
+      {
+        "name": "skeleton",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14,
+          20
+        ]
+      },
+      {
+        "name": "golden first three chapters",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "pipeline",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          21
+        ]
+      },
+      {
+        "name": "cheat code",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      }
+    ],
+    "summary": "All 18 supplied entities are explicitly grounded in the source passages with correct types and no unsafe merges. The article's core concepts (AI, mathematics, humanities, text generation, novel, state machine, standard answers, gray zone, outline, etc.) are captured. Ten major omitted entities—human, writer, reader, training phase, hallucination, creativity, skeleton, golden first three chapters, pipeline, cheat code—are identified from the text and could be added for completeness."
+  }
+}

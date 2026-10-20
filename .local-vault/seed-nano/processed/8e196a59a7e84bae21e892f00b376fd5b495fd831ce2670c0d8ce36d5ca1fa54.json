@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "raw_path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:demo-organizer",
+    "source_name": "Synthetic demo organizer",
+    "message_id": "original-1",
+    "captured_at": "2026-10-19T10:02:00+00:00",
+    "published_at": "2026-10-15T09:00:00+00:00",
+    "author_hint": {
+      "name": "Demo Organizer"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 82
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+      "statement": "The demo workshop starts at 14:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+        "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+        "start_char": 0,
+        "end_char": 81
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "9b3a5e4dbed792a0e5949ccc20eb68c133d8b8982dc22d03e027be80542fb37f",
+      "name": "Synthetic test fixture",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+          "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 22,
+          "surface_name": "Synthetic test fixture"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "b9bbe82ec6fc445b69088cc6d2ad481a64560226ba1cfa8a6fa56a2670fc8092",
+      "name": "UTC",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+          "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+          "passage_id": 1,
+          "start_char": 58,
+          "end_char": 61,
+          "surface_name": "UTC"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "news",
+    "split_digest": false,
+    "reason": "It is an announcement of a specific future event, thus a substantive update to keep."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 states exactly that the demo workshop starts at 14:00 UTC on 25 October 2026, matching the claim."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "The claim accurately reflects the announcement in the source passage about the demo workshop start time. No issues found.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "9b3a5e4dbed792a0e5949ccc20eb68c133d8b8982dc22d03e027be80542fb37f",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage as 'Synthetic test fixture' at chars 0-22, correctly typed as concept."
+        },
+        {
+          "entity_id": "b9bbe82ec6fc445b69088cc6d2ad481a64560226ba1cfa8a6fa56a2670fc8092",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage as 'UTC' at chars 58-61, correctly typed as concept."
+        }
+      ],
+      "omitted_entities": [],
+      "summary": "Both entities are directly supported by the source text with accurate mention spans and appropriate concept types.",
+      "status": "accepted"
+    }
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "c91f1d12d66a97e0e8bfff170981dcf56be9344599d7c6aa45574e20b941d5cb",
+    "entities/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "9e6f528169170958399f0c9a4625dae4957219973cbf69b48a6cf2906f13644c",
+    "entity-reviews/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "780470b5d1a1cdd13da95bf6e1447490a020f4636cff5a4f95adf565ab38797d",
+    "extractions/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "0e51013cece5533fd918cce887659305abffc5a3218a44e2fdde3dcd0232166c",
+    "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "9cd28e36cfb3e4113fab924a8dbeda6a1955418e9d5ceb1caa58c65660c71175",
+    "reviews/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "45e34dba884b03528a7f1edbce563efc82ab7a590b6457a473b9fb1cc0dbdebe",
+    "triage/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "42627510456efa78a2a0aa961b6cefd7ed70d10c402cf97fc2f62cb62c7027cc"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "2461d2f57a8a3ecf7c56179be5359748e85be14319ab78f774799e1ec1ec1f6a",
+  "created_at": "2026-10-20T10:39:24.289460+00:00"
+}

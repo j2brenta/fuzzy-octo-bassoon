@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "created_at": "2026-10-20T10:34:00.580781+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides a substantive curated list of key researchers and recent works across multiple AI subfields, offering valuable reference material."
+  },
+  "attempts": 2,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "request_id": "chatcmpl-5a03faaf-5d31-4f45-b3cf-e1e964b34da4",
+  "usage": {
+    "input_tokens": 1243,
+    "output_tokens": 234,
+    "total_tokens": 1477
+  }
+}

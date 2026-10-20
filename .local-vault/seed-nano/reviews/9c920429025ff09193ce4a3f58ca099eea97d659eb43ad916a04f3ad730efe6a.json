@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "source_content_hash": "c15ce644b1f84cf2495a4f34b3272d2e7a58955ce4dbdff9d27b8f0afeb480e4",
+  "extraction_hash": "c2826377116b71c1791cca2e6168dc6ac95dd172c56f7f7d83f3af3280a1ee8c",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:40:48.711562+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "4f70a9a60cd6bfa3a380160d126c106b5e534ce7842efc4e7f6db006ebf77054",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 states that AI's fundamental instinct is to please humans, albeit somewhat inaccurately."
+      },
+      {
+        "claim_id": "023ec1e6535a30fa7d316db981d1320ebb6392f3679dcff308446e2c18d00922",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 7 explicitly says the problems AI needs to solve can be split into two distinct categories."
+      },
+      {
+        "claim_id": "10f2cd30facf1461d8f54702f2ab7cba491d14215bf55be475d89f826dd49781",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 describes the first category as problems with standard answers (e.g., mathematics) having a single correct path and verifiable through multiple pathways."
+      },
+      {
+        "claim_id": "8ee9f3f186902309d3d7f687e1050d5855fe125727dcacc00df0628e327c5229",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 9 defines the second category as problems with no standard answers, judged by human intent, creating a gray zone especially difficult in the humanities."
+      },
+      {
+        "claim_id": "ef982482c00ed7fcbee29cd9f92a11bfabe27fee06e29aa4669a560261d61aa1",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 10 states that the more standardized a text is, the better AI performs, citing highly constrained documents with standardized formats."
+      },
+      {
+        "claim_id": "d39e0d9dc9c48549a299fdf8968b2cf4d92429af6c2caf808538d5ed7862b4fe",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 11 directly states that the more a text requires deep thinking and genuine creation, the more unreliable AI becomes."
+      },
+      {
+        "claim_id": "beb2a1013ea35586572699d9707cbedb018c65a4f10807c1bf36eb4e509af417",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 15 observes that AI exhibits excitement and creativity when discussing abstract, semi-philosophical topics with no standard answer, but cannot yield definitive conclusions."
+      },
+      {
+        "claim_id": "4ba8b19218470b000afc1c343ab37aa8d3bfd77d840b27a449323c49d42dfbb0",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 17 identifies high-level control of long-form text as another major hurdle."
+      },
+      {
+        "claim_id": "8f466ee783e1e40fc10ba108a2f8e71d21e5af19be4152f89b0ed4d2b3f7082d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 19 proposes making AI write actual prose while simultaneously composing and refining the subsequent plot outline."
+      },
+      {
+        "claim_id": "027913efad25b3798e08f81de711a3e99373f159f2173311d6f375152cbca904",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 20 describes the challenge of transforming AI using skeletons to anchor wild ideas into cohesive works."
+      },
+      {
+        "claim_id": "876a5f6e28daeddf55bc3837291384dc1c88c6c09a825ae08ed94a64b103c7c4",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 22 speculates that if the pipeline proves viable, AI could create non-detective novels exceeding one million words that remain highly readable."
+      },
+      {
+        "claim_id": "5d197b0fd4e1172c4ea2f39c0ea7c2db9a590e79e1002ea16ec72665e5eefa5a",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 24 states that all reflections aim to treat and use AI as an ordinary person possessing the inherent advantages and structural flaws of human cognitive patterns."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 6,
+        "description": "AI as a state machine filtered during training to satisfy humans; failures are denied release."
+      },
+      {
+        "passage_id": 8,
+        "description": "Standard-answer problems allow multi-path verification ('all roads lead to Rome')."
+      },
+      {
+        "passage_id": 9,
+        "description": "The 'thousand Hamlets' dilemma and scarcity of universally acclaimed masterpieces in humanities."
+      },
+      {
+        "passage_id": 13,
+        "description": "Human writers are also unreliable; gap between wild conception and poor execution."
+      },
+      {
+        "passage_id": 14,
+        "description": "Two core novel frameworks: non-fiction plot and construction (e.g., golden first three chapters, American TV tropes)."
+      },
+      {
+        "passage_id": 16,
+        "description": "AI's abstract creativity can be leveraged specifically for creating attractive characters."
+      },
+      {
+        "passage_id": 18,
+        "description": "Writers often draft outline while writing; inspiration as cumulative time × cognitive efficiency."
+      },
+      {
+        "passage_id": 23,
+        "description": "High probability of failure; even partial success maps outer limits of AI in humanities."
+      }
+    ],
+    "summary": "All 12 claims are faithful paraphrases of their cited passages. The extraction covers the article's core arguments: AI's human-pleasing instinct, the two problem categories, text standardization effects, AI's abstract creativity, long-form control hurdle, the proposed simultaneous writing/outlining method, the skeleton-anchoring principle, the million-word viability forecast, and the overarching human-cognition framing. No claims are unsupported, duplicated, or misattributed. Omitted concepts include the state-machine training filter, multi-path verification, the Hamlets dilemma, human unreliability, novel construction frameworks, character-creation leverage, the simultaneous drafting workflow, and the high failure probability.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-99139f277884325b",
+  "usage": {
+    "input_tokens": 3893,
+    "output_tokens": 5953,
+    "total_tokens": 9846
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

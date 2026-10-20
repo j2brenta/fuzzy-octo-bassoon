@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:23:00.375302+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Kept as a specific workshop announcement; its usefulness depends on how far the event is, so I treat it as reference material with moderate durability."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-b65e87e6a2471b61",
+  "usage": {
+    "input_tokens": 364,
+    "output_tokens": 796,
+    "total_tokens": 1160
+  }
+}

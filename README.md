@@ -392,6 +392,11 @@ coverage, multi-passage references, entity mentions, combined records and handof
 quality gates. They make no live
 API calls.
 
+# Evidence Viewer
+```bash
+uv run refresher-view
+```
+
 ## Remaining work
 
 Agree shared schemas and adapt the provisional handoff; add embeddings and

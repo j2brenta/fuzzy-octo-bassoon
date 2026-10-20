@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:21:18.726657+00:00",
+  "raw_path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "document_path": "documents/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "claims": [
+    {
+      "claim_id": "2fcef9745892659a5254213e3f0405083d1879ad1197dc7740aa4fe301d89749",
+      "statement": "В Anthropic внутри команды часто используют skill ELI5 - команда /eli5 объясняет любую тему как для новичка через HTML-артефакт с крупными картинками и минимумом текста.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 0,
+        "end_char": 171
+      }
+    },
+    {
+      "claim_id": "5e6cbd279988786fbd72b00a6d34927632e939301e59983a588152c148519bc9",
+      "statement": "Официальным плагином ELI5 пока не стал - команда еще решает, встраивать ли его по умолчанию, но поставить можно уже сейчас через community marketplace.",
+      "kind": "fact",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 173,
+        "end_char": 384
+      }
+    },
+    {
+      "claim_id": "0ea6b36942ea7de02094f56632a28ef9b0bb197d92c484e6cbaf35d27f04d4df",
+      "statement": "Внутри его используют не только для внешних тем. Thariq приводит примеры из рабочих запросов: /eli5 как работает этот модуль, /eli5 почему выбрали такой tradeoff, /eli5 что вызвало инцидент. То есть это способ быстро восстановить контекст по чужому коду или разбору инцидента, не читая документацию и логи с нуля.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 497,
+        "end_char": 810
+      }
+    },
+    {
+      "claim_id": "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
+      "statement": "Чтобы добавить community marketplace, выполните команду: claude plugin marketplace add anthropics/claude-plugins-community.",
+      "kind": "how-to",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 386,
+        "end_char": 451
+      }
+    },
+    {
+      "claim_id": "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8",
+      "statement": "Чтобы установить плагин ELI5, выполните команду: claude plugin install eli5@claude-community.",
+      "kind": "how-to",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 452,
+        "end_char": 495
+      }
+    },
+    {
+      "claim_id": "9e2d9d4c474a50150d2eef952c156f72be770f0719201d8c37de2dbdeb11bd84",
+      "statement": "Открыть /eli5, разобраться в теме за две минуты и пойти дальше - способ учиться быстрее.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.85,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 812,
+        "end_char": 1135
+      }
+    },
+    {
+      "claim_id": "65a1b9e21111a4e14d1f5bd43980e8a5de474d880a779a64c9d7295adcdd07b2",
+      "statement": "Сказать \"ничего не понимаю, сделай это за меня\" и не пытаться понять - способ разучиться думать.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.85,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 812,
+        "end_char": 1135
+      }
+    },
+    {
+      "claim_id": "931d31706b0b94d27f162c864a9b999dcb53b7b1ed9ec2b021ad1ed570c54a05",
+      "statement": "AI делает умных людей в разы умнее, а глупых - в разы глупее.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 812,
+        "end_char": 1135
+      }
+    }
+  ],
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-91a5bc1f30ab22a6",
+  "usage": {
+    "input_tokens": 1006,
+    "output_tokens": 3076,
+    "total_tokens": 4082
+  }
+}

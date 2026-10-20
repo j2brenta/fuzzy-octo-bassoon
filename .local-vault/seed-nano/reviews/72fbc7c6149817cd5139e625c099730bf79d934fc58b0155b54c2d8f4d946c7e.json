@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "extraction_hash": "5f5c7c16089c6f6bef2d52b8c2d48b1b839d2f67415de157afc579c1c9c4bf0b",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:38:37.830236+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "8121190082e7681d5dafdaf8635340bd3d86f4f8112377510d9ffa906e2f4e99",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 matches exactly."
+      },
+      {
+        "claim_id": "6a93623061f4d733a87d2a6bac3d094684aaee1c28a6b41dc629bade6cab0a78",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 matches exactly."
+      },
+      {
+        "claim_id": "3cf5748e0037654cf6cc7d641daea4b9869a085e60acf44bfe1132531cf05733",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 first sentence matches."
+      },
+      {
+        "claim_id": "be0cde41b32b86b7005821694ba163413df5a472d0b4a9351602073a9faa6928",
+        "verdict": "needs_revision",
+        "issues": [
+          "lost_qualification",
+          "wrong_kind"
+        ],
+        "reason": "Passage 4 includes condition 'Keeping the model constant,' which is omitted; claim kind is how-to but source is an announcement of a comparison."
+      },
+      {
+        "claim_id": "e4a971d01581cd7a35f746b9d4eea250722521bdf5b0f1d73ae15ecd40e1696d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 7 matches exactly."
+      },
+      {
+        "claim_id": "4edcb78c741eb4cd5efa0cf74a1dfe5a0cb8ce9ec23e5ff376774d21ada0c579",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 second sentence matches."
+      },
+      {
+        "claim_id": "a0ad1f67bafada41e1523b1716e22eca0c502d544164bfba4bccdaecff790b30",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 first sentence matches."
+      },
+      {
+        "claim_id": "57e1f0e5e97a4630016258c4ddb3dd32879e4597144a8bf15e4988a00289284f",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 9 first sentence matches but claim kind is how-to; source is an announcement of a demonstration."
+      },
+      {
+        "claim_id": "eae4d3f857ed225165430fa94787821722aafedf94db58c234464e3aa99abcf2",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 9 second sentence matches but claim kind is how-to; source is an announcement of an examination."
+      },
+      {
+        "claim_id": "1cb3c9295f7e2a7c6254d0779f30c9274478978b030d316758bc2e5e6f1f1c3d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 matches exactly."
+      },
+      {
+        "claim_id": "cfe1b1eec87032b9a99742d5c852e20595a5b2ee0317d4e815c0d316b4cc8a95",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 10 matches exactly."
+      },
+      {
+        "claim_id": "a3a8d8f62248830e342fcda7765e8e0c0f4dfc1424d03203b1de230440fc43ea",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 matches exactly."
+      },
+      {
+        "claim_id": "d6993546a66604b8a9c7686252ab8c2f9b33ab090b8351f3803b131e7df65fd5",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 matches exactly."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "All claims correspond to source passages. Most are fully supported. Claim be0cde41b32b86b7005821694ba163413df5a472d0b4a9351602073a9faa6928 loses the qualification 'Keeping the model constant' and is misclassified as how-to. Claims 57e1f0e5e97a4630016258c4ddb3dd32879e4597144a8bf15e4988a00289284f and eae4d3f857ed225165430fa94787821722aafedf94db58c234464e3aa99abcf2 are misclassified as how-to instead of announcement. No duplicate claims. All passages covered.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-984f72c6ba9cf102",
+  "usage": {
+    "input_tokens": 2299,
+    "output_tokens": 5221,
+    "total_tokens": 7520
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

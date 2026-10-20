@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "source_content_hash": "38cf2bf23c7779bc7ab209d2c99b9373b9992277f56007be94032c1adfebf115",
+  "raw_path": "raw/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:demo-organizer",
+    "source_name": "Synthetic demo organizer",
+    "message_id": "correction-1",
+    "captured_at": "2026-10-19T10:00:00+00:00",
+    "published_at": "2026-10-16T09:00:00+00:00",
+    "author_hint": {
+      "name": "Demo Organizer"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 144
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+      "statement": "The demo workshop starts at 16:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+        "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+        "start_char": 0,
+        "end_char": 143
+      }
+    },
+    {
+      "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+      "statement": "The demo workshop was previously announced to start at 14:00 UTC.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+        "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+        "start_char": 0,
+        "end_char": 143
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "830426a5bb896088a8c8cbf61176fafce050142f2611e817be90fe26c83c59c3",
+      "name": "Synthetic test fixture correction",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+          "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 33,
+          "surface_name": "Synthetic test fixture correction"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "80d1eeb2cb5f9e40a8f0eb7a79a33be08bca4624f18ca8b8c1e74e269b8d96a4",
+      "name": "demo workshop",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+          "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+          "passage_id": 1,
+          "start_char": 39,
+          "end_char": 52,
+          "surface_name": "demo workshop"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides a specific, reusable update about a future workshop schedule."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 states the demo workshop starts at 16:00 UTC on 25 October 2026."
+        },
+        {
+          "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 states the new time replaces the previously announced 14:00 UTC time."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "Both claims are directly supported by the single source passage. The first claim captures the corrected start time; the second captures the previously announced time that is being replaced. No central ideas are omitted.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "830426a5bb896088a8c8cbf61176fafce050142f2611e817be90fe26c83c59c3",
+          "verdict": "supported",
+          "reason": "Explicitly appears as the opening label in the passage."
+        },
+        {
+          "entity_id": "80d1eeb2cb5f9e40a8f0eb7a79a33be08bca4624f18ca8b8c1e74e269b8d96a4",
+          "verdict": "supported",
+          "reason": "Explicitly mentioned as the event whose start time is corrected."
+        }
+      ],
+      "omitted_entities": [],
+      "summary": "Both entities are directly grounded in the source text with correct concept typing; no major omissions.",
+      "status": "accepted"
+    }
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "058a05de295b8622de8cf99c590a90d258b5cf2fb9fb62755c86a1466c2d2df8",
+    "entities/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "cc27f7818b1931d467527d6daeed7d873f7a2bf8188775a19e16f6e811baa6ae",
+    "entity-reviews/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "54099e7e28025cd06b13810f8f370aaea22d1d3344daf1ca4c01b33b31cb8a42",
+    "extractions/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "9cb0d61a65b301ae6576455681fba23e268db66d6dc003b54ea8bbf341aaf120",
+    "raw/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "45dde60821146664280fc59d690589afaefa9f0ec82baf2e044f32c41bee1576",
+    "reviews/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "a22072240a1028e5ca1732c2f04f51cb5bf345a0cbb039b22a8495eaff4cc4cc",
+    "triage/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json": "0bd94f59e566c1d7f318ccbbe7d1685026d2e9f09d67425d4db243902aab1e77"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "c5a5742ca3a63c8e32566c5b3e51eb124892d742c6f2b23d311abdaa0bb3365f",
+  "created_at": "2026-10-20T10:22:16.272611+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "channel": "telegram",
+  "source_id": "seed:supplied-talks",
+  "source_name": "Supplied Redis talk descriptions (simulated)",
+  "message_id": "supplied-redis-talks",
+  "captured_at": "2026-10-20T10:33:54.677726+00:00",
+  "published_at": null,
+  "author_hint": null,
+  "forwarded_by": null,
+  "channel_metadata": null,
+  "url": null,
+  "kind": "text",
+  "text": "18:30 PM\nBuilding Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production\nHow do you give an agent the right information for its next decision? We’ll explore how relevance, freshness, conflicting sources and existing context affect retrieval, including context poisoning, distraction, confusion and clash.\nUsing a Redis powered retail support agent, we’ll demonstrate hybrid search, filtering, incremental updates and token aware context selection. Keeping the model constant, we’ll compare how the retrieval pipeline affects answer quality, latency and token usage.\n\n\nSamuel Agbede\n19:00 PM\nBuilding Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions\nHow do you preserve continuity as an agent’s tasks, users and information change? We’ll explore working and long term memory, separating active task state from reusable knowledge and user preferences.\nUsing Redis, we’ll demonstrate how to scope memories, retrieve relevant information, incorporate corrections and retire outdated assumptions. We’ll then examine whether these changes improve consistency without continually expanding the agent’s context.\n\n\nEvangelos Resvanis",
+  "attachments": [],
+  "content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418"
+}

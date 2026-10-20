@@ -1,0 +1,799 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:36:23.172896+00:00",
+  "entities": [
+    {
+      "entity_id": "e98d7e4dc47471b7afcf89b4a4c87dfb402dab0f9970bf6e0513b4a84effb0e2",
+      "name": "Kirill R",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 8,
+          "surface_name": "Kirill R"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d05b6e5b6763c8ce5bd33fd6f0cbad5bb02805288000a0702b98574499215df8",
+      "name": "Jack Lindsey",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 216,
+          "end_char": 228,
+          "surface_name": "Jack Lindsey"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "31ac22b5311cca3a8a7a70382b8c4168b02dbb208bb95deb1b46ec6d74ee2982",
+      "name": "Chris Olah",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 781,
+          "end_char": 791,
+          "surface_name": "Chris Olah"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "369b7541dd76ac970b43ca5745570658ed7eafed6c267e4975a7b5913ac08a03",
+      "name": "Josh Batson",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 796,
+          "end_char": 807,
+          "surface_name": "Josh Batson"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "92fcc2eba7ddd54e53a48806cea1db2fb5fc31e491435c58f7ca327e6bb77a2e",
+      "name": "Sam Marks",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 6,
+          "start_char": 1049,
+          "end_char": 1058,
+          "surface_name": "Sam Marks"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "7175ad62893c3be9245b6343747d6cdae6318852f90ceb2d73768a974c15b9ff",
+      "name": "Sebastian Farquhar",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1240,
+          "end_char": 1258,
+          "surface_name": "Sebastian Farquhar"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "df525f2a6de1c8ee862734954fb4d99263f2579fc61b0e2397b440d4fca64194",
+      "name": "Yarin Gal",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1263,
+          "end_char": 1272,
+          "surface_name": "Yarin Gal"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1429,
+          "end_char": 1432,
+          "surface_name": "Gal"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "Gal"
+      ]
+    },
+    {
+      "entity_id": "0f143e3d343f48df3506ed43e9b36a359f6661cbfa19489e39b2fa2057846056",
+      "name": "Adam Tauman Kalai",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 9,
+          "start_char": 1468,
+          "end_char": 1485,
+          "surface_name": "Adam Tauman Kalai"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "fe74ad04d410e3e71c134966fc416c1a4c1391284e458eb4e1595c4e68efbc20",
+      "name": "Owain Evans",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 10,
+          "start_char": 1707,
+          "end_char": 1718,
+          "surface_name": "Owain Evans"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "69a08e41691171a87f547c8e297f500c3e0fc8b03dbf0d7227125ca891ec4709",
+      "name": "Stephen Fleming",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2054,
+          "end_char": 2069,
+          "surface_name": "Stephen Fleming"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d2a066e9af65f610262688d38ad086835e275041c3deb04a3d068fb0a47345c5",
+      "name": "Arvind Narayanan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2395,
+          "end_char": 2411,
+          "surface_name": "Arvind Narayanan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e95d647f266e2dfa3b290a0546a7568e2cc52c53fed7fed6212e0759f33cf4ae",
+      "name": "Sayash Kapoor",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2416,
+          "end_char": 2429,
+          "surface_name": "Sayash Kapoor"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "44412b10b7dcb86adad6173e03827271d8d59fdb4d7c08b305123983595ce9a1",
+      "name": "Beth Barnes",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 15,
+          "start_char": 2644,
+          "end_char": 2655,
+          "surface_name": "Beth Barnes"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "02b25d77394f8f61ef1c6b28433a6c7e9aa4bc14211656f9f515a4ddfc1bb610",
+      "name": "Andrej Karpathy",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 16,
+          "start_char": 2795,
+          "end_char": 2810,
+          "surface_name": "Andrej Karpathy"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d4216625db7045469b7993461cca5034b54ffae3150d56b8fe7f7c3c59e89f62",
+      "name": "Azalia Mirhoseini",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2925,
+          "end_char": 2942,
+          "surface_name": "Azalia Mirhoseini"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e63d8b0105558dc0ea7c98fddb7221e094169e302b42bed2d305e4df6f9d0ee6",
+      "name": "Shreya Shankar",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 19,
+          "start_char": 3075,
+          "end_char": 3089,
+          "surface_name": "Shreya Shankar"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 3879,
+          "end_char": 3886,
+          "surface_name": "Shankar"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "Shankar"
+      ]
+    },
+    {
+      "entity_id": "6a94423b5287c9b8555e3031cf7835bb16efc68c8ee9543d4a3280e38da5d0a7",
+      "name": "Hamel Husain",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 20,
+          "start_char": 3309,
+          "end_char": 3321,
+          "surface_name": "Hamel Husain"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 3868,
+          "end_char": 3874,
+          "surface_name": "Husain"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "Husain"
+      ]
+    },
+    {
+      "entity_id": "99c36862eeb14937365f6319b0e94984c3ad1e2a7c78f10cbccc1b6271c0038f",
+      "name": "Eugene Yan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 21,
+          "start_char": 3549,
+          "end_char": 3559,
+          "surface_name": "Eugene Yan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e5db4f69110da22db8a0238f3cb4aa6549021498ddab12b3524845f7dbe2ac0d",
+      "name": "Anthropic",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 230,
+          "end_char": 239,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 252,
+          "end_char": 261,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 809,
+          "end_char": 818,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 3722,
+          "end_char": 3731,
+          "surface_name": "Anthropic"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "fb39f2304fa97f23b15fc46118d4c988a9f95eb80520e01ad6ba013e25cb29e0",
+      "name": "OpenAI",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 9,
+          "start_char": 1487,
+          "end_char": 1493,
+          "surface_name": "OpenAI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4af2a2765742c76cf041d9e0640e61ecc79df0d71115015659a24ef5b2490884",
+      "name": "UCL",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2071,
+          "end_char": 2074,
+          "surface_name": "UCL"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "1621370005d862a3a68cf70d13b4823a96813eec62c0a97f86be552a50346d91",
+      "name": "Princeton",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 14,
+          "start_char": 2431,
+          "end_char": 2440,
+          "surface_name": "Princeton"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 3784,
+          "end_char": 3793,
+          "surface_name": "Princeton"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "f9a2df53726172c90f844dc884c02c754d8d8c7f910c5aad5e5d83b75799cee0",
+      "name": "METR",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 15,
+          "start_char": 2627,
+          "end_char": 2631,
+          "surface_name": "METR"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 3830,
+          "end_char": 3834,
+          "surface_name": "METR"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "101d7493acdd3ea324e846a70666e49c35f1ede2c134247d3a7daf2b042df524",
+      "name": "Stanford",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2944,
+          "end_char": 2952,
+          "surface_name": "Stanford"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "eda8853c44ffab0ed5be1bbe81580d8035b71e3f6fb9e03a207a468758079e5f",
+      "name": "UC Berkeley",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 19,
+          "start_char": 3091,
+          "end_char": 3102,
+          "surface_name": "UC Berkeley"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "1d6dcd2b2980ddd7c095b04879faad5d8e6f1ddf2ccbacca5cbbfc7fb0c9513a",
+      "name": "Oxford",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1458,
+          "end_char": 1464,
+          "surface_name": "Oxford"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6b0f2eac281e996bb54eca1c73589fe765025378c5f62f48cc6d4ad0d007c75e",
+      "name": "Nature",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1332,
+          "end_char": 1338,
+          "surface_name": "Nature"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "93de132c6d645a84d044e21803828bdcdd6e518e31c56d529beb880c07b69b54",
+      "name": "Truthful AI",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 10,
+          "start_char": 2008,
+          "end_char": 2019,
+          "surface_name": "Truthful AI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6e4b564acef6495ffc6cf783f9bcdd9705ca8436d753f394c27e837c940c873c",
+      "name": "OATML group",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1443,
+          "end_char": 1454,
+          "surface_name": "OATML group"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "797740bbadab8d7be4168a6fd17282c1f53a0bcb8510f9b404258c3c25b5e6c6",
+      "name": "transformer-circuits.pub",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 955,
+          "end_char": 979,
+          "surface_name": "transformer-circuits.pub"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "7119700e89aff41ccdf5b8ee407d11d3710ea9295a86ae7834fc4b76726f9828",
+      "name": "arXiv",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 4097,
+          "end_char": 4102,
+          "surface_name": "arXiv"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "90dafe295135676c4f516e0efeae31a136d3664f9ba71a9e2a6bc67c053a1c8f",
+      "name": "metacognition",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 742,
+          "end_char": 755,
+          "surface_name": "metacognition"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2113,
+          "end_char": 2126,
+          "surface_name": "metacognition"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 12,
+          "start_char": 2194,
+          "end_char": 2207,
+          "surface_name": "metacognition"
+        },
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 23,
+          "start_char": 4119,
+          "end_char": 4132,
+          "surface_name": "metacognition"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "3a95b4fc3c3eed6bd946735dc6d44d0f4936a7211984281624655e121acf3bc9",
+      "name": "model psychiatry",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 273,
+          "end_char": 289,
+          "surface_name": "model psychiatry"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "27ba9e0240141ba77e505810d23e3327ca376aa7fbd076fe5d64bc6d5b2eb306",
+      "name": "emergent introspective awareness",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 4,
+          "start_char": 310,
+          "end_char": 342,
+          "surface_name": "emergent introspective awareness"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "ec85e18466870ac19830477a926a3aab1db960972db3f79dff462f65a1f86353",
+      "name": "circuit-tracing",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 5,
+          "start_char": 849,
+          "end_char": 864,
+          "surface_name": "circuit-tracing"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "2e72b17338f1265fd24313109b8a88efa3d398a878076d999a8f1a856b267aa9",
+      "name": "semantic entropy",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 8,
+          "start_char": 1297,
+          "end_char": 1313,
+          "surface_name": "semantic entropy"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6bbdccd373a85258a66181ec7cf2c02334238f3fee05859baaad92589b1d5f17",
+      "name": "geometry of truth",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 6,
+          "start_char": 1117,
+          "end_char": 1134,
+          "surface_name": "geometry of truth"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "5fd0254c612654817f5539dc92f163cc17d809be9e3ae7392fabe267568304ee",
+      "name": "LLM-as-a-Verifier",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 17,
+          "start_char": 2965,
+          "end_char": 2982,
+          "surface_name": "LLM-as-a-Verifier"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "8269e95331e658566b7dc12441940d6e26746dc55c89bf0f2ef21b84a2bb2a40",
+      "name": "evals",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 20,
+          "start_char": 3370,
+          "end_char": 3375,
+          "surface_name": "evals"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "66a285e90f75cacfc07494be933042823f1bbd3d57df8c930b72485b0f066ec7",
+      "name": "verifier-reliability problem",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+          "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+          "passage_id": 19,
+          "start_char": 3268,
+          "end_char": 3296,
+          "surface_name": "verifier-reliability problem"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-b2075c62c9982662",
+  "usage": {
+    "input_tokens": 1609,
+    "output_tokens": 12815,
+    "total_tokens": 14424
+  },
+  "usage_scope": "final_response_only"
+}

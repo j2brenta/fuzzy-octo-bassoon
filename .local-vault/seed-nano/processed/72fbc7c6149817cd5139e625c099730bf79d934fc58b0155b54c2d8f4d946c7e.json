@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "raw_path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-talks",
+    "source_name": "Supplied Redis talk descriptions (simulated)",
+    "message_id": "supplied-redis-talks",
+    "captured_at": "2026-10-20T10:33:54.677726+00:00",
+    "published_at": null,
+    "author_hint": null,
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 1179
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "8121190082e7681d5dafdaf8635340bd3d86f4f8112377510d9ffa906e2f4e99",
+      "statement": "Building Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 9,
+        "end_char": 101
+      }
+    },
+    {
+      "claim_id": "d04a8bc9d2141bf74a0befabd237c4e9752f9f2103de96c604d75c878b7b8647",
+      "statement": "How do you give an agent the right information for its next decision? We'll explore how relevance, freshness, conflicting sources and existing context affect retrieval, including context poisoning, distraction, confusion and clash.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 102,
+        "end_char": 333
+      }
+    },
+    {
+      "claim_id": "341c42264ce04b6655923b30ed232853eac098c0e0dab37611f29989c1552c42",
+      "statement": "Using a Redis powered retail support agent, we'll demonstrate hybrid search, filtering, incremental updates and token aware context selection.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 334,
+        "end_char": 594
+      }
+    },
+    {
+      "claim_id": "9591bcde57fcde66d63943ad51b0d000bc406a6e0f44be82cfc27811f421e835",
+      "statement": "Keeping the model constant, we'll compare how the retrieval pipeline affects answer quality, latency and token usage.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 334,
+        "end_char": 594
+      }
+    },
+    {
+      "claim_id": "1cb3c9295f7e2a7c6254d0779f30c9274478978b030d316758bc2e5e6f1f1c3d",
+      "statement": "Samuel Agbede",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 597,
+        "end_char": 610
+      }
+    },
+    {
+      "claim_id": "a3a8d8f62248830e342fcda7765e8e0c0f4dfc1424d03203b1de230440fc43ea",
+      "statement": "18:30 PM",
+      "kind": "fact",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 0,
+        "end_char": 8
+      }
+    },
+    {
+      "claim_id": "e4a971d01581cd7a35f746b9d4eea250722521bdf5b0f1d73ae15ecd40e1696d",
+      "statement": "Building Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 620,
+        "end_char": 703
+      }
+    },
+    {
+      "claim_id": "d426dec714dd368be064a02fef63daa93c915bdcabb125283f44d11e7bf520e1",
+      "statement": "How do you preserve continuity as an agent's tasks, users and information change?",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 704,
+        "end_char": 904
+      }
+    },
+    {
+      "claim_id": "c5b62e42c62a084e5a977df0fa3dea41d3025e125d871b230128d342fdee6e87",
+      "statement": "We'll explore working and long term memory, separating active task state from reusable knowledge and user preferences.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 704,
+        "end_char": 904
+      }
+    },
+    {
+      "claim_id": "cf8d117a5b4fae809797039b70dea4008617bb1ff7704adc303bbff56ab7bbc1",
+      "statement": "Using Redis, we'll demonstrate how to scope memories, retrieve relevant information, incorporate corrections and retire outdated assumptions.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 905,
+        "end_char": 1158
+      }
+    },
+    {
+      "claim_id": "520af54d034e7f0012bee92f96cb4b3d0814a24328821e1b8eea9393cfb0830f",
+      "statement": "We'll then examine whether these changes improve consistency without continually expanding the agent's context.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 905,
+        "end_char": 1158
+      }
+    },
+    {
+      "claim_id": "cfe1b1eec87032b9a99742d5c852e20595a5b2ee0317d4e815c0d316b4cc8a95",
+      "statement": "Evangelos Resvanis",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 1161,
+        "end_char": 1179
+      }
+    },
+    {
+      "claim_id": "d6993546a66604b8a9c7686252ab8c2f9b33ab090b8351f3803b131e7df65fd5",
+      "statement": "19:00 PM",
+      "kind": "fact",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 611,
+        "end_char": 619
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+      "name": "Samuel Agbede",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 5,
+          "start_char": 597,
+          "end_char": 610,
+          "surface_name": "Samuel Agbede"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+      "name": "Evangelos Resvanis",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 10,
+          "start_char": 1161,
+          "end_char": 1179,
+          "surface_name": "Evangelos Resvanis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "152cf82f0e354142303da53cce8f630bee475818d7aaf5355907c3c8bfb17836",
+      "name": "Redis",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 4,
+          "start_char": 342,
+          "end_char": 347,
+          "surface_name": "Redis"
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 9,
+          "start_char": 911,
+          "end_char": 916,
+          "surface_name": "Redis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "newsletter_digest",
+    "durability_class": "reference",
+    "split_digest": true,
+    "reason": "The text summarizes two substantive technical talks on AI agent retrieval and memory, offering reusable knowledge suitable for a personal knowledge base."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "8121190082e7681d5dafdaf8635340bd3d86f4f8112377510d9ffa906e2f4e99",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 2 exactly."
+        },
+        {
+          "claim_id": "d04a8bc9d2141bf74a0befabd237c4e9752f9f2103de96c604d75c878b7b8647",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 3 exactly."
+        },
+        {
+          "claim_id": "341c42264ce04b6655923b30ed232853eac098c0e0dab37611f29989c1552c42",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches first sentence of passage 4."
+        },
+        {
+          "claim_id": "9591bcde57fcde66d63943ad51b0d000bc406a6e0f44be82cfc27811f421e835",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches second sentence of passage 4."
+        },
+        {
+          "claim_id": "1cb3c9295f7e2a7c6254d0779f30c9274478978b030d316758bc2e5e6f1f1c3d",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 5 exactly."
+        },
+        {
+          "claim_id": "a3a8d8f62248830e342fcda7765e8e0c0f4dfc1424d03203b1de230440fc43ea",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 1 exactly."
+        },
+        {
+          "claim_id": "e4a971d01581cd7a35f746b9d4eea250722521bdf5b0f1d73ae15ecd40e1696d",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 7 exactly."
+        },
+        {
+          "claim_id": "d426dec714dd368be064a02fef63daa93c915bdcabb125283f44d11e7bf520e1",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches first sentence of passage 8."
+        },
+        {
+          "claim_id": "c5b62e42c62a084e5a977df0fa3dea41d3025e125d871b230128d342fdee6e87",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches second sentence of passage 8."
+        },
+        {
+          "claim_id": "cf8d117a5b4fae809797039b70dea4008617bb1ff7704adc303bbff56ab7bbc1",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches first sentence of passage 9."
+        },
+        {
+          "claim_id": "520af54d034e7f0012bee92f96cb4b3d0814a24328821e1b8eea9393cfb0830f",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches second sentence of passage 9."
+        },
+        {
+          "claim_id": "cfe1b1eec87032b9a99742d5c852e20595a5b2ee0317d4e815c0d316b4cc8a95",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 10 exactly."
+        },
+        {
+          "claim_id": "d6993546a66604b8a9c7686252ab8c2f9b33ab090b8351f3803b131e7df65fd5",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Matches passage 6 exactly."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "All 13 claims are faithful extractions from the provided passages. Each claim's statement matches its cited passage text exactly, with appropriate kind and durability labels. No unsupported, duplicate, or atomicity issues were found. The claims cover all passage content including session titles, descriptions, speaker names, and times.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage 5 as speaker for the 18:30 PM session; person type correct."
+        },
+        {
+          "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage 10 as speaker for the 19:00 PM session; person type correct."
+        },
+        {
+          "entity_id": "152cf82f0e354142303da53cce8f630bee475818d7aaf5355907c3c8bfb17836",
+          "verdict": "supported",
+          "reason": "Named in passages 4 and 9 as the technology powering the demo agents; organization type appropriate for Redis the company/product."
+        }
+      ],
+      "omitted_entities": [
+        {
+          "name": "Building Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            2
+          ]
+        },
+        {
+          "name": "Building Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            7
+          ]
+        },
+        {
+          "name": "retail support agent",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            4
+          ]
+        },
+        {
+          "name": "context poisoning",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            3
+          ]
+        },
+        {
+          "name": "working and long term memory",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            8
+          ]
+        }
+      ],
+      "summary": "All three supplied entities are directly grounded in the source passages with correct types and no merge issues. Five additional concept entities from talk titles and key technical terms are noted as omitted but within budget.",
+      "status": "needs_revision"
+    }
+  },
+  "quality_status": "needs_revision",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "claim_candidate": "repairs",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "7893c4fb010b61e87f2a36fbfc39cee314e8bd1847287f41555ab1e40d7fba92",
+    "entities/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "fce1d5cd63b8201cc8a140ad953e4e1ffb03b69d348ade992226cdcea8b211ca",
+    "entity-reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "cae5d22a058bd3dd5e51b2a8059b1b3d3cf88c4d232711d6f8a3d869da099add",
+    "extractions/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "5f5c7c16089c6f6bef2d52b8c2d48b1b839d2f67415de157afc579c1c9c4bf0b",
+    "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "f122f44de2700cceb355f437fe1540fe862c8a3e696847a5d63b7d9784cd02e3",
+    "repair-reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "dc190e1a7751608bdbad4fe0286a5c05647366c7a10a0ae3d49d448b3cc0a276",
+    "repairs/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "3c3386abcf35dd4ce6577068185658b7ad172aaec5cf3eea78f29d345fe38fd7",
+    "reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "ff4ebe76b6c6a3eb80ce9e8644c0c7b6ce8811ff6bbe891d04ece617cfcb77ef",
+    "triage/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "92f7eba8e174eb95d3501321352f7d83c962544f9590e3d546e2c742f1d1630e"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "73d366f8e258c117c0c61868298db779f644c5bb33f8d90f649036ae16f5456d",
+  "created_at": "2026-10-20T10:38:58.297096+00:00"
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:22:51.212438+00:00",
+  "labels": {
+    "keep": false,
+    "kind": "announcement",
+    "durability_class": "ephemeral",
+    "split_digest": false,
+    "reason": "The message is a time‑specific logistical detail with no lasting knowledge value."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-836101c3504e1c54",
+  "usage": {
+    "input_tokens": 364,
+    "output_tokens": 526,
+    "total_tokens": 890
+  }
+}

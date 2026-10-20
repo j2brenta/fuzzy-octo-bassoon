@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "entity_extraction_hash": "9e6f528169170958399f0c9a4625dae4957219973cbf69b48a6cf2906f13644c",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:39:24.172401+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "9b3a5e4dbed792a0e5949ccc20eb68c133d8b8982dc22d03e027be80542fb37f",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage as 'Synthetic test fixture' at chars 0-22, correctly typed as concept."
+      },
+      {
+        "entity_id": "b9bbe82ec6fc445b69088cc6d2ad481a64560226ba1cfa8a6fa56a2670fc8092",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage as 'UTC' at chars 58-61, correctly typed as concept."
+      }
+    ],
+    "omitted_entities": [],
+    "summary": "Both entities are directly supported by the source text with accurate mention spans and appropriate concept types.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a55edcf03513bac3",
+  "usage": {
+    "input_tokens": 983,
+    "output_tokens": 2114,
+    "total_tokens": 3097
+  },
+  "usage_scope": "final_response_only"
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:20:50.963945+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "thought",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "The text conveys useful information about the ELI5 tool, its internal adoption, practical examples, and broader learning implications, making it substantive knowledge worth retaining."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-97306062c222344c",
+  "usage": {
+    "input_tokens": 773,
+    "output_tokens": 297,
+    "total_tokens": 1070
+  }
+}

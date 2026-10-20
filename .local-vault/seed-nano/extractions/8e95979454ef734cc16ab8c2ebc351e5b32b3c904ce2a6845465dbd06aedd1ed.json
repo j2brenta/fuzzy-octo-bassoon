@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "created_at": "2026-10-20T10:39:33.549347+00:00",
+  "raw_path": "raw/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json",
+  "document_path": "documents/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json",
+  "claims": [
+    {
+      "claim_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+      "statement": "The demo workshop starts at 14:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+        "section_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:section:1",
+        "start_char": 0,
+        "end_char": 91
+      }
+    }
+  ],
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "request_id": "chatcmpl-9e0e7992-3d3c-4efa-a5a6-1b7f70f7a528",
+  "usage": {
+    "input_tokens": 481,
+    "output_tokens": 685,
+    "total_tokens": 1166
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "source_content_hash": "c15ce644b1f84cf2495a4f34b3272d2e7a58955ce4dbdff9d27b8f0afeb480e4",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:24:02.812305+00:00",
+  "raw_path": "raw/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json",
+  "document_path": "documents/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json",
+  "claims": [
+    {
+      "claim_id": "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
+      "statement": "AI is a state machine whose fundamental instinct is to please humans.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.96,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 466,
+        "end_char": 795
+      }
+    },
+    {
+      "claim_id": "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60",
+      "statement": "AI's problems fall into two categories: those with standard answers and those without standard answers.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.94,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 797,
+        "end_char": 885
+      }
+    },
+    {
+      "claim_id": "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
+      "statement": "In standard-answer problems like mathematics, there is only one correct path to satisfy humans, and the answer can be verified via multiple pathways, allowing AI to excel.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.93,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 887,
+        "end_char": 1599
+      }
+    },
+    {
+      "claim_id": "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
+      "statement": "In non-standard-answer problems such as humanities and text generation, outcomes depend on subjective human intent, creating a gray zone where AI lacks a definitive direction to please humans.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.93,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 1601,
+        "end_char": 2665
+      }
+    },
+    {
+      "claim_id": "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c",
+      "statement": "The more standardized a text is and the closer it is to having a single correct answer, the better AI performs at text generation.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.92,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 2667,
+        "end_char": 3072
+      }
+    },
+    {
+      "claim_id": "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1",
+      "statement": "The more a text requires deep thinking and genuine creation, the less reliable AI becomes.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.92,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 3074,
+        "end_char": 3182
+      }
+    },
+    {
+      "claim_id": "4163c0f0c0ebfde9043fda2d8cc21abe8d661783a77063b3c51bdbd1d444d284",
+      "statement": "When discussing abstract, metaphysical topics that please humans, AI can evoke excitement and exhibit creativity despite being unable to give definitive conclusions.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.88,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 4974,
+        "end_char": 5706
+      }
+    },
+    {
+      "claim_id": "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184",
+      "statement": "At a highly abstract level, AI possesses powerful creativity that can be leveraged for novel creation, especially for generating attractive characters.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.88,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 5708,
+        "end_char": 6033
+      }
+    },
+    {
+      "claim_id": "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
+      "statement": "A major obstacle for AI-driven novel creation is achieving high-level control of long-form text.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 6035,
+        "end_char": 6148
+      }
+    },
+    {
+      "claim_id": "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
+      "statement": "Writers often craft outlines while writing, integrating real-time inspiration; inspiration equals time multiplied by cognitive efficiency, and longer conceptualization yields more brilliant work.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 6150,
+        "end_char": 7206
+      }
+    },
+    {
+      "claim_id": "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
+      "statement": "To improve AI novel generation, AI should write prose while simultaneously composing and refining the subsequent plot outline.",
+      "kind": "how-to",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.92,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 7208,
+        "end_char": 7393
+      }
+    },
+    {
+      "claim_id": "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
+      "statement": "This non‑traditional approach may fail; the challenge is to devise a mechanism that turns AI’s free ideation into grounded writing using structural 'skeletons'.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 7395,
+        "end_char": 7773
+      }
+    },
+    {
+      "claim_id": "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554",
+      "statement": "The author intends to explore this methodology next.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.88,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 7775,
+        "end_char": 7828
+      }
+    },
+    {
+      "claim_id": "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96",
+      "statement": "If viable, the pipeline could enable AI to produce non‑detective novels over one million words that remain highly readable, given current memory limits.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.78,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 7830,
+        "end_char": 8024
+      }
+    },
+    {
+      "claim_id": "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02",
+      "statement": "Even if the pipeline does not totally fail, attempting it could reveal the outer limits of AI’s capabilities in the humanities, although the probability of failure is massive.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 8026,
+        "end_char": 8252
+      }
+    },
+    {
+      "claim_id": "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
+      "statement": "The author’s goal is to treat AI as an ordinary person, endowing it with the advantages and flaws of human cognitive patterns.",
+      "kind": "opinion",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.94,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+        "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+        "start_char": 8254,
+        "end_char": 8447
+      }
+    }
+  ],
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-991e11a1f4c3a704",
+  "usage": {
+    "input_tokens": 2395,
+    "output_tokens": 5193,
+    "total_tokens": 7588
+  }
+}

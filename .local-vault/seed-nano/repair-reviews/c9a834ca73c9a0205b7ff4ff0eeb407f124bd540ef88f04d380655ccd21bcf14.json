@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "extraction_hash": "1bd45698aaccf606688b55667eed4c3a7399be1ae780470856112354dd0049bc",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:51:47.523529+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "6547cde7fe3471c924f0f2f4231f568a3342c064f223a1515e355d7b05c22dde",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 3 exactly."
+      },
+      {
+        "claim_id": "b9278827d7188444c3c26136021cb02cd84661a34262d227454c15e7f3c2fbc9",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 4 exactly."
+      },
+      {
+        "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 5 exactly."
+      },
+      {
+        "claim_id": "8c7486d9f897055d8309031cce8a58a347df239662f1a69ee51cee13659093ca",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 7 exactly."
+      },
+      {
+        "claim_id": "b15c49dac078293c6231f3b2d4cd9bb5dd72a313a98296750c027abb4a2722c3",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 8 exactly."
+      },
+      {
+        "claim_id": "f2bc8aca673d921286b5e6733e0f74d0a5604816dd2a8f5def8340aa651f69ed",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 9 exactly."
+      },
+      {
+        "claim_id": "8e98a5f8d1efe2442f1f36a88078e82ab60c3b61a15fbc7c4aa6564858db8187",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 11 exactly."
+      },
+      {
+        "claim_id": "37a5f8fa9eca405689e86c3591e9740a7d47ce213b9a26391b35e93fc88bdcb2",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 13 exactly."
+      },
+      {
+        "claim_id": "281291b9c329acfea0244746cbeaec372cc8737dbd40c5f47ee8ff4ea22b6484",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 14 exactly."
+      },
+      {
+        "claim_id": "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 15 exactly."
+      },
+      {
+        "claim_id": "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 16 exactly."
+      },
+      {
+        "claim_id": "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 18 exactly."
+      },
+      {
+        "claim_id": "dacf1a60e6661efc796c7d4cbfeb5d25d61bba550bc854d5fa20217e40a08c2b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 19 exactly."
+      },
+      {
+        "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim matches passage 20 exactly."
+      },
+      {
+        "claim_id": "34b1f1cecfdda258a325887ddf480fcfe6ffb7955c2b576167a15921dd3f9e93",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Claim accurately paraphrases passage 22."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "All 15 claims are fully supported by their cited passages. Each claim accurately reflects the source text with no omissions, misattributions, or duplications. Kinds and durability labels are appropriate. No major concepts from the passages are missing from the claims.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a723235273208435",
+  "usage": {
+    "input_tokens": 3792,
+    "output_tokens": 5617,
+    "total_tokens": 9409
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

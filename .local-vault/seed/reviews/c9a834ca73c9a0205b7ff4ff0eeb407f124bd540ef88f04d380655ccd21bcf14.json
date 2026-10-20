@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "extraction_hash": "1a03f0b5f96a63c566654d61c1c964f615194805285d10fa4a4fa4ca945a4b08",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:29:24.876305+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 states Jack Lindsey leads Anthropic's 'model psychiatry' team."
+      },
+      {
+        "claim_id": "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 describes Lindsey's paper testing genuine introspective awareness via concept injection."
+      },
+      {
+        "claim_id": "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 reports Lindsey's cautious conclusion: limited, functional introspective awareness, highly limited and context-dependent."
+      },
+      {
+        "claim_id": "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 says Chris Olah and Josh Batson work on circuit-tracing research that found the 'can't answer' default pathway."
+      },
+      {
+        "claim_id": "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 identifies their transformer-circuits.pub publications as the main source for mechanistic explanations of hallucination."
+      },
+      {
+        "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 notes Sam Marks' work on the 'geometry of truth' and auditing models for hidden objectives."
+      },
+      {
+        "claim_id": "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 7 names Farquhar and Gal as lead authors of the 2024 Nature semantic entropy work for detecting confabulations by sampling multiple answers."
+      },
+      {
+        "claim_id": "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 7 states Yarin Gal leads the OATML group at Oxford."
+      },
+      {
+        "claim_id": "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 identifies Adam Tauman Kalai (OpenAI) as lead author of the 2025 paper 'Why Language Models Hallucinate,' arguing training rewards guessing over admitting uncertainty."
+      },
+      {
+        "claim_id": "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 9 describes Owain Evans' influential work on models knowing what they know, including the 'Looking Inward' and 'Tell me about yourself' papers."
+      },
+      {
+        "claim_id": "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 9 adds that Evans co-authored early work on teaching models to express uncertainty in words and leads Truthful AI."
+      },
+      {
+        "claim_id": "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 11 calls Stephen Fleming (UCL) a leading neuroscientist of human metacognition and author of 'Know Thyself.'"
+      },
+      {
+        "claim_id": "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 11 says Fleming increasingly applies metacognition research to AI and is useful for understanding the term, including calibration-versus-discrimination."
+      },
+      {
+        "claim_id": "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 13 states Arvind Narayanan and Sayash Kapoor (Princeton) wrote the cited agent reliability paper borrowing from nuclear and aviation safety."
+      },
+      {
+        "claim_id": "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 13 characterizes their newsletter as skeptical, data-driven, and a counterweight to hype."
+      },
+      {
+        "claim_id": "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 14 says METR (founded by Beth Barnes) measures how long a task agents can complete autonomously."
+      },
+      {
+        "claim_id": "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 14 calls METR reports a key reference for the reliability-over-horizon question."
+      },
+      {
+        "claim_id": "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 15 credits Andrej Karpathy with popularizing the 'march of nines' framing and writing clearly about moving from demos to products."
+      },
+      {
+        "claim_id": "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 16 notes Azalia Mirhoseini (Stanford) co-led the LLM-as-a-Verifier work on scaling verification as its own axis."
+      },
+      {
+        "claim_id": "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 18 describes Shreya Shankar's research on evaluating LLM pipelines, including 'Who Validates the Validators?' on aligning automated judges with human judgment."
+      },
+      {
+        "claim_id": "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 19 calls Hamel Husain a practical voice on building evals for real products: error analysis, reading traces, designing checks that catch real failures."
+      },
+      {
+        "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 20 says Eugene Yan writes accessible, practical pieces on LLM evaluation and production patterns."
+      },
+      {
+        "claim_id": "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 22 recommends a minimal follow set: Anthropic interpretability for mechanisms, Princeton newsletter for reliability science, METR for agent capability trends, Husain and Shankar for engineering practice."
+      },
+      {
+        "claim_id": "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 22 advises searching arXiv for terms like 'metacognition,' 'calibration,' 'selective prediction,' and 'process verifier' to surface recent work."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 3,
+        "description": "Jack Lindsey is arguably the most direct researcher on 'metacognition' in the literal sense."
+      },
+      {
+        "passage_id": 22,
+        "description": "The recommended minimal set covers the full chain from why models don't know when they're wrong to how teams build systems that catch it anyway."
+      }
+    ],
+    "summary": "All 24 claims are directly supported by their cited passages. The claims accurately capture the attributions, research descriptions, and recommendations from the source text. No issues such as unsupported statements, wrong evidence, lost qualifications, wrong attribution, duplicates, non-atomic claims, or incorrect kind/durability labels were found. Two omitted concepts are noted: Lindsey's status as the most direct metacognition researcher (passage 3) and the summary of the minimal set covering the full chain (passage 22).",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-aca488ad53bc879b",
+  "usage": {
+    "input_tokens": 4634,
+    "output_tokens": 6314,
+    "total_tokens": 10948
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

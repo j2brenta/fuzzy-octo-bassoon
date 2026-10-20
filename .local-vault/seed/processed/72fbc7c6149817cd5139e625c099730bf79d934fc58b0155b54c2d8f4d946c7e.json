@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "raw_path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-talks",
+    "source_name": "Supplied Redis talk descriptions (simulated)",
+    "message_id": "supplied-redis-talks",
+    "captured_at": "2026-10-20T07:04:29.905115+00:00",
+    "published_at": null,
+    "author_hint": null,
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 1179
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208",
+      "statement": "At 18:30, Samuel Agbede will present a talk titled 'Building Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production'.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 0,
+          "end_char": 8
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 9,
+          "end_char": 101
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 597,
+          "end_char": 610
+        }
+      ]
+    },
+    {
+      "claim_id": "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7",
+      "statement": "At 19:00, Evangelos Resvanis will present a talk titled 'Building Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions'.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 611,
+          "end_char": 619
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 620,
+          "end_char": 703
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 1161,
+          "end_char": 1179
+        }
+      ]
+    },
+    {
+      "claim_id": "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
+      "statement": "The 18:30 talk will explore how relevance, freshness, conflicting sources and existing context affect retrieval, including context poisoning, distraction, confusion and clash.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 102,
+        "end_char": 333
+      }
+    },
+    {
+      "claim_id": "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
+      "statement": "In the 18:30 talk, using a Redis-powered retail support agent, they will demonstrate hybrid search, filtering, incremental updates and token-aware context selection while keeping the model constant, and compare how the retrieval pipeline affects answer quality, latency and token usage.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 334,
+        "end_char": 594
+      }
+    },
+    {
+      "claim_id": "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
+      "statement": "The 19:00 talk will explore how to preserve continuity as an agent’s tasks, users and information change, covering working and long-term memory, separating active task state from reusable knowledge and user preferences.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 704,
+        "end_char": 904
+      }
+    },
+    {
+      "claim_id": "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
+      "statement": "In the 19:00 talk, using Redis, they will demonstrate how to scope memories, retrieve relevant information, incorporate corrections and retire outdated assumptions, and examine whether these changes improve consistency without continually expanding the agent’s context.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 905,
+        "end_char": 1158
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+      "name": "Samuel Agbede",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 5,
+          "start_char": 597,
+          "end_char": 610,
+          "surface_name": "Samuel Agbede"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+      "name": "Evangelos Resvanis",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 10,
+          "start_char": 1161,
+          "end_char": 1179,
+          "surface_name": "Evangelos Resvanis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c710b1d3fe17e97f39b912da0f5e949f84edf31527806d02f1c9efcbde69ba80",
+      "name": "Redis",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 4,
+          "start_char": 342,
+          "end_char": 347,
+          "surface_name": "Redis"
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 9,
+          "start_char": 911,
+          "end_char": 916,
+          "surface_name": "Redis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "ephemeral",
+    "split_digest": false,
+    "reason": "This text lists scheduled talks with times and speakers, which is an announcement of event sessions."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 gives the time 18:30 PM, passage 2 gives the exact title, and passage 5 gives the speaker Samuel Agbede; together they fully support the claim."
+        },
+        {
+          "claim_id": "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 6 gives the time 19:00 PM, passage 7 gives the exact title, and passage 10 gives the speaker Evangelos Resvanis; together they fully support the claim."
+        },
+        {
+          "claim_id": "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 3 states the talk will explore relevance, freshness, conflicting sources, existing context, context poisoning, distraction, confusion and clash, matching the claim exactly."
+        },
+        {
+          "claim_id": "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 4 describes using a Redis-powered retail support agent to demonstrate hybrid search, filtering, incremental updates, token-aware context selection, keeping the model constant, and comparing retrieval pipeline effects on answer quality, latency and token usage, matching the claim."
+        },
+        {
+          "claim_id": "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 8 states the talk will explore preserving continuity as tasks, users and information change, covering working and long-term memory, separating active task state from reusable knowledge and user preferences, matching the claim."
+        },
+        {
+          "claim_id": "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 9 states using Redis to demonstrate scoping memories, retrieving relevant information, incorporating corrections, retiring outdated assumptions, and examining whether changes improve consistency without continually expanding context, matching the claim."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "All six claims are fully supported by their cited passages. The first two claims correctly combine time, title, and speaker for each talk. The remaining four claims accurately paraphrase the descriptive content of each talk from passages 3, 4, 8, and 9. No issues such as missing qualifications, wrong attribution, or duplication were found. The source passages are brief event descriptions, and the claims capture all central reusable ideas presented.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage 5 as speaker for the 18:30 PM session."
+        },
+        {
+          "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage 10 as speaker for the 19:00 PM session."
+        },
+        {
+          "entity_id": "c710b1d3fe17e97f39b912da0f5e949f84edf31527806d02f1c9efcbde69ba80",
+          "verdict": "supported",
+          "reason": "Mentioned in passages 4 and 9 as the technology powering the retail support agent and used for memory demonstrations."
+        }
+      ],
+      "omitted_entities": [],
+      "summary": "All three extracted entities are directly grounded in the source passages: two speaker names and the Redis technology referenced in both talk descriptions. No major named entities are missing; talk titles and technical terms are descriptive rather than proper-named entities.",
+      "status": "accepted"
+    }
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "7893c4fb010b61e87f2a36fbfc39cee314e8bd1847287f41555ab1e40d7fba92",
+    "entities/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "05b8fce51fbf993ddad59f698ba58b7a4f743995d63c87690d353d1fcefa03f9",
+    "entity-reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "991c68afb5398df16c4dfd02b4e9869c4697ced8400b7781d0ae032f4026872c",
+    "extractions/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "d0215be35703e2bc67fb1af3342fa8c14d49d729b8f01609541c51898c8730c7",
+    "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "19784e1804d1db6d25e0003b3a61d16cf5bd29b6ef819f82ba2d194fdcd3fad2",
+    "reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "7d4bffe528cd8c3e2505c76c3334ed554e23c6ab1d978544fc35dd20cff7313f",
+    "triage/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json": "3573824886b8ca3a5ad5115f324f07cad5ef78337e5ed0546814e726d7ec7e35"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "e1b801338343441f41ee99627ea86be46997375051f27266c473c77fd1333946",
+  "created_at": "2026-10-20T10:22:47.230232+00:00"
+}

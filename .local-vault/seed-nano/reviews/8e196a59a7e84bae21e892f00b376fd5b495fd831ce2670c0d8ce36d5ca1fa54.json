@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "extraction_hash": "0e51013cece5533fd918cce887659305abffc5a3218a44e2fdde3dcd0232166c",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:39:10.800560+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 states exactly that the demo workshop starts at 14:00 UTC on 25 October 2026, matching the claim."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "The claim accurately reflects the announcement in the source passage about the demo workshop start time. No issues found.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-91367e3f8dec2271",
+  "usage": {
+    "input_tokens": 724,
+    "output_tokens": 510,
+    "total_tokens": 1234
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

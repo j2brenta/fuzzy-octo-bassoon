@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "extraction_hash": "9f5ecab4daf7fee7858e0fa2d63504b69d7e57c17fb34a37185228738259e5dd",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:39:36.902727+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 states 'The demo workshop starts at 14:00 UTC on 25 October 2026,' which matches the claim exactly. The kind 'announcement' and durability 'news' are appropriate for a specific event notice."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "The claim is fully supported by the cited passage. The passage announces the demo workshop start time, and the claim accurately extracts that information with correct kind and durability labels.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-9c7e3b34c4bdc0ba",
+  "usage": {
+    "input_tokens": 724,
+    "output_tokens": 675,
+    "total_tokens": 1399
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

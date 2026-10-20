@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "extraction_hash": "779b650d6fc79bf9453ba2e062a2d5c38f882e3ac0c61aac814a6b52a530cba7",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:21:27.449716+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "2fcef9745892659a5254213e3f0405083d1879ad1197dc7740aa4fe301d89749",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 1 exactly: internal Anthropic skill ELI5 via /eli5 command explains topics for beginners with HTML artifact, large pictures, minimal text."
+      },
+      {
+        "claim_id": "5e6cbd279988786fbd72b00a6d34927632e939301e59983a588152c148519bc9",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 2: ELI5 not yet official plugin, team deciding on default inclusion, but installable now via community marketplace."
+      },
+      {
+        "claim_id": "0ea6b36942ea7de02094f56632a28ef9b0bb197d92c484e6cbaf35d27f04d4df",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 5: internal use examples (/eli5 how module works, why tradeoff, what caused incident) to quickly restore context without reading docs/logs from scratch."
+      },
+      {
+        "claim_id": "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 3 exactly: command to add community marketplace."
+      },
+      {
+        "claim_id": "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 4 exactly: command to install ELI5 plugin."
+      },
+      {
+        "claim_id": "9e2d9d4c474a50150d2eef952c156f72be770f0719201d8c37de2dbdeb11bd84",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 6: 'Открыть /eli5, разобраться в теме за две минуты и пойти дальше - способ учиться быстрее.'"
+      },
+      {
+        "claim_id": "65a1b9e21111a4e14d1f5bd43980e8a5de474d880a779a64c9d7295adcdd07b2",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Matches passage 6: 'Сказать \"ничего не понимаю, сделай это за меня\" и не пытаться понять - способ разучиться думать.'"
+      },
+      {
+        "claim_id": "931d31706b0b94d27f162c864a9b999dcb53b7b1ed9ec2b021ad1ed570c54a05",
+        "verdict": "needs_revision",
+        "issues": [
+          "lost_qualification"
+        ],
+        "reason": "Passage 6 attributes statement to author ('Недавно я писал, что...'), but claim presents it as standalone opinion without speaker attribution."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 2,
+        "description": "Thariq Shihipar identified as Claude Code engineer at Anthropic who shared the ELI5 information."
+      },
+      {
+        "passage_id": 6,
+        "description": "ELI5 described as concrete example of where the line/boundary runs between learning faster and unlearning to think."
+      }
+    ],
+    "summary": "All claims except one are fully supported by cited passages. Claim 931d31706b0b94d27f162c864a9b999dcb53b7b1ed9ec2b021ad1ed570c54a05 loses the author attribution present in passage 6 ('я писал'). Two omitted concepts: Thariq Shihipar's role (passage 2) and the 'gran'/boundary metaphor (passage 6). The extraction covers commands, internal usage examples, and the author's contrasting learning opinions well.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8f5d9ce49e9be435",
+  "usage": {
+    "input_tokens": 2197,
+    "output_tokens": 3516,
+    "total_tokens": 5713
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

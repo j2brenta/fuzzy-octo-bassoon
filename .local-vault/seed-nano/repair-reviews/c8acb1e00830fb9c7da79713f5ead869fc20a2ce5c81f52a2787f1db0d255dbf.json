@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "extraction_hash": "08a961602bca578dc6e7f4cac5bd0bfdc74b97de7759dd966fa2867e9eb4b8e1",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:46:28.809791+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "4788df4dcff91a823de51e8952857f7d0f80f4c702f55ce56fb147780b377707",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 directly states there's a rich ecosystem of economists embracing the 'messy life' approach, often marginalized by mainstream departments."
+      },
+      {
+        "claim_id": "bd6a43a8bdc9ed9dc48362ac8f607b41fa38fa3df24a497ba8d4aff57e5b518e",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 4-7 collectively describe Ha-Joon Chang's challenges to free market orthodoxy, informal institutions, and 'Bad Samaritans'."
+      },
+      {
+        "claim_id": "0298bf70e51671aaf6d4178079fdff8cc9a329bea415f84dbd44f38e1167c4e8",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 8-11 cover Dani Rodrik's advocacy for methodological pluralism, context-dependency, and opposition to one-size-fits-all models."
+      },
+      {
+        "claim_id": "5aa00cde86ece92e9a1c60fe19cfe003ff68970397ea9ae5176ae6620d2ab545",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 17-20 confirm Matthew Jackson as pioneer in social network economics, 'The Human Network', and mathematically rigorous yet socially dynamic work."
+      },
+      {
+        "claim_id": "a9104807aec8795698b9d17f3ba223ba84a1cab4f4899ec442d6215abd013cb2",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 21-24 establish Brian Arthur as complexity economics founder, technology evolution through cultural/network processes, and 'The Nature of Technology' on emergent innovation."
+      },
+      {
+        "claim_id": "e9bc5d0e08148238963ba17810cbd00dc4bd66887a20e92b06ebd16c6c269b87",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 25-28 show César Hidalgo combines economics with network science in 'Why Information Grows', studies knowledge flows, data-driven but socially informed."
+      },
+      {
+        "claim_id": "fb61acc75934ac00b717620f8425c5eb07d9058d9b40ac814437f2e2764ca6da",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 98-99 state these economists would better predict AI impacts due to understanding network effects: technologies spread via social connections."
+      },
+      {
+        "claim_id": "9083e4b099eb93b2b94518639e5404fd17655371529bd2579f5c3188f23ff8d5",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 98 and 100 link better AI prediction to studying cultural adaptation: societies reshaping technologies."
+      },
+      {
+        "claim_id": "646aad5df3521f6ae08a2a5b3d770d2a9ce13c7cfcf1628cdd8fb962d387a584",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 98 and 101 link better AI prediction to recognizing emergent phenomena: new organizations from complex interactions."
+      },
+      {
+        "claim_id": "63993ea74a3b059323299a0abfcd87f5d531eb33bec33dd3b9015dc2091ccea4",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 98 and 102 link better AI prediction to valuing ethnographic insight: observing systems rather than just modeling."
+      },
+      {
+        "claim_id": "ff97dcf6f97bcd1582a311fc675349b0543f080715c47c34061036dcd8dfe722",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 98 and 103 link better AI prediction to embracing methodological pluralism: using whatever methods work."
+      },
+      {
+        "claim_id": "d88b2e0f05a30c505971482268fdabeca8853957bfdc70ef4147f5fafcc99a34",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 105-109 detail career challenges: harder to publish, relegated to policy/business schools, less mainstream influence, but better real-world prediction."
+      },
+      {
+        "claim_id": "1d4e3e0c4501530a6eea8cccbd013d95370f179f9cd8af2e938d6e80d6720656",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 110 directly states user's intuition points to this tradition, which would see AI+RAG+agentic+cultural adaptation as more transformative than Acemoglu's 5%."
+      },
+      {
+        "claim_id": "a5907107ab4f8f01d614f273828bb5e2abe534b0c82a27e44f79c742fa976e04",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 12-15 describe James Robinson as Acemoglu co-author more open to informal institutions, 'The Narrow Corridor' on state/social power balance, ethnographically informed."
+      },
+      {
+        "claim_id": "7a41f3bf725ffa9f86d223ed41d51267d921dadcc4f0424f194e9dfc8b6555ef",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 30-33 cover Sendhil Mullainathan's cultural context shaping behavior, 'Scarcity' on social conditions affecting cognition, rigorous methods with cultural sensitivity."
+      },
+      {
+        "claim_id": "228a884fea35eb906e0bbe9b51dcd278a2c03c6cd7b50b27cbe225541786bf65",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 34-37 describe Raghuram Rajan's 'The Third Pillar' on community/social institutions, former central banker bridging theory and informal networks."
+      },
+      {
+        "claim_id": "1b3dcced74986764afb1f2577c8a3f8345b97e575f51744106cd7ede4029e6ed",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 38-41 cover Abhijit Banerjee and Esther Duflo as development economists on the ground, 'Good Economics for Hard Times' with cultural/social factors, listening to people."
+      },
+      {
+        "claim_id": "75c260ca69774680d3db8065703ce5d456a7af6a0508ce16b7288a0acd0c0eb5",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Cited passages [43,44,46,48,50] do not fully support the claim: Steve Keen's network effects/cultural dynamics (passage 45) and critique of formalism (46) are split; Stephanie Kelton's Modern Monetary Theory advocacy (49) and 'The Deficit Myth' (51) are missing from citations."
+      },
+      {
+        "claim_id": "48cf8fc7a5ed405416cf32035d8212d336b540d75d7ade55d9e4b67156d84890",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 52-56 describe Herman Daly representing Ecological Economics, economy embedded in social/ecological systems, cultural values/social cooperation, 'Beyond Growth' integrating social/environmental factors."
+      },
+      {
+        "claim_id": "2c868cd9aa14633a6f09344ee4c2752956acfa816b18aeac507950db25655f39",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Cited passages [58,60,62,64,66] provide names and theory labels but omit key details: Granovetter's 'Getting a Job' (59), Zelizer's cultural meanings (63), Swedberg's entrepreneurship from networks (68)."
+      },
+      {
+        "claim_id": "d6c9e805364210a5b2df46d20ad645b6622571422327fd92f7c3bb23a0fd6313",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Cited passages [71,73,75,77,79] are headers and descriptions but omit economist names (72,76,80) and book title 'Demystifying the Chinese Economy' (78)."
+      },
+      {
+        "claim_id": "8eb12d9de9186fd040ec7f9f3c0fb831e0bc237f95d650319720a189ac0a8238",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Cited passages [84,86,88,90,92] are headers and book descriptions but omit economist names (85,89,93) and specific roles."
+      },
+      {
+        "claim_id": "89339d6ee7cce90ee4592826a61cf01888505ad5338fc3057e95c2c85754ea46",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_evidence"
+        ],
+        "reason": "Cited passages [98,99,100,101,102] cover network effects, cultural adaptation, emergent phenomena, ethnographic insight, but omit methodological pluralism (passage 103)."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 47,
+        "description": "Steve Keen studies how debt flows through social networks."
+      },
+      {
+        "passage_id": 65,
+        "description": "Viviana Zelizer's approach is ethnographically informed but theoretically sophisticated."
+      },
+      {
+        "passage_id": 67,
+        "description": "Richard Swedberg is an economic sociology pioneer."
+      },
+      {
+        "passage_id": 69,
+        "description": "Richard Swedberg bridges sociology and economics effectively."
+      },
+      {
+        "passage_id": 74,
+        "description": "Latin American Structuralism uses a network-based approach to industrial development."
+      },
+      {
+        "passage_id": 82,
+        "description": "African Development Economics emphasizes social networks and cultural practices."
+      },
+      {
+        "passage_id": 87,
+        "description": "Shoshana Zuboff combines economics with cultural analysis of digital transformation."
+      },
+      {
+        "passage_id": 91,
+        "description": "Nick Srnicek's platform economics is Marxist-influenced but empirically grounded."
+      },
+      {
+        "passage_id": 96,
+        "description": "Raj Chetty's work is mathematically sophisticated but socially informed."
+      },
+      {
+        "passage_id": 51,
+        "description": "Stephanie Kelton's 'The Deficit Myth' shows how cultural narratives drive economic outcomes."
+      }
+    ],
+    "summary": "Reviewed 23 claims against 110 passages. 17 claims fully supported by cited passages. 6 claims need revision due to wrong_evidence: claims 18,20,21,22,23 cite passages that omit key details (e.g., economist names, specific book contributions, methodological pluralism). No duplicates found. Kinds and durability labels are reasonable. Omitted concepts include 10 major ideas from passages not covered by any claim, such as debt flow networks, ethnographically sophisticated approaches, network-based industrial development, and cultural narratives in deficit myths.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8ad4579cacbe051b",
+  "usage": {
+    "input_tokens": 6413,
+    "output_tokens": 15661,
+    "total_tokens": 22074
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

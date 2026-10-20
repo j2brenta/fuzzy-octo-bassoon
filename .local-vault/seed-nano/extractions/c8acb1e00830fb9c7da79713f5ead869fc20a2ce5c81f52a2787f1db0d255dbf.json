@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "created_at": "2026-10-20T10:44:10.926419+00:00",
+  "raw_path": "raw/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+  "document_path": "documents/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+  "claims": [
+    {
+      "claim_id": "25cafbdebf0d7375b70b3dd065691ede48d4a2a9988d97a2e2c4ecafa9979260",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they:",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 4901,
+        "end_char": 4991
+      }
+    },
+    {
+      "claim_id": "69bd1375ce63030126f89d1ae636d7ef24520cdd6688ea4be82080b92ddc6a07",
+      "statement": "Understand Network Effects: How technologies spread through social connections rather than economic incentives alone",
+      "kind": "fact",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 4993,
+        "end_char": 5112
+      }
+    },
+    {
+      "claim_id": "369f9d9dbbee04ef7c3abdf99798d8eab92143328b18574599a57fee0420a52c",
+      "statement": "Study Cultural Adaptation: How societies reshape technologies rather than just being passively affected by them",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5114,
+        "end_char": 5228
+      }
+    },
+    {
+      "claim_id": "9e7b3733e1708011bbab9005a15624550bb229c6c8b7a58629d70aa62f60a09d",
+      "statement": "Recognize Emergent Phenomena: How new forms of organization emerge from complex social interactions",
+      "kind": "fact",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5230,
+        "end_char": 5332
+      }
+    },
+    {
+      "claim_id": "fab81e8199543f5364ca7a56ff0530345d8438ab4708fcc7d2ccab2c0f08a3ed",
+      "statement": "Value Ethnographic Insight: Spend time observing how systems actually work rather than just modeling them",
+      "kind": "principle",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5334,
+        "end_char": 5442
+      }
+    },
+    {
+      "claim_id": "d17c088be58d195b2a3c62b3863306ffd264cd169e08458529c88e57930c718a",
+      "statement": "Embrace Methodological Pluralism: Use whatever methods work rather than being constrained by mathematical formalism",
+      "kind": "principle",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5444,
+        "end_char": 5562
+      }
+    },
+    {
+      "claim_id": "ab86dc02e93282313f28868fbfba22826d7fc95965bf6f27967133ad35cf7bb1",
+      "statement": "Ha-Joon Chang (Cambridge) challenges free market orthodoxy with cultural and historical analysis",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 302,
+        "end_char": 372
+      }
+    },
+    {
+      "claim_id": "1b40773ebdd1cd12451b8a50a5236456462fabe50201ab4f72e016384786d044",
+      "statement": "Dani Rodrik’s “Economics Rules” advocates for methodological pluralism",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 521,
+        "end_char": 557
+      }
+    },
+    {
+      "claim_id": "6102f0e58d8e0229003ce6d1b2f4f31ca4a3010dbbae1c4910c3dd89e35dbd8f",
+      "statement": "Dani Rodrik emphasizes context-dependency and local institutional knowledge",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 616,
+        "end_char": 679
+      }
+    },
+    {
+      "claim_id": "e835ef27a4cd7bd903e3e48a4a0d0ba5a704db8d7c0fdbdb4b1144edaf9f7e55",
+      "statement": "Dani Rodrik argues against one-size-fits-all economic models",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 680,
+        "end_char": 728
+      }
+    },
+    {
+      "claim_id": "ce12b74b54ccdaa3f3f22f6c6525a81afcfc55c4036b652f3045b03a6da052ce",
+      "statement": "Matthew Jackson (Stanford) is a pioneer in social network economics",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 1001,
+        "end_char": 1027
+      }
+    },
+    {
+      "claim_id": "b7b011686ff73c1a9d6b0cbb30af2512a76ed7adb2c37cbb2b9f92ad35d5b509",
+      "statement": "“The Human Network” shows how informal connections drive economic outcomes",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 1065,
+        "end_char": 1139
+      }
+    },
+    {
+      "claim_id": "392b32ed5acb6afd1fbc27534cb7b3f42485ce2103e1f222cf1eb1bbdba1a52c",
+      "statement": "Brian Arthur (Santa Fe Institute) is a complexity economics founder",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 1203,
+        "end_char": 1236
+      }
+    },
+    {
+      "claim_id": "2aef0a820332f85fe24f5f2edce982dcd25f9b74b2ea26bcbb3122999748e51e",
+      "statement": "“The Nature of Technology” is brilliant on emergent innovation",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 1336,
+        "end_char": 1398
+      }
+    },
+    {
+      "claim_id": "4a52132e878b64976043a320ce756b626a67e30fe24d65c34ebb4b474ff146f3",
+      "statement": "César Hidalgo’s “Why Information Grows” combines economics with network science",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.99,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 1400,
+        "end_char": 1438
+      }
+    }
+  ],
+  "attempts": 2,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "request_id": "chatcmpl-dfbbf15f-0408-4bea-a5ac-9aec2d423172",
+  "usage": {
+    "input_tokens": 2926,
+    "output_tokens": 12897,
+    "total_tokens": 15823
+  }
+}

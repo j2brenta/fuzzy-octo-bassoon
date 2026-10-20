@@ -1,0 +1,776 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "repair_prompt_version": "repair-v2",
+  "parent_extraction_hash": "6452844a162c5c73f3699cbddf1fac0d7d680260976e766385ac15deb87b931b",
+  "parent_review_hash": "855c7d08a410d30e90e93b4907c0dce810b20a8e0b9f55b921060a8d6d9cfd65",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:45:46.051046+00:00",
+  "raw_path": "raw/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+  "document_path": "documents/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+  "claims": [
+    {
+      "claim_id": "4788df4dcff91a823de51e8952857f7d0f80f4c702f55ce56fb147780b377707",
+      "statement": "There’s a rich ecosystem of economists who embrace the “messy life” approach, though they’re often marginalized by mainstream departments.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 37,
+        "end_char": 237
+      }
+    },
+    {
+      "claim_id": "bd6a43a8bdc9ed9dc48362ac8f607b41fa38fa3df24a497ba8d4aff57e5b518e",
+      "statement": "Ha-Joon Chang (Cambridge) challenges free market orthodoxy with cultural and historical analysis, shows how informal institutions shape economic development, and his work “Bad Samaritans” demonstrates how culture and networks matter more than formal policies.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 275,
+          "end_char": 300
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 302,
+          "end_char": 372
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 373,
+          "end_char": 431
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 432,
+          "end_char": 519
+        }
+      ]
+    },
+    {
+      "claim_id": "0298bf70e51671aaf6d4178079fdff8cc9a329bea415f84dbd44f38e1167c4e8",
+      "statement": "Dani Rodrik (Harvard Kennedy School) advocates for methodological pluralism in “Economics Rules,” emphasizes context-dependency and local institutional knowledge, and argues against one-size-fits-all economic models.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 521,
+          "end_char": 557
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 559,
+          "end_char": 615
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 616,
+          "end_char": 679
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 680,
+          "end_char": 728
+        }
+      ]
+    },
+    {
+      "claim_id": "5aa00cde86ece92e9a1c60fe19cfe003ff68970397ea9ae5176ae6620d2ab545",
+      "statement": "Matthew Jackson (Stanford) is a pioneer in social network economics; his book “The Human Network” shows how informal connections drive economic outcomes, and his work is mathematically rigorous but incorporates real social dynamics.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1001,
+          "end_char": 1027
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1029,
+          "end_char": 1064
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1065,
+          "end_char": 1139
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1140,
+          "end_char": 1201
+        }
+      ]
+    },
+    {
+      "claim_id": "a9104807aec8795698b9d17f3ba223ba84a1cab4f4899ec442d6215abd013cb2",
+      "statement": "Brian Arthur (Santa Fe Institute) is a complexity economics founder who shows how technologies evolve through cultural and network processes, and his book “The Nature of Technology” is brilliant on emergent innovation.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1203,
+          "end_char": 1236
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1238,
+          "end_char": 1266
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1267,
+          "end_char": 1335
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1336,
+          "end_char": 1398
+        }
+      ]
+    },
+    {
+      "claim_id": "e9bc5d0e08148238963ba17810cbd00dc4bd66887a20e92b06ebd16c6c269b87",
+      "statement": "César Hidalgo (University of Toulouse) combines economics with network science in “Why Information Grows,” studies how knowledge flows through social networks, and his approach is data-driven but socially informed.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1400,
+          "end_char": 1438
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1440,
+          "end_char": 1503
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1504,
+          "end_char": 1555
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1556,
+          "end_char": 1589
+        }
+      ]
+    },
+    {
+      "claim_id": "fb61acc75934ac00b717620f8425c5eb07d9058d9b40ac814437f2e2764ca6da",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they understand network effects: how technologies spread through social connections rather than economic incentives alone.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4993,
+          "end_char": 5112
+        }
+      ]
+    },
+    {
+      "claim_id": "9083e4b099eb93b2b94518639e5404fd17655371529bd2579f5c3188f23ff8d5",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they study cultural adaptation: how societies reshape technologies rather than just being passively affected by them.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5114,
+          "end_char": 5228
+        }
+      ]
+    },
+    {
+      "claim_id": "646aad5df3521f6ae08a2a5b3d770d2a9ce13c7cfcf1628cdd8fb962d387a584",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they recognize emergent phenomena: how new forms of organization emerge from complex social interactions.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5230,
+          "end_char": 5332
+        }
+      ]
+    },
+    {
+      "claim_id": "63993ea74a3b059323299a0abfcd87f5d531eb33bec33dd3b9015dc2091ccea4",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they value ethnographic insight: spending time observing how systems actually work rather than just modeling them.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5334,
+          "end_char": 5442
+        }
+      ]
+    },
+    {
+      "claim_id": "ff97dcf6f97bcd1582a311fc675349b0543f080715c47c34061036dcd8dfe722",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they embrace methodological pluralism: using whatever methods work rather than being constrained by mathematical formalism.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5444,
+          "end_char": 5562
+        }
+      ]
+    },
+    {
+      "claim_id": "d88b2e0f05a30c505971482268fdabeca8853957bfdc70ef4147f5fafcc99a34",
+      "statement": "Most of these economists face career challenges: harder to publish in top economics journals, often relegated to policy schools or business schools, less influence on mainstream economic thinking, but often better at predicting real-world outcomes.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5593,
+          "end_char": 5641
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5643,
+          "end_char": 5686
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5687,
+          "end_char": 5760
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5761,
+          "end_char": 5807
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5808,
+          "end_char": 5858
+        }
+      ]
+    },
+    {
+      "claim_id": "1d4e3e0c4501530a6eea8cccbd013d95370f179f9cd8af2e938d6e80d6720656",
+      "statement": "The user’s intuition about needing economists who “grasp how it works on the ground” points toward this alternative tradition, which would likely recognize that AI + RAG + agentic behavior + cultural adaptation = much more transformation than Acemoglu’s 5% prediction.",
+      "kind": "opinion",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5860,
+        "end_char": 6145
+      }
+    },
+    {
+      "claim_id": "a5907107ab4f8f01d614f273828bb5e2abe534b0c82a27e44f79c742fa976e04",
+      "statement": "James Robinson (University of Chicago), a frequent co-author of Acemoglu, is more open to informal institutions and his work “The Narrow Corridor” explores how societies balance state and social power with ethnographic insight.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 730,
+          "end_char": 768
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 770,
+          "end_char": 847
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 848,
+          "end_char": 923
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 924,
+          "end_char": 968
+        }
+      ]
+    },
+    {
+      "claim_id": "7a41f3bf725ffa9f86d223ed41d51267d921dadcc4f0424f194e9dfc8b6555ef",
+      "statement": "Sendhil Mullainathan (University of Chicago) studies how cultural context shapes economic behavior, and his book “Scarcity” shows how social conditions affect cognitive capacity, combining rigorous methods with cultural sensitivity.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1623,
+          "end_char": 1667
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1669,
+          "end_char": 1722
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1723,
+          "end_char": 1787
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1788,
+          "end_char": 1839
+        }
+      ]
+    },
+    {
+      "claim_id": "228a884fea35eb906e0bbe9b51dcd278a2c03c6cd7b50b27cbe225541786bf65",
+      "statement": "Raghuram Rajan (University of Chicago) emphasizes community and social institutions in “The Third Pillar,” drawing on his experience as a former central banker to bridge academic theory with practical knowledge of informal networks.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1841,
+          "end_char": 1879
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1881,
+          "end_char": 1944
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1945,
+          "end_char": 2018
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2019,
+          "end_char": 2068
+        }
+      ]
+    },
+    {
+      "claim_id": "1b3dcced74986764afb1f2577c8a3f8345b97e575f51744106cd7ede4029e6ed",
+      "statement": "Abhijit Banerjee and Esther Duflo (MIT) are development economists who spend time on the ground, and their book “Good Economics for Hard Times” incorporates cultural and social factors, reflecting their practice of listening to the people they study.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2070,
+          "end_char": 2107
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2109,
+          "end_char": 2160
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2161,
+          "end_char": 2233
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2234,
+          "end_char": 2288
+        }
+      ]
+    },
+    {
+      "claim_id": "75c260ca69774680d3db8065703ce5d456a7af6a0508ce16b7288a0acd0c0eb5",
+      "statement": "Post-Keynesian economists include Steve Keen (Kingston University), who incorporates network effects and cultural dynamics and critiques mathematical formalism in “Debunking Economics,” and Stephanie Kelton (Stony Brook), a Modern Monetary Theory advocate who emphasizes how political and social factors shape economic policy in “The Deficit Myth.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2308,
+          "end_char": 2333
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2334,
+          "end_char": 2366
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2419,
+          "end_char": 2473
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2522,
+          "end_char": 2552
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2586,
+          "end_char": 2651
+        }
+      ]
+    },
+    {
+      "claim_id": "48cf8fc7a5ed405416cf32035d8212d336b540d75d7ade55d9e4b67156d84890",
+      "statement": "Herman Daly (University of Maryland) represents Ecological Economics, studying the economy as embedded in social and ecological systems, emphasizing cultural values and social cooperation, and integrating social and environmental factors in “Beyond Growth.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2726,
+          "end_char": 2747
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2748,
+          "end_char": 2784
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2786,
+          "end_char": 2846
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2847,
+          "end_char": 2896
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2897,
+          "end_char": 2956
+        }
+      ]
+    },
+    {
+      "claim_id": "2c868cd9aa14633a6f09344ee4c2752956acfa816b18aeac507950db25655f39",
+      "statement": "Economic sociologists such as Mark Granovetter (Stanford) pioneered embeddedness theory showing how informal networks drive economic outcomes in “Getting a Job,” Viviana Zelizer (Princeton) studies how cultural meanings shape economic behavior in “Purchase of Intimacy,” and Richard Swedberg (Cornell) examines how entrepreneurship emerges from social networks, bridging sociology and economics.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3001,
+          "end_char": 3038
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3109,
+          "end_char": 3141
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3195,
+          "end_char": 3232
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3288,
+          "end_char": 3366
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3426,
+          "end_char": 3462
+        }
+      ]
+    },
+    {
+      "claim_id": "d6c9e805364210a5b2df46d20ad645b6622571422327fd92f7c3bb23a0fd6313",
+      "statement": "Regional alternative traditions include Latin American Structuralism with Fernando Fajnzylber emphasizing cultural and institutional factors in development, Chinese Institutional Economics with Justin Yifu Lin studying how informal institutions guide China’s development in “Demystifying the Chinese Economy,” and African Development Economics with Benno Ndulu examining how traditional institutions interact with modern markets.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3626,
+          "end_char": 3655
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3695,
+          "end_char": 3762
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3813,
+          "end_char": 3845
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3883,
+          "end_char": 3942
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4016,
+          "end_char": 4046
+        }
+      ]
+    },
+    {
+      "claim_id": "8eb12d9de9186fd040ec7f9f3c0fb831e0bc237f95d650319720a189ac0a8238",
+      "statement": "Contemporary innovators include Shoshana Zuboff (Harvard Business School) studying surveillance capitalism and how technology shapes social behavior, Nick Srnicek (King’s College London) analyzing platform capitalism and how digital networks reshape economics, and Raj Chetty (Harvard) using big data to study how social networks affect economic mobility in “The Fading American Dream.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4228,
+          "end_char": 4246
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4299,
+          "end_char": 4381
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4451,
+          "end_char": 4470
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4509,
+          "end_char": 4577
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4623,
+          "end_char": 4652
+        }
+      ]
+    },
+    {
+      "claim_id": "89339d6ee7cce90ee4592826a61cf01888505ad5338fc3057e95c2c85754ea46",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they understand network effects, study cultural adaptation, recognize emergent phenomena, value ethnographic insight, and embrace methodological pluralism.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4993,
+          "end_char": 5112
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5114,
+          "end_char": 5228
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5230,
+          "end_char": 5332
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5334,
+          "end_char": 5442
+        }
+      ]
+    }
+  ],
+  "attempts": 2,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-831456ed70fdc573",
+  "usage": {
+    "input_tokens": 9576,
+    "output_tokens": 13511,
+    "total_tokens": 23087
+  },
+  "usage_scope": "final_response_only"
+}
