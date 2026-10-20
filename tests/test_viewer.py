@@ -90,3 +90,17 @@ def test_vault_picker_lists_vaults_and_goes_back(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "5 ok / 1 rev / 0 pend" in out
     assert out.count("accepted/revision/pending") == 2  # b returned to the vault list
+
+
+def test_ignored_candidates_and_their_reviews_are_marked_stale(tmp_path):
+    import json
+    vault = tmp_path / "vault"
+    for folder in ("raw", "coverage", "coverage-reviews", "processed"):
+        (vault / folder).mkdir(parents=True)
+    (vault / "raw" / "x.json").write_text(json.dumps({"text": "t"}))
+    (vault / "coverage" / "x.json").write_text("{}")
+    (vault / "coverage-reviews" / "x.json").write_text(json.dumps({"review": {"status": "needs_revision"}}))
+    (vault / "processed" / "x.json").write_text(json.dumps({"ignored_candidates": [{"stage": "coverage", "reason": "stale_parent"}]}))
+    rows = {s["stage"]: s for s in viewer.stages(vault, "x")}
+    assert rows["coverage-reviews"]["stale"].startswith("stale (stale_parent)") and rows["coverage-reviews"]["problem"] == ""
+    assert viewer.stage_row(rows["coverage"]).startswith("· coverage")

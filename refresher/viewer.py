@@ -119,12 +119,25 @@ def problem(stage: str, data: dict) -> str:
     return ""
 
 
+def stale(vault: Path, item_id: str) -> dict[str, str]:
+    """Stages the packager ignored (e.g. built on an older extraction), with their review stages."""
+    out = {}
+    for row in _read(vault / "processed" / f"{item_id}.json").get("ignored_candidates") or []:
+        stage, reason = row.get("stage"), row.get("reason", "ignored")
+        out[stage] = reason
+        out.update({review: reason for review, cand in REVIEWED.items() if cand == stage})
+    return out
+
+
 def stages(vault: Path, item_id: str) -> list[dict]:
     """Stage files for an item, with missing core stages listed so failed steps stay visible."""
     out = []
+    ignored = stale(vault, item_id)
     for s in STAGES:
         path = vault / s / f"{item_id}.json"
-        if path.exists():
+        if path.exists() and s in ignored:
+            out.append({"stage": s, "path": path, "problem": "", "stale": f"stale ({ignored[s]}): not used by processed"})
+        elif path.exists():
             out.append({"stage": s, "path": path, "problem": problem(s, _read(path))})
         elif s in CORE:
             out.append({"stage": s, "path": None, "problem": "missing: this step did not finish"})
@@ -255,6 +268,8 @@ def item_row(r: dict) -> str:
 
 
 def stage_row(s: dict) -> str:
+    if s.get("stale"):
+        return f"· {s['stage']:17} {s['stale']}"
     return f"{'✗' if s['problem'] else '✓'} {s['stage']:17} {s['problem']}"
 
 
@@ -492,7 +507,7 @@ def tui_item(stdscr, vault: Path, row: dict) -> bool:
         width = stdscr.getmaxyx()[1]
         title = [row["headline"], f"{row['id']}  {row['status']}  {row['author']}  {row['event']}"]
         detail = lambda n: _wrap(_summary(files[n]), width - 4, 4)  # noqa: E731
-        key = _menu(stdscr, title, [stage_row(s) for s in files], [1 if s["problem"] else 2 for s in files],
+        key = _menu(stdscr, title, [stage_row(s) for s in files], [0 if s.get("stale") else 1 if s["problem"] else 2 for s in files],
                     "↑/↓ move  Enter default filter  / own filter  t text  p passages  ← back  q quit", pos, detail)
         s = files[pos]
         if key in UP:
