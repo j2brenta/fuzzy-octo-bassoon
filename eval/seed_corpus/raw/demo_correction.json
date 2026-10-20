@@ -1,0 +1,14 @@
+{
+  "attachments": [],
+  "author_hint": {
+    "name": "Demo Organizer"
+  },
+  "captured_at": "2026-10-19T10:00:00Z",
+  "channel": "telegram",
+  "kind": "text",
+  "published_at": "2026-10-16T09:00:00Z",
+  "schema_version": 1,
+  "source_id": "seed:demo_correction#1",
+  "source_name": "Synthetic demo organizer",
+  "text": "Synthetic test fixture correction: The demo workshop starts at 16:00 UTC on 25 October 2026, replacing the previously announced 14:00 UTC time."
+}

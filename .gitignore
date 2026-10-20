@@ -3,8 +3,18 @@
 .claude/settings.local.json
 *_discussion.md
 WhatsApp Image *.jpeg
+
+# Local Python environment and generated files
 .venv/
 *.egg-info/
 __pycache__/
+*.pyc
 .pytest_cache/
+
+# Local practice vault; captured content stays off Git
 .local-vault/
+
+# Local credentials
+.env
+.env.*
+!.env.example
