@@ -51,3 +51,11 @@ def test_problem_flags_reviews_gate_and_missing_steps(tmp_path):
     rows = {s["stage"]: s for s in viewer.stages(vault, held["id"])}
     assert rows["processed"]["problem"].startswith("quality needs_revision")
     assert rows["triage"]["path"] is None and rows["triage"]["problem"].startswith("missing")
+
+
+def test_cited_passages_come_from_omissions_and_reasons():
+    review = {"review": {"claims": [{"reason": "Cited passage 21 only states it; see passages 3 and 4."}],
+                         "omitted_concepts": [{"passage_id": 7, "description": "x"}], "summary": "Passages 9-10 fine."}}
+    assert viewer.cited("coverage-reviews", review) == {3, 4, 7, 9, 10, 21}
+    rows = [{"id": 1, "text": "one"}, {"id": 2, "text": "two"}]
+    assert viewer.render_passages(rows, {2}) == "[  2] two\n"

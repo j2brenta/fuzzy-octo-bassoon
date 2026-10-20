@@ -4,9 +4,13 @@
 
 Items: ↑/↓ (or j/k) to move, Enter or → to open, r to reload, q to quit.
 Stage files: ↑/↓ to move, Enter runs the stage's jq filter, / runs your own filter, t shows the
-original text, ← / Esc / b goes back. Stages with problems are marked ✗ with a short reason.
+original text, p the numbered passages, ← / Esc / b goes back. Stages with problems are marked ✗ with a
+short reason. Review output ends with the text of every passage it cites.
 
---plain (or a non-terminal stdin) uses numbered prompts instead: `3`, `3 .claims | length`, `t`, `b`, `q`.
+Passage N is the Nth nonblank line of raw/<id>.json's text (engine.extract.source_passages); reviewers
+cite claims and omissions by these numbers.
+
+--plain (or a non-terminal stdin) uses numbered prompts instead: `3`, `3 .claims | length`, `t`, `p`, `b`, `q`.
 """
 import argparse
 import curses
@@ -117,6 +121,49 @@ def run_jq(path: Path, expr: str, color: bool) -> str:
     return done.stdout if done.returncode == 0 else f"jq error: {done.stderr.strip()}\n"
 
 
+def passages(vault: Path, item_id: str) -> list[dict]:
+    from engine.extract import source_passages  # the same numbering the extractor and reviewers see
+
+    return source_passages(_read(vault / "raw" / f"{item_id}.json").get("text", ""))
+
+
+def render_passages(rows: list[dict], only: set[int] | None = None) -> str:
+    return "".join(f"[{p['id']:>3}] {p['text']}\n" for p in rows if only is None or p["id"] in only)
+
+
+def cited(stage: str, data: dict) -> set[int]:
+    """Passage ids a stage file refers to: claim citations, omissions, and "passage 12" in reasons."""
+    ids = set()
+
+    def walk(value, key=""):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, k)
+        elif isinstance(value, list):
+            for v in value:
+                walk(v, key)
+        elif key in ("passage_id", "evidence_passage_id") and type(value) is int:
+            ids.add(value)
+        elif key == "evidence_passage_ids" and type(value) is int:
+            ids.add(value)
+        elif key in ("reason", "summary", "description") and isinstance(value, str):
+            for group in re.findall(r"passages? ((?:\d+(?:\s*(?:,|and|-|–|to)\s*)?)+)", value, re.I):
+                ids.update(int(n) for n in re.findall(r"\d+", group))
+
+    walk(data.get("review", data) if stage.endswith("reviews") else data)
+    return ids
+
+
+def output(vault: Path, item_id: str, s: dict, expr: str, color: bool) -> str:
+    """jq result, followed by the cited passages for review files."""
+    text = f"$ jq '{expr}' {s['path'].relative_to(vault)}\n" + run_jq(s["path"], expr, color)
+    if s["stage"].endswith("reviews"):
+        ids = cited(s["stage"], _read(s["path"]))
+        if ids:
+            text += "\n-- cited passages --\n" + render_passages(passages(vault, item_id), ids)
+    return text
+
+
 # ---------- plain mode: numbered prompts, used for pipes and tests ----------
 
 def show(text: str) -> None:
@@ -150,7 +197,7 @@ def plain_item(vault: Path, row: dict, ask) -> bool:
         print(f"\n{row['headline']}\n{row['id']}  {row['status']}  {row['author']}  {row['event']}")
         for n, s in enumerate(files, 1):
             print(f"  {n:>2}  {stage_row(s)}")
-        answer = ask("file [jq filter] | t text | b back | q quit > ").strip()
+        answer = ask("file [jq filter] | t text | p passages | b back | q quit > ").strip()
         if answer in ("q", "quit"):
             return False
         if answer in ("b", ""):
@@ -158,14 +205,16 @@ def plain_item(vault: Path, row: dict, ask) -> bool:
         if answer == "t":
             show(_read(vault / "raw" / f"{row['id']}.json").get("text", ""))
             continue
+        if answer == "p":
+            show(render_passages(passages(vault, row["id"])))
+            continue
         number, _, expr = answer.partition(" ")
         if not number.isdigit() or not 1 <= int(number) <= len(files) or files[int(number) - 1]["path"] is None:
             print("pick a file number from the list")
             continue
         s = files[int(number) - 1]
         expr = expr.strip() or FILTERS.get(s["stage"], ".")
-        print(f"$ jq '{expr}' {s['path'].relative_to(vault)}")
-        show(run_jq(s["path"], expr, sys.stdout.isatty()))
+        show(output(vault, row["id"], s, expr, sys.stdout.isatty()))
 
 
 def plain(vault: Path, ask) -> int:
@@ -320,7 +369,7 @@ def tui_item(stdscr, vault: Path, row: dict) -> bool:
         title = [row["headline"], f"{row['id']}  {row['status']}  {row['author']}  {row['event']}"]
         detail = lambda n: _wrap(_summary(files[n]), width - 4, 4)  # noqa: E731
         key = _menu(stdscr, title, [stage_row(s) for s in files], [1 if s["problem"] else 2 for s in files],
-                    "↑/↓ move  Enter default filter  / own filter  t text  ← back  q quit", pos, detail)
+                    "↑/↓ move  Enter default filter  / own filter  t text  p passages  ← back  q quit", pos, detail)
         s = files[pos]
         if key in UP:
             pos = max(0, pos - 1)
@@ -332,13 +381,14 @@ def tui_item(stdscr, vault: Path, row: dict) -> bool:
             return False
         elif key == ord("t"):
             _page(stdscr, _read(vault / "raw" / f"{row['id']}.json").get("text", ""))
+        elif key == ord("p"):
+            _page(stdscr, render_passages(passages(vault, row["id"])))
         elif key in OPEN and s["path"] is not None:
-            expr = FILTERS.get(s["stage"], ".")
-            _page(stdscr, f"$ jq '{expr}' {s['path'].relative_to(vault)}\n" + run_jq(s["path"], expr, True))
+            _page(stdscr, output(vault, row["id"], s, FILTERS.get(s["stage"], "."), True))
         elif key == ord("/") and s["path"] is not None:
             expr = _prompt(stdscr, "jq filter (Enter for the default): ", FILTERS.get(s["stage"], "."))
             if expr:
-                _page(stdscr, f"$ jq '{expr}' {s['path'].relative_to(vault)}\n" + run_jq(s["path"], expr, True))
+                _page(stdscr, output(vault, row["id"], s, expr, True))
 
 
 def main(argv=None, ask=None) -> int:
