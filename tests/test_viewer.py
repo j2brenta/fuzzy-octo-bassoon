@@ -77,3 +77,16 @@ def test_review_output_joins_claim_text_from_the_reviewed_candidate(tmp_path):
     assert "--slurpfile c extractions/x.json" in out
     assert '"statement": "Two is true."' in out and "Claim «Two is true.» cites" in out and "✗ Two is true." in out
     assert "[  2] two" in out
+
+
+def test_vault_picker_lists_vaults_and_goes_back(tmp_path, capsys):
+    root = tmp_path / "vaults"
+    shutil.copytree(FIXTURES / "vault", root / "a")
+    shutil.copytree(FIXTURES / "vault", root / "nested" / "b")
+    assert viewer.find_vaults(root) == [root / "a", root / "nested" / "b"]
+    summary = viewer.vault_summary(root / "a")
+    assert summary["items"] == 6 and summary["status"]["accepted"] == 5
+    assert viewer.main(["--root", str(root)], ask=scripted("2", "b", "1", "q")) == 0
+    out = capsys.readouterr().out
+    assert "5 ok / 1 rev / 0 pend" in out
+    assert out.count("accepted/revision/pending") == 2  # b returned to the vault list

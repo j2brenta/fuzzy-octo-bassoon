@@ -1,6 +1,9 @@
 """refresher-view: browse a vault's items in the terminal and inspect each stage file with jq.
 
-    uv run refresher-view [--vault V] [--plain]    # default $REFRESHER_VAULT, else .local-vault/seed
+    uv run refresher-view [--vault V] [--plain]
+
+Without --vault it lists every vault it finds (folders with raw/ under .local-vault/, plus
+$REFRESHER_VAULT) with item counts, statuses and models, and you pick one; ← goes back to that list.
 
 Items: ↑/↓ (or j/k) to move, Enter or → to open, r to reload, q to quit.
 Stage files: ↑/↓ to move, Enter runs the stage's jq filter, / runs your own filter, t shows the
@@ -14,6 +17,8 @@ cite claims and omissions by these numbers.
 """
 import argparse
 import curses
+from collections import Counter
+from datetime import datetime
 import json
 import os
 import re
@@ -186,6 +191,54 @@ def output(vault: Path, item_id: str, s: dict, expr: str, color: bool) -> str:
     return text
 
 
+def find_vaults(root: Path = Path(".local-vault")) -> list[Path]:
+    """Folders with raw/ under root (two levels deep), plus $REFRESHER_VAULT."""
+    found = []
+    if root.is_dir():
+        for raw in sorted([*root.glob("raw"), *root.glob("*/raw"), *root.glob("*/*/raw")]):
+            if raw.is_dir():
+                found.append(raw.parent)
+    env = os.environ.get("REFRESHER_VAULT")
+    if env and (Path(env) / "raw").is_dir() and Path(env).resolve() not in {v.resolve() for v in found}:
+        found.append(Path(env))
+    return found
+
+
+def vault_summary(vault: Path) -> dict:
+    rows = items(vault)
+    models = set()
+    for folder, key in (("extractions", "model_name"), ("reviews", "model_name")):
+        for path in (vault / folder).glob("*.json"):
+            name = _read(path).get(key)
+            if name:
+                models.add((folder, name.split("/")[-1]))
+    files = [p for p in vault.rglob("*.json")]
+    updated = datetime.fromtimestamp(max(p.stat().st_mtime for p in files)).strftime("%Y-%m-%d %H:%M") if files else ""
+    return {
+        "path": vault, "items": len(rows), "status": Counter(r["status"] for r in rows), "updated": updated,
+        "extract": ", ".join(sorted(m for f, m in models if f == "extractions")) or "-",
+        "judge": ", ".join(sorted(m for f, m in models if f == "reviews")) or "-",
+    }
+
+
+def _label(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(Path.cwd().resolve()))
+    except ValueError:
+        return str(path).replace(str(Path.home()), "~")
+
+
+def vault_row(v: dict) -> str:
+    st = v["status"]
+    counts = f"{st.get('accepted', 0)} ok / {st.get('needs_revision', 0)} rev / {st.get('pending', 0) + st.get('not packaged', 0)} pend"
+    label = _label(v["path"])
+    label = label if len(label) <= 30 else "…" + label[-29:]
+    return f"{label:30} {v['items']:>3}  {counts:24} {v['updated']:16}  {v['extract']} | {v['judge']}"
+
+
+VAULT_HEADER = f"{'vault':30} {'n':>3}  {'accepted/revision/pending':24} {'updated':16}  extraction model | review model"
+
+
 # ---------- plain mode: numbered prompts, used for pipes and tests ----------
 
 def show(text: str) -> None:
@@ -239,23 +292,45 @@ def plain_item(vault: Path, row: dict, ask) -> bool:
         show(output(vault, row["id"], s, expr, sys.stdout.isatty()))
 
 
-def plain(vault: Path, ask) -> int:
+def plain_items(vault: Path, ask, can_go_back: bool) -> bool:
+    """Returns False when the user quits, True to go back to the vault list."""
+    while True:
+        rows = items(vault)
+        print(f"\n{vault}\n{'#':>3}  {'id':8}  {'status':14} {'cl':>3}  {'kind':16} {'author':18} headline")
+        for n, r in enumerate(rows, 1):
+            print(f"{n:>3}  {item_row(r)}")
+        back = " | b vaults" if can_go_back else ""
+        answer = ask(f"item # or id prefix | r refresh{back} | q quit > ").strip()
+        if answer in ("q", "quit"):
+            return False
+        if answer == "b" and can_go_back:
+            return True
+        if answer in ("r", "", "b"):
+            continue
+        row = pick(rows, answer)
+        if row is None:
+            print("no single item matches")
+        elif not plain_item(vault, row, ask):
+            return False
+
+
+def plain(vaults: list[Path], ask, direct: bool = False) -> int:
     try:
+        if direct:
+            plain_items(vaults[0], ask, can_go_back=False)
+            return 0
         while True:
-            rows = items(vault)
-            print(f"\n{'#':>3}  {'id':8}  {'status':14} {'cl':>3}  {'kind':16} {'author':18} headline")
-            for n, r in enumerate(rows, 1):
-                print(f"{n:>3}  {item_row(r)}")
-            answer = ask("item # or id prefix | r refresh | q quit > ").strip()
+            print(f"\n{'#':>3}  {VAULT_HEADER}")
+            for n, v in enumerate(vaults, 1):
+                print(f"{n:>3}  {vault_row(vault_summary(v))}")
+            answer = ask("vault # | q quit > ").strip()
             if answer in ("q", "quit"):
                 return 0
-            if answer in ("r", ""):
-                continue
-            row = pick(rows, answer)
-            if row is None:
-                print("no single item matches")
-            elif not plain_item(vault, row, ask):
-                return 0
+            if answer.isdigit() and 1 <= int(answer) <= len(vaults):
+                if not plain_items(vaults[int(answer) - 1], ask, can_go_back=True):
+                    return 0
+            elif answer:
+                print("pick a vault number")
     except (EOFError, KeyboardInterrupt):
         print()
         return 0
@@ -355,31 +430,58 @@ def _summary(s: dict) -> str:
     return ""
 
 
-def tui(stdscr, vault: Path) -> int:
+def tui(stdscr, vaults: list[Path], direct: bool = False) -> int:
     curses.curs_set(0)
     curses.use_default_colors()
     curses.init_pair(1, curses.COLOR_RED, -1)
     curses.init_pair(2, curses.COLOR_GREEN, -1)
     curses.init_pair(3, curses.COLOR_YELLOW, -1)
+    if direct:
+        tui_items(stdscr, vaults[0], can_go_back=False)
+        return 0
+    pos = 0
+    while True:
+        summaries = [vault_summary(v) for v in vaults]
+        key = _menu(stdscr, [f"refresher-view  ({len(vaults)} vaults)", VAULT_HEADER], [vault_row(v) for v in summaries],
+                    [0] * len(summaries), "↑/↓ move  Enter open  q quit", pos)
+        if key in UP:
+            pos = max(0, pos - 1)
+        elif key in DOWN:
+            pos = min(len(vaults) - 1, pos + 1)
+        elif key in (ord("q"), 27):
+            return 0
+        elif key in OPEN and not tui_items(stdscr, vaults[pos], can_go_back=True):
+            return 0
+
+
+def tui_items(stdscr, vault: Path, can_go_back: bool) -> bool:
+    """Returns False when the user quits, True to go back to the vault list."""
     tone = {"accepted": 2, "needs_revision": 1, "pending": 3, "not packaged": 3, "skipped": 0}
     pos = 0
+    footer = "↑/↓ move  Enter open  r reload  " + ("← vaults  " if can_go_back else "") + "q quit"
     while True:
         rows = items(vault)
         if not rows:
-            _menu(stdscr, [f"refresher-view  {vault}", "no items in raw/"], [], [], "q quit", 0)
-            return 0
+            key = _menu(stdscr, [f"refresher-view  {vault}", "no items in raw/"], [], [], footer, 0)
+            if key in BACK and can_go_back:
+                return True
+            if key in (ord("q"), 27):
+                return False
+            continue
         pos = min(pos, len(rows) - 1)
         header = f"{'id':8}  {'status':14} {'cl':>3}  {'kind':16} {'author':18} headline"
         key = _menu(stdscr, [f"refresher-view  {vault}  ({len(rows)} items)", header], [item_row(r) for r in rows],
-                    [tone.get(r["status"], 0) for r in rows], "↑/↓ move  Enter open  r reload  q quit", pos)
+                    [tone.get(r["status"], 0) for r in rows], footer, pos)
         if key in UP:
             pos = max(0, pos - 1)
         elif key in DOWN:
             pos = min(len(rows) - 1, pos + 1)
-        elif key in (ord("q"), 27):
-            return 0
+        elif key in BACK and can_go_back:
+            return True
+        elif key == ord("q") or (key == 27 and not can_go_back):
+            return False
         elif key in OPEN and not tui_item(stdscr, vault, rows[pos]):
-            return 0
+            return False
 
 
 def tui_item(stdscr, vault: Path, row: dict) -> bool:
@@ -415,16 +517,23 @@ def tui_item(stdscr, vault: Path, row: dict) -> bool:
 
 def main(argv=None, ask=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher-view", description=__doc__.splitlines()[0])
-    ap.add_argument("--vault", type=Path, default=Path(os.environ.get("REFRESHER_VAULT") or ".local-vault/seed"))
+    ap.add_argument("--vault", type=Path, help="open this vault directly (default: choose from the vaults found)")
+    ap.add_argument("--root", type=Path, default=Path(".local-vault"), help="where to look for vaults")
     ap.add_argument("--plain", action="store_true", help="numbered prompts instead of arrow keys")
     args = ap.parse_args(argv)
-    if not (args.vault / "raw").is_dir():
-        ap.error(f"{args.vault} has no raw/ folder")
+    if args.vault:
+        if not (args.vault / "raw").is_dir():
+            ap.error(f"{args.vault} has no raw/ folder")
+        vaults = [args.vault]
+    else:
+        vaults = find_vaults(args.root)
+        if not vaults:
+            ap.error(f"no vaults (folders with raw/) under {args.root}; pass --vault or set REFRESHER_VAULT")
     if ask is not None or args.plain or not (sys.stdin.isatty() and sys.stdout.isatty()):
-        return plain(args.vault, ask or input)
+        return plain(vaults, ask or input, direct=bool(args.vault))
     os.environ.setdefault("ESCDELAY", "25")  # make Esc respond quickly
     try:
-        return curses.wrapper(tui, args.vault)
+        return curses.wrapper(tui, vaults, bool(args.vault))
     except KeyboardInterrupt:
         return 0
 
