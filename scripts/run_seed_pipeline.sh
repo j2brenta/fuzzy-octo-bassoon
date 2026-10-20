@@ -13,10 +13,7 @@ for raw in "$VAULT"/raw/*.json; do
   for stage in triage extract quality judge; do
     uv run python -m engine.$stage "$VAULT" --item-id "$id" || echo "   $stage failed for $id"
   done
-  # Citation repair only applies after a coverage review; elsewhere the packager picks the best candidate.
-  if [ -f "$VAULT/coverage-reviews/$id.json" ]; then
-    uv run python -m engine.evidence "$VAULT" --item-id "$id" --candidate coverage || echo "   evidence not applied for $id"
-  fi
+  # engine.quality runs coverage and citation repair itself when the review calls for them.
   uv run python -m engine.entities "$VAULT" --item-id "$id" || echo "   entities failed for $id"
   uv run python -m engine.package "$VAULT" --item-id "$id" || echo "   package failed for $id"
 done
