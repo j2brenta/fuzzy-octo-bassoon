@@ -9,6 +9,7 @@ captured_at: '2026-10-19T10:00:00+00:00'
 url: null
 durability: news
 duplicate_of: null
+review_status: accepted
 user_durability: null
 ---
 # Synthetic test fixture correction: The demo workshop starts at 16:00 UTC on 25 O

@@ -117,3 +117,19 @@ def test_cli_km_and_eval(vault_dir, capsys):
     assert main(["km", "--vault", str(vault_dir), "--at", "2027-01-15"]) == 0
     assert "Knowledge health at 2027-01-15" in capsys.readouterr().out
     assert main(["eval", "--vault", str(vault_dir), "--manifest", str(FIXTURES / "manifest.yaml")]) == 1
+
+
+def test_include_unreviewed_places_failed_items_with_a_mark(vault_dir):
+    store = vault.replay(vault_dir, include_unreviewed=True)
+    assert len(list(store.items())) == 6 and store.held_back == {}
+    eli5 = by_source(store, "seed:rvnikita_blog")
+    assert eli5.review_status == "needs_revision"
+    report = km.run(store, TODAY)
+    assert report.unreviewed == {eli5.item_id: "needs_revision"}
+    assert "## Placed without passing review" in km.render(report, store)
+
+    assert main(["rebuild", "--vault", str(vault_dir), "--at", "2026-10-19", "--include-unreviewed"]) == 0
+    note = next(p for p in (vault_dir / "wiki" / "items").glob("*.md") if "review_status: needs_revision" in p.read_text())
+    assert "[!warning] Unreviewed" in note.read_text()
+    assert main(["rebuild", "--vault", str(vault_dir), "--at", "2026-10-19"]) == 0
+    assert not note.exists()  # the default rebuild drops it again

@@ -9,6 +9,7 @@ captured_at: '2026-10-19T10:01:00+00:00'
 url: null
 durability: news
 duplicate_of: null
+review_status: accepted
 user_durability: null
 ---
 # Forwarded synthetic announcement: The demo workshop starts at 14:00 UTC on 25 Oc

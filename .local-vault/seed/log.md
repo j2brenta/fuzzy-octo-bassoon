@@ -4,3 +4,5 @@
 - 2026-10-20 10:46 rebuild: 2 items, 8 claims, 3 people, 7 held back, 0 overrides
 - 2026-10-20 10:50 rebuild: 2 items, 8 claims, 3 people, 7 held back, 0 overrides
 - 2026-10-20 00:00 rebuild: 2 items, 8 claims, 3 people, 7 held back, 0 overrides
+- 2026-10-20 00:00 rebuild: 8 items (6 unreviewed), 147 claims, 48 people, 1 held back, 0 overrides
+- 2026-10-20 00:00 rebuild: 8 items (6 unreviewed), 147 claims, 48 people, 1 held back, 0 overrides

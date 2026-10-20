@@ -1,19 +1,19 @@
 # Knowledge health at 2026-10-20 00:00 UTC
 
-2 items, 8 claims, 3 people (3 awaiting enrichment). 0 claims collapsed as noise, 0 confirmations.
+8 items, 147 claims, 48 people (48 awaiting enrichment). 28 claims collapsed as noise, 0 confirmations.
 
 ## Freshness by durability
 
 | durability | half-life | fresh | fading | stale |
 |---|---|---|---|---|
-| foundation | 720 d | 0 | 0 | 0 |
-| reference | 180 d | 0 | 0 | 0 |
-| news | 30 d | 8 | 0 | 0 |
-| ephemeral | 7 d | 0 | 0 | 0 |
+| foundation | 720 d | 10 | 0 | 0 |
+| reference | 180 d | 112 | 0 | 0 |
+| news | 30 d | 22 | 0 | 0 |
+| ephemeral | 7 d | 3 | 0 | 0 |
 
 ## Reposts
 
-None.
+- Introspection and model internals repeats Here's a map of people worth following, grouped by angle. Affiliations change of
 
 ## Supersessions
 
@@ -31,12 +31,15 @@ None.
 
 None.
 
+## Placed without passing review
+
+- Here's a map of people worth following, grouped by angle. Affiliations change of: needs_revision
+- 🧠 В Anthropic внутри команды часто используют skill ELI5 - команда /eli5 объясня: pending
+- Forwarded synthetic announcement: The demo workshop starts at 14:00 UTC on 25 Oc: needs_revision
+- Why AI Excels at Math but Fails at Creative Writing (And How to Fix It): needs_revision
+- Great question! There’s actually a rich ecosystem of economists who embrace the : needs_revision
+- Introspection and model internals: needs_revision
+
 ## Held back from the graph
 
-- `35d90abd3163`: needs_revision
-- `40c3bbcd636c`: pending
 - `8e196a59a7e8`: skipped by triage
-- `8e95979454ef`: needs_revision
-- `9c920429025f`: needs_revision
-- `c8acb1e00830`: needs_revision
-- `c9a834ca73c9`: needs_revision

@@ -1,6 +1,7 @@
 """refresher: rebuild the knowledge base from the vault, run the KM pass, evaluate against the seeds.
 
     uv run refresher rebuild [--vault V] [--at DATE]   replay processed/ + overrides, write wiki/
+    add --include-unreviewed to any command to also place items that did not pass ingestion's quality gate
     uv run refresher km [--vault V] [--at DATE]        print the health report at a moment
     uv run refresher eval [--vault V] --manifest M     score against expected labels
 
@@ -29,6 +30,8 @@ def main(argv=None) -> int:
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
+        p.add_argument("--include-unreviewed", action="store_true",
+                       help="also place needs_revision/pending items, marked unreviewed (triage skips stay out)")
         if name == "eval":
             p.add_argument("--manifest", type=Path, required=True)
             p.add_argument("--out", type=Path, help="write the markdown report here")
@@ -40,15 +43,15 @@ def main(argv=None) -> int:
     at = _at(args.at)
 
     overrides = vault.merged_overrides(args.vault)
-    store = vault.replay(args.vault, overrides)
+    store = vault.replay(args.vault, overrides, include_unreviewed=args.include_unreviewed)
 
     if args.command == "rebuild":
         if overrides != vault.load_overrides(args.vault):
             vault.save_overrides(args.vault, overrides)
         written = vault.export(store, args.vault, at)
         report = km.run(store, at)
-        message = (f"rebuild: {report.items} items, {report.claims} claims, {report.people} people, "
-                   f"{len(store.held_back)} held back, {len(overrides)} overrides")
+        message = (f"rebuild: {report.items} items ({len(report.unreviewed)} unreviewed), {report.claims} claims, "
+                   f"{report.people} people, {len(store.held_back)} held back, {len(overrides)} overrides")
         vault.log(args.vault, at, message)
         print(f"{message}; wrote {len(written)} notes to {args.vault / 'wiki'}")
     elif args.command == "km":

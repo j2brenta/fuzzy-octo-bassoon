@@ -77,8 +77,8 @@ def merged_overrides(vault: Path) -> list[Override]:
     return list(merged.values())
 
 
-def replay(vault: Path, overrides: list[Override] | None = None) -> MemoryStore:
-    store = MemoryStore()
+def replay(vault: Path, overrides: list[Override] | None = None, include_unreviewed: bool = False) -> MemoryStore:
+    store = MemoryStore(include_unreviewed=include_unreviewed)
     for ex, text in load_extractions(vault):
         store.apply(ex, text)
     for o in merged_overrides(vault) if overrides is None else overrides:
@@ -150,6 +150,9 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                                          f"{src.event_time:%Y-%m-%d}"]))]
         if src.url:
             lines.append(f"[original]({src.url})")
+        if item.review_status != "accepted":
+            lines += ["", f"> [!warning] Unreviewed: ingestion quality {item.review_status}. "
+                          "Placed by `rebuild --include-unreviewed`; check the claims before relying on them."]
         if rel.get(item.item_id):
             lines.append("")
         for label, other, _ in rel.get(item.item_id, []):
@@ -171,7 +174,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                 "author": store.person(item.author_id).name if item.author_id else None,
                 "event_time": src.event_time.isoformat(), "captured_at": src.captured_at.isoformat(),
                 "url": src.url, "durability": item.durability, "duplicate_of": item.duplicate_of,
-                "user_durability": None}
+                "review_status": item.review_status, "user_durability": None}
         _write_note(wiki / "items" / f"{names[item.item_id]}.md", meta, "\n".join(lines), written)
 
     for p in sorted(store.people(), key=lambda p: p.person_id):

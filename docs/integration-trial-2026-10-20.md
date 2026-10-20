@@ -54,9 +54,15 @@ ranking; they are one run each.
    demo correction and repost labelled `reference` (expected `ephemeral`), the essay `foundation`. Triage
    also skipped `demo-original` as "no lasting value", which removes the target the correction should
    supersede.
-10. **Relation checks cannot pass yet.** DUPLICATES and SUPERSEDES are only computed between items in the
+10. **Telegram copy headers are kept as text, and their time is lost.** Pasted Telegram Desktop messages
+    start with "Kirill R, [7 Oct 2026 at 12:13:38]:". Capture keeps that line in `text` and, with no
+    `published_at` in the manifest, the items get today's capture time, so the forwards sort as 20 Oct
+    instead of 7 Oct. `channels/seed_raw.py` already parses this header into `forwarded_by` and a time.
+11. **Relation checks cannot pass yet.** DUPLICATES and SUPERSEDES are only computed between items in the
     graph, and the graph only takes items whose quality gate passed. With most items held back, the eval's
-    relation checks fail regardless of the relation logic.
+    relation checks fail regardless of the relation logic. With `refresher rebuild --include-unreviewed`
+    the introspection list is detected as a repost of the people list (check passes); the demo repost
+    has no original to match because triage skipped `demo-original`, and SUPERSEDES needs Victor's check.
 
 ## Changes on this branch that touch `engine/` (for Olga to review)
 
@@ -100,6 +106,7 @@ ranking; they are one run each.
 
 - Freeze reviewed `processed/` output as graph-level fixtures once the gate settles, and replace the
   hand-written `tests/fixtures/vault`.
-- Option for the demo: `refresher rebuild --include-unreviewed` to place `needs_revision` items with an
-  "unreviewed" mark, so relations and decay can be shown before the gate changes.
+- Done: `refresher rebuild|km|eval --include-unreviewed` places `needs_revision`/`pending` items with an
+  "Unreviewed" banner and `review_status` in their notes, so relations and decay can be shown before the
+  gate changes. Triage skips stay out. The committed `wiki/` folders were built with it.
 - Record the decisions above in the v2 plan doc.

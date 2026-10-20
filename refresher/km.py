@@ -35,6 +35,7 @@ class KnowledgeReport:
     supersessions: list[tuple[str, str]] = field(default_factory=list)
     contradictions: list[tuple[str, str]] = field(default_factory=list)
     held_back: dict[str, str] = field(default_factory=dict)
+    unreviewed: dict[str, str] = field(default_factory=dict)  # placed without passing the quality gate
     people: int = 0
     people_pending: int = 0
     fading_soon: list[ClaimScore] = field(default_factory=list)  # fresh now, fading within SOON
@@ -68,6 +69,7 @@ def run(store: GraphStore, at: datetime) -> KnowledgeReport:
         elif e.type == "CONTRADICTS":
             r.contradictions.append((e.src, e.dst))
     r.held_back = dict(getattr(store, "held_back", {}))
+    r.unreviewed = {i.item_id: i.review_status for i in store.items() if i.review_status != "accepted"}
     people = list(store.people())
     r.people, r.people_pending = len(people), sum(p.enrichment_status == "pending" for p in people)
 
@@ -103,6 +105,7 @@ def render(r: KnowledgeReport, store: GraphStore) -> str:
         (f"Fading within {SOON.days} days", [f"- {s.freshness:.2f} {s.node.durability}: {s.node.claim.statement}"
                                              for s in r.fading_soon[:20]]),
         ("Worth a refresher: durable knowledge going stale", [f"- {title(i)}: {n} claims" for i, n in r.refresh_due[:20]]),
+        ("Placed without passing review", [f"- {title(i)}: {why}" for i, why in sorted(r.unreviewed.items())]),
         ("Held back from the graph", [f"- `{i[:12]}`: {why}" for i, why in sorted(r.held_back.items())]),
     ]
     for head, body in sections:

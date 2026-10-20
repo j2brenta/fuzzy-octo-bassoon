@@ -34,16 +34,23 @@ def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
     return {tuple(w[i:i + n]) for i in range(max(1, len(w) - n + 1))}
 
 
+# Telegram Desktop "Copy" header, kept in raw text by capture: "Kirill R, [7 Oct 2026 at 12:13:38]:"
+_TG_HEADER = re.compile(r"^.+, \[\d{1,2} \w{3} \d{4} at [\d:]+\]:$")
+
+
 def _title(text: str, fallback: str) -> str:
     for line in text.splitlines():
         line = line.strip().lstrip("#").strip()
-        if line:
+        if line and not _TG_HEADER.match(line):
             return line[:80]
     return fallback
 
 
 class MemoryStore:
-    def __init__(self):
+    def __init__(self, include_unreviewed: bool = False):
+        # Place items that failed or have not finished ingestion's quality gate, marked by review_status.
+        # Items triage chose not to keep stay out either way.
+        self.include_unreviewed = include_unreviewed
         self._items: dict[str, ItemNode] = {}
         self._claims: dict[str, ClaimNode] = {}
         self._people: dict[str, PersonNode] = {}
@@ -58,12 +65,14 @@ class MemoryStore:
         ex, src = extraction, extraction.source
         if ex.item_id in self._items:
             return Placement(ex.item_id, "already_placed")
-        if not ex.quality_gate_passed or (ex.triage and not ex.triage.keep):
-            self.held_back[ex.item_id] = "skipped by triage" if ex.triage and not ex.triage.keep else ex.quality_status
+        skipped = ex.triage is not None and not ex.triage.keep
+        if skipped or (not ex.quality_gate_passed and not self.include_unreviewed):
+            self.held_back[ex.item_id] = "skipped by triage" if skipped else ex.quality_status
             return Placement(ex.item_id, "held_back")
 
         item = ItemNode(ex.item_id, src, _title(text, src.source_name or ex.item_id), text,
-                        durability=ex.triage.durability_class if ex.triage else None)
+                        durability=ex.triage.durability_class if ex.triage else None,
+                        review_status="accepted" if ex.quality_gate_passed else ex.quality_status)
         self._items[ex.item_id] = item
         new_edges: list[Edge] = []
 

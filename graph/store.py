@@ -23,6 +23,7 @@ class ItemNode:
     source_key: str | None = None
     durability: str | None = None  # triage class for the whole item
     duplicate_of: str | None = None  # earliest item it reposts
+    review_status: str = "accepted"  # ingestion quality_status; other values only with include_unreviewed
 
 
 @dataclass

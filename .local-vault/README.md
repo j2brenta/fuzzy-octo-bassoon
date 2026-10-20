@@ -21,7 +21,9 @@ uv run refresher km --vault .local-vault/seed --at 2027-01-15   # decay at a lat
 uv run refresher eval --vault .local-vault/seed --manifest eval/seed_corpus/manifest.yaml
 ```
 
-Open `seed/` as an Obsidian vault and look at `wiki/` for the generated notes.
+Open `seed/` as an Obsidian vault and look at `wiki/` for the generated notes. The committed `wiki/` was
+built with `refresher rebuild --include-unreviewed`, so it also shows items that did not pass ingestion's
+quality gate; those notes carry an "Unreviewed" banner and `review_status` in their frontmatter.
 
 To reproduce (paid Nebius calls; needs `.env`), use a new folder so these stay as they are:
 
