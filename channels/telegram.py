@@ -4,6 +4,7 @@ import argparse
 import asyncio
 from datetime import datetime, timezone
 import getpass
+import json
 import logging
 import os
 from pathlib import Path
@@ -24,7 +25,9 @@ from aiogram.utils.serialization import deserialize_telegram_object_to_python
 from dotenv import load_dotenv
 
 from store.raw import CaptureResult, capture_text
+from channels.web import fetch_linked_articles
 from engine.parse import parse_capture
+from engine.parse.text import text_without_links
 from engine.llm import ModelError, client_from_environment, judge_client_from_environment
 from engine.triage import TriageError, triage_capture
 from engine.extract import ExtractionError, extract_capture
@@ -33,6 +36,7 @@ from engine.quality import QualityError, quality_capture
 from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities
 from engine.package import PackageError, build_extraction
 from engine.placement import apply_storage_stub
+from engine.results import write_item_note, entity_summary
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -165,8 +169,59 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     status = "Already prepared" if prepared.reused else "Prepared"
     await message.answer(
         f"{status}: {prepared.section_count} text section(s), {prepared.link_count} link(s). "
-        "Links were identified, not downloaded."
+        "Links identified; article reading is a separate step."
     )
+    document = json.loads(prepared.path.read_text())
+    rows = []
+    setting = os.environ.get("WEB_FETCH", "on").strip().lower()
+    if setting not in {"on", "off"}:
+        await message.answer("Original saved; WEB_FETCH must be on or off.")
+        return
+    if document["links"] and setting == "on":
+        await message.answer("Reading linked articles; your original message remains saved.")
+        try:
+            rows = await asyncio.to_thread(fetch_linked_articles, result.path)
+        except (OSError, ValueError):
+            await message.answer("Original saved; article processing could not finish. Retry this message later.")
+        for row in rows:
+            if row["status"] == "captured":
+                status = "Cached article" if row.get("reused") else "Article saved"
+                await message.answer(f"{status}. Item: {row['item_id']}")
+            else:
+                await message.answer(f"Link {row['status']}: {row['reason']} Original retained.")
+
+    # A bare URL is a pointer, not source text from which to invent article claims.
+    remaining = text_without_links(message.text or "", document["links"])
+    if not document["links"] or any(character.isalnum() for character in remaining):
+        if rows:
+            await message.answer("Processing the message text separately from its linked articles.")
+        await process_capture(message, result)
+    elif not rows and document["links"]:
+        await message.answer("URL saved. Article reading is off or unfinished; no article claims were extracted.")
+    for row in rows:
+        if row["status"] == "captured":
+            await message.answer(f"Processing article item: {row['item_id']}")
+            article = CaptureResult(
+                result.path.parent / f"{row['item_id']}.json",
+                row["item_id"],
+                row.get("reused", False),
+            )
+            await process_capture(message, article)
+
+
+async def process_capture(message: Message, result: CaptureResult) -> None:
+    """Always refresh a readable result, including when a model stage is pending."""
+    try:
+        await _process_capture(message, result)
+    finally:
+        try:
+            await asyncio.to_thread(write_item_note, result.path)
+        except (OSError, ValueError, KeyError):
+            logger.warning("Readable result could not be refreshed for %s.", result.item_id)
+
+
+async def _process_capture(message: Message, result: CaptureResult) -> None:
+    """Run the same reviewed text pipeline for a message or a downloaded article."""
     try:
         client = client_from_environment()
         if client is None:
@@ -247,12 +302,9 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     except (OSError, ValueError):
         await message.answer("Claims saved; entity processing could not be saved and remains pending.")
         return
-    counts = {kind: sum(e["kind"] == kind for e in entity_result.entities) for kind in ("person", "organization", "concept")}
-    label = "accepted" if entity_review.review["status"] == "accepted" else "needs revision"
     await message.answer(
-        f"Entities: {counts['person']} people | {counts['organization']} organizations | {counts['concept']} concepts.\n"
-        f"AI entity review: {label}.\n{entity_review.review['summary']}\n"
-        "Clear aliases are grouped within this article; cross-source identities and relationships remain unresolved."
+        entity_summary(entity_result.entities, entity_review.review)
+        + "\nClear aliases are grouped within this article; source identities remain separate."
     )
 
     try:

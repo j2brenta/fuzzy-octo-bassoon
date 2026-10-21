@@ -83,6 +83,7 @@ class JudgeTests(unittest.TestCase):
         payload = json.loads(client.calls[0][1])
         self.assertEqual(payload['passages'], [{'id': 1, 'text': TEXT}])
         self.assertEqual(len(payload['claims']), 2)
+        self.assertEqual(payload['claims'][0]['evidence_passages'], [{'id': 1, 'text': TEXT}])
         stored = json.loads(first.path.read_text())
         self.assertEqual(stored['actual_model'], 'fixture-judge')
         self.assertEqual(stored['scope'], 'source_faithfulness_not_external_fact_checking')

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -126,6 +127,9 @@ class TelegramCaptureTests(unittest.TestCase):
 
 class TelegramHandlerTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        web_patch = patch.dict(os.environ, {"WEB_FETCH": "off"})
+        web_patch.start()
+        self.addCleanup(web_patch.stop)
         model_patch = patch("channels.telegram.client_from_environment", return_value=None)
         model_patch.start()
         self.addCleanup(model_patch.stop)

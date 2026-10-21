@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 from aiogram.types import Message
 
 from channels.telegram import handle_message
-from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities, validate_entities, validate_entity_review
+from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities, validate_entities, validate_entity_review, repair_entity_references
 from engine.llm import ModelError, ModelReply
 from store.raw import capture_text
 from tests.test_extract import TEXT as CLAIM_TEXT, response
@@ -76,6 +76,48 @@ class EntityTests(unittest.TestCase):
             with self.subTest(rows=rows), self.assertRaises(EntityError):
                 validate_entities({'entities': rows}, TEXT, 'item', 'section')
 
+    def test_model_can_return_names_without_copying_any_passage_ids(self):
+        data = {'entities': [{'name': 'Maya', 'kind': 'person', 'aliases': []}, {'name': 'Acme', 'kind': 'organization', 'aliases': []}]}
+        result = self.extract(FakeModel([ModelReply(data)]))
+        self.assertEqual([entity['name'] for entity in result.entities], ['Maya', 'Acme'])
+        self.assertEqual(len(result.entities[0]['mentions']), 2)
+        record = json.loads(result.path.read_text())
+        self.assertEqual(record['reference_repairs'][0]['reason'], 'located_exact_source_name_with_python')
+        for entity in result.entities:
+            for mention in entity['mentions']:
+                self.assertEqual(TEXT[mention['start_char']:mention['end_char']], entity['name'])
+
+    def test_many_exact_mentions_are_preserved_without_a_five_passage_cap(self):
+        text = '\n'.join('IMDb publishes a listing.' for _ in range(7))
+        rows = {'entities': [{'name': 'IMDb', 'kind': 'organization', 'evidence_passage_ids': list(range(1, 8))}]}
+        entities = validate_entities(rows, text, 'item', 'section')
+        self.assertEqual(len(entities[0]['mentions']), 7)
+
+    def test_only_unique_adjacent_exact_name_references_are_repaired(self):
+        text = 'A heading.\nContext before the name.\nGuo explains the approach.'
+        data = {'entities': [{'name': 'Guo', 'kind': 'person', 'evidence_passage_ids': [2]}]}
+        fixed, changes = repair_entity_references(data, text)
+        self.assertEqual(data['entities'][0]['evidence_passage_ids'], [2])
+        self.assertEqual(fixed['entities'][0]['evidence_passage_ids'], [3])
+        self.assertEqual(changes[0]['reason'], 'unique_exact_name_on_adjacent_source_line')
+        validate_entities(fixed, text, 'item', 'section')
+        for name, ids, source in [('Guo', [999], text), ('Guo Smith', [2], text),
+                                  ('Guo', [2], 'Guo speaks.\nA gap.\nGuo returns.')]:
+            candidate = {'entities': [{'name': name, 'kind': 'person', 'evidence_passage_ids': ids}]}
+            untouched, changes = repair_entity_references(candidate, source)
+            self.assertEqual(untouched, candidate)
+            self.assertFalse(changes)
+
+    def test_mixed_entity_references_keep_all_real_mentions_and_log_removed_mismatches(self):
+        text = 'TypeSafe AI released a model.\nA generic explanation.\nTypeSafe AI described its approach.'
+        data = {'entities': [{'name': 'TypeSafe AI', 'kind': 'organization', 'evidence_passage_ids': [1, 2, 3]}]}
+        fixed, changes = repair_entity_references(data, text)
+        self.assertEqual(fixed['entities'][0]['evidence_passage_ids'], [1, 3])
+        self.assertEqual(changes[0]['reason'], 'kept_only_verified_exact_name_mentions')
+        entities = validate_entities(fixed, text, 'item', 'section')
+        self.assertEqual(len(entities[0]['mentions']), 2)
+        self.assertEqual(data['entities'][0]['evidence_passage_ids'], [1, 2, 3])
+
     def test_reordered_passage_ids_have_stable_entities(self):
         first = validate_entities({'entities': ROWS}, TEXT, 'item', 'section')
         rows = deepcopy(ROWS)
@@ -93,6 +135,17 @@ class EntityTests(unittest.TestCase):
         self.assertTrue(second.reused)
         self.assertEqual(first.entities, second.entities)
         self.assertEqual(len(client.calls), 1)
+
+    def test_compatible_entity_cache_preserves_existing_names_without_new_calls(self):
+        client = FakeModel([ModelReply({'entities': ROWS})])
+        original = self.extract(client)
+        data = json.loads(original.path.read_text())
+        data['prompt_version'] = 'entities-v4'
+        original.path.write_text(json.dumps(data))
+        before = original.path.read_bytes()
+        self.assertTrue(self.extract(client).reused)
+        self.assertEqual(len(client.calls), 1)
+        self.assertEqual(original.path.read_bytes(), before)
 
     def test_corrupt_cached_mention_is_rebuilt(self):
         result = self.extract()
@@ -132,7 +185,8 @@ class EntityTests(unittest.TestCase):
         self.assertEqual(len(client.calls), 1)
         payload = json.loads(client.calls[0][1])
         self.assertEqual(len(payload['passages']), 3)
-        self.assertEqual(payload['entities'], [{**e, 'entity_id': f'E{n}'} for n, e in enumerate(result.entities, 1)])
+        self.assertEqual([row['entity_id'] for row in payload['entities']], ['E1', 'E2', 'E3'])
+        self.assertEqual(payload['entities'][0]['evidence_passages'], [{'id': 1, 'text': TEXT.splitlines()[0]}, {'id': 2, 'text': TEXT.splitlines()[1]}])
         self.assertNotIn('review', payload)
 
     def test_review_answers_with_short_ids_are_mapped_back(self):
@@ -221,7 +275,7 @@ class TelegramEntityTests(unittest.IsolatedAsyncioTestCase):
             with patch('channels.telegram.client_from_environment', return_value=extractor), patch('channels.telegram.judge_client_from_environment', return_value=ClaimJudge()), patch('channels.telegram.entity_client_from_environment', return_value=EntityModel()), patch.object(Message, 'answer', new_callable=AsyncMock) as answer:
                 await handle_message(message(text=CLAIM_TEXT), Path(folder), 100)
                 self.assertEqual(answer.await_count, 7)
-                self.assertIn('AI entity review: accepted', answer.await_args_list[-2].args[0])
+                self.assertIn('Review: accepted', answer.await_args_list[-2].args[0])
                 self.assertIn('Combined extraction saved', answer.await_args_list[-1].args[0])
                 self.assertTrue(list((Path(folder) / 'processed').glob('*.json')))
 

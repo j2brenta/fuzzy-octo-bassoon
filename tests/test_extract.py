@@ -86,6 +86,18 @@ class ExtractionTests(unittest.TestCase):
             extract_capture(self.raw.path, FakeModel([response(bad), response(bad)]))
         self.assertNotIn('Private invented quote', str(caught.exception))
 
+    def test_compatible_v5_cache_is_reused_without_rewriting_original_metadata(self):
+        client = FakeModel([response()])
+        original = extract_capture(self.raw.path, client)
+        data = json.loads(original.path.read_text())
+        data['prompt_version'] = 'extract-v5'
+        original.path.write_text(json.dumps(data))
+        before = original.path.read_bytes()
+        repeated = extract_capture(self.raw.path, client)
+        self.assertTrue(repeated.reused)
+        self.assertEqual(len(client.calls), 1)
+        self.assertEqual(original.path.read_bytes(), before)
+
     def test_repeated_passages_keep_distinct_original_locations(self):
         text = '💡 Same idea.\r\n\n💡 Same idea.'
         row = {**ROWS[0], 'evidence_passage_id': 2}

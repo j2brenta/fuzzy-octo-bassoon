@@ -16,9 +16,12 @@ from engine.llm import JsonModel, ModelError, ModelOutputError, client_from_envi
 from engine.parse import parse_capture
 from engine.triage import TriageError, triage_capture
 
-PROMPT_VERSION = "extract-v5"
-SUPPORTED_PROMPT_VERSIONS = {"extract-v3", "extract-v4", PROMPT_VERSION}
+PROMPT_VERSION = "extract-v6"
+SUPPORTED_PROMPT_VERSIONS = {"extract-v3", "extract-v4", "extract-v5", PROMPT_VERSION}
 MAX_CLAIMS = 25
+MAX_EVIDENCE_PASSAGES = 10
+# v6 only widens the citation budget; validated v5 claims need no regeneration.
+REUSABLE_PROMPT_VERSIONS = {"extract-v5", PROMPT_VERSION}
 MAX_COVERAGE_CLAIMS = 50
 HALF_LIVES = {"foundation": 720, "reference": 180, "news": 30, "ephemeral": 7}
 KINDS = {"fact", "announcement", "opinion", "how-to", "principle"}
@@ -29,7 +32,7 @@ Do not browse links, use tools, invent evidence or rely on outside knowledge.
 Return only JSON with one key, claims, containing a list of at most 25 objects.
 Each object must have exactly these five fields:
 statement: one concise atomic statement in the source language;
-evidence_passage_ids: a list of 1 to 5 distinct integer IDs of supporting passages;
+evidence_passage_ids: a list of 1 to 10 distinct integer IDs of supporting passages;
 include context passages needed for attribution or qualifications. These passages
 must jointly support ONE atomic statement, not a bundle of unrelated ideas;
 kind: fact, announcement, opinion, how-to, or principle;
@@ -89,7 +92,7 @@ def validate_claims(data: dict, text: str, item_id: str, section_id: str, *, max
         raise ExtractionError(f"Extraction must contain at most {max_claims} claims.")
     claims = []
     seen = set()
-    for row in rows:
+    for claim_number, row in enumerate(rows, 1):
         legacy_fields = (MODEL_FIELDS - {"evidence_passage_ids"}) | {"evidence_passage_id"}
         if not isinstance(row, dict) or set(row) not in (MODEL_FIELDS, legacy_fields):
             raise ExtractionError("Each claim must contain the five expected fields.")
@@ -97,9 +100,20 @@ def validate_claims(data: dict, text: str, item_id: str, section_id: str, *, max
         passage_ids = row.get("evidence_passage_ids") if "evidence_passage_ids" in row else [row["evidence_passage_id"]]
         if not isinstance(statement, str) or not statement.strip() or len(statement) > 1200:
             raise ExtractionError("Claim statement must be nonblank text under 1201 characters.")
-        if (not isinstance(passage_ids, list) or not 1 <= len(passage_ids) <= 5
-            or any(type(pid) is not int or pid not in passages for pid in passage_ids)):
-            raise ExtractionError("Evidence passage ID must be an integer from the supplied passages. Provide 1 to 5 IDs.")
+        if not isinstance(passage_ids, list) or not passage_ids:
+            raise ExtractionError(f"Claim {claim_number}: evidence_passage_ids must be a nonempty list of source passage IDs.")
+        if len(passage_ids) > MAX_EVIDENCE_PASSAGES:
+            raise ExtractionError(
+                f"Claim {claim_number} cites {len(passage_ids)} passages; maximum is {MAX_EVIDENCE_PASSAGES}. "
+                "Choose the smallest fully supporting set or split an overbroad claim; do not discard required evidence."
+            )
+        if any(type(pid) is not int for pid in passage_ids):
+            raise ExtractionError(f"Claim {claim_number}: Evidence passage ID must be an integer from the supplied passages.")
+        if any(pid not in passages for pid in passage_ids):
+            raise ExtractionError(
+                f"Claim {claim_number}: Evidence passage ID must be an integer from the supplied passages. "
+                f"At least one ID is outside the supplied range 1–{len(passages)}."
+            )
         if len(set(passage_ids)) != len(passage_ids):
             raise ExtractionError("Evidence passage IDs must not repeat.")
         selected = sorted((passages[pid] for pid in passage_ids), key=lambda p: p["start"])
@@ -168,6 +182,35 @@ def _cached_claims(rows, text: str, item_id: str, section_id: str, *, max_claims
     return checked
 
 
+
+def claims_for_model(claims: list[dict], text: str) -> tuple[list[dict], dict[str, str]]:
+    """Give a correction model the same numbered citations as a fresh extraction."""
+    from engine.short_ids import short_ids
+    to_short, _ = short_ids([claim["claim_id"] for claim in claims], "C")
+    by_span = {(p["start"], p["end"]): p["id"] for p in source_passages(text)}
+    rows = []
+    for claim in claims:
+        rows.append({
+            "claim_id": to_short[claim["claim_id"]],
+            **{key: claim[key] for key in ("statement", "kind", "durability_class", "confidence")},
+            "evidence_passage_ids": [by_span[(span["start_char"], span["end_char"])] for span in evidence_spans(claim)],
+        })
+    return rows, to_short
+
+
+def review_for_model(review: dict, to_short: dict[str, str]) -> dict:
+    """Shorten review IDs and free-text references without changing stored reviews."""
+    def shorten_text(text):
+        for real, short in to_short.items():
+            text = text.replace(real, short)
+        return text
+    return {
+        **review,
+        "claims": [{**row, "claim_id": to_short[row["claim_id"]], "reason": shorten_text(row["reason"])} for row in review["claims"]],
+        "summary": shorten_text(review["summary"]),
+    }
+
+
 def extract_capture(raw_path: Path, client: JsonModel, *, force: bool = False) -> ExtractionResult:
     """Extract text claims after a keep decision; the caller owns that gate.
 
@@ -192,7 +235,8 @@ def extract_capture(raw_path: Path, client: JsonModel, *, force: bool = False) -
     if destination.exists() and not force:
         try:
             cached = json.loads(destination.read_text(encoding="utf-8"))
-            if isinstance(cached, dict) and all(cached.get(key) == value for key, value in identity.items()):
+            if (isinstance(cached, dict) and cached.get("prompt_version") in REUSABLE_PROMPT_VERSIONS
+                and all(cached.get(key) == value for key, value in identity.items() if key != "prompt_version")):
                 return ExtractionResult(destination, _cached_claims(cached.get("claims"), text, raw["item_id"], section_id), True)
         except (ValueError, ExtractionError):
             pass

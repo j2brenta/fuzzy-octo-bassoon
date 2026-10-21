@@ -37,6 +37,20 @@ class MultiEvidenceTests(unittest.TestCase):
         with self.assertRaises(ExtractionError):
             validate_claims({'claims': [{**ROW, 'evidence_passage_ids': [1], 'evidence_passage_id': 1}]}, TEXT, 'item', 'section')
 
+    def test_eight_line_source_block_keeps_every_reference_and_exact_span(self):
+        text = '\n'.join(f'Code line {number}' for number in range(1, 9))
+        row = {**ROW, 'evidence_passage_ids': list(range(1, 9))}
+        claim = validate_claims({'claims': [row]}, text, 'item', 'section')[0]
+        self.assertEqual([text[s['start_char']:s['end_char']] for s in evidence_spans(claim)], text.splitlines())
+        self.assertEqual(_cached_claims([claim], text, 'item', 'section'), [claim])
+
+    def test_reference_count_error_is_distinct_from_invalid_reference_type(self):
+        text = '\n'.join(f'Line {n}' for n in range(1, 13))
+        with self.assertRaisesRegex(ExtractionError, 'Claim 1 cites 11 passages; maximum is 10'):
+            validate_claims({'claims': [{**ROW, 'evidence_passage_ids': list(range(1, 12))}]}, text, 'item', 'section')
+        with self.assertRaisesRegex(ExtractionError, 'must be an integer'):
+            validate_claims({'claims': [{**ROW, 'evidence_passage_ids': ['1']}]}, text, 'item', 'section')
+
     def test_a_corrupted_secondary_span_invalidates_the_cache(self):
         claim = validate_claims({'claims': [{**ROW, 'evidence_passage_ids': [1, 2, 3]}]}, TEXT, 'item', 'section')[0]
         for update in [{'start_char': 999}, {'item_id': 'other'}, {'end_char': 2}]:
@@ -114,9 +128,9 @@ class CitationRepairTests(unittest.TestCase):
             self.repair(client)
         self.assertFalse((self.vault / 'evidence').exists())
 
-    def test_final_rejection_does_not_start_another_loop(self):
+    def test_semantic_rejection_does_not_start_a_citation_followup(self):
         failed = deepcopy(self.final)
-        failed['claims'][0].update(verdict='needs_revision', issues=['wrong_evidence'])
+        failed['claims'][0].update(verdict='needs_revision', issues=['wrong_kind'])
         client = self.client(failed)
         result = self.repair(client)
         self.assertEqual(result.reviewed.review['status'], 'needs_revision')
@@ -131,8 +145,28 @@ class CitationRepairTests(unittest.TestCase):
         self.assertEqual(self.repair(client).reviewed.review['status'], 'accepted')
         self.assertEqual(len(client.calls), 3)
 
+    def test_one_focused_followup_is_cached_and_never_loops_again(self):
+        failed = deepcopy(self.final)
+        failed['claims'][0].update(verdict='needs_revision', issues=['wrong_evidence'])
+        followup = {'citations': [{'claim_id': self.corrected[0]['claim_id'], 'evidence_passage_ids': [1, 2, 3]}]}
+        client = FakeModel([ModelReply(self.edits), ModelReply(failed), ModelReply(followup), ModelReply(failed)])
+        result = self.repair(client)
+        self.assertEqual(result.reviewed.review['status'], 'needs_revision')
+        self.assertEqual(len(client.calls), 4)
+        stored = json.loads(result.extraction_path.read_text())
+        self.assertEqual(stored['citation_round'], 2)
+        self.assertIn('previous_citation_candidate', stored)
+        self.repair(client)
+        self.assertEqual(len(client.calls), 4)
+        self.assertEqual(result.claims[0]['statement'], self.original.claims[0]['statement'])
+
     def test_citation_only_errors_after_correction_trigger_one_repair(self):
         from engine.quality import quality_capture
+        # A real semantic error still requires correction before citation repair.
+        from engine.artifacts import atomic_json
+        record = json.loads(self.reviewed.path.read_text())
+        record['review']['claims'][0]['issues'].append('wrong_kind')
+        atomic_json(self.reviewed.path, record)
         client = FakeModel([
             ModelReply({'claims': [self.initial_row]}), ModelReply(self.review),
             ModelReply(self.edits), ModelReply(self.final),
@@ -156,11 +190,16 @@ class CitationRepairTests(unittest.TestCase):
 
     def test_new_prompts_and_full_quality_pipeline_support_multiple_passages(self):
         from engine.quality import quality_capture
-        # Initial semantic repair returns a claim already carrying all required citations.
-        client = FakeModel([ModelReply({'claims': [{**ROW, 'evidence_passage_ids': [1, 2, 3]}]}), ModelReply(self.final)])
+        # Citation-only findings go straight to citation repair, retaining wording.
+        client = FakeModel([ModelReply(self.edits), ModelReply(self.final)])
         result = quality_capture(self.raw.path, client)
         self.assertEqual(result.reviewed.review['status'], 'accepted')
         self.assertEqual(len(evidence_spans(result.claims[0])), 3)
+        self.assertFalse(result.corrected)
+        self.assertTrue(result.citations_repaired)
+        self.assertFalse((self.vault / 'repairs').exists())
+        self.assertEqual(result.claims[0]['statement'], self.original.claims[0]['statement'])
+        self.assertEqual(len(client.calls), 2)
 
 
 if __name__ == '__main__':

@@ -169,6 +169,8 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         "chunks": [], "embeddings_status": "not_implemented",
         "inputs": dict(sorted(inputs.items())), "ignored_candidates": ignored,
     }
+    if "parent" in document:
+        core["parent"] = document["parent"]
     core["source"]["forwarded_by"] = source_forwarder
     core["bundle_id"] = fingerprint(core)
     destination = vault / "processed" / name

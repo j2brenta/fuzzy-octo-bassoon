@@ -63,6 +63,7 @@ def capture_text(
     author_hint: dict[str, str] | None = None,
     forwarded_by: dict[str, str] | str | None = None,
     channel_metadata: dict | None = None,
+    url: str | None = None,
 ) -> CaptureResult:
     """Capture text with provenance; repeat deliveries reuse the original record.
 
@@ -85,6 +86,11 @@ def capture_text(
     ):
         raise ValueError("Author hint must contain text keys and values.")
     forwarded_by = forwarder_hint(forwarded_by)
+    if url is not None:
+        from urllib.parse import urlsplit
+        parts = urlsplit(url)
+        if parts.scheme not in {"http", "https"} or not parts.hostname or parts.username is not None or parts.password is not None:
+            raise ValueError("Source URL must be HTTP(S), without embedded credentials.")
 
     if channel_metadata is not None:
         if not isinstance(channel_metadata, dict):
@@ -107,7 +113,7 @@ def capture_text(
         "author_hint": author_hint,
         "forwarded_by": forwarded_by,
         "channel_metadata": channel_metadata,
-        "url": None,
+        "url": url,
         "kind": "text",
         "text": text,
         "attachments": [],

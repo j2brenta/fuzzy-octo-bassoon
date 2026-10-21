@@ -124,7 +124,8 @@ and [Telegram bot setup](https://core.telegram.org/bots/tutorial#obtain-your-bot
 ## Prepare captured text and links
 
 Telegram now acknowledges capture first, then reports prepared section/link
-counts. Link identification does not fetch pages, PDFs or YouTube transcripts.
+counts. This preparation stage only identifies links; the article stage below
+fetches supported public HTML pages. PDF and YouTube parsers remain pending.
 
 For existing captures, run:
 
@@ -146,6 +147,46 @@ Repeating preparation reuses identical documents. Raw records are never changed.
 The source hash is checked before parsing. If preparation fails after capture,
 the bot says the original was saved and preparation can be retried with the CLI.
 These document fields are provisional until the team agrees the shared schema.
+
+## Read public web articles
+
+With `WEB_FETCH=on` (the default), Telegram downloads up to three distinct links
+from a saved message, then runs the existing triage, extraction and review
+pipeline on each readable HTML article. A bare URL is treated as a pointer;
+claims come from the fetched article text. A comment and its linked articles
+remain separate inputs. Article links are never recursively crawled.
+
+[Trafilatura](https://trafilatura.readthedocs.io/en/latest/usage-python.html)
+extracts the main text, title, byline and site name. Publication dates come only
+from explicit page metadata. A date without a timezone stays in metadata rather
+than becoming an invented midnight timestamp. The article author is independent
+of the person who shared the URL.
+
+- `raw/`: original message plus a separate article-text child, with source URL
+  and a parent reference. Article claims cite the child's exact text spans.
+- `web-snapshots/`: immutable HTML bytes addressed by SHA-256, checked before
+  processing a derived article. These are local captures and stay ignored by Git.
+- `web-links/`: per-link captured/failed/unsupported/deferred status, used to
+  reuse successful downloads and retry failures without losing originals.
+
+Downloads accept public HTTP(S) pages, check every redirect, verify TLS against
+the original hostname and cap HTML at 2 MB. PDF/media, restricted or JavaScript-only
+pages return explicit status and preserve the original link. Sites returning
+HTTP 403 may require a browser challenge; open the page normally and paste its
+text into Telegram. The fetcher does not bypass those challenges. Extracted text over
+60,000 characters is saved but needs future section processing before AI review.
+
+Import a public article without running a Telegram bot:
+
+```bash
+python -m channels.web 'https://example.org/article' --vault .local-vault/web
+```
+
+This CLI saves/parses the child and prints its raw path; it does not call an LLM.
+Use the existing extraction/review commands for that child. A repeated import
+reuses the download. `--refresh` requests the current page, retaining older HTML
+and child versions when content changes. Set `WEB_FETCH=off` to disable automatic
+article downloads in Telegram, and restart the bot after configuration changes.
 
 ## AI triage and providers
 
@@ -212,7 +253,7 @@ Each statement must stand alone. A corrected event value and its replacement
 context form one update; an obsolete value must not be presented as current.
 
 Python numbers nonblank source lines. New model outputs use
-`evidence_passage_ids`, a list of 1–5 distinct supporting passage IDs. Python
+`evidence_passage_ids`, a list of 1–10 distinct supporting passage IDs. Python
 validates every reference and stores exact character spans in source order.
 Several passages may supply attribution or qualifications for one atomic idea;
 they do not justify merging unrelated ideas. Legacy singular references remain
@@ -231,13 +272,14 @@ without tools. Source text and claims go to Nebius Token Factory.
 
 1. Judge every claim for source support, cited passages, attribution, lost
    qualifications, duplicates, atomicity, clear label errors and major omissions.
-2. If claims have errors, make one strong-model correction and judge it again.
+2. For citation-only findings, repair evidence directly without rewriting claim wording. For semantic errors, make one strong-model correction and judge it again.
 3. Optionally use `--expand-coverage` to make one additive
    coverage pass for omitted ideas: retain existing claims and IDs, append at most 25 new claims,
    then judge the full set. Expanded results have a 50-claim limit.
 4. If the remaining claim errors concern citations only, repair those references
-   once and judge again. Python prevents changes to wording, labels or confidence
-   and preserves unflagged claims.
+   and judge again, with at most two citation rounds for a candidate. A second
+   round is allowed only if the new findings are still citation-only. Python
+   prevents changes to wording, labels or confidence and preserves unflagged claims.
 
 Python requires exactly one review per claim and validates omission passage IDs.
 `accepted` requires every claim to be supported. Omissions are advisory coverage
@@ -303,9 +345,12 @@ and judge commands support `--force`, which repeats calls even with a cache.
 New extraction requests up to 40 explicitly named people and organizations.
 Products, works, headings and abstract concepts are excluded from new requests;
 legacy `concept` entities remain readable and their findings stay advisory.
-Names must match the original spelling within each
-cited passage. Python rejects invented expansions, partial-word matches, invalid
-passage IDs and duplicate kind/name pairs, then records exact mention spans.
+The model returns names, types and aliases; Python locates every exact name
+occurrence and records its passage and character spans. The model no longer
+copies passage IDs for new entity extractions. Names must match the original
+spelling; invented expansions and partial-word matches fail validation. Legacy
+replies with passage IDs remain readable, with only verifiable mechanical
+reference repairs allowed and recorded. Semantic errors still require review.
 Entity IDs are local to an item. Within an article, names that clearly refer to
 the same entity are grouped under the most complete source-written name, with
 short forms in `aliases`. Each mention retains its exact `surface_name` and source
@@ -344,6 +389,33 @@ rerunning claim extraction or sending Telegram messages:
 ```bash
 python -m engine.entities .local-vault/telegram --item-id ITEM_ID
 ```
+
+## Read claims and entities without opening pipeline folders
+
+Open `.local-vault/telegram/processed/index.md`. It lists saved items by readable
+title and status. Each item has one current Markdown note next to its JSON
+handoff: claims, source passage numbers, people, organizations, aliases, mention
+counts and review findings. Unfinished entity extraction is labeled explicitly;
+it is not shown as “no people found”. Notes are refreshed after Telegram processing,
+including pending model stages. Text below the user-notes marker is preserved.
+
+Generate or refresh these notes for existing captures without any model calls:
+
+```bash
+python -m engine.results .local-vault/telegram
+```
+
+`raw/` contains originals; `processed/` contains current results. The other stage
+folders are internal caches and diagnostics used for bounded correction and
+retries. They are retained so a failed stage can resume without losing evidence
+or paying to repeat completed work. There is no need to read them to understand
+an extraction; their folder names do not represent independent copies of an article.
+
+The claim citation limit is ten **source lines**, because a single supporting
+code block can occupy more than five lines. This does not relax atomicity or
+source-support review. Validation distinguishes an over-limit citation list from
+invalid ID types or references to nonexistent passages. IDs and character spans
+are never silently dropped or replaced to make output pass.
 
 ## Combined extraction and storage handoff
 

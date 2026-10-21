@@ -54,6 +54,11 @@ class QualityTests(unittest.TestCase):
         self.assertEqual(json.loads((self.vault / 'reviews' / self.raw.path.name).read_text())['review']['status'], 'needs_revision')
         self.assertIn('review', json.loads(client.calls[1][1]))
         self.assertIn('previous_claims', json.loads(client.calls[1][1]))
+        payload = json.loads(client.calls[1][1])
+        self.assertEqual(payload['previous_claims'][0]['claim_id'], 'C1')
+        self.assertEqual(payload['previous_claims'][0]['evidence_passage_ids'], [1])
+        self.assertNotIn('evidence', payload['previous_claims'][0])
+        self.assertEqual(payload['review']['claims'][0]['claim_id'], 'C1')
         self.assertNotIn('previous_claims', json.loads(client.calls[2][1]))
 
     def test_accepted_initial_review_needs_no_correction(self):
@@ -97,6 +102,7 @@ class QualityTests(unittest.TestCase):
         self.assertEqual(result.reviewed.review['status'], 'accepted')
         self.assertEqual(len(client.calls), 4)
         self.assertIn('Previous correction was invalid', client.calls[2][0])
+        self.assertEqual(json.loads(client.calls[2][1])['previous_output'], {})
 
     def test_service_failure_preserves_review_and_original(self):
         client = FakeModel([ModelReply(self.initial_review), ModelError('Service unavailable.')])
