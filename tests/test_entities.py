@@ -132,8 +132,16 @@ class EntityTests(unittest.TestCase):
         self.assertEqual(len(client.calls), 1)
         payload = json.loads(client.calls[0][1])
         self.assertEqual(len(payload['passages']), 3)
-        self.assertEqual(payload['entities'], result.entities)
+        self.assertEqual(payload['entities'], [{**e, 'entity_id': f'E{n}'} for n, e in enumerate(result.entities, 1)])
         self.assertNotIn('review', payload)
+
+    def test_review_answers_with_short_ids_are_mapped_back(self):
+        result = self.extract()
+        data = entity_review(result.entities)
+        short = {row['entity_id']: f'E{n}' for n, row in enumerate(result.entities, 1)}
+        data['entities'] = [{**row, 'entity_id': short[row['entity_id']]} for row in data['entities']]
+        review = review_entities(self.raw.path, FakeModel([ModelReply(data)]), result).review
+        self.assertEqual([r['entity_id'] for r in review['entities']], [e['entity_id'] for e in result.entities])
 
     def test_review_requires_every_entity_exactly_once(self):
         entities = self.extract().entities
@@ -143,14 +151,15 @@ class EntityTests(unittest.TestCase):
             with self.subTest(rows=rows), self.assertRaises(EntityError):
                 validate_entity_review({**data, 'entities': rows}, entities, TEXT, 'item', 'section')
 
-    def test_unsupported_entities_or_omissions_prevent_acceptance(self):
+    def test_wrong_people_block_acceptance_but_omissions_are_advisory(self):
         entities = self.extract().entities
         data = entity_review(entities)
         data['entities'][0]['verdict'] = 'needs_revision'
         self.assertEqual(validate_entity_review(data, entities, TEXT, 'item', 'section')['status'], 'needs_revision')
         omitted = [{'name': 'AI', 'kind': 'concept', 'evidence_passage_ids': [2]}]
         data = entity_review(entities, omitted_entities=omitted)
-        self.assertEqual(validate_entity_review(data, entities, TEXT, 'item', 'section')['status'], 'needs_revision')
+        self.assertEqual(validate_entity_review(data, entities, TEXT, 'item', 'section')['status'], 'accepted')
+        self.assertTrue(validate_entity_review(data, entities, TEXT, 'item', 'section')['omitted_entities'])
         with self.assertRaises(EntityError):
             validate_entity_review(entity_review(entities, omitted_entities=[ROWS[0]]), entities, TEXT, 'item', 'section')
 
@@ -194,8 +203,8 @@ class EntityTests(unittest.TestCase):
     def test_configuration_reuses_strong_model_and_can_be_disabled(self):
         with patch.dict(os.environ, {'ENTITY_EXTRACTION': 'off'}, clear=True):
             self.assertIsNone(entity_client_from_environment())
-        with patch.dict(os.environ, {'ENTITY_EXTRACTION': 'on', 'JUDGE_PROVIDER': 'backboard', 'BACKBOARD_API_KEY': 'fixture-secret'}, clear=True):
-            self.assertEqual(entity_client_from_environment().model_name, 'claude-opus-5-5')
+        with patch.dict(os.environ, {'ENTITY_EXTRACTION': 'on', 'JUDGE_PROVIDER': 'nebius', 'NEBIUS_API_KEY': 'fixture-secret'}, clear=True):
+            self.assertEqual(entity_client_from_environment().model_name, 'nvidia/Nemotron-3-Ultra-550b-a55b')
 
 
 class TelegramEntityTests(unittest.IsolatedAsyncioTestCase):

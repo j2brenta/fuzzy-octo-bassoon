@@ -6,19 +6,18 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
-import os
 import re
 from pathlib import Path
-import tempfile
 
 from dotenv import load_dotenv
+from engine.artifacts import atomic_json
 
 from engine.llm import JsonModel, ModelError, ModelOutputError, client_from_environment
 from engine.parse import parse_capture
 from engine.triage import TriageError, triage_capture
 
-PROMPT_VERSION = "extract-v4"
-SUPPORTED_PROMPT_VERSIONS = {"extract-v3", PROMPT_VERSION}
+PROMPT_VERSION = "extract-v5"
+SUPPORTED_PROMPT_VERSIONS = {"extract-v3", "extract-v4", PROMPT_VERSION}
 MAX_CLAIMS = 25
 MAX_COVERAGE_CLAIMS = 50
 HALF_LIVES = {"foundation": 720, "reference": 180, "news": 30, "ephemeral": 7}
@@ -37,6 +36,12 @@ kind: fact, announcement, opinion, how-to, or principle;
 durability_class: foundation, reference, news, or ephemeral;
 confidence: a number from 0 to 1 representing confidence in faithful extraction,
 not confidence that the source is true or that the author is trustworthy.
+Each statement must stand alone: name its subject and relevant event/date. Do
+not rely on another extracted statement to resolve "this", "it" or "the above".
+For a correction, keep the corrected value and its replacement context together
+as one atomic update about the same event/property. Do not split off a separate
+context-dependent "this replaces the old value" claim or assert the obsolete
+value as current. Preserve both values in that update when the source gives them.
 Keep the most central claims first. Preserve uncertainty, conditions, dates,
 negations and attribution. Do not turn 'may/could/potentially' into certainty.
 Treat forecasts as opinions. A fact label describes how the source presents a
@@ -218,21 +223,7 @@ def extract_capture(raw_path: Path, client: JsonModel, *, force: bool = False) -
         "actual_provider": reply.actual_provider, "actual_model": reply.actual_model,
         "request_id": reply.request_id, "usage": reply.usage,
     }
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent, delete=False, suffix=".tmp") as file:
-        temporary = Path(file.name)
-        try:
-            json.dump(output, file, ensure_ascii=False, indent=2)
-            file.write("\n")
-            file.flush()
-            os.fsync(file.fileno())
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
-        os.replace(temporary, destination)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_json(destination, output)
     return ExtractionResult(destination, claims, False)
 
 
@@ -246,7 +237,7 @@ def main() -> int:
     try:
         client = client_from_environment()
         if client is None:
-            raise ModelError("Configure Backboard in .env before model extraction.")
+            raise ModelError("Set TRIAGE_PROVIDER in .env before model extraction.")
         paths = sorted((args.vault / "raw").glob("*.json"))
         if args.item_id:
             paths = [path for path in paths if path.stem == args.item_id]

@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import ValidationError
 
-from channels.importer import import_corpus, import_file, main, parse_linkedin_paste, parse_telegram_desktop
+from channels.seed_raw import import_corpus, import_file, main, parse_linkedin_paste, parse_telegram_desktop
 from refresher.schemas import RawItem
 
 BERLIN = ZoneInfo("Europe/Berlin")

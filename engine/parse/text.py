@@ -3,11 +3,10 @@
 from dataclasses import dataclass
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
-import tempfile
 from urllib.parse import urlsplit
+from engine.artifacts import atomic_json
 
 PARSER_VERSION = "text-v1"
 URL_PATTERN = re.compile(r'''https?://[^\s<>"'\u200b]+''')
@@ -130,18 +129,5 @@ def parse_capture(raw_path: Path) -> ParseResult:
     destination = folder / raw_path.name
     reused = destination.exists() and destination.read_bytes() == encoded
     if not reused:
-        folder.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(dir=folder, delete=False, suffix=".tmp") as file:
-            temporary = Path(file.name)
-            try:
-                file.write(encoded)
-                file.flush()
-                os.fsync(file.fileno())
-            except BaseException:
-                temporary.unlink(missing_ok=True)
-                raise
-        try:
-            os.replace(temporary, destination)
-        finally:
-            temporary.unlink(missing_ok=True)
+        atomic_json(destination, document)
     return ParseResult(destination, len(document["sections"]), len(document["links"]), reused)

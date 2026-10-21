@@ -66,6 +66,7 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
       relations: []
 
   - id: introspection-list
@@ -80,6 +81,7 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
       relations: [{type: DUPLICATES, target: people-list}]
 
   - id: redis-talks
@@ -94,6 +96,7 @@ items:
       author: null
       people: [Samuel Agbede, Evangelos Resvanis]
       kind: post
+      durability: reference
       relations: []
 
   - id: economics-list
@@ -108,4 +111,42 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
+      relations: []
+
+  - id: eli5-post
+    file: originals/tg_eli5.md
+    channel: telegram
+    source_id: seed:rvnikita_blog
+    source_name: Мысли Рвачева (t.me/rvnikita_blog)
+    message_id: "1899"
+    captured_at: "2026-10-19T14:20:00+02:00"
+    author_hint: {name: Nikita Rvachev, handle: rvnikita_blog}
+    synthetic: false
+    notes: "Channel repost without a Telegram header; captured_at is the file time. Russian."
+    expected:
+      label_status: draft
+      author: Nikita Rvachev
+      kind: post
+      durability: news
+      people: [Thariq Shihipar]
+      relations: []
+
+  - id: linkedin-math
+    file: originals/linkedin_why_ai_excels_in_math.md
+    channel: telegram
+    source_id: seed:linkedin
+    source_name: LinkedIn (pasted)
+    message_id: jianfeng-liu-why-ai-excels-in-math
+    captured_at: "2026-10-19T14:20:00+02:00"
+    published_at: "2026-10-07T00:00:00+02:00"
+    author_hint: {name: Jianfeng Liu, url: "https://www.linkedin.com/pulse/why-ai-excels-math-fails-creative-writing-how-fix-jianfeng-liu-heeyc"}
+    synthetic: false
+    notes: "Opinion essay pasted from LinkedIn Pulse; the headline line belongs to the author profile."
+    expected:
+      label_status: draft
+      author: Jianfeng Liu
+      kind: article
+      durability: reference
+      people: []
       relations: []

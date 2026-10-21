@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from store.raw import CaptureResult, capture_text, normalize_timestamp
+from store.raw import CaptureResult, capture_text, normalize_timestamp, forwarder_hint
 
 
 @dataclass(frozen=True)
@@ -74,9 +74,7 @@ def load_manifest(path: Path) -> list[SeedItem]:
             capture["author_hint"] = author
         forwarder = entry.get("forwarded_by")
         if forwarder is not None:
-            if not isinstance(forwarder, str) or not forwarder.strip():
-                raise ValueError(f"{seed_id}: forwarded_by must be nonblank text.")
-            capture["forwarded_by"] = forwarder
+            capture["forwarded_by"] = forwarder_hint(forwarder)
         expected = entry.get("expected")
         if not isinstance(expected, dict):
             raise ValueError(f"{seed_id}: expected must be a mapping of labels.")

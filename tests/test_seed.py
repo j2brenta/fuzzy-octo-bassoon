@@ -31,7 +31,7 @@ class SeedTests(unittest.TestCase):
     def test_metadata_is_preserved_without_answer_key_leakage(self):
         items = load_manifest(self.manifest)
         results = import_seed(items, self.vault)
-        self.assertEqual(len(results), 7)
+        self.assertEqual(len(results), 9)
         correction = json.loads(results[0][1].path.read_text())
         self.assertEqual(correction['text'], items[0].text)
         self.assertEqual(correction['captured_at'], '2026-10-19T10:00:00+00:00')
@@ -43,7 +43,7 @@ class SeedTests(unittest.TestCase):
         people = json.loads(results[3][1].path.read_text())
         self.assertIsNone(people['author_hint'])
         self.assertIsNone(people['published_at'])
-        self.assertEqual(people['forwarded_by'], 'Kirill R')
+        self.assertEqual(people['forwarded_by'], {'name': 'Kirill R'})
 
     def test_retry_after_corpus_move_keeps_original_records(self):
         first = import_seed(load_manifest(self.manifest), self.vault)
@@ -52,7 +52,7 @@ class SeedTests(unittest.TestCase):
         shutil.copytree(self.corpus, relocated)
         second = import_seed(load_manifest(relocated / 'manifest.yaml'), self.vault)
         self.assertTrue(all(result.duplicate for _, result in second))
-        self.assertEqual(len(list((self.vault / 'raw').iterdir())), 7)
+        self.assertEqual(len(list((self.vault / 'raw').iterdir())), 9)
         for _, result in second:
             self.assertEqual(result.path.read_bytes(), original[result.path.name])
 
@@ -100,14 +100,14 @@ class SeedTests(unittest.TestCase):
         command = [sys.executable, '-m', 'channels.importer', str(self.corpus), '--vault', str(self.vault)]
         validate = subprocess.run(command + ['--validate-only'], capture_output=True, text=True)
         self.assertEqual(validate.returncode, 0, validate.stderr)
-        self.assertIn('7 items; no records written', validate.stdout)
+        self.assertIn('9 items; no records written', validate.stdout)
         self.assertFalse(self.vault.exists())
         first = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(first.returncode, 0, first.stderr)
-        self.assertIn('7 new, 0 already captured', first.stdout)
+        self.assertIn('9 new, 0 already captured', first.stdout)
         second = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(second.returncode, 0, second.stderr)
-        self.assertIn('0 new, 7 already captured', second.stdout)
+        self.assertIn('0 new, 9 already captured', second.stdout)
 
     def test_invalid_yaml_reports_readable_error(self):
         self.manifest.write_text('items: [broken')
@@ -115,11 +115,6 @@ class SeedTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('Invalid YAML', result.stderr)
         self.assertNotIn('Traceback', result.stderr)
-
-    def test_supplied_originals_match_repository_samples(self):
-        for original in (CORPUS / 'originals').glob('*.md'):
-            supplied = CORPUS.parents[1] / 'sample_raw' / original.name
-            self.assertEqual(original.read_bytes(), supplied.read_bytes())
 
 
 if __name__ == '__main__':

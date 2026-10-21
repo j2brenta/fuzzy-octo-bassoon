@@ -4,16 +4,16 @@ import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
-import tempfile
 
 from dotenv import load_dotenv
+from engine.artifacts import atomic_json
 
+from engine.artifacts import save_rejected
 from engine.llm import JsonModel, ModelError, ModelOutputError, client_from_environment
 from engine.parse import parse_capture
 
-PROMPT_VERSION = "triage-v2"
+PROMPT_VERSION = "triage-v4"
 MAX_TEXT_CHARACTERS = 60_000
 FIELDS = {"keep", "kind", "durability_class", "split_digest", "reason"}
 KINDS = {"post", "article", "newsletter_digest", "announcement", "thought", "conversation", "other"}
@@ -25,6 +25,28 @@ Classify only the text actually supplied. Return a JSON object with exactly:
 keep (boolean), kind (post/article/newsletter_digest/announcement/thought/conversation/other),
 durability_class (foundation/reference/news/ephemeral), split_digest (boolean),
 reason (one concise English sentence explaining your judgment).
+Apply these rules in order, based on the supplied content:
+1. Technical abstracts describing methods, systems or what a session teaches are
+post + reference, even when presented as a scheduled event with times, speakers,
+future-tense demonstrations or an agenda. Their reusable technical substance
+wins over the schedule. No full tutorial or completed experiment is required.
+2. Logistics-only event notices, rescheduling, cancellation, correction or repost
+of event logistics are announcement + ephemeral, and KEEP. Keep the original
+event notice even if it is old: later corrections and reposts need a preserved
+target. Ephemeral describes usefulness duration, not a reason to skip. Never skip
+substantive low-durability facts solely for being dated.
+3. Social commentary on a current tool/feature release or availability update
+is post + news. This includes a tool that is not official yet but installable
+now. Installation commands, usage examples or learning advice inside that update
+do not turn the whole update into reference material. Distinguish an evolving
+availability/adoption report from a standalone stable technical guide.
+Curated people/book/resource lists are post + reference, not articles merely
+because they are long.
+A stand-alone social/chat/channel message, including curated lists and short
+commentary, is post. An explicitly presented long-form essay/article is article;
+classify an explanatory/opinion essay as reference, not foundation merely because
+it discusses enduring topics. An isolated personal reflection is thought.
+Ignore pasted sender/timestamp headers as content or authorship evidence.
 Keep substantive knowledge, useful personal thoughts, references and meaningful
 updates. Dialogues, chats, brainstorming and Q&A can contain valuable concepts,
 proposals, arguments and disagreements. Keep them when substantive even if informal.
@@ -95,14 +117,17 @@ def triage_capture(raw_path: Path, client: JsonModel, *, force: bool = False) ->
             pass  # Derived data can be rebuilt; raw content is never replaced.
 
     # One retry for invalid model output, never unlimited paid requests.
+    errors = []
     for attempt in range(2):
         try:
+            reply = None
             reply = client.complete_json(SYSTEM_PROMPT, text)
             labels = validate_labels(reply.data)
             break
-        except (TriageError, ModelOutputError):
+        except (TriageError, ModelOutputError) as error:
+            errors.append(save_rejected(raw_path, "triage", attempt, error, reply))
             if attempt == 1:
-                raise TriageError("Model output failed validation twice; original retained.") from None
+                raise TriageError("Model output failed validation twice: " + " | ".join(errors) + " Original retained.") from None
     output = {
         **identity,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -114,21 +139,7 @@ def triage_capture(raw_path: Path, client: JsonModel, *, force: bool = False) ->
         "request_id": reply.request_id,
         "usage": reply.usage,
     }
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent, delete=False, suffix=".tmp") as file:
-        temporary = Path(file.name)
-        try:
-            json.dump(output, file, ensure_ascii=False, indent=2)
-            file.write("\n")
-            file.flush()
-            os.fsync(file.fileno())
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
-        os.replace(temporary, destination)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_json(destination, output)
     return TriageResult(destination, labels, False)
 
 
@@ -142,7 +153,7 @@ def main() -> int:
     try:
         client = client_from_environment()
         if client is None:
-            raise ModelError("Set TRIAGE_PROVIDER=backboard and BACKBOARD_API_KEY in .env first.")
+            raise ModelError("Set TRIAGE_PROVIDER=nebius and NEBIUS_API_KEY in .env first.")
         paths = sorted((args.vault / "raw").glob("*.json"))
         if args.item_id:
             paths = [path for path in paths if path.stem == args.item_id]

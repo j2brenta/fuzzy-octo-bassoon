@@ -60,7 +60,9 @@ def capture_message(message: Message, vault_path: Path) -> CaptureResult:
     if origin is not None:
         published_at = origin.date
         author = None
-        forwarder = str(message.from_user.id) if message.from_user else None
+        forwarder = ({"name": message.from_user.full_name, "url": f"tg://user?id={message.from_user.id}",
+                          **({"handle": message.from_user.username} if message.from_user.username else {})}
+                         if message.from_user else None)
         # Only channel forwards expose an original message ID. Other forwarded
         # messages retain a receipt-scoped ID instead of guessing an original ID.
         delivery_id = f"delivery:{message.chat.id}:{message.message_id}"
@@ -225,7 +227,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     label = "accepted" if review["status"] == "accepted" else "needs revision"
     await message.answer(
         f"AI quality review: {label} | {passed}/{len(review['claims'])} claims supported | "
-        f"{len(review['omitted_concepts'])} major omission(s).\n"
+        f"{len(review['omitted_concepts'])} coverage note(s).\n"
         f"{review['summary']}\n"
         + ("One automatic correction was applied and reviewed.\n" if quality.corrected else "")
         + ("One coverage pass added missing source-backed ideas and was reviewed.\n" if quality.expanded else "")

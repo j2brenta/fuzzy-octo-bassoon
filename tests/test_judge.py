@@ -41,13 +41,14 @@ class JudgeTests(unittest.TestCase):
         client.model_name = 'fixture-judge'
         return client
 
-    def test_acceptance_requires_every_claim_and_coverage(self):
+    def test_acceptance_requires_claim_correctness_but_retains_coverage_notes(self):
         self.assertEqual(validate_review(self.data, self.claims, self.passages)['status'], 'accepted')
         changed = deepcopy(self.data)
         changed['claims'][0].update(verdict='needs_revision', issues=['lost_qualification'])
         self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'needs_revision')
         changed = {**self.data, 'omitted_concepts': [{'passage_id': 1, 'description': 'A central omitted idea.'}]}
-        self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'needs_revision')
+        self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'accepted')
+        self.assertTrue(validate_review(changed, self.claims, self.passages)['omitted_concepts'])
 
     def test_unknown_missing_and_repeated_ids_cannot_pass(self):
         for rows in [self.data['claims'][:1], self.data['claims'] * 2,
@@ -121,11 +122,18 @@ class JudgeTests(unittest.TestCase):
         self.assertIn('Previous output was invalid', client.calls[1][0])
 
     def test_failed_review_never_saves_acceptance(self):
-        client = FakeModel([ModelReply({}), ModelReply({})])
-        with self.assertRaises(JudgeError):
+        client = FakeModel([ModelReply({}), ModelReply({'claims': []})])
+        with self.assertRaises(JudgeError) as failure:
             judge_capture(self.raw.path, client)
         self.assertFalse((self.vault / 'reviews').exists())
         self.assertTrue(self.extraction.path.exists())
+        # Both reasons are reported, and both rejected answers are kept for inspection only.
+        self.assertEqual(str(failure.exception).count(' | '), 1)
+        rejected = sorted((self.vault / 'rejected' / 'reviews').glob('*.json'))
+        self.assertEqual([p.name.rsplit('.', 2)[1] for p in rejected], ['1', '2'])
+        second = json.loads(rejected[1].read_text())
+        self.assertEqual(second['data'], {'claims': []})
+        self.assertIn(second['error'], str(failure.exception))
 
     def test_service_errors_do_not_trigger_blind_retries(self):
         client = FakeModel([ModelError('Service unavailable.')])
@@ -145,15 +153,16 @@ class JudgeTests(unittest.TestCase):
 
     def test_empty_extraction_still_requires_coverage_review(self):
         data = {'claims': [], 'omitted_concepts': [{'passage_id': 1, 'description': 'A central idea was missed.'}], 'summary': 'No ideas extracted.'}
-        self.assertEqual(validate_review(data, [], self.passages)['status'], 'needs_revision')
+        self.assertEqual(validate_review(data, [], self.passages)['status'], 'accepted')
+        self.assertTrue(validate_review(data, [], self.passages)['omitted_concepts'])
 
     def test_configuration_is_separate_and_key_not_in_repr(self):
         with patch.dict(os.environ, {'JUDGE_PROVIDER': 'off'}, clear=True):
             self.assertIsNone(judge_client_from_environment())
-        with patch.dict(os.environ, {'JUDGE_PROVIDER': 'backboard', 'BACKBOARD_API_KEY': 'fixture-secret', 'BACKBOARD_MODEL': 'small-extractor'}, clear=True):
+        with patch.dict(os.environ, {'JUDGE_PROVIDER': 'nebius', 'NEBIUS_API_KEY': 'fixture-secret', 'NEBIUS_MODEL': 'small-extractor'}, clear=True):
             client = judge_client_from_environment()
-            self.assertEqual(client.model_name, 'claude-opus-5-5')
-            self.assertEqual(client.model_provider, 'anthropic')
+            self.assertEqual(client.model_name, 'nvidia/Nemotron-3-Ultra-550b-a55b')
+            self.assertEqual(client.model_provider, 'nebius')
             self.assertEqual(client.timeout_seconds, 180)
             self.assertNotIn('fixture-secret', repr(client))
 

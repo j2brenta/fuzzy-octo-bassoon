@@ -8,7 +8,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from engine.artifacts import atomic_json, fingerprint
+from engine.short_ids import restore_reply, short_ids
+from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, PROMPT_VERSION as EXTRACT_VERSION, SUPPORTED_PROMPT_VERSIONS, _cached_claims, evidence_spans, source_passages, validate_claims
 from engine.judge import JudgeError, JudgeResult, judge_capture, validate_review
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
@@ -121,22 +122,26 @@ def repair_evidence(raw_path: Path, client: JsonModel, extraction_path: Path, re
             pass
     if output is None:
         by_span = {(p["start"], p["end"]): p["id"] for p in passages}
+        to_short, to_long = short_ids([c["claim_id"] for c in claims], "C")
         payload = {
             "passages": [{"id": p["id"], "text": p["text"]} for p in passages],
-            "claims": [{"claim_id": c["claim_id"], "statement": c["statement"],
+            "claims": [{"claim_id": to_short[c["claim_id"]], "statement": c["statement"],
                         "evidence_passage_ids": [by_span[(s["start_char"], s["end_char"])] for s in evidence_spans(c)]}
                        for c in claims if c["claim_id"] in targets],
-            "feedback": [r for r in reviewed.review["claims"] if r["claim_id"] in targets],
+            "feedback": [{**r, "claim_id": to_short[r["claim_id"]]} for r in reviewed.review["claims"] if r["claim_id"] in targets],
         }
         feedback = ""
+        errors = []
         for attempt in range(2):
             try:
-                reply = client.complete_json(SYSTEM_PROMPT + feedback, json.dumps(payload, ensure_ascii=False))
+                reply = None
+                reply = restore_reply(client.complete_json(SYSTEM_PROMPT + feedback, json.dumps(payload, ensure_ascii=False)), "claim_id", to_long)
                 corrected = apply_citations(reply.data, claims, targets, text, raw["item_id"], section_id)
                 break
             except (JudgeError, ExtractionError, ModelOutputError) as error:
+                errors.append(save_rejected(raw_path, "evidence", attempt, error, reply))
                 if attempt == 1:
-                    raise JudgeError("Citation output failed validation twice; earlier results retained.") from None
+                    raise JudgeError("Citation output failed validation twice: " + " | ".join(errors) + " Earlier results retained.") from None
                 feedback = "\nPrevious citation output was invalid: " + str(error) + " Regenerate the full citations JSON."
         output = {
             **identity, "created_at": datetime.now(timezone.utc).isoformat(),
@@ -160,7 +165,7 @@ def main() -> int:
     try:
         client = judge_client_from_environment()
         if client is None:
-            raise ModelError("Enable the Backboard judge before repairing citations.")
+            raise ModelError("Set JUDGE_PROVIDER in .env before repairing citations.")
         paths = [p for p in (args.vault / "raw").glob("*.json") if p.stem == args.item_id]
         if len(paths) != 1:
             raise JudgeError("No matching capture found.")

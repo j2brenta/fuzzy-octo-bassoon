@@ -12,7 +12,7 @@ from engine.extract import ExtractionError, PROMPT_VERSION as EXTRACT_VERSION, S
 from engine.judge import JudgeError, JudgeResult, judge_capture
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
-from engine.artifacts import fingerprint as _fingerprint, atomic_json as _atomic_json
+from engine.artifacts import save_rejected, fingerprint as _fingerprint, atomic_json as _atomic_json
 
 PROMPT_VERSION = "repair-v2"
 REPAIR_PROMPT = EXTRACT_PROMPT + '''
@@ -52,16 +52,16 @@ def _with_evidence(raw_path: Path, client: JsonModel, result: QualityResult) -> 
     return result
 
 
-def _with_coverage(raw_path: Path, client: JsonModel, result: QualityResult) -> QualityResult:
+def _with_coverage(raw_path: Path, client: JsonModel, result: QualityResult, *, expand_omissions: bool = False) -> QualityResult:
     review = result.reviewed.review
-    if review["omitted_concepts"] and all(row["verdict"] == "supported" for row in review["claims"]):
+    if expand_omissions and review["omitted_concepts"] and all(row["verdict"] == "supported" for row in review["claims"]):
         from engine.coverage import expand_coverage
         expanded = expand_coverage(raw_path, client, result.extraction_path, result.reviewed)
         return _with_evidence(raw_path, client, QualityResult(expanded.extraction_path, expanded.claims, expanded.reviewed, result.corrected, True))
     return _with_evidence(raw_path, client, result)
 
 
-def quality_capture(raw_path: Path, client: JsonModel) -> QualityResult:
+def quality_capture(raw_path: Path, client: JsonModel, *, expand_omissions: bool = False) -> QualityResult:
     """Review, correct at most once if needed, then independently re-review.
 
     Uses fresh conversations for correction and judging. They may use the same
@@ -76,9 +76,9 @@ def quality_capture(raw_path: Path, client: JsonModel) -> QualityResult:
     if _fingerprint(original) != json.loads(initial_review.path.read_text(encoding="utf-8"))["extraction_hash"]:
         raise QualityError("Extraction changed during review; retry quality processing.")
     if initial_review.review["status"] == "accepted":
-        return QualityResult(extraction_path, original["claims"], initial_review, False)
+        return _with_coverage(raw_path, client, QualityResult(extraction_path, original["claims"], initial_review, False), expand_omissions=expand_omissions)
     if all(row["verdict"] == "supported" for row in initial_review.review["claims"]):
-        return _with_coverage(raw_path, client, QualityResult(extraction_path, original["claims"], initial_review, False))
+        return _with_coverage(raw_path, client, QualityResult(extraction_path, original["claims"], initial_review, False), expand_omissions=expand_omissions)
     prepared = parse_capture(raw_path)
     raw = json.loads(raw_path.read_text(encoding="utf-8"))
     document = json.loads(prepared.path.read_text(encoding="utf-8"))
@@ -108,14 +108,17 @@ def quality_capture(raw_path: Path, client: JsonModel) -> QualityResult:
             "previous_claims": original["claims"], "review": initial_review.review,
         }, ensure_ascii=False)
         feedback = ""
+        errors = []
         for attempt in range(2):
             try:
+                reply = None
                 reply = client.complete_json(REPAIR_PROMPT + feedback, content)
                 claims = validate_claims(reply.data, text, raw["item_id"], section_id)
                 break
             except (ExtractionError, ModelOutputError) as error:
+                errors.append(save_rejected(raw_path, "repairs", attempt, error, reply))
                 if attempt == 1:
-                    raise QualityError("Correction output failed validation twice; originals retained.") from None
+                    raise QualityError("Correction output failed validation twice: " + " | ".join(errors) + " Originals retained.") from None
                 feedback = "\nPrevious correction was invalid: " + str(error) + " Regenerate the complete claims JSON."
         output = {
             **identity, "created_at": datetime.now(timezone.utc).isoformat(),
@@ -126,24 +129,25 @@ def quality_capture(raw_path: Path, client: JsonModel) -> QualityResult:
         }
         _atomic_json(destination, output)
     reviewed = judge_capture(raw_path, client, extraction_path=destination, review_path=vault / "repair-reviews" / raw_path.name)
-    return _with_coverage(raw_path, client, QualityResult(destination, output["claims"], reviewed, True))
+    return _with_coverage(raw_path, client, QualityResult(destination, output["claims"], reviewed, True), expand_omissions=expand_omissions)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("vault", type=Path)
     parser.add_argument("--item-id", required=True, help="Review and correct one extracted item")
+    parser.add_argument("--expand-coverage", action="store_true", help="Optionally add omitted ideas once; coverage does not block acceptance")
     args = parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
     try:
         client = judge_client_from_environment()
         if client is None:
-            raise ModelError("Set JUDGE_PROVIDER=backboard to enable quality processing.")
+            raise ModelError("Set JUDGE_PROVIDER=nebius in .env to enable quality processing.")
         # Match filenames rather than interpolating untrusted input into a path.
         paths = [p for p in (args.vault / "raw").glob("*.json") if p.stem == args.item_id]
         if len(paths) != 1:
             raise QualityError("No matching captured item found.")
-        result = quality_capture(paths[0], client)
+        result = quality_capture(paths[0], client, expand_omissions=args.expand_coverage)
         print(f"Quality: {result.reviewed.review['status']} | {len(result.claims)} claims | corrected={result.corrected} | expanded={result.expanded}")
         print(result.extraction_path)
     except (ModelError, JudgeError, QualityError, ExtractionError, OSError, ValueError) as error:

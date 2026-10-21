@@ -88,6 +88,9 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(build_extraction(self.raw.path).record['quality_status'], 'pending')
         saved['labels']['keep'] = False
         atomic_json(path, saved)
+        # A changed triage invalidates dependent claims; recreate fixture outputs.
+        rebuilt = extract_capture(self.raw.path, FakeModel([response()]))
+        judge_capture(self.raw.path, FakeModel([ModelReply(review_data(rebuilt.claims))]))
         result = build_extraction(self.raw.path)
         self.assertEqual(result.record['quality_status'], 'skipped')
         self.assertFalse(result.record['quality_gate_passed'])

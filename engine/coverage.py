@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from engine.artifacts import atomic_json, fingerprint
+from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import ExtractionError, MAX_COVERAGE_CLAIMS, SYSTEM_PROMPT as EXTRACT_PROMPT, _cached_claims, source_passages, validate_claims
 from engine.judge import JudgeError, JudgeResult, judge_capture
 from engine.llm import JsonModel, ModelOutputError
@@ -73,8 +73,10 @@ def expand_coverage(raw_path: Path, client: JsonModel, extraction_path: Path, re
         }, ensure_ascii=False)
         feedback = ""
         existing_keys = {c["statement"].casefold() for c in existing}
+        errors = []
         for attempt in range(2):
             try:
+                reply = None
                 reply = client.complete_json(SYSTEM_PROMPT + feedback, content)
                 additions = validate_claims(reply.data, text, raw["item_id"], section_id)
                 if any(c["statement"].casefold() in existing_keys for c in additions):
@@ -84,8 +86,9 @@ def expand_coverage(raw_path: Path, client: JsonModel, extraction_path: Path, re
                     raise ExtractionError("Coverage additions contain repeated claims.")
                 break
             except (ExtractionError, ModelOutputError) as error:
+                errors.append(save_rejected(raw_path, "coverage", attempt, error, reply))
                 if attempt == 1:
-                    raise JudgeError("Coverage output failed validation twice; earlier results retained.") from None
+                    raise JudgeError("Coverage output failed validation twice: " + " | ".join(errors) + " Earlier results retained.") from None
                 feedback = "\nPrevious coverage output was invalid: " + str(error) + " Regenerate only the additions."
         output = {
             **identity, "created_at": datetime.now(timezone.utc).isoformat(),
