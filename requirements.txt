@@ -1,0 +1,5 @@
+PyYAML==6.0.3
+aiogram==3.31.0
+python-dotenv==1.2.4
+pydantic>=2,<3
+trafilatura==2.3.1

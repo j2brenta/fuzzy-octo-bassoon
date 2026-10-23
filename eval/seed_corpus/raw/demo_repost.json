@@ -1,0 +1,14 @@
+{
+  "attachments": [],
+  "captured_at": "2026-10-19T10:01:00Z",
+  "channel": "telegram",
+  "forwarded_by": {
+    "name": "Demo Forwarder"
+  },
+  "kind": "text",
+  "published_at": "2026-10-15T09:10:00Z",
+  "schema_version": 1,
+  "source_id": "seed:demo_repost#1",
+  "source_name": "Synthetic repost channel",
+  "text": "Forwarded synthetic announcement: The demo workshop starts at 14:00 UTC on 25 October 2026."
+}
