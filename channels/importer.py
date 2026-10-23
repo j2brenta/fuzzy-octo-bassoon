@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from store.raw import capture_text
+from channels.pasted import telegram_copy_metadata
 
 
 from channels.seed_raw import import_corpus, import_file, parse_linkedin_paste, parse_telegram_desktop
@@ -15,6 +16,7 @@ def main(argv=None) -> int:
     parser.add_argument("--vault", type=Path, default=Path(".local-vault"))
     parser.add_argument("--source-name", help="Display name for a single-file import")
     parser.add_argument("--validate-only", action="store_true", help="Check a seed manifest without writing records")
+    parser.add_argument("--copy-timezone", help="IANA timezone for copied Telegram chat timestamps; does not set publication time")
     parser.add_argument("--check", action="store_true", help="Check committed RawItem fixtures")
     args = parser.parse_args(argv)
     if args.check:
@@ -33,7 +35,7 @@ def main(argv=None) -> int:
             except ImportError:
                 raise ValueError("Install seed-import dependencies: python -m pip install -r requirements.txt") from None
             try:
-                items = load_manifest(manifest)
+                items = load_manifest(manifest, copy_timezone=args.copy_timezone)
             except yaml.YAMLError as error:
                 raise ValueError(f"Invalid YAML: {error}") from None
             if args.validate_only:
@@ -51,12 +53,15 @@ def main(argv=None) -> int:
             raise ValueError("--validate-only requires a seed manifest or corpus directory.")
         with source.open(encoding="utf-8", newline="") as file:
             text = file.read()
+        copied = telegram_copy_metadata(text, args.copy_timezone)
         result = capture_text(
             text,
             args.vault,
             channel="file",
             source_id=source.as_uri(),
             source_name=args.source_name or source.name,
+            channel_metadata={"telegram_copy": copied} if copied else None,
+            forwarded_by=copied["messages"][0]["sender_hint"] if copied and len(copied["messages"]) == 1 else None,
         )
     except (OSError, UnicodeError, ValueError) as error:
         parser.exit(1, f"Import failed: {error}\n")

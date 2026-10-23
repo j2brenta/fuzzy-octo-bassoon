@@ -167,6 +167,21 @@ def write_item_note(raw_path: Path, *, refresh_index=True) -> Path:
         forwarder = forwarder.get('name') or forwarder.get('handle')
     if forwarder:
         lines += ['**Shared by:** ' + _plain(forwarder), '']
+    copied = document.get('telegram_copy')
+    if copied:
+        lines += ['## Copied Telegram metadata', '', 'These are copied chat-message timestamps, not verified original publication dates. Original text is preserved.', '']
+        for header in copied['messages']:
+            zone = header.get('timezone') or 'timezone unknown; not converted to UTC'
+            lines.append(f"- {_plain(header['sender_hint']['name'])}: {_plain(header['copied_at_local'])} ({_plain(zone)}).")
+        lines.append('')
+    image_source = document.get('image_source')
+    if image_source:
+        lines += ['## Original picture', '',
+                  f"![Saved original](../{image_source['image_path']})", '',
+                  'Text and visual descriptions were read by a vision model and may contain errors. Claim review checks the derived text, not the original pixels.', '',
+                  '**Image reading:**', '', *[_plain(line) for line in raw['text'].splitlines()], '']
+        if image_source.get('uncertainties'):
+            lines += ['**Uncertainties:**', '', *['- '+_plain(value) for value in image_source['uncertainties']], '']
     if error:
         lines += ['> Processing is incomplete: ' + _plain(error), '']
     if status in {'linked', 'link_saved', 'download_failed'}:

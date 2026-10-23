@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 
+from channels.pasted import telegram_copy_metadata
 from store.raw import CaptureResult, capture_text, normalize_timestamp, forwarder_hint
 
 
@@ -23,7 +24,7 @@ def _required_text(data: dict, key: str, context: str) -> str:
     return value
 
 
-def load_manifest(path: Path) -> list[SeedItem]:
+def load_manifest(path: Path, *, copy_timezone: str | None = None) -> list[SeedItem]:
     """Load all originals, checking metadata and relation targets before writes.
 
     Expected labels stay in the manifest. They are never given to the capture
@@ -38,6 +39,13 @@ def load_manifest(path: Path) -> list[SeedItem]:
     if not isinstance(entries, list) or not entries:
         raise ValueError("Manifest items must be a nonempty list.")
 
+    # Only source timezone configuration is reused; raw_manifest's evaluation
+    # answers and author guesses are never imported into the model input.
+    copy_timezone = copy_timezone if copy_timezone is not None else data.get("copy_timezone")
+    raw_config = path.parent / "raw_manifest.yaml"
+    if copy_timezone is None and raw_config.exists():
+        with raw_config.open(encoding="utf-8") as file:
+            copy_timezone = (yaml.safe_load(file) or {}).get("timezone")
     originals = (path.parent / "originals").resolve(strict=True)
     items = []
     seen = set()
@@ -75,6 +83,11 @@ def load_manifest(path: Path) -> list[SeedItem]:
         forwarder = entry.get("forwarded_by")
         if forwarder is not None:
             capture["forwarded_by"] = forwarder_hint(forwarder)
+        copied = telegram_copy_metadata(text, copy_timezone)
+        if copied:
+            capture["channel_metadata"] = {"telegram_copy": copied}
+            if not capture.get("forwarded_by") and len(copied["messages"]) == 1:
+                capture["forwarded_by"] = copied["messages"][0]["sender_hint"]
         expected = entry.get("expected")
         if not isinstance(expected, dict):
             raise ValueError(f"{seed_id}: expected must be a mapping of labels.")

@@ -63,7 +63,7 @@ The bot uses aiogram long polling, so it can run on your laptop without a public
 server. It accepts text in a private conversation with its configured owner.
 Text is stored once in the top-level `text` field. Telegram-specific metadata
 (sender, forwarding details, formatting and link previews) stays under
-`channel_metadata`; it does not repeat the message text. Attachments, edits and channel subscriptions are future work.
+`channel_metadata`; it does not repeat the message text. Other attachments, edits and channel subscriptions are future work.
 
 ### Connect your bot
 
@@ -110,8 +110,8 @@ Text is stored once in the top-level `text` field. Telegram-specific metadata
   legacy strings are normalized in the combined handoff without rewriting raw.
   Forwarders are not substituted for original authors; hidden author names are
   only hints. A channel title is a source, not proof of a person's identity.
-- Files, photos (even with captions) and voice are rejected explicitly; their
-  attachments are not silently discarded. Edited messages are not processed.
+- Telegram photos and JPEG/PNG/WebP image files are supported, with captions.
+  Voice and other attachments are rejected explicitly. Edited messages are not processed.
 - This is a raw-capture acknowledgment, not a filing, deduplication or graph
   verdict. AI processing follows capture; graph relations are still pending.
 - One polling process per token. Existing webhooks are detected, not deleted.
@@ -485,3 +485,54 @@ is not a model ranking.
 ## License
 
 Apache-2.0; see [LICENSE](LICENSE).
+
+## Pictures from Telegram
+
+Send a photo, screenshot, or still JPEG/PNG/WebP image document to the private
+bot. Limits: **10 MB and 20 megapixels**. The largest Telegram photo variant is
+used. The original image and Telegram receipt are saved before any model call
+under `raw/images/`; file uploads preserve the file bytes, while Telegram photos
+are the rendition delivered by Telegram. Albums are handled as separate messages.
+
+Token Factory’s `nvidia/Nemotron-3.5-Super-VL` reads visible text and describes
+visual content. Configure `NEBIUS_VISION_MODEL` in `.env`; it uses the existing
+`NEBIUS_API_KEY`. The API receives a correctly oriented image, capped at 2048 pixels
+on its longest side and re-encoded without EXIF metadata. The saved original is
+unchanged. Supported request format: [Nebius vision capabilities](https://docs.tokenfactory.nebius.com/api-reference/examples/vision-capabilities).
+
+The derived text separates automatic OCR, model descriptions and the sender’s
+caption. It goes through existing triage, claims, entities and review. A sender
+uploading a picture is not assumed to be its creator; quoted speakers remain
+source text, and a person’s identity is not inferred from their face. The bot
+returns an automatic-reading preview. `processed/index.md` leads to notes with
+the original picture, interpreted text, uncertainty notes and extracted results.
+
+OCR and visual descriptions can contain mistakes. The downstream claim reviewer
+checks the derived text, not the pixels. Small/cropped text may remain unreadable;
+send a clearer image or paste its text. Model/service failures retain saved
+originals and allow retry by resending. Repeated delivery reuses the saved reading.
+Voice handling and Whisper dependencies have been removed; saved legacy sources
+are not deleted. Restart the bot to load these changes.
+
+## Pasted Telegram Desktop headers
+
+File/seed import and pasted Telegram text reuse Kirill’s `parse_telegram_desktop`
+parser to record each header’s sender and chat timestamp **without stripping or
+rewriting the original captured text**. Headers do not establish original authorship.
+The actual Telegram sender stays separate from senders named inside a paste.
+
+`published_at` remains the known original publication time; `captured_at` remains
+the actual ingestion time. `copied_at_local` preserves the copied chat wall time;
+`copied_at` is populated only with an explicitly supplied timezone. Configure
+`TELEGRAM_COPY_TIMEZONE`, or use `--copy-timezone Europe/Berlin` for file/seed imports.
+Seed imports can also use `copy_timezone` in their manifest or the existing corpus
+`raw_manifest.yaml` timezone. Unknown zones stay unknown; no UTC time is invented.
+
+The handoff preserves this metadata. Timeline ordering uses publication time,
+then timezone-qualified copied-message time, then capture time. Multiple-message
+pastes retain all headers without pretending there is one original author/date.
+A copied-header-only parser refresh rebuilds handoff/placement artifacts while
+preserving valid paid text extraction/review caches.
+
+Validation reports: [nine-seed triage](docs/triage-v4-seed-evaluation-2026-10-23.md)
+and [reviewer token usage](docs/reviewer-token-usage-2026-10-23.md).

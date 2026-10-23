@@ -171,6 +171,16 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
     }
     if "parent" in document:
         core["parent"] = document["parent"]
+    if "image_source" in document:
+        core["image_source"] = document["image_source"]
+    copied = document.get("telegram_copy")
+    if copied:
+        core["telegram_copy"] = copied
+        if len(copied["messages"]) == 1:
+            header = copied["messages"][0]
+            core["source"].update({key: header.get(key) for key in ("copied_at", "copied_at_local")})
+            if source_forwarder is None:
+                source_forwarder = header["sender_hint"]
     core["source"]["forwarded_by"] = source_forwarder
     core["bundle_id"] = fingerprint(core)
     destination = vault / "processed" / name

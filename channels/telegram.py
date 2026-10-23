@@ -1,4 +1,4 @@
-"""Private text-capture bot. Run locally with: python -m channels.telegram."""
+"""Private text and image capture bot. Run locally with: python -m channels.telegram."""
 
 import argparse
 import asyncio
@@ -24,8 +24,12 @@ from aiogram.utils.token import TokenValidationError
 from aiogram.utils.serialization import deserialize_telegram_object_to_python
 from dotenv import load_dotenv
 
+from channels.pasted import telegram_copy_metadata
 from store.raw import CaptureResult, capture_text
 from channels.web import fetch_linked_articles
+from channels.pictures import capture_picture, interpret_picture, image_attachment
+from engine.vision import ImageError
+from store.media import MediaError
 from engine.parse import parse_capture
 from engine.parse.text import text_without_links
 from engine.llm import ModelError, client_from_environment, judge_client_from_environment
@@ -53,6 +57,11 @@ def capture_message(message: Message, vault_path: Path) -> CaptureResult:
     """Translate Telegram metadata while preserving original text separately."""
     if message.text is None:
         raise ValueError("This block supports text messages only.")
+    return capture_text(message.text, vault_path, channel="telegram", **message_fields(message))
+
+
+def message_fields(message: Message) -> dict:
+    """Share provenance between text and image without inventing original authors."""
     origin = message.forward_origin
     source_id = f"telegram:chat:{message.chat.id}"
     source_name = message.chat.title or message.chat.full_name or "Private Telegram chat"
@@ -96,11 +105,24 @@ def capture_message(message: Message, vault_path: Path) -> CaptureResult:
     # fields remain available for provenance and formatting.
     metadata = deserialize_telegram_object_to_python(message)
     metadata.pop("text", None)
+    copied = telegram_copy_metadata(message.text or "")
+    if copied:
+        metadata["telegram_copy"] = copied
+        if origin is None:
+            # The Telegram sender pasted this text; that is not proof they wrote it.
+            author = None
+            forwarder = ({"name": message.from_user.full_name, "url": f"tg://user?id={message.from_user.id}",
+                          **({"handle": message.from_user.username} if message.from_user.username else {})}
+                         if message.from_user else None)
 
-    return capture_text(
-        message.text,
-        vault_path,
-        channel="telegram",
+    if origin is None and image_attachment(message) is not None:
+        # An uploader is known; the creator/author of a screenshot is not.
+        author = None
+        forwarder = ({"name": message.from_user.full_name, "url": f"tg://user?id={message.from_user.id}",
+                      **({"handle": message.from_user.username} if message.from_user.username else {})}
+                     if message.from_user else None)
+
+    return dict(
         source_id=source_id,
         source_name=source_name,
         message_id=message_id,
@@ -127,7 +149,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
                 "with --owner-id followed by your ID."
             )
         elif message.from_user.id == owner_id:
-            await message.answer("Refresher is ready. Send or forward a text message to save it.")
+            await message.answer("Refresher is ready. Send text, a link or a photo (JPEG/PNG/WebP, up to 10 MB).")
         else:
             await message.answer("This bot accepts notes only from its configured owner.")
         return
@@ -137,8 +159,11 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if message.from_user.id != owner_id:
         await message.answer("This bot accepts notes only from its configured owner.")
         return
+    if image_attachment(message) is not None:
+        await handle_picture(message, vault_path)
+        return
     if message.text is None:
-        await message.answer("Not saved: this version supports text only. Please paste the text; files and voice come later.")
+        await message.answer("Not saved: send text, a link or a JPEG/PNG/WebP picture. Voice and other attachments are not supported.")
         return
     if message.forward_origin is None and command.startswith("/"):
         await message.answer("Only /start and /help are available. Topic refreshers are not implemented yet.")
@@ -207,6 +232,26 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
                 row.get("reused", False),
             )
             await process_capture(message, article)
+
+
+async def handle_picture(message: Message, vault_path: Path) -> None:
+    receipt = None
+    try:
+        receipt = await capture_picture(message, vault_path, message_fields(message))
+        await message.answer("Picture saved. Reading text and visual content with Nebius; your original is retained.")
+        result = await asyncio.to_thread(interpret_picture, receipt)
+    except (ImageError, MediaError, ModelError) as error:
+        await message.answer(str(error) + (" Picture retained; resend it to retry." if receipt else ""))
+        return
+    except (OSError, ValueError, KeyError):
+        logger.error("Picture processing could not finish; any saved source is retained.")
+        await message.answer("Picture processing could not finish. Any saved original is retained; resend it to retry.")
+        return
+    raw = json.loads(result.path.read_text())
+    text = raw['text']
+    preview = text[:1800] + ("…\nFull text is in the saved result." if len(text)>1800 else "")
+    await message.answer("Image reading (automatic; may contain errors):\n"+preview)
+    await process_capture(message, result)
 
 
 async def process_capture(message: Message, result: CaptureResult) -> None:

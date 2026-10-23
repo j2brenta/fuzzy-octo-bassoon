@@ -1,5 +1,7 @@
 # Integration trial: ingestion + knowledge management on the seed corpus (20 Oct 2026)
 
+**Latest follow-up, 23 Oct:** triage labels/retention and copied-header metadata are verified; reviewer usage is measured. See the dated follow-ups below and the [token report](reviewer-token-usage-2026-10-23.md). The merge-time findings remain as historical context.
+
 Branch `kirill/integration-trial` merges `olga/ingestion` into `kirill/knowledge-management` and runs the
 nine seeds end to end on Nebius Token Factory. It is a trial, not a proposal to merge as is: everything that
 touches `engine/` is a suggestion for Olga to accept, rework or drop.
@@ -143,3 +145,23 @@ changed (`judge-v4`, `repair-v3`), so a full rerun calls the models again for ev
    the full passage list, so long items send most passages twice. Probably worth it for accuracy; worth
    measuring on the essay and the people list.
 4. Nothing blocks the merge; it is merged into `kirill/integration-trial` with all 291 tests passing.
+
+## Triage follow-up — fresh nine-seed run on 23 October
+
+A fresh Nebius Super run with the existing `triage-v4` prompt matched **18/18 manifest kind/durability checks**, with **9/9 items kept**, including `demo-original` (`announcement / ephemeral`). The historical Super/Nano vaults and originals were preserved. A cache-only replay reused all nine results without API calls. Usage: 11,335 input + 3,309 output = 14,644 tokens.
+
+The triage part of the open finding above is therefore verified on the refreshed corpus. The earlier `triage-v2` sample artifacts remain unchanged; repackaging them alone cannot show the new behavior. Telegram copied-header dates and reviewer token overhead remain open. This is a triage-only result, not a new 37-check graph/full-pipeline score.
+
+Per-item results, provenance and reproduction details: [23 October triage evaluation](triage-v4-seed-evaluation-2026-10-23.md).
+
+## Header metadata and reviewer usage follow-up — 23 October
+
+- **Copied Telegram headers:** Olga’s importer, seed path and Telegram pastes now reuse Kirill’s parser while preserving the exact original text. Copied chat sender/time metadata is separate from original publication and actual capture time. Known publication time wins; otherwise timezone-qualified copied time precedes capture time in timeline ordering. An explicit import/config/corpus timezone is required for conversion; unknown timezone remains unknown. Direct paste senders and image uploaders are not promoted to original authors. Metadata-only header refresh preserves valid paid text-stage caches and rebuilds the handoff.
+- **Reviewer usage measured:** people-list: **5,155 input / 5,856 output / 11,011 total tokens**, 25 claims, accepted; LinkedIn essay: **5,168 input / 4,005 output / 9,173 total**, 16 claims, needs revision for one citation-support issue. Both are fresh `judge-v4` Ultra calls with one format attempt. These are review measurements, not a refreshed graph score.
+- **Evidence overhead:** attaching cited passages increases user JSON size by **81.0%** on the people list and **52.9%** on the essay. These are character comparisons, not token-cost multipliers. Keep the evidence for now; no accuracy/cost ablation was performed.
+
+Details and saved local evidence: [reviewer usage report](reviewer-token-usage-2026-10-23.md). The preceding historical review comments remain as a record of what was observed before these follow-ups.
+
+## Picture input follow-up — 23 October
+
+Telegram photos/image documents now use Token Factory’s NVIDIA VLM and the existing reviewed text pipeline; voice handling was removed at Olga’s request. The synthetic full-pipeline check was accepted. Two explicitly approved Desktop test images completed image reading/extraction: the room photo was accepted (8 claims); the math screenshot remained needs revision (23 claims), with incorrect/unsupported claims retained as flagged. Originals were unchanged. Automated checks: 311 tests and 104 subtests pass. [Picture validation and limits](picture-support-validation-2026-10-23.md).

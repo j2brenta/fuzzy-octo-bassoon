@@ -102,6 +102,8 @@ class Source(_Handoff):
     message_id: str | None = None
     captured_at: AwareDatetime
     published_at: AwareDatetime | None = None
+    copied_at: AwareDatetime | None = None
+    copied_at_local: str | None = None
     author_hint: AuthorHint | None = None
     forwarded_by: AuthorHint | None = None
     url: str | None = None
@@ -114,8 +116,8 @@ class Source(_Handoff):
 
     @property
     def event_time(self):
-        """When it happened, not when we saw it."""
-        return self.published_at or self.captured_at
+        """Source timeline time, distinct from dates mentioned inside claims."""
+        return self.published_at or self.copied_at or self.captured_at
 
 
 class Triage(_Handoff):
