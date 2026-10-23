@@ -66,6 +66,7 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
       relations: []
 
   - id: introspection-list
@@ -80,6 +81,7 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
       relations: [{type: DUPLICATES, target: people-list}]
 
   - id: redis-talks
@@ -94,6 +96,7 @@ items:
       author: null
       people: [Samuel Agbede, Evangelos Resvanis]
       kind: post
+      durability: reference
       relations: []
 
   - id: economics-list
@@ -108,6 +111,7 @@ items:
       label_status: draft
       author: null
       kind: post
+      durability: reference
       relations: []
 
   - id: eli5-post

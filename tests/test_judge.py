@@ -41,13 +41,14 @@ class JudgeTests(unittest.TestCase):
         client.model_name = 'fixture-judge'
         return client
 
-    def test_acceptance_requires_every_claim_and_coverage(self):
+    def test_acceptance_requires_claim_correctness_but_retains_coverage_notes(self):
         self.assertEqual(validate_review(self.data, self.claims, self.passages)['status'], 'accepted')
         changed = deepcopy(self.data)
         changed['claims'][0].update(verdict='needs_revision', issues=['lost_qualification'])
         self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'needs_revision')
         changed = {**self.data, 'omitted_concepts': [{'passage_id': 1, 'description': 'A central omitted idea.'}]}
-        self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'needs_revision')
+        self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'accepted')
+        self.assertTrue(validate_review(changed, self.claims, self.passages)['omitted_concepts'])
 
     def test_unknown_missing_and_repeated_ids_cannot_pass(self):
         for rows in [self.data['claims'][:1], self.data['claims'] * 2,
@@ -82,6 +83,7 @@ class JudgeTests(unittest.TestCase):
         payload = json.loads(client.calls[0][1])
         self.assertEqual(payload['passages'], [{'id': 1, 'text': TEXT}])
         self.assertEqual(len(payload['claims']), 2)
+        self.assertEqual(payload['claims'][0]['evidence_passages'], [{'id': 1, 'text': TEXT}])
         stored = json.loads(first.path.read_text())
         self.assertEqual(stored['actual_model'], 'fixture-judge')
         self.assertEqual(stored['scope'], 'source_faithfulness_not_external_fact_checking')
@@ -152,15 +154,16 @@ class JudgeTests(unittest.TestCase):
 
     def test_empty_extraction_still_requires_coverage_review(self):
         data = {'claims': [], 'omitted_concepts': [{'passage_id': 1, 'description': 'A central idea was missed.'}], 'summary': 'No ideas extracted.'}
-        self.assertEqual(validate_review(data, [], self.passages)['status'], 'needs_revision')
+        self.assertEqual(validate_review(data, [], self.passages)['status'], 'accepted')
+        self.assertTrue(validate_review(data, [], self.passages)['omitted_concepts'])
 
     def test_configuration_is_separate_and_key_not_in_repr(self):
         with patch.dict(os.environ, {'JUDGE_PROVIDER': 'off'}, clear=True):
             self.assertIsNone(judge_client_from_environment())
-        with patch.dict(os.environ, {'JUDGE_PROVIDER': 'backboard', 'BACKBOARD_API_KEY': 'fixture-secret', 'BACKBOARD_MODEL': 'small-extractor'}, clear=True):
+        with patch.dict(os.environ, {'JUDGE_PROVIDER': 'nebius', 'NEBIUS_API_KEY': 'fixture-secret', 'NEBIUS_MODEL': 'small-extractor'}, clear=True):
             client = judge_client_from_environment()
-            self.assertEqual(client.model_name, 'claude-opus-5-5')
-            self.assertEqual(client.model_provider, 'anthropic')
+            self.assertEqual(client.model_name, 'nvidia/Nemotron-3-Ultra-550b-a55b')
+            self.assertEqual(client.model_provider, 'nebius')
             self.assertEqual(client.timeout_seconds, 180)
             self.assertNotIn('fixture-secret', repr(client))
 

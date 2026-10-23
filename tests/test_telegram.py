@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -56,7 +57,7 @@ class TelegramCaptureTests(unittest.TestCase):
         self.assertEqual(record['source_id'], 'telegram:channel:-100123')
         self.assertEqual(record['source_name'], 'Demo Channel')
         self.assertEqual(record['message_id'], '77')
-        self.assertEqual(record['forwarded_by'], '100')
+        self.assertEqual(record['forwarded_by'], {'name': 'Olga', 'handle': 'demo_owner', 'url': 'tg://user?id=100'})
         self.assertIsNone(record['author_hint'])
         self.assertEqual(record['channel_metadata']['forward_origin']['type'], 'channel')
         self.assertNotIn('text', record['channel_metadata'])
@@ -81,7 +82,7 @@ class TelegramCaptureTests(unittest.TestCase):
         })
         _, record = self.record(incoming)
         self.assertEqual(record['author_hint']['id'], '200')
-        self.assertEqual(record['forwarded_by'], '100')
+        self.assertEqual(record['forwarded_by'], {'name': 'Olga', 'handle': 'demo_owner', 'url': 'tg://user?id=100'})
         self.assertEqual(record['message_id'], 'delivery:100:10')
 
     def test_hidden_sender_name_is_a_hint_without_invented_id(self):
@@ -112,7 +113,7 @@ class TelegramCaptureTests(unittest.TestCase):
         payload["link_preview_options"] = {"url": "https://example.com/report.pdf"}
         _, record = self.record(Message.model_validate(payload))
         self.assertEqual(record["source_name"], "Demo Channel")
-        self.assertEqual(record["forwarded_by"], "100")
+        self.assertEqual(record["forwarded_by"]["url"], "tg://user?id=100")
         self.assertEqual(record["channel_metadata"]["link_preview_options"]["url"], "https://example.com/report.pdf")
 
     def test_media_with_caption_is_not_silently_saved_as_text(self):
@@ -126,6 +127,9 @@ class TelegramCaptureTests(unittest.TestCase):
 
 class TelegramHandlerTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        web_patch = patch.dict(os.environ, {"WEB_FETCH": "off"})
+        web_patch.start()
+        self.addCleanup(web_patch.stop)
         model_patch = patch("channels.telegram.client_from_environment", return_value=None)
         model_patch.start()
         self.addCleanup(model_patch.stop)

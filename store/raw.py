@@ -8,6 +8,19 @@ import os
 from pathlib import Path
 import tempfile
 from uuid import uuid4
+from refresher.schemas import AuthorHint
+
+
+def forwarder_hint(value) -> dict | None:
+    """Emit the shared AuthorHint shape; continue accepting legacy display-name strings."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = {"name": value}
+    hint = AuthorHint.model_validate(value).model_dump(exclude_none=True)
+    if not hint or any(not isinstance(v, str) or not v.strip() for v in hint.values()):
+        raise ValueError("Forwarder must contain nonblank person hint fields.")
+    return hint
 
 
 def save_text(text: str, vault_path: Path) -> Path:
@@ -48,8 +61,9 @@ def capture_text(
     captured_at: str | None = None,
     published_at: str | None = None,
     author_hint: dict[str, str] | None = None,
-    forwarded_by: str | None = None,
+    forwarded_by: dict[str, str] | str | None = None,
     channel_metadata: dict | None = None,
+    url: str | None = None,
 ) -> CaptureResult:
     """Capture text with provenance; repeat deliveries reuse the original record.
 
@@ -71,8 +85,12 @@ def capture_text(
         or not all(isinstance(k, str) and isinstance(v, str) for k, v in author_hint.items())
     ):
         raise ValueError("Author hint must contain text keys and values.")
-    if forwarded_by is not None and (not isinstance(forwarded_by, str) or not forwarded_by.strip()):
-        raise ValueError("Forwarder must be nonblank text when provided.")
+    forwarded_by = forwarder_hint(forwarded_by)
+    if url is not None:
+        from urllib.parse import urlsplit
+        parts = urlsplit(url)
+        if parts.scheme not in {"http", "https"} or not parts.hostname or parts.username is not None or parts.password is not None:
+            raise ValueError("Source URL must be HTTP(S), without embedded credentials.")
 
     if channel_metadata is not None:
         if not isinstance(channel_metadata, dict):
@@ -95,7 +113,7 @@ def capture_text(
         "author_hint": author_hint,
         "forwarded_by": forwarded_by,
         "channel_metadata": channel_metadata,
-        "url": None,
+        "url": url,
         "kind": "text",
         "text": text,
         "attachments": [],

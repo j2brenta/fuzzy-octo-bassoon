@@ -51,7 +51,7 @@ python -m channels.importer eval/seed_corpus --validate-only
 python -m channels.importer eval/seed_corpus --vault .local-vault/seed
 ```
 
-The manifest describes seven originals: four supplied samples and a synthetic
+The manifest describes nine originals: six supplied samples and a synthetic
 original/repost/correction sequence. Metadata enters the same capture function;
 expected labels remain separate for future evaluation. Repeating the import
 creates no additional records. See [the seed guide](eval/seed_corpus/README.md)
@@ -106,7 +106,9 @@ Text is stored once in the top-level `text` field. Telegram-specific metadata
 - Forwarding the same unchanged channel post again reuses its original channel
   and post identity. Forwards without an exposed original message ID use their
   delivery identity, avoiding guesses about authors or independent sources.
-- Forwarders are not substituted for original authors; hidden author names are
+- New `forwarded_by` values use the shared person-hint shape (name/handle/URL);
+  legacy strings are normalized in the combined handoff without rewriting raw.
+  Forwarders are not substituted for original authors; hidden author names are
   only hints. A channel title is a source, not proof of a person's identity.
 - Files, photos (even with captions) and voice are rejected explicitly; their
   attachments are not silently discarded. Edited messages are not processed.
@@ -122,7 +124,8 @@ and [Telegram bot setup](https://core.telegram.org/bots/tutorial#obtain-your-bot
 ## Prepare captured text and links
 
 Telegram now acknowledges capture first, then reports prepared section/link
-counts. Link identification does not fetch pages, PDFs or YouTube transcripts.
+counts. This preparation stage only identifies links; the article stage below
+fetches supported public HTML pages. PDF and YouTube parsers remain pending.
 
 For existing captures, run:
 
@@ -145,63 +148,99 @@ The source hash is checked before parsing. If preparation fails after capture,
 the bot says the original was saved and preparation can be retried with the CLI.
 These document fields are provisional until the team agrees the shared schema.
 
-## AI triage through Nebius Token Factory
+## Read public web articles
 
-Model calls go through the small `JsonModel` interface (`engine/llm.py`). The default
-provider is Nebius Token Factory with NVIDIA Nemotron models, called through its
-OpenAI-compatible chat API in JSON mode. Backboard remains available for development.
+With `WEB_FETCH=on` (the default), Telegram downloads up to three distinct links
+from a saved message, then runs the existing triage, extraction and review
+pipeline on each readable HTML article. A bare URL is treated as a pointer;
+claims come from the fetched article text. A comment and its linked articles
+remain separate inputs. Article links are never recursively crawled.
 
-Add these settings to your **real `.env`**, keeping your Telegram settings:
+[Trafilatura](https://trafilatura.readthedocs.io/en/latest/usage-python.html)
+extracts the main text, title, byline and site name. Publication dates come only
+from explicit page metadata. A date without a timezone stays in metadata rather
+than becoming an invented midnight timestamp. The article author is independent
+of the person who shared the URL.
+
+- `raw/`: original message plus a separate article-text child, with source URL
+  and a parent reference. Article claims cite the child's exact text spans.
+- `web-snapshots/`: immutable HTML bytes addressed by SHA-256, checked before
+  processing a derived article. These are local captures and stay ignored by Git.
+- `web-links/`: per-link captured/failed/unsupported/deferred status, used to
+  reuse successful downloads and retry failures without losing originals.
+
+Downloads accept public HTTP(S) pages, check every redirect, verify TLS against
+the original hostname and cap HTML at 2 MB. PDF/media, restricted or JavaScript-only
+pages return explicit status and preserve the original link. Sites returning
+HTTP 403 may require a browser challenge; open the page normally and paste its
+text into Telegram. The fetcher does not bypass those challenges. Extracted text over
+60,000 characters is saved but needs future section processing before AI review.
+
+Import a public article without running a Telegram bot:
+
+```bash
+python -m channels.web 'https://example.org/article' --vault .local-vault/web
+```
+
+This CLI saves/parses the child and prints its raw path; it does not call an LLM.
+Use the existing extraction/review commands for that child. A repeated import
+reuses the download. `--refresh` requests the current page, retaining older HTML
+and child versions when content changes. Set `WEB_FETCH=off` to disable automatic
+article downloads in Telegram, and restart the bot after configuration changes.
+
+## AI triage and providers
+
+Nebius Token Factory is the default provider. The trial configuration uses NVIDIA
+Nemotron 3 Super for triage/extraction and Ultra for independent review, entity
+extraction and repair. Model IDs match Kirill's integration trial and can be
+changed for the models available to your Token Factory account.
+
+Keep credentials in the ignored project-root `.env`:
 
 ```dotenv
 TRIAGE_PROVIDER=nebius
 JUDGE_PROVIDER=nebius
-NEBIUS_API_KEY=your_actual_key_here
-NEBIUS_MODEL=fast Nemotron model ID (triage, extraction)
-NEBIUS_JUDGE_MODEL=stronger Nemotron model ID (judge, quality, evidence, entities)
+NEBIUS_API_KEY=your_token_factory_key
+NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1
+NEBIUS_MODEL=nvidia/nemotron-3-super-120b-a12b
+NEBIUS_JUDGE_MODEL=nvidia/Nemotron-3-Ultra-550b-a55b
+NEBIUS_MAX_TOKENS=32768
+NEBIUS_JUDGE_MAX_TOKENS=32768
+ENTITY_EXTRACTION=on
 ```
 
-List the model IDs your key can call with `uv run python -m engine.llm models`.
-`NEBIUS_BASE_URL` overrides the default `https://api.tokenfactory.nebius.com/v1`.
-Thinking blocks and code fences around the JSON answer are stripped.
+Both models use the same Token Factory key. `NEBIUS_JUDGE_MAX_TOKENS` overrides
+the general budget for review/repair/entity calls. Model context/output limits
+still apply; a truncated answer remains an explicit retryable error. Run
+`python -m engine.llm models` to list models using your configured key.
 
-To use Backboard instead, set `TRIAGE_PROVIDER=backboard` (and `JUDGE_PROVIDER=backboard`)
-with `BACKBOARD_API_KEY`, `BACKBOARD_LLM_PROVIDER` and `BACKBOARD_MODEL`; see `.env.example`.
-`TRIAGE_PROVIDER=off` disables remote triage while keeping capture and preparation working.
-Restart the bot after configuration changes.
+Set a provider to `off` to disable that stage. Restart the bot after changes.
+No key belongs in Git.
 
-Substantive conversations, brainstorming and Q&A should be kept too; triage judges
-content rather than rejecting chat format. Each forwarded Telegram message is
-currently processed independently. Paste the relevant exchange as one message
-when context matters. Automatic conversation grouping and a manual Keep override
-are not implemented yet. Triage caches depend on the rubric version.
+Triage returns keep/skip, kind, durability, digest-splitting flag and a reason.
+Event logistics and corrections are kept as announcement/ephemeral, including
+original announcements needed by later reposts or corrections. Curated lists are
+post/reference; technical talk abstracts can remain reusable references despite
+clock times. Long-form opinion/explanatory essays are article/reference; current
+tool-release commentary is post/news. Pasted sender/time headers are metadata,
+not substantive ideas. Expected seed labels are never supplied to the model.
 
-After capture/preparation, enabled triage sends **only the note text** to
-the model and asks for five fields: keep, kind, durability_class, split_digest
-and a short reason. Each call is stateless (on Backboard: memory and web search off, a new conversation per
-call, though Backboard can still retain conversation history). The source text is
-untrusted data and does not control system instructions or invoke tools.
+Substantive chats are kept too. Each forwarded message is processed independently;
+paste an exchange as one message when context matters. Automatic conversation
+grouping and a manual Keep override are not implemented. A skip preserves raw.
 
-A validated result is saved under `triage/<item_id>.json`, including the source
-hash, prompt version, requested/actual model and reported token usage. Existing
-results are reused for the same source/prompt/model. Raw captures never change,
-even for a skip decision. Token usage describes the final response; retry
-usage may be additional. Invalid output gets at most one retry; service/auth
-errors stop without deleting the original. Inputs over 60,000 characters wait
-for later section processing rather than being silently truncated.
-
-To triage a saved item manually (replace the ID):
+Results are cached under `triage/` by source, rubric, provider and model. Inputs
+over 60,000 characters wait for section processing rather than being truncated.
+Invalid output gets one retry; service/auth errors stop. Failed JSON/validation
+attempts are saved under `rejected/<stage>/` with both reasons. These diagnostic
+records are ignored by the pipeline and can contain private source text.
 
 ```bash
-python -m engine.triage .local-vault/telegram --item-id YOUR_ITEM_ID
+python -m engine.triage .local-vault/telegram --item-id ITEM_ID
 ```
 
-Omit `--item-id` to process all captures. `--force` repeats model calls even when
-results exist and can incur additional usage. A classification is a model
-judgment, not factual verification. Digest splitting is only flagged, not yet
-performed; claim extraction is the next stage below and graph integration is pending.
-
-API reference: [Backboard send message](https://docs.backboard.io/concepts/messages).
+Omit the ID for all captures; `--force` repeats calls even if cached. Digest
+splitting is flagged but not performed. Triage labels are model judgments.
 
 ## Claims and automated quality review
 
@@ -210,9 +249,11 @@ statement, kind, durability, confidence and exact source references. Attribution
 uncertainty, dates, conditions and negations should be preserved. Durability maps
 to half-life days: foundation 720, reference 180, news 30 and ephemeral 7.
 Confidence concerns extraction faithfulness, not factual accuracy or author trust.
+Each statement must stand alone. A corrected event value and its replacement
+context form one update; an obsolete value must not be presented as current.
 
 Python numbers nonblank source lines. New model outputs use
-`evidence_passage_ids`, a list of 1–5 distinct supporting passage IDs. Python
+`evidence_passage_ids`, a list of 1–10 distinct supporting passage IDs. Python
 validates every reference and stores exact character spans in source order.
 Several passages may supply attribution or qualifications for one atomic idea;
 they do not justify merging unrelated ideas. Legacy singular references remain
@@ -222,39 +263,32 @@ depend on all ordered spans. Source text remains necessary to resolve references
 
 ### Configuration
 
-The strong review model is separate from the extraction model. Add these settings
-to the existing `.env`, using the same Nebius key:
-
-```dotenv
-JUDGE_PROVIDER=nebius
-NEBIUS_JUDGE_MODEL=stronger Nemotron model ID
-```
-
-On Backboard, set `JUDGE_PROVIDER=backboard`, `BACKBOARD_JUDGE_LLM_PROVIDER` and `BACKBOARD_JUDGE_MODEL`.
-
-`JUDGE_PROVIDER=off` disables review. Restart after code or configuration changes.
-Judge requests allow up to 180 seconds. Source text and claims are sent to
-the judge model in stateless requests.
+The judge uses `JUDGE_PROVIDER` and the model settings above through the small
+`JsonModel` boundary. Review requests allow up to 180 seconds; triage/extraction
+requests allow up to 120 seconds. Nebius calls send stateless chat requests
+without tools. Source text and claims go to Nebius Token Factory.
 
 ### Workflow and limits
 
 1. Judge every claim for source support, cited passages, attribution, lost
    qualifications, duplicates, atomicity, clear label errors and major omissions.
-2. If claims have errors, make one strong-model correction and judge it again.
-3. If all claims are supported but central ideas are missing, make one additive
-   coverage pass: retain existing claims and IDs, append at most 25 new claims,
+2. For citation-only findings, repair evidence directly without rewriting claim wording. For semantic errors, make one strong-model correction and judge it again.
+3. Optionally use `--expand-coverage` to make one additive
+   coverage pass for omitted ideas: retain existing claims and IDs, append at most 25 new claims,
    then judge the full set. Expanded results have a 50-claim limit.
 4. If the remaining claim errors concern citations only, repair those references
-   once and judge again. Python prevents changes to wording, labels or confidence
-   and preserves unflagged claims.
+   and judge again, with at most two citation rounds for a candidate. A second
+   round is allowed only if the new findings are still citation-only. Python
+   prevents changes to wording, labels or confidence and preserves unflagged claims.
 
 Python requires exactly one review per claim and validates omission passage IDs.
-`accepted` requires every claim to be supported with no reported major omissions.
-Other valid results remain `needs_revision`; malformed or unavailable results
+`accepted` requires every claim to be supported. Omissions are advisory coverage
+notes, not blocking failures. Other correctness errors remain `needs_revision`; malformed or unavailable results
 remain pending. Telegram sends a final quality-review reply automatically.
 There is no loop that keeps retrying until a model approves.
 
-Each JSON-producing step can retry once for invalid output. Service errors stop
+Model-facing review/citation IDs are short (`C1`, `E1`); stored IDs remain the
+full stable identifiers. Each JSON-producing step can retry once for invalid output. Service errors stop
 without a blind retry. Completed unchanged results are cached by source, parent
 artifact/review hashes, prompt versions and model settings. A saved candidate can
 resume at review after interruption. Reported usage covers the final response of
@@ -278,7 +312,10 @@ assessment, not independent factual verification.
 | `placements/` | Storage-only handoff receipt; no graph placement |
 
 These are working pipeline records under `.local-vault/telegram/`, not document
-drafts. Later stages depend on earlier records for cache reuse and provenance.
+drafts. Replacing a stage archives its dependent live records under `stale/`,
+so old coverage, repairs and handoffs do not appear current. Raw sources stay
+untouched. Archives are recoverable and never selected by the live pipeline.
+Unchanged records preserve their downstream caches.
 Original captures remain unchanged. Formats are provisional until the team agrees
 the shared RawItem/Extraction contracts.
 
@@ -303,12 +340,17 @@ For citation repair, `--candidate` also accepts `extractions` or `repairs`. The
 matching prior review must exist and refer to that exact candidate. Extraction
 and judge commands support `--force`, which repeats calls even with a cache.
 
-## People, organizations and concepts
+## People and organizations
 
-Entity extraction identifies up to 40 explicit source mentions, typed as `person`,
-`organization` or `concept`. Names must match the original spelling within each
-cited passage. Python rejects invented expansions, partial-word matches, invalid
-passage IDs and duplicate kind/name pairs, then records exact mention spans.
+New extraction requests up to 40 explicitly named people and organizations.
+Products, works, headings and abstract concepts are excluded from new requests;
+legacy `concept` entities remain readable and their findings stay advisory.
+The model returns names, types and aliases; Python locates every exact name
+occurrence and records its passage and character spans. The model no longer
+copies passage IDs for new entity extractions. Names must match the original
+spelling; invented expansions and partial-word matches fail validation. Legacy
+replies with passage IDs remain readable, with only verifiable mechanical
+reference repairs allowed and recorded. Semantic errors still require review.
 Entity IDs are local to an item. Within an article, names that clearly refer to
 the same entity are grouped under the most complete source-written name, with
 short forms in `aliases`. Each mention retains its exact `surface_name` and source
@@ -319,13 +361,16 @@ not inferred. The independent reviewer checks missed merges and unsafe merges.
 
 Set `ENTITY_EXTRACTION=on` in `.env` to enable this stage. It uses the configured
 strong judge model for extraction and a separate fresh-conversation review.
-A configured `JUDGE_PROVIDER` (nebius or backboard) is required. Set
+A configured Nebius judge and its key are required. Set
 `ENTITY_EXTRACTION=off` to disable it. Restart the bot after changes.
 
 The reviewer checks every entity's type and source context and looks for major
 omissions. Python validates complete review coverage and source-grounded omission
-names. Only a review with all entities supported and no major omissions is
-`accepted`; other valid results are `needs_revision`. Failures remain pending.
+names. Wrong people/organizations and unsafe named-entity merges block acceptance.
+Legacy concept findings and all entity omissions remain advisory and visible, without
+blocking the item. Generic concepts, headers and framing text are excluded from
+the omission rubric. Duplicate alias labels are normalized rather than rejecting
+the entire extraction; invalid source evidence still fails. Failures remain pending.
 Entity reviews do not change claim-review decisions or promote data into a graph.
 Automatic entity correction is not implemented.
 
@@ -345,6 +390,33 @@ rerunning claim extraction or sending Telegram messages:
 python -m engine.entities .local-vault/telegram --item-id ITEM_ID
 ```
 
+## Read claims and entities without opening pipeline folders
+
+Open `.local-vault/telegram/processed/index.md`. It lists saved items by readable
+title and status. Each item has one current Markdown note next to its JSON
+handoff: claims, source passage numbers, people, organizations, aliases, mention
+counts and review findings. Unfinished entity extraction is labeled explicitly;
+it is not shown as “no people found”. Notes are refreshed after Telegram processing,
+including pending model stages. Text below the user-notes marker is preserved.
+
+Generate or refresh these notes for existing captures without any model calls:
+
+```bash
+python -m engine.results .local-vault/telegram
+```
+
+`raw/` contains originals; `processed/` contains current results. The other stage
+folders are internal caches and diagnostics used for bounded correction and
+retries. They are retained so a failed stage can resume without losing evidence
+or paying to repeat completed work. There is no need to read them to understand
+an extraction; their folder names do not represent independent copies of an article.
+
+The claim citation limit is ten **source lines**, because a single supporting
+code block can occupy more than five lines. This does not relax atomicity or
+source-support review. Validation distinguishes an over-limit citation list from
+invalid ID types or references to nonexistent passages. IDs and character spans
+are never silently dropped or replaced to make output pass.
+
 ## Combined extraction and storage handoff
 
 After entity review, Telegram packages the selected claims, entities, sections,
@@ -363,7 +435,11 @@ rejected judgments and omissions stay visible. An unchanged build reuses its
 record and timestamp. Concurrent input changes abort publication.
 
 `quality_status` is `accepted`, `needs_revision`, `pending` or `skipped`. The quality
-gate passes only for a keep decision with accepted claim and entity reviews.
+gate passes for a keep decision with accepted correctness reviews. Omissions are
+retained in `coverage_notes`; concept-only warnings remain in
+`concept_review_notes`. Missing reviews still prevent acceptance. Older valid
+reviews can be reassessed under this policy without another model call; their
+original stored judgments remain unchanged.
 The storage-only adapter writes an idempotent receipt under `placements/`, with
 `stored_only` for a passed gate or `pending_quality` otherwise. It always reports
 `graph_applied=false` and assigns no node or edge IDs. It does not implement
@@ -402,7 +478,9 @@ uv run refresher-view
 Agree shared schemas and adapt the provisional handoff; add embeddings and
 multi-format parsing; integrate Victor’s graph interface and
 Kirill’s retrieval/refresher work. Graph promotion, digest splitting, attachment
-ingestion and external fact-checking remain unimplemented. Nebius runtime and NVIDIA model integration remain planned.
+ingestion and external fact-checking remain unimplemented. Fresh Nebius seed runs
+should be repeated after configuring the Token Factory key; one trial per model
+is not a model ranking.
 
 ## License
 

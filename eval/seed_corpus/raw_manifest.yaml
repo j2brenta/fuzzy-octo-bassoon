@@ -14,7 +14,7 @@ items:
   tg_people_to_follow.md:
     author_hint: {name: AI assistant}
     expect:
-      kind: list
+      kind: post
       durability: reference
       authors: []
       people: [Jack Lindsey, Chris Olah, Josh Batson, Sam Marks, Sebastian Farquhar, Yarin Gal,
@@ -33,7 +33,7 @@ items:
   tg_messy_life_econ.md:
     author_hint: {name: AI assistant}
     expect:
-      kind: list
+      kind: post
       durability: reference
       authors: []
       people: [Ha-Joon Chang, Dani Rodrik, James Robinson, Daron Acemoglu, Matthew Jackson, Brian Arthur,
@@ -50,8 +50,8 @@ items:
     format: plain
     captured_at: 2026-10-19T11:52:00  # file time; the original send time is unknown
     expect:
-      kind: announcement
-      durability: ephemeral
+      kind: post
+      durability: reference
       authors: []
       people: [Samuel Agbede, Evangelos Resvanis]
       organizations: [Redis]

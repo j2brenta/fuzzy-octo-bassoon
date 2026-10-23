@@ -6,14 +6,16 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
+from engine.review_policy import POLICY_VERSION, compatible_stored_review
 from engine.artifacts import atomic_json, fingerprint
-from engine.entities import EntityError, PROMPT_VERSION as ENTITY_VERSION, _cached_entities, validate_entity_review
+from engine.entities import EntityError, SUPPORTED_ENTITY_VERSIONS, _cached_entities, validate_entity_review
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, SUPPORTED_PROMPT_VERSIONS, _cached_claims, source_passages
 from engine.judge import JudgeError, validate_review
 from engine.parse import parse_capture
+from store.raw import forwarder_hint
 from engine.triage import TriageError, validate_labels
 
-BUILDER_VERSION = "handoff-v1"
+BUILDER_VERSION = "handoff-v2"
 CANDIDATES = {"extractions": "reviews", "repairs": "repair-reviews", "coverage": "coverage-reviews", "evidence": "evidence-reviews"}
 
 
@@ -72,7 +74,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
             continue
         if folder != "extractions":
             parents = [c for c in candidates if fingerprint(c["record"]) == record.get("parent_extraction_hash")
-                       and c["review"] is not None and fingerprint(c["review"]) == record.get("parent_review_hash")]
+                       and c["review"] is not None and c["stored_review_hash"] == record.get("parent_review_hash")]
             if not parents:
                 if claims_from == folder:
                     raise PackageError("Requested claim candidate has a stale or missing parent.")
@@ -84,6 +86,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         limit = MAX_COVERAGE_CLAIMS if record.get("coverage_prompt_version") else MAX_CLAIMS
         claims = _cached_claims(record.get("claims"), text, item_id, section, max_claims=limit)
         reviewed = None
+        stored_review_hash = None
         review_path = vault / review_folder / name
         if review_path.exists():
             review_record = read(review_path)
@@ -92,9 +95,10 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
                 if not isinstance(stored, dict):
                     raise PackageError("Claim review is malformed.")
                 reviewed = validate_review({k: v for k, v in stored.items() if k != "status"}, claims, passages)
-                if reviewed != stored:
+                if not compatible_stored_review(stored, reviewed, review_record.get("quality_policy_version"), "claims", "omitted_concepts"):
                     raise PackageError("Stored claim review status disagrees with its findings.")
-        candidate = {"folder": folder, "record": record, "claims": claims, "review": reviewed}
+                stored_review_hash = fingerprint(stored)
+        candidate = {"folder": folder, "record": record, "claims": claims, "review": reviewed, "stored_review_hash": stored_review_hash}
         candidates.append(candidate)
         if claims_from == "auto" or claims_from == folder:
             selected = candidate
@@ -108,7 +112,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
     entity_record = None
     if entity_path.exists():
         entity_record = read(entity_path)
-        if (entity_record.get("stage") != "entity_extraction" or not source_matches(entity_record) or entity_record.get("prompt_version") != ENTITY_VERSION
+        if (entity_record.get("stage") != "entity_extraction" or not source_matches(entity_record) or entity_record.get("prompt_version") not in SUPPORTED_ENTITY_VERSIONS
             or entity_record.get("parser_version") != document["parser_version"]):
             raise PackageError("Entity extraction is stale or does not match this source.")
         entities = _cached_entities(entity_record.get("entities"), text, item_id, section)
@@ -120,7 +124,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
                 if not isinstance(stored, dict):
                     raise PackageError("Entity review is malformed.")
                 entity_review = validate_entity_review({k: v for k, v in stored.items() if k != "status"}, entities, text, item_id, section)
-                if entity_review != stored:
+                if not compatible_stored_review(stored, entity_review, review_record.get("quality_policy_version"), "entities", "omitted_entities"):
                     raise PackageError("Stored entity review status disagrees with its findings.")
 
     labels = None
@@ -139,6 +143,10 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         status = "pending"
     else:
         status = "accepted"
+    source_forwarder = raw.get("forwarded_by")
+    if isinstance(source_forwarder, str) and source_forwarder.isdigit() and raw.get("channel") == "telegram":
+        source_forwarder = {"url": f"tg://user?id={source_forwarder}"}
+    source_forwarder = forwarder_hint(source_forwarder)
     core = {
         "schema_version": 1, "stage": "processed_extraction", "builder_version": BUILDER_VERSION,
         "contract_status": "provisional_awaiting_shared_schema", "item_id": item_id,
@@ -150,11 +158,20 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         "claims": selected["claims"], "entities": entities, "triage": labels,
         "reviews": {"claims": claim_review or {"status": "pending"}, "entities": entity_review or {"status": "pending"}},
         "quality_status": status, "quality_gate_passed": status == "accepted",
+        "quality_policy_version": POLICY_VERSION,
+        "coverage_notes": {"claims": (claim_review or {}).get("omitted_concepts", []),
+                           "entities": (entity_review or {}).get("omitted_entities", [])},
+        "concept_review_notes": [r for r in (entity_review or {}).get("entities", [])
+                                 if r["verdict"] != "supported" and r["entity_id"] in
+                                 {e["entity_id"] for e in entities if e["kind"] == "concept"}],
         "graph_status": "not_applied", "claim_candidate": selected["folder"],
         "entity_status": "saved" if entity_record is not None else "pending",
         "chunks": [], "embeddings_status": "not_implemented",
         "inputs": dict(sorted(inputs.items())), "ignored_candidates": ignored,
     }
+    if "parent" in document:
+        core["parent"] = document["parent"]
+    core["source"]["forwarded_by"] = source_forwarder
     core["bundle_id"] = fingerprint(core)
     destination = vault / "processed" / name
     # Do not publish a mixed snapshot if another process changed an input.

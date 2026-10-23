@@ -110,3 +110,25 @@ ranking; they are one run each.
   "Unreviewed" banner and `review_status` in their notes, so relations and decay can be shown before the
   gate changes. Triage skips stay out. The committed `wiki/` folders were built with it.
 - Record the decisions above in the v2 plan doc.
+
+## Olga's response: PR #8 (merged into this branch on 23 Oct)
+
+PR #8 (`olga/ingestion`, rebased) takes over the engine changes above and answers most of the findings:
+
+| Finding / next step | PR #8 |
+|---|---|
+| 1–3 Omissions fail the gate; noisy omissions | `engine/review_policy.py` (`correctness-v1`): claims pass on verdicts alone; omissions go to `coverage_notes`. The judge prompt (`judge-v4`) excludes titles, headers, author/time metadata, framing questions and linking sentences |
+| 4 Concept entities block | Concepts are advisory (`concept_review_notes`); wrong people/organizations still block |
+| Alias repeats reject the extraction | Duplicate aliases are dropped |
+| 5 `max_tokens` | `NEBIUS_MAX_TOKENS` / `NEBIUS_JUDGE_MAX_TOKENS` (default 32,768); Super/Ultra are the defaults |
+| 6 Stale stage files | A changed extraction moves its descendants to `<vault>/stale/<item_id>/` |
+| 9 `forwarded_by` contract | The handoff (`handoff-v2`) emits the `AuthorHint` shape |
+| Old reviews | Reassessed under the new policy without new model calls |
+| Not yet | 7 (triage labels against the manifest), 10 (Telegram copy-header time) |
+
+Also new: web article capture (`channels/web.py`, `engine/parse/web.py`, trafilatura); the Backboard provider is removed.
+
+Repackaging the committed Super vault under `handoff-v2` with no new model calls gives 4 accepted, 4 pending
+and 1 skipped (was 2 / 5 / 1 / 1), and 20/37 eval checks (21/37 with `--include-unreviewed`; the manifest now
+has 37 checks). The four pending items are the reviews that failed before short ids; the prompt versions
+changed (`judge-v4`, `repair-v3`), so a full rerun calls the models again for every item.

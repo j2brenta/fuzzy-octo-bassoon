@@ -57,7 +57,7 @@ class CoverageTests(unittest.TestCase):
 
     def test_initially_supported_claims_skip_rewrite_and_go_directly_to_coverage(self):
         client = self.client()
-        result = quality_capture(self.raw.path, client)
+        result = quality_capture(self.raw.path, client, expand_omissions=True)
         self.assertTrue(result.expanded)
         self.assertFalse(result.corrected)
         self.assertFalse((self.vault / 'repairs').exists())
@@ -65,18 +65,19 @@ class CoverageTests(unittest.TestCase):
 
     def test_repeated_processing_reuses_both_caches(self):
         client = self.client()
-        quality_capture(self.raw.path, client)
-        again = quality_capture(self.raw.path, client)
+        quality_capture(self.raw.path, client, expand_omissions=True)
+        again = quality_capture(self.raw.path, client, expand_omissions=True)
         self.assertTrue(again.reviewed.reused)
         self.assertEqual(len(client.calls), 2)
 
     def test_remaining_omissions_stop_after_one_pass(self):
         final = review_data(self.combined, omitted_concepts=[{'passage_id': 3, 'description': 'Still missing a central idea.'}])
         client = self.client(final)
-        result = quality_capture(self.raw.path, client)
-        self.assertEqual(result.reviewed.review['status'], 'needs_revision')
-        again = quality_capture(self.raw.path, client)
-        self.assertEqual(again.reviewed.review['status'], 'needs_revision')
+        result = quality_capture(self.raw.path, client, expand_omissions=True)
+        self.assertEqual(result.reviewed.review['status'], 'accepted')
+        self.assertTrue(result.reviewed.review['omitted_concepts'])
+        again = quality_capture(self.raw.path, client, expand_omissions=True)
+        self.assertEqual(again.reviewed.review['status'], 'accepted')
         self.assertEqual(len(client.calls), 2)
 
     def test_invalid_passages_and_exact_existing_duplicates_do_not_save(self):
@@ -111,7 +112,8 @@ class CoverageTests(unittest.TestCase):
         client = FakeModel([ModelReply({'claims': []}), ModelReply(self.review)])
         result = self.expand(client)
         self.assertEqual(result.claims, self.original.claims)
-        self.assertEqual(result.reviewed.review['status'], 'needs_revision')
+        self.assertEqual(result.reviewed.review['status'], 'accepted')
+        self.assertTrue(result.reviewed.review['omitted_concepts'])
 
     def test_corrupt_cache_cannot_replace_existing_supported_claim(self):
         result = self.expand(self.client())

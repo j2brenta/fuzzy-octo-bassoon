@@ -3,11 +3,10 @@
 from dataclasses import dataclass
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
-import tempfile
 from urllib.parse import urlsplit
+from engine.artifacts import atomic_json
 
 PARSER_VERSION = "text-v1"
 URL_PATTERN = re.compile(r'''https?://[^\s<>"'\u200b]+''')
@@ -84,6 +83,14 @@ def find_links(text: str, metadata: dict, section_id: str) -> list[dict]:
     return sorted(links.values(), key=lambda link: (link["start_char"], link["end_char"], link["url"]))
 
 
+
+def text_without_links(text: str, links: list[dict]) -> str:
+    """Remove link spans to distinguish a bare pointer from a message comment."""
+    for link in sorted(links, key=lambda row: row["start_char"], reverse=True):
+        text = text[:link["start_char"]] + text[link["end_char"]:]
+    return text
+
+
 def parse_capture(raw_path: Path) -> ParseResult:
     """Write a rebuildable document while keeping source text only in raw/.
 
@@ -125,23 +132,28 @@ def parse_capture(raw_path: Path) -> ParseResult:
         }],
         "links": find_links(text, metadata, section_id),
     }
+    if isinstance(metadata.get("web_article"), dict):
+        parent = metadata.get("parent")
+        snapshot = metadata["web_article"].get("snapshot")
+        if not isinstance(parent, dict) or not re.fullmatch(r"[0-9a-f]{64}", str(parent.get("item_id", ""))):
+            raise ValueError("Article parent provenance is invalid.")
+        if parent.get("raw_path") != f"raw/{parent['item_id']}.json":
+            raise ValueError("Article parent path does not match its ID.")
+        digest = snapshot.get("sha256") if isinstance(snapshot, dict) else None
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise ValueError("Article snapshot identity is invalid.")
+        if snapshot.get("path") != f"web-snapshots/{digest}.html":
+            raise ValueError("Article snapshot path does not match its hash.")
+        snapshot_path = raw_path.parent.parent / snapshot["path"]
+        if hashlib.sha256(snapshot_path.read_bytes()).hexdigest() != digest:
+            raise ValueError("Article snapshot failed its content check.")
+        document["parent"] = parent
+        document["source_url"] = record.get("url")
+        document["sections"][0]["provenance"]["derived_from"] = snapshot
     encoded = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     folder = raw_path.parent.parent / "documents"
     destination = folder / raw_path.name
     reused = destination.exists() and destination.read_bytes() == encoded
     if not reused:
-        folder.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(dir=folder, delete=False, suffix=".tmp") as file:
-            temporary = Path(file.name)
-            try:
-                file.write(encoded)
-                file.flush()
-                os.fsync(file.fileno())
-            except BaseException:
-                temporary.unlink(missing_ok=True)
-                raise
-        try:
-            os.replace(temporary, destination)
-        finally:
-            temporary.unlink(missing_ok=True)
+        atomic_json(destination, document)
     return ParseResult(destination, len(document["sections"]), len(document["links"]), reused)

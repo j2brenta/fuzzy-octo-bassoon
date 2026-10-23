@@ -54,11 +54,9 @@ class EntityAliasTests(unittest.TestCase):
         with self.assertRaises(EntityError):
             self.validate([row])
 
-    def test_invented_alias_duplicate_alias_and_canonical_alias_are_rejected(self):
+    def test_invented_alias_or_invalid_alias_evidence_is_rejected(self):
         for aliases in [
             [{'name': 'Carl', 'evidence_passage_ids': [2]}],
-            MERGED['aliases'] * 2,
-            [{'name': 'Carlos Victorica', 'evidence_passage_ids': [1]}],
             [{'name': 'Carlos', 'evidence_passage_ids': [True]}],
             [{'name': 'Carlos', 'evidence_passage_ids': [2], 'guess': True}],
             'Carlos',

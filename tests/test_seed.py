@@ -43,7 +43,7 @@ class SeedTests(unittest.TestCase):
         people = json.loads(results[3][1].path.read_text())
         self.assertIsNone(people['author_hint'])
         self.assertIsNone(people['published_at'])
-        self.assertEqual(people['forwarded_by'], 'Kirill R')
+        self.assertEqual(people['forwarded_by'], {'name': 'Kirill R'})
 
     def test_retry_after_corpus_move_keeps_original_records(self):
         first = import_seed(load_manifest(self.manifest), self.vault)

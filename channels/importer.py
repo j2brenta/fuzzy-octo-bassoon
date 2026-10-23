@@ -6,13 +6,20 @@ from pathlib import Path
 from store.raw import capture_text
 
 
-def main() -> int:
+from channels.seed_raw import import_corpus, import_file, parse_linkedin_paste, parse_telegram_desktop
+
+
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path, help="Text/Markdown file, manifest.yaml, or corpus directory")
     parser.add_argument("--vault", type=Path, default=Path(".local-vault"))
     parser.add_argument("--source-name", help="Display name for a single-file import")
     parser.add_argument("--validate-only", action="store_true", help="Check a seed manifest without writing records")
-    args = parser.parse_args()
+    parser.add_argument("--check", action="store_true", help="Check committed RawItem fixtures")
+    args = parser.parse_args(argv)
+    if args.check:
+        from channels.seed_raw import main as seed_raw_main
+        return seed_raw_main([str(args.file), "--check"])
 
     try:
         source = args.file.resolve(strict=True)

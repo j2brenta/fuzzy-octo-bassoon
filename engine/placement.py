@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from engine.review_policy import claim_status, entity_status
 from engine.artifacts import atomic_json, fingerprint
 
 class PlacementError(ValueError):
@@ -34,10 +35,13 @@ def apply_storage_stub(record_path: Path) -> dict:
             rows = reviewed.get(collection)
             expected = record.get(collection)
             if (not isinstance(rows, list) or not isinstance(expected, list)
-                or any(not isinstance(r, dict) or r.get("verdict") != "supported" for r in rows)
+                or any(not isinstance(r, dict) for r in rows)
                 or {r.get(id_key) for r in rows} != {r.get(id_key) for r in expected}
-                or len(rows) != len(expected) or reviewed.get(omissions_key) != []):
+                or len(rows) != len(expected)):
                 raise PlacementError("Accepted handoff review contains unresolved findings.")
+            accepted = claim_status(rows) if key == "claims" else entity_status(rows, expected)
+            if accepted != "accepted":
+                raise PlacementError("Accepted handoff review contains blocking correctness errors.")
     triage = record.get("triage")
     if triage is not None and not isinstance(triage, dict):
         raise PlacementError("Processed extraction triage is invalid.")
