@@ -23,3 +23,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.agents/skills/
+
+skills-lock.json
