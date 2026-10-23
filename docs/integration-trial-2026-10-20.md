@@ -132,3 +132,14 @@ Repackaging the committed Super vault under `handoff-v2` with no new model calls
 and 1 skipped (was 2 / 5 / 1 / 1), and 20/37 eval checks (21/37 with `--include-unreviewed`; the manifest now
 has 37 checks). The four pending items are the reviews that failed before short ids; the prompt versions
 changed (`judge-v4`, `repair-v3`), so a full rerun calls the models again for every item.
+
+### To raise with Olga on PR #8
+
+1. **Empty PR description.** It should state the policy change (`correctness-v1`): "accepted" now means every
+   claim is supported and no person/organization entity is wrong; omissions and concepts are advisory.
+2. **Findings still open:** 7, triage labels disagree with the manifest (kind, durability, `demo-original`
+   skipped); 10, the Telegram copy header stays in `text` and its date is lost, so forwards sort by capture time.
+3. **Reviewer token cost.** Each claim now carries its cited passages in full (`evidence_passages`) on top of
+   the full passage list, so long items send most passages twice. Probably worth it for accuracy; worth
+   measuring on the essay and the people list.
+4. Nothing blocks the merge; it is merged into `kirill/integration-trial` with all 291 tests passing.
