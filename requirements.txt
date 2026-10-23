@@ -4,3 +4,4 @@ python-dotenv==1.2.4
 pydantic>=2,<3
 trafilatura==2.3.1
 Pillow==12.3.0
+pypdfium2==5.14.0

@@ -174,6 +174,14 @@ def write_item_note(raw_path: Path, *, refresh_index=True) -> Path:
             zone = header.get('timezone') or 'timezone unknown; not converted to UTC'
             lines.append(f"- {_plain(header['sender_hint']['name'])}: {_plain(header['copied_at_local'])} ({_plain(zone)}).")
         lines.append('')
+    pdf_source = document.get('pdf_source')
+    if pdf_source:
+        lines += ['## Original PDF', '', f"[Open original PDF](../{pdf_source['pdf_path']})", '',
+                  f"Pages: {pdf_source['page_count']}. Scanned-page readings are automatic and may contain errors.", '',
+                  '| PDF page | Reading method |', '|---|---|']
+        for page in pdf_source['pages']:
+            lines.append(f"| {page['page']} | {_plain(page['method'])} |")
+        lines.append('')
     image_source = document.get('image_source')
     if image_source:
         lines += ['## Original picture', '',
@@ -203,6 +211,11 @@ def write_item_note(raw_path: Path, *, refresh_index=True) -> Path:
         ids = [by_span[(span['start_char'], span['end_char'])] for span in evidence_spans(claim)]
         lines += [f"{number}. **{label}** — {_plain(claim['statement'])}",
                   f"   - Source passages: {', '.join(map(str, ids))}. Kind: {_plain(claim['kind'])}; durability: {_plain(claim['durability_class'])}."]
+        if pdf_source:
+            page_numbers = sorted({page['page'] for page in pdf_source['pages'] for span in evidence_spans(claim)
+                                   if span['start_char'] < page['end_char'] and span['end_char'] > page['start_char']})
+            if page_numbers:
+                lines.append('   - PDF pages: ' + ', '.join(map(str, page_numbers)) + '.')
         if finding is not None and finding['verdict'] != 'supported':
             lines.append('   - Review: ' + _plain(finding['reason']))
     if not claims:

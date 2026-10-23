@@ -173,6 +173,8 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         core["parent"] = document["parent"]
     if "image_source" in document:
         core["image_source"] = document["image_source"]
+    if "pdf_source" in document:
+        core["pdf_source"] = document["pdf_source"]
     copied = document.get("telegram_copy")
     if copied:
         core["telegram_copy"] = copied

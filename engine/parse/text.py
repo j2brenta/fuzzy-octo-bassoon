@@ -150,8 +150,7 @@ def parse_capture(raw_path: Path) -> ParseResult:
         document["parent"] = parent
         document["source_url"] = record.get("url")
         document["sections"][0]["provenance"]["derived_from"] = snapshot
-    encoded = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    if not metadata.get("image_reading"):
+    if not metadata.get("image_reading") and not metadata.get("pdf_reading"):
         from channels.pasted import telegram_copy_metadata
         copied = metadata.get("telegram_copy") or telegram_copy_metadata(text)
         if copied:
@@ -160,6 +159,14 @@ def parse_capture(raw_path: Path) -> ParseResult:
     image_source = validate_image_reference(raw_path, record)
     if image_source is not None:
         document["image_source"] = image_source
+    from channels.pdf import validate_pdf_reference
+    pdf_source = validate_pdf_reference(raw_path, record)
+    if pdf_source is not None:
+        document["pdf_source"] = pdf_source
+        if metadata.get("parent"):
+            document["parent"] = metadata["parent"]
+        document["sections"][0]["provenance"]["derived_from"] = {"path": pdf_source["pdf_path"], "sha256": pdf_source["sha256"]}
+    encoded = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     folder = raw_path.parent.parent / "documents"
     destination = folder / raw_path.name
     reused = destination.exists() and destination.read_bytes() == encoded

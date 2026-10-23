@@ -27,6 +27,8 @@ from dotenv import load_dotenv
 from channels.pasted import telegram_copy_metadata
 from store.raw import CaptureResult, capture_text
 from channels.web import fetch_linked_articles
+from channels.pdf import capture_pdf, interpret_pdf, pdf_attachment
+from engine.parse.pdf import PdfError
 from channels.pictures import capture_picture, interpret_picture, image_attachment
 from engine.vision import ImageError
 from store.media import MediaError
@@ -115,7 +117,7 @@ def message_fields(message: Message) -> dict:
                           **({"handle": message.from_user.username} if message.from_user.username else {})}
                          if message.from_user else None)
 
-    if origin is None and image_attachment(message) is not None:
+    if origin is None and (image_attachment(message) is not None or pdf_attachment(message) is not None):
         # An uploader is known; the creator/author of a screenshot is not.
         author = None
         forwarder = ({"name": message.from_user.full_name, "url": f"tg://user?id={message.from_user.id}",
@@ -149,7 +151,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
                 "with --owner-id followed by your ID."
             )
         elif message.from_user.id == owner_id:
-            await message.answer("Refresher is ready. Send text, a link or a photo (JPEG/PNG/WebP, up to 10 MB).")
+            await message.answer("Refresher is ready. Send text, a link, a picture or a PDF (up to 20 MB / 20 pages).")
         else:
             await message.answer("This bot accepts notes only from its configured owner.")
         return
@@ -159,11 +161,14 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if message.from_user.id != owner_id:
         await message.answer("This bot accepts notes only from its configured owner.")
         return
+    if pdf_attachment(message) is not None:
+        await handle_pdf(message, vault_path)
+        return
     if image_attachment(message) is not None:
         await handle_picture(message, vault_path)
         return
     if message.text is None:
-        await message.answer("Not saved: send text, a link or a JPEG/PNG/WebP picture. Voice and other attachments are not supported.")
+        await message.answer("Not saved: send text, a link, a JPEG/PNG/WebP picture or a PDF. Voice and other attachments are not supported.")
         return
     if message.forward_origin is None and command.startswith("/"):
         await message.answer("Only /start and /help are available. Topic refreshers are not implemented yet.")
@@ -232,6 +237,25 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
                 row.get("reused", False),
             )
             await process_capture(message, article)
+
+
+async def handle_pdf(message: Message, vault_path: Path) -> None:
+    receipt = None
+    try:
+        receipt = await capture_pdf(message, vault_path, message_fields(message))
+        await message.answer("PDF saved. Extracting pages; scanned pages use Nebius vision. Your original is retained.")
+        result = await asyncio.to_thread(interpret_pdf, receipt)
+    except (PdfError, MediaError, ModelError) as error:
+        await message.answer(str(error) + (" PDF retained; resend it to retry." if receipt else ""))
+        return
+    except (OSError, ValueError, KeyError):
+        logger.error("PDF processing could not finish; any saved original is retained.")
+        await message.answer("PDF processing could not finish. Any saved original is retained; resend it to retry.")
+        return
+    raw = json.loads(result.path.read_text())
+    pages = raw['channel_metadata']['pdf_reading']['page_count']
+    await message.answer(f"PDF prepared: {pages} page(s). Page references are saved with the extracted text.")
+    await process_capture(message, result)
 
 
 async def handle_picture(message: Message, vault_path: Path) -> None:
