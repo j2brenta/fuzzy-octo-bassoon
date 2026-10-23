@@ -121,12 +121,15 @@ class MemoryStore:
             new_edges += [Edge(claim.claim_id, "FROM", s.section_id) for s in claim.spans]
             new_edges += self._relate(node)
 
-        self._recount_duplicates()
         self._edges += new_edges
+        self._drop_repost_relations()
+        self._recount_duplicates()
+        self._derive()
         return Placement(ex.item_id, "placed", len(ex.claims), item.author_id, item.duplicate_of,
                          [e for e in new_edges if e.type in {"DUPLICATES", "SUPPORTS"}])
 
     def _relate(self, node: ClaimNode) -> list[Edge]:
+        """Write relation edges only; _derive turns them into confirmations, half-lives and clocks."""
         words = set(_words(node.claim.statement))
         author = self._items[node.item_id].author_id
         out = []
@@ -135,28 +138,66 @@ class MemoryStore:
                 continue
             if _jaccard(words, set(_words(other.claim.statement))) < CLAIM_SIMILARITY:
                 continue
-            first, later = sorted((other, node), key=lambda c: (c.clock_start, c.claim.claim_id))
+            first, later = sorted((other, node), key=lambda c: (self._event_time(c), c.claim.claim_id))
             other_author = self._items[other.item_id].author_id
-            reposted = self._items[node.item_id].duplicate_of or self._items[other.item_id].duplicate_of
-            if author and other_author and author != other_author and not reposted:
-                # Independent confirmation: the clock resets to the later sighting and the half-life grows.
-                first.confirmations += 1
-                first.half_life_days = scoring.confirm(first.half_life_days)
-                first.clock_start = max(first.clock_start, later.clock_start)
-                for pid in (author, other_author):
-                    self._people[pid].confirmations += 1
+            if self._items[node.item_id].duplicate_of or self._items[other.item_id].duplicate_of:
+                continue  # a repost's claims are noise; its item already DUPLICATES the original
+            if author and other_author and author != other_author:
                 out.append(Edge(later.claim.claim_id, "SUPPORTS", first.claim.claim_id,
-                                "Same statement from a different author."))
+                                "Same statement from a different author.", self._event_time(later)))
             else:
                 out.append(Edge(later.claim.claim_id, "DUPLICATES", first.claim.claim_id,
-                                "Same statement, same or unknown author."))
+                                "Same statement, same or unknown author.", self._event_time(later)))
         return out
+
+    def _event_time(self, node: ClaimNode):
+        return self._items[node.item_id].source.event_time
+
+    def _drop_repost_relations(self):
+        """An item found to be a repost only after its claims were related loses those claim relations,
+        so the edges are the same whichever arrived first."""
+        def reposted(claim_id):
+            node = self._claims.get(claim_id)
+            return node is not None and self._items[node.item_id].duplicate_of is not None
+        self._edges = [e for e in self._edges if not (e.type in {"SUPPORTS", "DUPLICATES"} and e.src in self._claims
+                                                       and (reposted(e.src) or reposted(e.dst)))]
 
     def _recount_duplicates(self):
         dup_claims = {e.src for e in self._edges if e.type == "DUPLICATES"}
         for node in self._claims.values():
             reposted = self._items[node.item_id].duplicate_of is not None
             node.duplicate_rank = 1 if reposted or node.claim.claim_id in dup_claims else 0
+
+    def _derive(self):
+        """Recompute what scoring decides from the edges, so the result does not depend on arrival order.
+
+        An independent confirmation (SUPPORTS) extends the earlier claim's half-life and moves its clock to the
+        later sighting; both authors gain a confirmation. CONTRADICTS counts against both authors.
+        """
+        for node in self._claims.values():
+            node.confirmations, node.superseded_by = 0, None
+            node.clock_start = self._event_time(node)
+        for person in self._people.values():
+            person.confirmations = person.contradictions = 0
+        for e in self._edges:
+            if e.src not in self._claims or e.dst not in self._claims:
+                continue
+            later, first = self._claims[e.src], self._claims[e.dst]
+            authors = {self._items[later.item_id].author_id, self._items[first.item_id].author_id} - {None}
+            if e.type == "SUPPORTS":
+                first.confirmations += 1
+                first.clock_start = max(first.clock_start, e.at or self._event_time(later))
+                for pid in authors:
+                    self._people[pid].confirmations += 1
+            elif e.type == "SUPERSEDES":
+                first.superseded_by = later.claim.claim_id
+            elif e.type == "CONTRADICTS":
+                for pid in authors:
+                    self._people[pid].contradictions += 1
+        for node in self._claims.values():
+            base = (node.claim.half_life_days if node.durability == node.claim.durability_class
+                    else scoring.HALF_LIFE_DAYS[node.durability])
+            node.half_life_days = scoring.half_life(base, node.confirmations)
 
     def _person(self, name: str) -> PersonNode:
         pid = person_id(name)
@@ -179,10 +220,9 @@ class MemoryStore:
         for node in targets:
             if o.durability_class:
                 node.durability = o.durability_class
-                node.half_life_days = scoring.HALF_LIFE_DAYS[o.durability_class] * scoring.CONFIRM_FACTOR ** node.confirmations
-                node.half_life_days = min(node.half_life_days, scoring.MAX_HALF_LIFE)
             if o.vote:
                 node.votes += o.vote
+        self._derive()
 
     # --- reads ---
 

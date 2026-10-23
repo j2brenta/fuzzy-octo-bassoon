@@ -34,7 +34,7 @@ class ClaimNode:
     item_id: str
     durability: str
     half_life_days: float
-    clock_start: datetime  # event time; reset by an independent confirmation
+    clock_start: datetime  # event time; moved to the latest independent confirmation by the derive pass
     confirmations: int = 0
     duplicate_rank: int = 0  # 0 = first source; > 0 = a repost, counted as noise
     superseded_by: str | None = None
@@ -84,6 +84,7 @@ class Edge:
     type: str
     dst: str
     rationale: str = ""
+    at: datetime | None = None  # event time of the later side, for relations between claims
 
 
 @dataclass

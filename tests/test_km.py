@@ -151,3 +151,22 @@ def test_query_baseline_on_fixture_vault(vault_dir):
     assert author in {p.person_id for p in store.people_for([claim.claim.claim_id])}
     assert any(e.type == "PUBLISHED_IN" for e in store.neighbours(claim.item_id))
     assert list(store.ideas()) == [] and store.review(TODAY).firmed == []
+
+
+def _scored(store):
+    claims = {c.claim.claim_id: (c.half_life_days, c.clock_start, c.confirmations, c.duplicate_rank, c.superseded_by)
+              for c in store.claims()}
+    return claims, {p.person_id: store.trust(p.person_id) for p in store.people()}, set(store.edges())
+
+
+@pytest.mark.parametrize("vault_path", [FIXTURES / "vault", Path(__file__).parent.parent / ".local-vault" / "seed"])
+def test_scores_do_not_depend_on_arrival_order(vault_path):
+    if not (vault_path / "processed").is_dir():
+        pytest.skip("seed vault not checked out")
+    records = list(vault.load_extractions(vault_path))
+    forward, backward = MemoryStore(include_unreviewed=True), MemoryStore(include_unreviewed=True)
+    for ex, text in records:
+        forward.apply(ex, text)
+    for ex, text in reversed(records):
+        backward.apply(ex, text)
+    assert _scored(forward) == _scored(backward)
