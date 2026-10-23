@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from graph.memory import person_id
+from graph.memory import MemoryStore, person_id
+from graph.store import GraphStore
 from refresher import evaluate, km, vault
 from refresher.cli import main
 from refresher.schemas import Extraction, Override
@@ -133,3 +134,20 @@ def test_include_unreviewed_places_failed_items_with_a_mark(vault_dir):
     assert "[!warning] Unreviewed" in note.read_text()
     assert main(["rebuild", "--vault", str(vault_dir), "--at", "2026-10-19"]) == 0
     assert not note.exists()  # the default rebuild drops it again
+
+
+def test_memory_store_satisfies_the_graph_store_contract():
+    assert isinstance(MemoryStore(), GraphStore)
+
+
+def test_query_baseline_on_fixture_vault(vault_dir):
+    store = vault.replay(vault_dir)
+    hits = store.claims_for(["semantic entropy"], hops=0)
+    assert hits and all("entropy" in c.claim.statement.casefold() for c in hits)
+    assert len(store.claims_for(["semantic entropy"])) >= len(hits)
+    claim = hits[0]
+    assert store.chain(claim.claim.claim_id) == [claim]  # nothing supersedes it in the fixture
+    author = store.item(claim.item_id).author_id
+    assert author in {p.person_id for p in store.people_for([claim.claim.claim_id])}
+    assert any(e.type == "PUBLISHED_IN" for e in store.neighbours(claim.item_id))
+    assert list(store.ideas()) == [] and store.review(TODAY).firmed == []

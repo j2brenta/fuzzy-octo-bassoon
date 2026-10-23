@@ -5,12 +5,14 @@ implement the same methods, so callers never depend on Neo4j directly.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, Protocol
+from typing import Iterable, Protocol, runtime_checkable
 
 from refresher.schemas import Claim, Extraction, Override, Source
 
 EDGE_TYPES = {"AUTHORED_BY", "PUBLISHED_IN", "MENTIONS", "FROM", "DUPLICATES", "SUPPORTS",
-              "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
+              "SUPERSEDES", "CONTRADICTS", "ELABORATES",
+              "PART_OF",  # claim -> Idea
+              "ABOUT"}  # claim -> Person or Org: a profile fact, which gets no Idea
 
 
 @dataclass
@@ -37,6 +39,20 @@ class ClaimNode:
     duplicate_rank: int = 0  # 0 = first source; > 0 = a repost, counted as noise
     superseded_by: str | None = None
     votes: int = 0
+    idea_id: str | None = None  # world claims only
+    subject_id: str | None = None  # person:… or org:… when the claim is about them; then no Idea
+
+
+@dataclass
+class IdeaNode:
+    """The set of claims that make the same assertion. Ingest creates it provisional; the review firms it up."""
+    idea_id: str
+    canonical_claim_id: str
+    title: str
+    durability: str
+    valid_at: datetime  # event time of the newest member
+    members: set[str] = field(default_factory=set)  # claim ids
+    status: str = "provisional"  # provisional | firm
 
 
 @dataclass
@@ -81,6 +97,18 @@ class Placement:
     relations: list[Edge] = field(default_factory=list)
 
 
+@dataclass
+class ReviewReport:
+    """What graph.review() decided. The verdicts are also written to reviews/ so a rebuild replays them."""
+    at: datetime
+    item_duplicates: list[Edge] = field(default_factory=list)  # later item DUPLICATES first item
+    firmed: list[str] = field(default_factory=list)  # idea ids, provisional -> firm
+    merged_ideas: list[tuple[str, str]] = field(default_factory=list)  # (absorbed, kept)
+    topics: dict[str, list[str]] = field(default_factory=dict)  # topic title -> idea ids (3+, 2+ sources)
+    merged_people: list[tuple[str, str]] = field(default_factory=list)  # (absorbed, kept)
+
+
+@runtime_checkable
 class GraphStore(Protocol):
     def apply(self, extraction: Extraction, text: str = "") -> Placement: ...
     def apply_override(self, override: Override) -> None: ...
@@ -90,3 +118,16 @@ class GraphStore(Protocol):
     def sources(self) -> Iterable[SourceNode]: ...
     def edges(self) -> Iterable[Edge]: ...
     def trust(self, person_id: str) -> float: ...
+    def ideas(self) -> Iterable[IdeaNode]: ...
+    def idea(self, idea_id: str) -> IdeaNode: ...
+    def review(self, at: datetime) -> ReviewReport: ...
+
+    # graph.query: what the refresher gathers from.
+    def claims_for(self, terms: Iterable[str], hops: int = 2) -> list[ClaimNode]:
+        """Claims matching the terms, plus those within `hops` edges of a match (Idea, item, person)."""
+    def chain(self, claim_id: str) -> list[ClaimNode]:
+        """The supersession chain through this claim, oldest first."""
+    def people_for(self, claim_ids: Iterable[str]) -> list[PersonNode]:
+        """Authors of, and people the claims are about, for these claims."""
+    def neighbours(self, item_id: str) -> list[Edge]:
+        """Edges touching the item or any of its claims."""

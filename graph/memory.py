@@ -7,7 +7,10 @@ different author is a confirmation. Victor's relate.py replaces it.
 import re
 import unicodedata
 
-from graph.store import ClaimNode, Edge, ItemNode, PersonNode, Placement, SourceNode
+from datetime import datetime
+from typing import Iterable
+
+from graph.store import ClaimNode, Edge, IdeaNode, ItemNode, PersonNode, Placement, ReviewReport, SourceNode
 from refresher import scoring
 from refresher.schemas import Extraction, Override
 
@@ -53,6 +56,7 @@ class MemoryStore:
         self.include_unreviewed = include_unreviewed
         self._items: dict[str, ItemNode] = {}
         self._claims: dict[str, ClaimNode] = {}
+        self._ideas: dict[str, IdeaNode] = {}  # filled by relate.py; empty with the lexical baseline
         self._people: dict[str, PersonNode] = {}
         self._sources: dict[str, SourceNode] = {}
         self._orgs: dict[str, str] = {}
@@ -205,6 +209,58 @@ class MemoryStore:
 
     def person(self, pid: str) -> PersonNode:
         return self._people[pid]
+
+    def ideas(self):
+        return self._ideas.values()
+
+    def idea(self, idea_id: str) -> IdeaNode:
+        return self._ideas[idea_id]
+
+    def review(self, at: datetime) -> ReviewReport:
+        return ReviewReport(at)  # review.py (Victor) decides; nothing to firm up or merge without Ideas
+
+    # --- graph.query: lexical baseline ---
+
+    def claims_for(self, terms: Iterable[str], hops: int = 2) -> list[ClaimNode]:
+        wanted = {w for t in terms for w in _words(t)}
+        found = {cid for cid, c in self._claims.items() if wanted & set(_words(c.claim.statement))}
+        # Undirected: edges, plus each claim to its item and Idea, so a hop reaches sibling claims via those.
+        pairs = [(e.src, e.dst) for e in self._edges]
+        pairs += [(cid, c.item_id) for cid, c in self._claims.items()]
+        pairs += [(cid, c.idea_id) for cid, c in self._claims.items() if c.idea_id]
+        near: dict[str, set[str]] = {}
+        for a, b in pairs:
+            near.setdefault(a, set()).add(b)
+            near.setdefault(b, set()).add(a)
+        frontier = set(found)
+        for _ in range(hops):
+            frontier = {n for f in frontier for n in near.get(f, ())} - found
+            found |= frontier
+        return sorted((self._claims[cid] for cid in found if cid in self._claims), key=lambda c: c.claim.claim_id)
+
+    def chain(self, claim_id: str) -> list[ClaimNode]:
+        older = {e.src: e.dst for e in self._edges if e.type == "SUPERSEDES"}
+        newer = {v: k for k, v in older.items()}
+        first = claim_id
+        while first in older:
+            first = older[first]
+        out = [first]
+        while out[-1] in newer:
+            out.append(newer[out[-1]])
+        return [self._claims[cid] for cid in out if cid in self._claims]
+
+    def people_for(self, claim_ids: Iterable[str]) -> list[PersonNode]:
+        pids = set()
+        for cid in claim_ids:
+            node = self._claims.get(cid)
+            if node is None:
+                continue
+            pids |= {node.subject_id, self._items[node.item_id].author_id} - {None}
+        return sorted((self._people[p] for p in pids if p in self._people), key=lambda p: p.person_id)
+
+    def neighbours(self, item_id: str) -> list[Edge]:
+        ids = {item_id} | {cid for cid, c in self._claims.items() if c.item_id == item_id}
+        return [e for e in self._edges if e.src in ids or e.dst in ids]
 
     def trust(self, pid: str) -> float:
         p = self._people[pid]
