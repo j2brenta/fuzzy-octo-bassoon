@@ -165,3 +165,7 @@ Details and saved local evidence: [reviewer usage report](reviewer-token-usage-2
 ## Picture input follow-up — 23 October
 
 Telegram photos/image documents now use Token Factory’s NVIDIA VLM and the existing reviewed text pipeline; voice handling was removed at Olga’s request. The synthetic full-pipeline check was accepted. Two explicitly approved Desktop test images completed image reading/extraction: the room photo was accepted (8 claims); the math screenshot remained needs revision (23 claims), with incorrect/unsupported claims retained as flagged. Originals were unchanged. Automated checks: 311 tests and 104 subtests pass. [Picture validation and limits](picture-support-validation-2026-10-23.md).
+
+## PDF input follow-up — 23 October
+
+PDF Telegram uploads, public links (including extensionless download URLs) and local imports now use page-preserving native extraction with cached VLM fallback for scans. Original files/receipts remain immutable; handoffs and readable claims retain PDF page references. Limits: 20 MB / 20 pages / 50,000 characters; over-limit/unreadable files are retained with explicit errors, never truncated. Tests: 327 passed plus 104 subtests. Native and scanned synthetic PDF handoffs passed live Nebius review; a public W3C PDF URL and its cache passed the real downloader check. [PDF validation and limitations](pdf-support-validation-2026-10-23.md). Existing graph-placement and temporal-relation limitations are unchanged.

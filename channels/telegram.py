@@ -1,4 +1,4 @@
-"""Private text and image capture bot. Run locally with: python -m channels.telegram."""
+"""Private text, picture and PDF capture bot. Run locally with: python -m channels.telegram."""
 
 import argparse
 import asyncio
@@ -208,14 +208,14 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         await message.answer("Original saved; WEB_FETCH must be on or off.")
         return
     if document["links"] and setting == "on":
-        await message.answer("Reading linked articles; your original message remains saved.")
+        await message.answer("Reading linked articles/PDFs; your original message remains saved.")
         try:
             rows = await asyncio.to_thread(fetch_linked_articles, result.path)
         except (OSError, ValueError):
             await message.answer("Original saved; article processing could not finish. Retry this message later.")
         for row in rows:
             if row["status"] == "captured":
-                status = "Cached article" if row.get("reused") else "Article saved"
+                status = ("Cached PDF" if row.get("reused") else "PDF saved") if row.get("kind") == "pdf" else ("Cached article" if row.get("reused") else "Article saved")
                 await message.answer(f"{status}. Item: {row['item_id']}")
             else:
                 await message.answer(f"Link {row['status']}: {row['reason']} Original retained.")
@@ -230,7 +230,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         await message.answer("URL saved. Article reading is off or unfinished; no article claims were extracted.")
     for row in rows:
         if row["status"] == "captured":
-            await message.answer(f"Processing article item: {row['item_id']}")
+            await message.answer(f"Processing {'PDF' if row.get('kind') == 'pdf' else 'article'} item: {row['item_id']}")
             article = CaptureResult(
                 result.path.parent / f"{row['item_id']}.json",
                 row["item_id"],

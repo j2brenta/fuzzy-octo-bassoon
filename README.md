@@ -125,7 +125,7 @@ and [Telegram bot setup](https://core.telegram.org/bots/tutorial#obtain-your-bot
 
 Telegram now acknowledges capture first, then reports prepared section/link
 counts. This preparation stage only identifies links; the article stage below
-fetches supported public HTML pages. PDF and YouTube parsers remain pending.
+fetches supported public HTML pages and PDFs. YouTube parsing remains pending.
 
 For existing captures, run:
 
@@ -152,7 +152,7 @@ These document fields are provisional until the team agrees the shared schema.
 
 With `WEB_FETCH=on` (the default), Telegram downloads up to three distinct links
 from a saved message, then runs the existing triage, extraction and review
-pipeline on each readable HTML article. A bare URL is treated as a pointer;
+pipeline on each readable HTML article or PDF. A bare URL is treated as a pointer;
 claims come from the fetched article text. A comment and its linked articles
 remain separate inputs. Article links are never recursively crawled.
 
@@ -170,8 +170,8 @@ of the person who shared the URL.
   reuse successful downloads and retry failures without losing originals.
 
 Downloads accept public HTTP(S) pages, check every redirect, verify TLS against
-the original hostname and cap HTML at 2 MB. PDF/media, restricted or JavaScript-only
-pages return explicit status and preserve the original link. Sites returning
+the original hostname and cap HTML at 2 MB / PDFs at 20 MB. Unsupported media,
+restricted or JavaScript-only pages return explicit status and preserve the original link. Sites returning
 HTTP 403 may require a browser challenge; open the page normally and paste its
 text into Telegram. The fetcher does not bypass those challenges. Extracted text over
 60,000 characters is saved but needs future section processing before AI review.
@@ -536,3 +536,40 @@ preserving valid paid text extraction/review caches.
 
 Validation reports: [nine-seed triage](docs/triage-v4-seed-evaluation-2026-10-23.md)
 and [reviewer token usage](docs/reviewer-token-usage-2026-10-23.md).
+
+## PDF uploads, links and local files
+
+Send a PDF document to Telegram or send its direct public URL. Local import is
+also supported:
+
+```bash
+python -m channels.importer path/to/document.pdf --vault .local-vault/imports
+```
+
+Limits: **20 MB, 20 pages and 50,000 extracted characters**. The original PDF and
+capture receipt are saved in `raw/pdfs/` before parsing. Native page text is read
+locally; pages with little/no usable text are rendered for the existing Nebius
+vision model. Completed page readings are cached for retry. The derived text goes
+through normal triage, claims, entities and review. Original files are never
+rewritten or silently truncated. A failed page/model call retains saved originals
+and earlier page readings; resend the document to retry.
+
+Open `processed/index.md` for results. Each PDF note links the original file,
+lists page-reading methods, and shows page references beside claims. The JSON
+handoff retains file hashes and the map from text spans to PDF pages. Telegram
+captions remain separate from PDF content; uploaders are not assumed to be PDF
+authors. Scanned readings may contain mistakes; the claim reviewer checks the
+derived text, not page pixels. Native pages' diagrams/figures and complex layouts
+are not fully interpreted automatically.
+
+Encrypted/damaged, entirely blank and over-limit PDFs receive clear errors.
+Send an unlocked copy or split large documents; no password bypass or background
+large-document job is implemented. `WEB_FETCH=on` controls public PDF-link reading;
+uploaded PDFs do not require that setting. Links are routed by content type and
+signature, so `.pdf` is not required in the URL. HTML stays capped at 2 MB, PDF
+links at 20 MB, with the same public-address/redirect checks. Direct image URLs
+still need a separate downloader; supported image uploads already work.
+
+No new API key is required; scanned pages use `NEBIUS_API_KEY` and
+`NEBIUS_VISION_MODEL`. Install updated requirements (or `uv sync`) and restart the
+bot. Verification: [PDF validation report](docs/pdf-support-validation-2026-10-23.md).
