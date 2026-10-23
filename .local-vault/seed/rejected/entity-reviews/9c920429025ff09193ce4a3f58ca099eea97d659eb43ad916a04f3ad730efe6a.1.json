@@ -1,0 +1,204 @@
+{
+  "stage": "entity-reviews",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "attempt": 1,
+  "error": "Entity review must cover every entity exactly once.",
+  "created_at": "2026-10-20T11:15:48.229520+00:00",
+  "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "data": {
+    "entities": [
+      {
+        "entity_id": "14364ecf132824a84766f933f3783f3876dade817991dd2fee220310ebcd524b",
+        "verdict": "supported",
+        "reason": "Explicitly named as author in passage 2."
+      },
+      {
+        "entity_id": "ff2a32cd0c7de9aa3a9dd486d9d0c8860614a5f9c9fd6f26a96a7d753034920c",
+        "verdict": "supported",
+        "reason": "Repeatedly referenced as 'AI' across passages 5,6,8,9,10 as the central concept."
+      },
+      {
+        "entity_id": "bd5e1868aab0b3aa1bb56ab949ce854549edb9a8c9d943c814ca73d962d715bb",
+        "verdict": "supported",
+        "reason": "Explicitly named 'mathematics' in passage 8 as a domain with standard answers."
+      },
+      {
+        "entity_id": "57c87673242d729083cf493100bae9e735483f15e13e123e06f5965383f21c63",
+        "verdict": "supported",
+        "reason": "Explicitly named 'gray zone' in passage 9 describing subjective humanities problems."
+      },
+      {
+        "entity_id": "6bcafcfd7f93c9e861fd3e2d32358567ddf5f615a7bbae5cc3280ca5ad02d265",
+        "verdict": "supported",
+        "reason": "Repeatedly referenced as 'outline' in passages 18 and 19 regarding novel writing process."
+      },
+      {
+        "entity_id": "b9786a2c3f4ac8ac3aa1ca2b1a6f874ed01ac9eb5961a742738a9b85374fd6f8",
+        "verdict": "supported",
+        "reason": "Explicitly named 'detective fiction' in passage 18 as a genre requiring tight logic."
+      },
+      {
+        "entity_id": "c9882a074fcd9952c36e65497c089b420a69ca8e1ece00a0918ce9eb06af0f53",
+        "verdict": "supported",
+        "reason": "Explicitly named 'cognitive efficiency' in passage 18 as factor in writer's inspiration."
+      },
+      {
+        "entity_id": "a2757fa1251fce85fb64c9793751179613823a0085c1868bab06a27d654c7fc5",
+        "verdict": "supported",
+        "reason": "Explicitly named 'memory limits' in passage 22 regarding AI context limits."
+      },
+      {
+        "entity_id": "c8d06d333f4d77ad0fdee5e0278649af17cf7cc3b9e80d9359d74fc85a3ef525",
+        "verdict": "supported",
+        "reason": "Explicitly named 'long-form output control' in passage 3 author bio."
+      },
+      {
+        "entity_id": "13a8513451d748fd148586f9a3f729df87758a6dd16a4520250c11a1d5f22f1b",
+        "verdict": "supported",
+        "reason": "Explicitly named 'non-detective novels' in passage 22 as target for AI creation."
+      },
+      {
+        "entity_id": "df01f02ca408b71b36351d7933217dec2881bb88ac3e776b427e96311c8003e3",
+        "verdict": "supported",
+        "reason": "Explicitly named 'human cognitive patterns' in passage 24 as basis for AI approach."
+      },
+      {
+        "entity_id": "6bcafcfd7f93c9e861fd3e2d32358567ddf5f615a7bbae5cc3280ca5ad02d265",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'outline'; same mentions as primary outline entity."
+      },
+      {
+        "entity_id": "b9786a2c3f4ac8ac3aa1ca2b1a6f874ed01ac9eb5961a742738a9b85374fd6f8",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'detective fiction'; same mention as primary."
+      },
+      {
+        "entity_id": "c9882a074fcd9952c36e65497c089b420a69ca8e1ece00a0918ce9eb06af0f53",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'cognitive efficiency'; same mention as primary."
+      },
+      {
+        "entity_id": "a2757fa1251fce85fb64c9793751179613823a0085c1868bab06a27d654c7fc5",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'memory limits'; same mention as primary."
+      },
+      {
+        "entity_id": "c8d06d333f4d77ad0fdee5e0278649af17cf7cc3b9e80d9359d74fc85a3ef525",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'long-form output control'; same mention as primary."
+      },
+      {
+        "entity_id": "13a8513451d748fd148586f9a3f729df87758a6dd16a4520250c11a1d5f22f1b",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'non-detective novels'; same mention as primary."
+      },
+      {
+        "entity_id": "df01f02ca408b71b36351d7933217dec2881bb88ac3e776b427e96311c8003e3",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'human cognitive patterns'; same mention as primary."
+      },
+      {
+        "entity_id": "57c87673242d729083cf493100bae9e735483f15e13e123e06f5965383f21c63",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'gray zone'; same mention as primary."
+      },
+      {
+        "entity_id": "14364ecf132824a84766f933f3783f3876dade817991dd2fee220310ebcd524b",
+        "verdict": "supported",
+        "reason": "Duplicate entity_id for 'Jianfeng Liu'; same mention as primary."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "standard answers",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          8
+        ]
+      },
+      {
+        "name": "humanities",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          9
+        ]
+      },
+      {
+        "name": "text generation",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          5,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "name": "creative writing",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          1,
+          11,
+          12
+        ]
+      },
+      {
+        "name": "novel creation",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12,
+          13,
+          14,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ]
+      },
+      {
+        "name": "human",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          13,
+          14,
+          18,
+          19,
+          20,
+          24
+        ]
+      },
+      {
+        "name": "reader",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "Chinese male-targeted web novels",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "hallucination",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      },
+      {
+        "name": "masterpiece novel",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      }
+    ],
+    "summary": "All 20 supplied entity_ids correspond to 10 unique entities, each explicitly named in the source passages with correct types. Duplicates exist in the input but each ID is supported. Ten major omitted concepts are grounded in the text: standard answers, humanities, text generation, creative writing, novel creation, human/author, reader, Chinese male-targeted web novels, hallucination, and masterpiece novel."
+  }
+}

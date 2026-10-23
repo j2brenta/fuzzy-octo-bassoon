@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:51.032231+00:00",
+  "entities": [
+    {
+      "entity_id": "6baa44610eb9aabb07c0876b94fcec15df307b1bc071c2bd3d34b271e88a9619",
+      "name": "demo workshop",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+          "section_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:section:1",
+          "passage_id": 1,
+          "start_char": 38,
+          "end_char": 51,
+          "surface_name": "demo workshop"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "1aa57fe748ceaaa9536a20d00330f634f21b6b490e710d148d18cbce0d4bd71f",
+      "name": "UTC",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+          "section_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:section:1",
+          "passage_id": 1,
+          "start_char": 68,
+          "end_char": 71,
+          "surface_name": "UTC"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-97fa92e295c99f99",
+  "usage": {
+    "input_tokens": 487,
+    "output_tokens": 732,
+    "total_tokens": 1219
+  },
+  "usage_scope": "final_response_only"
+}

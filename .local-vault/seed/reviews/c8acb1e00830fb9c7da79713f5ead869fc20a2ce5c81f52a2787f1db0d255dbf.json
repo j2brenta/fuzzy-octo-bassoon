@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "extraction_hash": "2b94973247d9d31f3b125c2b0cf8d01305097fd3afa3c10827eeffed798b505a",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:27:22.040724+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "16d458bd0e6b17f0f0244b458ff462583263d15f4379abf3e6e8d1ecfac79735",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 explicitly states there is a rich ecosystem of economists embracing the 'messy life' approach who are often marginalized by mainstream departments."
+      },
+      {
+        "claim_id": "020a0e29b612e9d0b900b2bac22fb33e05f09572317d42959e1417f807acc647",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 99 lists 'Understand Network Effects: How technologies spread through social connections rather than economic incentives alone' as a reason these economists would predict AI impacts accurately."
+      },
+      {
+        "claim_id": "0e1d2b6cf3802c14bf6b0fedef2f58558ef48d6e2f97d5c04f5088675e0f94aa",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 100 lists 'Study Cultural Adaptation: How societies reshape technologies rather than just being passively affected by them' as a reason."
+      },
+      {
+        "claim_id": "3f3047bc43acdc5775e20e50185bce876db49906bfa9d35bdf45ad6b83101a1b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 101 lists 'Recognize Emergent Phenomena: How new forms of organization emerge from complex social interactions' as a reason."
+      },
+      {
+        "claim_id": "35dc97b3b83e68742461099ff044178d894867c7fdebc3639b331b669290c285",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 102 lists 'Value Ethnographic Insight: Spend time observing how systems actually work rather than just modeling them' as a reason."
+      },
+      {
+        "claim_id": "aa183481da8904e81e8bcee8df32107282988972f313c73eb448bebe89e1ed8f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 103 lists 'Embrace Methodological Pluralism: Use whatever methods work rather than being constrained by mathematical formalism' as a reason."
+      },
+      {
+        "claim_id": "26311a69c16d0f9abdff46e60e27b78274fae82fe9f32317c129043a462abb60",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 106 states 'Harder to publish in top economics journals' as a career challenge."
+      },
+      {
+        "claim_id": "808a4e8f402465f076fdf0d05580ce7020d1420914251fe141d8178bd3a3d8c6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 107 states 'Often relegated to policy schools, business schools, or other departments' as a career challenge."
+      },
+      {
+        "claim_id": "9c84895e5c2e4dad6d18ad1f06f968e4600d3a5f352794f7384aa0587e6deda6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 108 states 'Less influence on mainstream economic thinking' as a career challenge."
+      },
+      {
+        "claim_id": "7e99d2e11022dd4be86c5a00bb01de258feb9b5aef75680223586ecc0237df70",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 109 states 'But often better at predicting real-world outcomes' as a career challenge."
+      },
+      {
+        "claim_id": "2aaff14598d29191f25e71e01c3ce3c16d84425604063ae114ce38ec8e654ad6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 110 states 'They're the ones who would likely recognize that AI + RAG + agentic behavior + cultural adaptation = much more transformation than Acemoglu's 5% prediction.'"
+      },
+      {
+        "claim_id": "cc176d0f2bc51722bc29389ef4fca387056378f5fc34e3cd6d4bb14105fb08e6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 identifies Ha-Joon Chang and passage 5 states he 'Challenges free market orthodoxy with cultural and historical analysis.'"
+      },
+      {
+        "claim_id": "a86eda357ad8462227ad36126e40c0fa1031e0fac79f73985418067f4706aa15",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 identifies Ha-Joon Chang and passage 6 states he 'Shows how informal institutions shape economic development.'"
+      },
+      {
+        "claim_id": "3abd1c31e90bb6aab61f962c85c15b68c28c18ca581c5566c9bbf8b94c4299fc",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 identifies Dani Rodrik and passage 9 states '\"Economics Rules\" advocates for methodological pluralism.'"
+      },
+      {
+        "claim_id": "9ba1507e5b0a0e32e401a1afdf6650648c9cd33fee269b1080accd836af02bda",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 identifies Dani Rodrik and passage 10 states 'Emphasizes context-dependency and local institutional knowledge.'"
+      },
+      {
+        "claim_id": "366bf75d64cd6017dbd9da75bd319027b427e5b7a4aa5c1509d591738ccb77b0",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 identifies Dani Rodrik and passage 11 states 'Argues against one-size-fits-all economic models.'"
+      },
+      {
+        "claim_id": "b4d8978b57d8f3e9504629a5f6d399a652640f3625c2e2e39fbc1877f3845651",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 17 identifies Matthew Jackson and passage 18 states 'Pioneer in social network economics.'"
+      },
+      {
+        "claim_id": "eb5a6f47a16ffaf8e7e099a157a6ec3555971531f127d963becf2f9b8c6f464a",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 17 identifies Matthew Jackson and passage 19 states '\"The Human Network\" shows how informal connections drive economic outcomes.'"
+      },
+      {
+        "claim_id": "6aac5b5566e9b0cb6b5c519fff82bab73606aa1aacf14652bc723ab331e41098",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 21 identifies Brian Arthur and passage 22 states 'Complexity economics founder.'"
+      },
+      {
+        "claim_id": "ef422ccf7ad4b45e33acfcd7ab2f7aa47a04533e03633d9a9b63c8ccccb59f4d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 21 identifies Brian Arthur and passage 23 states 'Shows how technologies evolve through cultural and network processes.'"
+      },
+      {
+        "claim_id": "64f73a95ad82c3fbacfdec6f0889ef83652381484ef8c5f155207f5bf8ff9409",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 25 identifies César Hidalgo and passage 27 states 'Studies how knowledge flows through social networks.'"
+      },
+      {
+        "claim_id": "750411ca7cb9f8781f8d3e95956046a046e5ce4cc1a3ffb13f27d243306043bd",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 25 identifies César Hidalgo and passage 28 states 'Data-driven but socially informed.'"
+      },
+      {
+        "claim_id": "bb41b27cd9d6ca6a2a291bf84aab23d50cb753119dcf2235f33f337cdb07f8c8",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 30 identifies Sendhil Mullainathan and passage 31 states 'Studies how cultural context shapes economic behavior.'"
+      },
+      {
+        "claim_id": "78d08e61b7bd335388d17c635ae6847af87ebfc5f3688d12188042429cb7e857",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 30 identifies Sendhil Mullainathan and passage 32 states '\"Scarcity\" shows how social conditions affect cognitive capacity.'"
+      },
+      {
+        "claim_id": "8fa2ce60c4ec170dddb3b6b4f705f7d9a02891baa56fb550c94286f733385b59",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 34 identifies Raghuram Rajan and passage 35 states '\"The Third Pillar\" emphasizes community and social institutions.'"
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 12,
+        "description": "James Robinson (University of Chicago) and his work \"The Narrow Corridor\" exploring how societies balance state and social power, noted as more ethnographically informed than Acemoglu."
+      },
+      {
+        "passage_id": 38,
+        "description": "Abhijit Banerjee & Esther Duflo (MIT), development economists who spend time on the ground, Nobel winners who listen to people they study, and their book \"Good Economics for Hard Times\" incorporating cultural and social factors."
+      },
+      {
+        "passage_id": 43,
+        "description": "Post-Keynesian Economics: Steve Keen (incorporates network effects, critiques mathematical formalism) and Stephanie Kelton (Modern Monetary Theory, emphasizes political/social factors shaping policy)."
+      },
+      {
+        "passage_id": 52,
+        "description": "Ecological Economics: Herman Daly studies economy as embedded in social and ecological systems, emphasizes cultural values and social cooperation, \"Beyond Growth\" integrates social and environmental factors."
+      },
+      {
+        "passage_id": 57,
+        "description": "Economic Sociologists: Mark Granovetter (pioneer of embeddedness theory, informal networks drive outcomes), Viviana Zelizer (cultural meanings shape economic behavior), Richard Swedberg (entrepreneurship from social networks)."
+      },
+      {
+        "passage_id": 71,
+        "description": "Latin American Structuralism: Fernando Fajnzylber (ECLAC tradition) emphasizes cultural/institutional factors in development and network-based industrial development."
+      },
+      {
+        "passage_id": 75,
+        "description": "Chinese Institutional Economics: Justin Yifu Lin studies informal institutions guiding China's development, \"Demystifying the Chinese Economy\" shows cultural adaptation of markets."
+      },
+      {
+        "passage_id": 79,
+        "description": "African Development Economics: Benno Ndulu studies traditional institutions interacting with modern markets, emphasizes social networks and cultural practices."
+      },
+      {
+        "passage_id": 84,
+        "description": "Digital Economics: Shoshana Zuboff studies surveillance capitalism, technology shaping social behavior, combines economics with cultural analysis of digital transformation."
+      },
+      {
+        "passage_id": 88,
+        "description": "Platform Economics: Nick Srnicek studies platform capitalism, digital networks reshaping economics, Marxist-influenced but empirically grounded."
+      }
+    ],
+    "summary": "All 25 claims are supported by the cited passages. The claims accurately capture the source's description of a marginalized 'messy life' economist ecosystem, their methodological strengths for AI prediction, institutional challenges, and specific contributions of 8 named economists. The extraction omits 10 other significant economist groups and individuals detailed in the source, including James Robinson, Banerjee & Duflo, Post-Keynesian and Ecological schools, economic sociologists, regional traditions (Latin American, Chinese, African), and contemporary digital/platform economists.",
+    "status": "needs_revision"
+  },
+  "attempts": 2,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-b71d96ee31bbed00",
+  "usage": {
+    "input_tokens": 5818,
+    "output_tokens": 15413,
+    "total_tokens": 21231
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

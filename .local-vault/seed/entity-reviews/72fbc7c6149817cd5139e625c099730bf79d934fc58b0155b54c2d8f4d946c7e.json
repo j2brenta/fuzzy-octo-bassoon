@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "entity_extraction_hash": "05b8fce51fbf993ddad59f698ba58b7a4f743995d63c87690d353d1fcefa03f9",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:29.632092+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage 5 as speaker for the 18:30 PM session."
+      },
+      {
+        "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage 10 as speaker for the 19:00 PM session."
+      },
+      {
+        "entity_id": "c710b1d3fe17e97f39b912da0f5e949f84edf31527806d02f1c9efcbde69ba80",
+        "verdict": "supported",
+        "reason": "Mentioned in passages 4 and 9 as the technology powering the retail support agent and used for memory demonstrations."
+      }
+    ],
+    "omitted_entities": [],
+    "summary": "All three extracted entities are directly grounded in the source passages: two speaker names and the Redis technology referenced in both talk descriptions. No major named entities are missing; talk titles and technical terms are descriptive rather than proper-named entities.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-9131582864056d28",
+  "usage": {
+    "input_tokens": 1742,
+    "output_tokens": 1206,
+    "total_tokens": 2948
+  },
+  "usage_scope": "final_response_only"
+}

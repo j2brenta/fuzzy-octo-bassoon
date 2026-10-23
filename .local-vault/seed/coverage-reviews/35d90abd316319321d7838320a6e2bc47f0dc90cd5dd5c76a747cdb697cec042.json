@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "extraction_hash": "1e8132cbff2e1d9e829a1a82e358b0c6f402457722c3b88a04e3db0318d61aa5",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:53:21.423998+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "5fce0e6aa41360fe4c6098b49d83e45ec3339764fe5d08dc1dc07011bc757361",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 states Jack Lindsey's paper concludes models show a limited, functional form of introspective awareness that is highly limited and context-dependent."
+      },
+      {
+        "claim_id": "c73fa11d64de8f0b58ba9f1fead777141fa5a7ef79aa4bab60f655e6d9dae968",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 describes Chris Olah and Josh Batson's circuit-tracing research finding the 'can't answer' default pathway and notes their publications are the main source for mechanistic explanations of hallucination."
+      },
+      {
+        "claim_id": "a49b9670dc7f914099283c6cd312235da79f95198d5ed280c763e691ed86439f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 directly states Sam Marks has worked on the 'geometry of truth' line of work and on auditing models for hidden objectives."
+      },
+      {
+        "claim_id": "4c728c79054a60aa82059d3b823b3292cca77e4a1d782d718b1c7393cd736dea",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 8 identifies Sebastian Farquhar and Yarin Gal as lead authors of the semantic entropy work published in Nature 2024, calling it the best-known method for detecting confabulations by sampling multiple answers."
+      },
+      {
+        "claim_id": "b9611253bffaef49f7568b95cb0ece3003d38ffea3e8c3aa2028578fba11e4f5",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 9 says Adam Tauman Kalai's 2025 paper argues training and evaluation reward guessing over admitting uncertainty, essential for understanding the incentive problem."
+      },
+      {
+        "claim_id": "9565750aaef8f5aaadc038229c8589d7f454b6cc1b2d6910fa88df25c8cad399",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 10 describes Owain Evans' influential work on models' self-knowledge, ability to describe learned behaviors, co-authoring early work on expressing uncertainty, and leading Truthful AI."
+      },
+      {
+        "claim_id": "ec7e32c2ed1b9fe14974f9aed95d89d8b3da53bbab46315121657f3a1e78fb59",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 12 states Stephen Fleming applies human metacognition research to AI and clarifies the calibration-versus-discrimination distinction."
+      },
+      {
+        "claim_id": "5df319e821d602cf662cfdcc09502bc8a7a96c381a4f810d483e7053d9d31712",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 14 notes Arvind Narayanan and Sayash Kapoor's agent reliability paper borrowed methods from nuclear and aviation safety, and their newsletter is skeptical and data-driven."
+      },
+      {
+        "claim_id": "96817017fa532a80a53bce894e6fc1df1ce93f8e77aed60166e60a2511ea5ef1",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 15 says METR measures how long agents can complete tasks autonomously and their reports are a key reference for reliability-over-horizon."
+      },
+      {
+        "claim_id": "c8d73f74530492f6ba28ce35915eb8c3571601a3486b52078c70249c7cfb3ad0",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 16 states Andrej Karpathy popularized the 'march of nines' framing and writes about moving from demos to products."
+      },
+      {
+        "claim_id": "592f8363f1ee79097aea9e6158e33721c66215cef679df040d3067c1a5b917e5",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 17 says Azalia Mirhoseini co-led the LLM-as-a-Verifier work on scaling verification as its own axis."
+      },
+      {
+        "claim_id": "276816d80654e61318bffaea9dc472e0f6272138d3debef108e510b215072638",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 19 describes Shreya Shankar's research on LLM pipeline evaluation, including the 'Who Validates the Validators?' paper aligning automated judges with human judgment."
+      },
+      {
+        "claim_id": "e5a753d28389a9dfecf454169ecbdc1c9dac222a1dcaa9a355b4fe796e201673",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 20 characterizes Hamel Husain as a practical voice on building evals for real products, emphasizing error analysis, reading traces, and designing checks that catch real failures."
+      },
+      {
+        "claim_id": "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 21 directly states Eugene Yan writes accessible, practical pieces on LLM evaluation and production patterns."
+      },
+      {
+        "claim_id": "643e714c6b66e899a80027ccfd5a38e7c64756ee4ba137b741cebe3577aa8c13",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passages 1 and 2 show Kirill R presenting a map of people worth following grouped by angle with a caveat that affiliations change often."
+      },
+      {
+        "claim_id": "e37978bec86b50d35ca306b6ccc4ea1e6cb754e4af2fedf9c3c6a37cda71fe17",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 23 recommends a minimal following set covering the full chain: Anthropic interpretability for mechanisms, Princeton newsletter for reliability science, METR for agent capability trends, and Husain and Shankar for engineering practice."
+      },
+      {
+        "claim_id": "0619638d101523a7f9a848cf9f64c7a4f26126ae10500c145f30b113368a6baf",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 23 advises searching arXiv for terms like 'metacognition,' 'calibration,' 'selective prediction,' and 'process verifier' to surface new work from recent months."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 5,
+        "description": "The circuit-tracing research publications are hosted at transformer-circuits.pub, the main source for mechanistic explanations of hallucination."
+      },
+      {
+        "passage_id": 8,
+        "description": "Yarin Gal leads the OATML group at Oxford."
+      },
+      {
+        "passage_id": 12,
+        "description": "Stephen Fleming is the author of the book 'Know Thyself.'"
+      },
+      {
+        "passage_id": 15,
+        "description": "METR was founded by Beth Barnes."
+      },
+      {
+        "passage_id": 20,
+        "description": "Hamel Husain and Shreya Shankar teach together and their writing pairs well."
+      },
+      {
+        "passage_id": 9,
+        "description": "Adam Tauman Kalai is affiliated with OpenAI."
+      }
+    ],
+    "summary": "All 17 claims are supported by the cited passages. The claims accurately capture the key researchers, their contributions, and the recommended following strategy. No duplicates or atomicity issues found. Minor details such as specific affiliations, publication venues, and collaborative relationships are not claimed but are present in the source.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a7b0329f95fd8aec",
+  "usage": {
+    "input_tokens": 3850,
+    "output_tokens": 7965,
+    "total_tokens": 11815
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

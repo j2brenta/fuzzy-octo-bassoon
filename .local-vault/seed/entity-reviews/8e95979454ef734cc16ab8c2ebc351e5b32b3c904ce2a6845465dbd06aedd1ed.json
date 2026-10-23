@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "entity_extraction_hash": "46f44ccd0f7d57a9f9813244eba09555b664283f5977ddd3f3a563acaae9c841",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:54.906462+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "6baa44610eb9aabb07c0876b94fcec15df307b1bc071c2bd3d34b271e88a9619",
+        "verdict": "supported",
+        "reason": "Entity correctly identifies 'demo workshop' as a concept mentioned in the passage."
+      },
+      {
+        "entity_id": "1aa57fe748ceaaa9536a20d00330f634f21b6b490e710d148d18cbce0d4bd71f",
+        "verdict": "supported",
+        "reason": "Entity correctly identifies 'UTC' as a concept mentioned in the passage."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "Forwarded synthetic announcement",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          1
+        ]
+      }
+    ],
+    "summary": "Both extracted entities are faithful to the source text. The demo workshop and UTC are correctly typed as concepts. The phrase 'Forwarded synthetic announcement' is a notable omitted concept.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-b04729f13bef2504",
+  "usage": {
+    "input_tokens": 974,
+    "output_tokens": 1434,
+    "total_tokens": 2408
+  },
+  "usage_scope": "final_response_only"
+}

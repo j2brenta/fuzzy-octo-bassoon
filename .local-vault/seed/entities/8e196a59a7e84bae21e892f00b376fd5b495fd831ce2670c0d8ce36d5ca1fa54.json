@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:40.269844+00:00",
+  "entities": [],
+  "raw_path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8a3955971079d799",
+  "usage": {
+    "input_tokens": 487,
+    "output_tokens": 600,
+    "total_tokens": 1087
+  },
+  "usage_scope": "final_response_only"
+}

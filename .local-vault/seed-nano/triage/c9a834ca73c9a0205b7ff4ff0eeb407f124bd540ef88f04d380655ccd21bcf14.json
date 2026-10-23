@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "created_at": "2026-10-20T10:49:58.176414+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Contains detailed references to recent research, key contributors, and practical guidance, representing reusable technical material."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "request_id": "chatcmpl-a194c6ef-6d13-4e7f-924b-430b03c70149",
+  "usage": {
+    "input_tokens": 1212,
+    "output_tokens": 338,
+    "total_tokens": 1550
+  }
+}

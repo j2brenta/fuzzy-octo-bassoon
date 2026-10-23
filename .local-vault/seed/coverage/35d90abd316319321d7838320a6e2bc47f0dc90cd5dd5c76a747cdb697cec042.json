@@ -1,0 +1,535 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+  "source_content_hash": "6ec60e8432395fc7acce81a172623920117a31ad83ac64b0891034ab7647fe22",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "coverage_prompt_version": "coverage-v2",
+  "claim_limit": 50,
+  "parent_extraction_hash": "082e21f10096685b365968e675ac4114af3c443e85603252b05f3c28a315f44c",
+  "parent_review_hash": "047d7e3115930678ccd882ae5ab7009b2e02b9649754200cf65045bc008f06ae",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:18:59.022575+00:00",
+  "raw_path": "raw/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+  "document_path": "documents/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json",
+  "claims": [
+    {
+      "claim_id": "2c2e7b502a9729b9bcd7fdac054f7ada34e212e93dcaeb0b07a75b692389f5e2",
+      "statement": "Jack Lindsey leads Anthropic's \"model psychiatry\" team.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "4561aaa8c343f7563fe605cadbec24dfb48ab93e0d11197a56179dc9f755c0ec",
+      "statement": "Jack Lindsey's paper on emergent introspective awareness tests whether models can genuinely observe their own internal states by injecting concepts and checking whether they notice.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "62844514747345a947231ac0c55ef945755cf08f807bbc329f307d5bcc9c20ae",
+      "statement": "His conclusion is that models show at least a limited, functional form of introspective awareness, but he stresses it is highly limited and context‑dependent.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 214,
+        "end_char": 778
+      }
+    },
+    {
+      "claim_id": "849c3a459dd111cbc68f7a59e9e09e88fee6b21f94b07294ec1e06121d00ef6c",
+      "statement": "Chris Olah and Josh Batson work on circuit‑tracing research that found the \"can't answer\" default pathway.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 779,
+        "end_char": 1046
+      }
+    },
+    {
+      "claim_id": "e70904c34aef40ea3dc934a3e8b057f9119c28db2e7e71df879858cd73d7a1d8",
+      "statement": "Their publications at transformer‑circuits.pub are the main source for mechanistic explanations of hallucination.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 779,
+        "end_char": 1046
+      }
+    },
+    {
+      "claim_id": "b03b99688b0931da5fe7210bd21ee690688f56a6a76465fad113afded92c0979",
+      "statement": "Sam Marks has worked on how models represent truth internally (the \"geometry of truth\" line of work).",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1047,
+        "end_char": 1195
+      }
+    },
+    {
+      "claim_id": "b2ca0ad0bf4b8dd1e4e0c34054220fb509a89a10800bfa53ebe364f260861ddc",
+      "statement": "Sam Marks has worked on auditing models for hidden objectives.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1047,
+        "end_char": 1195
+      }
+    },
+    {
+      "claim_id": "cf83dfd8d25f48b55b39b0e977743cf4efd0ef6801d1f3d444a95e531e08605e",
+      "statement": "Sebastian Farquhar and Yarin Gal are lead authors of the semantic entropy work published in Nature in 2024.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
+      "statement": "The semantic entropy work is the best‑known method for detecting confabulations by sampling multiple answers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "f1c69c317cf62661fdfa5cb323372b68ce199ad3b243bc750103dd510f3cf212",
+      "statement": "Yarin Gal leads the OATML group at Oxford.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1238,
+        "end_char": 1465
+      }
+    },
+    {
+      "claim_id": "da4550234a74ae4a41cef8d04d36714590991663d412c121cbf6efefea35cf71",
+      "statement": "Adam Tauman Kalai is lead author of the 2025 paper \"Why Language Models Hallucinate\".",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1466,
+        "end_char": 1704
+      }
+    },
+    {
+      "claim_id": "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "statement": "The paper argues that training and evaluation reward guessing over admitting uncertainty.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1466,
+        "end_char": 1704
+      }
+    },
+    {
+      "claim_id": "673430a11e281f0bee66ba37d645fe09ee8675d7de0c101732c645458e349b1d",
+      "statement": "Owain Evans has done influential work on whether models know what they know and can describe their own learned behaviors.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "a9ca94d4b97d53eb34e58d0b4cea0c76100ea09014e25f37a426c85105e2141c",
+      "statement": "This includes the \"Looking Inward\" and \"Tell me about yourself\" papers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "b15049d3d97b634886f7d520f3918e38b20908be52533d5ecb8cb13b0175f8bc",
+      "statement": "He co‑authored early work on teaching models to express uncertainty in words.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "e444a12b80265e6a1d61195e23a6f2e3d974ee13765dadc40e1f4dca6ad8956f",
+      "statement": "He leads the research nonprofit Truthful AI.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 1705,
+        "end_char": 2020
+      }
+    },
+    {
+      "claim_id": "99dba5e23c9b7b7f87c3de2e8625b795420edfa447a118eab50390a061adf3fa",
+      "statement": "Stephen Fleming is a leading neuroscientist of human metacognition.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "c1ef17eee7e166ca302244969b91f69adc0944757a3fb3b664b1cf15521b14fe",
+      "statement": "Stephen Fleming is the author of the book \"Know Thyself\".",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "200e4b0fbfe3914edc593e168d01ee673d391af65d2a3316372a91af584e1f7e",
+      "statement": "Stephen Fleming has increasingly applied metacognition research to AI.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2052,
+        "end_char": 2349
+      }
+    },
+    {
+      "claim_id": "503640688c7d6a92b045f83b94f8c4411c29e25a809491961fb2276d08681ba5",
+      "statement": "Arvind Narayanan and Sayash Kapoor wrote the agent reliability paper that borrowed methods from nuclear and aviation safety.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2393,
+        "end_char": 2624
+      }
+    },
+    {
+      "claim_id": "7935ac30df720d7b32f229b911c8f8364dae047e08081148ba8859df74096fa1",
+      "statement": "Their newsletter is often skeptical and data‑driven, a good counterweight to hype.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2393,
+        "end_char": 2624
+      }
+    },
+    {
+      "claim_id": "e12d3872e1553bdc6d8cd01eeac1c0152f605720162a520f07c5cabf9f400d4a",
+      "statement": "METR (founded by Beth Barnes) measures how long a task agents can complete autonomously.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2625,
+        "end_char": 2792
+      }
+    },
+    {
+      "claim_id": "f3e8540736f15aea56085afcb8dbf2aa5e219904ac3da3e024a6a20113ee34e3",
+      "statement": "METR's reports are a key reference for the reliability‑over‑horizon question.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2625,
+        "end_char": 2792
+      }
+    },
+    {
+      "claim_id": "021b50b4a573790fb8a7f368fefef167554c37bccba5ae43ccc0e737d2d46304",
+      "statement": "Andrej Karpathy popularized the \"march of nines\" framing.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2793,
+        "end_char": 2922
+      }
+    },
+    {
+      "claim_id": "e6b8c88f6e9bc55368347cba34f969712e77a85ac183c2e76ecda2f817eeefdd",
+      "statement": "Andrej Karpathy writes clearly about what it takes to move from demos to products.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2793,
+        "end_char": 2922
+      }
+    },
+    {
+      "claim_id": "f04a51cb93ce733c67913bda7a396e8cf8427e49db3655e9db398d611bf1a501",
+      "statement": "Azalia Mirhoseini (Stanford) co-led the LLM-as-a-Verifier work on scaling verification as its own axis.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 2923,
+        "end_char": 3028
+      }
+    },
+    {
+      "claim_id": "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502",
+      "statement": "Shreya Shankar (UC Berkeley) researches how to evaluate LLM pipelines, including the paper \"Who Validates the Validators?\" on aligning automated judges with human judgment.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3073,
+        "end_char": 3306
+      }
+    },
+    {
+      "claim_id": "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f",
+      "statement": "Hamel Husain is a practical voice on building evals for real products, focusing on error analysis, reading traces, and designing checks that catch real failures.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3307,
+        "end_char": 3546
+      }
+    },
+    {
+      "claim_id": "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
+      "statement": "Hamel Husain and Shreya Shankar teach together.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3307,
+        "end_char": 3546
+      }
+    },
+    {
+      "claim_id": "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c",
+      "statement": "Eugene Yan writes accessible, practical pieces on LLM evaluation and production patterns.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3547,
+        "end_char": 3638
+      }
+    },
+    {
+      "claim_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "statement": "The author recommends a minimal follow set: Anthropic's interpretability publications for mechanisms, the Princeton newsletter for reliability science, METR for agent capability trends, and Husain and Shankar for engineering practice.",
+      "kind": "opinion",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3668,
+        "end_char": 4288
+      }
+    },
+    {
+      "claim_id": "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "statement": "The author states that searching arXiv for terms like \"metacognition,\" \"calibration,\" \"selective prediction,\" and \"process verifier\" will surface new work, much of which has appeared in just the past few months.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 3668,
+        "end_char": 4288
+      }
+    },
+    {
+      "claim_id": "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
+      "statement": "The author notes that affiliations change often in this field and recommends checking researchers' latest pages.",
+      "kind": "principle",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
+        "section_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042:section:1",
+        "start_char": 36,
+        "end_char": 177
+      }
+    }
+  ],
+  "added_claim_ids": [
+    "f04a51cb93ce733c67913bda7a396e8cf8427e49db3655e9db398d611bf1a501",
+    "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502",
+    "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f",
+    "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
+    "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c",
+    "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+    "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+    "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b"
+  ],
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-aa8dccef3c79d367",
+  "usage": {
+    "input_tokens": 9273,
+    "output_tokens": 3526,
+    "total_tokens": 12799
+  },
+  "usage_scope": "final_response_only"
+}

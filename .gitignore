@@ -6,13 +6,18 @@ WhatsApp Image *.jpeg
 
 # Local Python environment and generated files
 .venv/
-__pycache__/
 *.egg-info/
-.pytest_cache/
+__pycache__/
 *.pyc
+.pytest_cache/
 
-# Local practice vault; captured content stays off Git
-.local-vault/
+# Local vaults: captured content stays off Git. Only the seed-sample runs are shared (see .local-vault/README.md).
+.local-vault/*
+!.local-vault/README.md
+!.local-vault/seed/
+!.local-vault/seed-nano/
+!.local-vault/seed*-run*.log
+!.local-vault/seed*-eval.md
 
 # Local credentials
 .env

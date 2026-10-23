@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "entity_extraction_hash": "73b82cd54a646d51ec50869699282582340ea1e32d3abd3cdcf6112d08906721",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:49:55.522843+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "46cf925e3d21bc00c239eaabe77eef59adf5ad36c8a4cc8e888b61afda2c25d6",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage 1 as the message author."
+      },
+      {
+        "entity_id": "8a0b29f27e9b7bdd701040e492f54b14fed642a298de75ebbf17be2f0307095e",
+        "verdict": "supported",
+        "reason": "Named in passage 4 as Ha-Joon Chang (Cambridge)."
+      },
+      {
+        "entity_id": "d7dd601e89672292e4a53832c5902c6a988d656ce372c73d004a3d1810ee7603",
+        "verdict": "supported",
+        "reason": "Named in passage 8 as Dani Rodrik (Harvard Kennedy School)."
+      },
+      {
+        "entity_id": "563805bacf8d899746b81f7f9960f1e07b22269cc7040d344ad8ba752efa0334",
+        "verdict": "supported",
+        "reason": "Named in passage 12 as James Robinson (University of Chicago)."
+      },
+      {
+        "entity_id": "ef4f6372ce375bb902059976a56be7f95c94c1c0eeeca8ade9536b9642fdf7d3",
+        "verdict": "supported",
+        "reason": "Referenced in passages 13 and 15 as Acemoglu (last name only)."
+      },
+      {
+        "entity_id": "f6a26d7db92df32d42347254c7b9a16f010ec354d22f090eb221392e95338cc2",
+        "verdict": "supported",
+        "reason": "Named in passage 17 as Matthew Jackson (Stanford)."
+      },
+      {
+        "entity_id": "eb69e56c6c9055265f9021d3e39669a9ef1d4e8eb10aa89039705ce245102df0",
+        "verdict": "supported",
+        "reason": "Named in passage 21 as Brian Arthur (Santa Fe Institute)."
+      },
+      {
+        "entity_id": "aff21097d3a3481f6559bedcc25008ceaa71948c9cab915a5b778930e6224d16",
+        "verdict": "supported",
+        "reason": "Named in passage 25 as César Hidalgo (University of Toulouse)."
+      },
+      {
+        "entity_id": "9f4629ec953744509bf73f4648a55290ff8611994bc86962873916f9323e2b75",
+        "verdict": "supported",
+        "reason": "Named in passage 30 as Sendhil Mullainathan (University of Chicago)."
+      },
+      {
+        "entity_id": "4398ddb0155df091ea0ff50ad3574f3c5aab8d0d1933d5b39307643a6e6cc3b5",
+        "verdict": "supported",
+        "reason": "Named in passage 34 as Raghuram Rajan (University of Chicago)."
+      },
+      {
+        "entity_id": "e36635b1f980639e7c35b9b48e854b1c315126de8c82ddd193d9aa8dfe311433",
+        "verdict": "supported",
+        "reason": "Named in passage 38 as Abhijit Banerjee (MIT)."
+      },
+      {
+        "entity_id": "5013b7de7fd67afcb485da4cbbc2d0ac8269365c2ecd3d075109eadea8461171",
+        "verdict": "supported",
+        "reason": "Named in passage 38 as Esther Duflo (MIT)."
+      },
+      {
+        "entity_id": "8d9b7caee61d11178a6489821c032039f43ea135ec45a09ff8fc78ac51db3d0a",
+        "verdict": "supported",
+        "reason": "Named in passage 44 as Steve Keen (Kingston University)."
+      },
+      {
+        "entity_id": "4c1debef07eee6590a52df49e470efcb36dab6a7ec7f662c8aad51ebbf6eeea7",
+        "verdict": "supported",
+        "reason": "Named in passage 48 as Stephanie Kelton (Stony Brook)."
+      },
+      {
+        "entity_id": "7607954e5054c20a79548820d70537b9dab85be291fcd1012d970a973c6a5b55",
+        "verdict": "supported",
+        "reason": "Named in passage 53 as Herman Daly (University of Maryland)."
+      },
+      {
+        "entity_id": "e05542a94ccfcb12ef1551123d0be975f7479a52ce895863f687329faf024743",
+        "verdict": "supported",
+        "reason": "Named in passage 58 as Mark Granovetter (Stanford Sociology)."
+      },
+      {
+        "entity_id": "14fdbb7de66b18aa663713a4c5966bcb8d9b8bd18815732b58f0aaaa23595370",
+        "verdict": "supported",
+        "reason": "Named in passage 62 as Viviana Zelizer (Princeton Sociology)."
+      },
+      {
+        "entity_id": "2454d4e12996a4e39db0846a5509a1733a12dee6cd97e556409f23c0b8cf138a",
+        "verdict": "supported",
+        "reason": "Named in passage 66 as Richard Swedberg (Cornell Sociology)."
+      },
+      {
+        "entity_id": "453d1164604847024e72594696e73d0b136cc17f9458d1d8d12f7e5b29e458c3",
+        "verdict": "supported",
+        "reason": "Named in passage 72 as Fernando Fajnzylber (ECLAC tradition)."
+      },
+      {
+        "entity_id": "65e20be71ba5693fda28d12ae291b8baf26ed7c53865fe8759b6e6994730714a",
+        "verdict": "supported",
+        "reason": "Named in passage 76 as Justin Yifu Lin (Peking University)."
+      },
+      {
+        "entity_id": "9a508a6d1d6cd13d3e26429af6412c40718d4bcc6456bc730e615ef06609af4f",
+        "verdict": "supported",
+        "reason": "Named in passage 80 as Benno Ndulu (University of Cape Town)."
+      },
+      {
+        "entity_id": "31231927ece797043626f11bfc84e86d07675ea061f5724dabd2afd96696e948",
+        "verdict": "supported",
+        "reason": "Named in passage 85 as Shoshana Zuboff (Harvard Business School emeritus)."
+      },
+      {
+        "entity_id": "6c1da7e4f049f2a629d2d2b803fee9e4093d3fe776e8478eef85c7b4e5b4ec6e",
+        "verdict": "supported",
+        "reason": "Named in passage 89 as Nick Srnicek (King’s College London)."
+      },
+      {
+        "entity_id": "f94ce0a334a97bda4b9a4cfd5bdc877945e005d5cd386fa8b57acf3a2686b404",
+        "verdict": "supported",
+        "reason": "Named in passage 93 as Raj Chetty (Harvard)."
+      },
+      {
+        "entity_id": "ba4d43de815cc94173b34e8b4d626e4380502f34a32c15a4dbce272708e054d1",
+        "verdict": "supported",
+        "reason": "Heading in passage 3: Institutional & Cultural Economics."
+      },
+      {
+        "entity_id": "5d241bf652f57eb37f624ec53581b0d15264666a80925dc30e9d05fd1f4fe87d",
+        "verdict": "supported",
+        "reason": "Heading in passage 16: Network & Complexity Economics."
+      },
+      {
+        "entity_id": "0535dcef0f9a1923da76bc3ffc6b1cda30a5e4b586c22b58efc57be072baa4d2",
+        "verdict": "supported",
+        "reason": "Heading in passage 29: Behavioral & Cultural Economics."
+      },
+      {
+        "entity_id": "52132d673cb8ddf6bc61f9728cb3ac480e6a7f3bab39497df4512d2376935738",
+        "verdict": "supported",
+        "reason": "Heading in passage 42: Heterodox Schools."
+      },
+      {
+        "entity_id": "6a559ae215568ed21da0816013e4a2f6b5746d3bf52ddd3302934c32e9347c76",
+        "verdict": "supported",
+        "reason": "Heading in passage 57: Economic Sociologists (Economics-Adjacent)."
+      },
+      {
+        "entity_id": "b99f4a0f91b3e059a741ae8185409a843c934bb3959a8a5e92b481785d312ee2",
+        "verdict": "supported",
+        "reason": "Heading in passage 70: Regional/Alternative Traditions."
+      },
+      {
+        "entity_id": "904bdaf3dcaaae48471b1ab0c701f6e0ad97b6e787720274ee94d0b9a8b58d2a",
+        "verdict": "supported",
+        "reason": "Heading in passage 83: Contemporary Innovators."
+      },
+      {
+        "entity_id": "b18abce0ba142e5623e16a27b7dd9f5101009b7766112aa8260d045de6266235",
+        "verdict": "supported",
+        "reason": "Bullet point in passage 99: Network Effects."
+      },
+      {
+        "entity_id": "30ea39575f09243aa3c1bc3b09eb869bbbd95656e795c0b23f3aa3a57537047b",
+        "verdict": "supported",
+        "reason": "Bullet point in passage 100: Cultural Adaptation."
+      },
+      {
+        "entity_id": "31680d8c122fc641c809463936a449f98a53cd0aaf93de65230d26d4385ca1be",
+        "verdict": "supported",
+        "reason": "Bullet point in passage 101: Emergent Phenomena."
+      },
+      {
+        "entity_id": "5be94a38746f887970a3705f531ecee1d91e7879e104c2191c6222be9439837a",
+        "verdict": "supported",
+        "reason": "Bullet point in passage 102: Ethnographic Insight."
+      },
+      {
+        "entity_id": "4645a79b5c078af129419bae27f1fd0d022fb9de207f2e0a4f39aa7eaede6fb2",
+        "verdict": "supported",
+        "reason": "Bullet point in passage 103: Methodological Pluralism."
+      },
+      {
+        "entity_id": "e8236791e1a1dcb35f97775319c561148ae0da824c12aa9a17df0bc98c7e4abf",
+        "verdict": "supported",
+        "reason": "Heading in passage 104: The Institutional Challenge."
+      },
+      {
+        "entity_id": "aa200a13796fc03ebf5c58c468dd2cf9949695c1781b47a78df102bdfff67342",
+        "verdict": "supported",
+        "reason": "Mentioned in passage 110 as AI."
+      },
+      {
+        "entity_id": "4a754c4dac1d3452b02fd6f26fd75cfb37761d8f945fa6778e829583685bdf93",
+        "verdict": "supported",
+        "reason": "Mentioned in passage 110 as RAG."
+      },
+      {
+        "entity_id": "16a3e0648523dd7ed66a7f1958dba98261849d2791d8a1331e692c245fd35f42",
+        "verdict": "supported",
+        "reason": "Mentioned in passage 110 as agentic behavior."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "Post-Keynesian Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          43
+        ]
+      },
+      {
+        "name": "Ecological Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          52
+        ]
+      },
+      {
+        "name": "Latin American Structuralism",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          71
+        ]
+      },
+      {
+        "name": "Chinese Institutional Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          75
+        ]
+      },
+      {
+        "name": "African Development Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          79
+        ]
+      },
+      {
+        "name": "Digital Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          84
+        ]
+      },
+      {
+        "name": "Platform Economics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          88
+        ]
+      },
+      {
+        "name": "Inequality & Social Dynamics",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          92
+        ]
+      }
+    ],
+    "summary": "All 40 supplied entities are directly supported by the source passages with correct names and types. No unsafe merges or missed merges detected. Eight major sub‑school headings (e.g., Post‑Keynesian Economics, Ecological Economics) appear in the text but were not included in the entity list; they are noted as omitted entities.",
+    "status": "needs_revision"
+  },
+  "attempts": 2,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-99b2a729bdbd39ad",
+  "usage": {
+    "input_tokens": 13784,
+    "output_tokens": 11429,
+    "total_tokens": 25213
+  },
+  "usage_scope": "final_response_only"
+}

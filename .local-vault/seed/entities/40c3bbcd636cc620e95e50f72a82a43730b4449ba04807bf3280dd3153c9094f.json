@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:42:06.689300+00:00",
+  "entities": [
+    {
+      "entity_id": "4ecd69b8faeb05955b99f5e32ec51f976895863f7937e0c142ba812210649406",
+      "name": "Anthropic",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 1,
+          "start_char": 4,
+          "end_char": 13,
+          "surface_name": "Anthropic"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 2,
+          "start_char": 222,
+          "end_char": 231,
+          "surface_name": "Anthropic"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d9df6976fe39d2547e8a8726cd0688be7b8f7e349812c2a442a037fb50067963",
+      "name": "ELI5",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 1,
+          "start_char": 52,
+          "end_char": 56,
+          "surface_name": "ELI5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 1,
+          "start_char": 67,
+          "end_char": 72,
+          "surface_name": "/eli5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 2,
+          "start_char": 254,
+          "end_char": 258,
+          "surface_name": "ELI5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 5,
+          "start_char": 591,
+          "end_char": 596,
+          "surface_name": "/eli5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 5,
+          "start_char": 623,
+          "end_char": 628,
+          "surface_name": "/eli5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 5,
+          "start_char": 660,
+          "end_char": 665,
+          "surface_name": "/eli5"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 6,
+          "start_char": 895,
+          "end_char": 899,
+          "surface_name": "ELI5"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "/eli5"
+      ]
+    },
+    {
+      "entity_id": "7e27daa0b9cdcc593423f8596d82d3cf49374d7ccdccfca51271ffaad68b0680",
+      "name": "Thariq Shihipar",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 2,
+          "start_char": 183,
+          "end_char": 198,
+          "surface_name": "Thariq Shihipar"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 5,
+          "start_char": 546,
+          "end_char": 552,
+          "surface_name": "Thariq"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "Thariq"
+      ]
+    },
+    {
+      "entity_id": "376aa19fa612d1f04c0118807cc899470bd26c95343438772982a62cd29eec58",
+      "name": "Claude Code",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 2,
+          "start_char": 208,
+          "end_char": 219,
+          "surface_name": "Claude Code"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "2223b2ab52282dde98f5cd913f05cc1d15767683e1b7cd5f43cd703ead2a8873",
+      "name": "community marketplace",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 2,
+          "start_char": 362,
+          "end_char": 383,
+          "surface_name": "community marketplace"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "0139ddc5f0b3f2e671716d38d9399f80ee2622868c0e010268b1340617c28ae2",
+      "name": "anthropics/claude-plugins-community",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 3,
+          "start_char": 416,
+          "end_char": 451,
+          "surface_name": "anthropics/claude-plugins-community"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e07ddbcdbfa561884238d0bb2b9f4e455cf40885a2a71acbe67837670c7ab6cc",
+      "name": "eli5@claude-community",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 4,
+          "start_char": 474,
+          "end_char": 495,
+          "surface_name": "eli5@claude-community"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "9263cfeabd8a4a048b1150b5fefcc8fb907681a892604c8be45f4ffd183e3360",
+      "name": "rvnikita_blog",
+      "kind": "organization",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 8,
+          "start_char": 1199,
+          "end_char": 1212,
+          "surface_name": "rvnikita_blog"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 9,
+          "start_char": 1230,
+          "end_char": 1243,
+          "surface_name": "rvnikita_blog"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 9,
+          "start_char": 1252,
+          "end_char": 1265,
+          "surface_name": "rvnikita_blog"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 9,
+          "start_char": 1270,
+          "end_char": 1283,
+          "surface_name": "rvnikita_blog"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 9,
+          "start_char": 1301,
+          "end_char": 1314,
+          "surface_name": "rvnikita_blog"
+        },
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 11,
+          "start_char": 1326,
+          "end_char": 1339,
+          "surface_name": "Мысли Рвачева"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "Мысли Рвачева"
+      ]
+    },
+    {
+      "entity_id": "0ee524b551a8923a7d2af01aae15e32b0afd87c87c0f848be00c96ca407140f9",
+      "name": "trq212",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 7,
+          "start_char": 1151,
+          "end_char": 1157,
+          "surface_name": "trq212"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "82db61e285892fdeee6e051bf19e196db6db06b8beceac538d8536a65f755a88",
+      "name": "HTML-артефакт",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+          "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+          "passage_id": 1,
+          "start_char": 116,
+          "end_char": 129,
+          "surface_name": "HTML-артефакт"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-98b867eca78fdb7c",
+  "usage": {
+    "input_tokens": 1012,
+    "output_tokens": 2928,
+    "total_tokens": 3940
+  },
+  "usage_scope": "final_response_only"
+}

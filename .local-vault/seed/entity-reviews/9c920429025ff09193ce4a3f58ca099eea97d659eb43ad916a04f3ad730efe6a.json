@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "source_content_hash": "c15ce644b1f84cf2495a4f34b3272d2e7a58955ce4dbdff9d27b8f0afeb480e4",
+  "entity_extraction_hash": "424c88a005d44dc581c84344d5b13fdd5bfc38b71bb55423a4e1f5f088f071d8",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T11:27:30.466163+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "14364ecf132824a84766f933f3783f3876dade817991dd2fee220310ebcd524b",
+        "verdict": "supported",
+        "reason": "Explicitly named as author in passage 2 and described in passage 3."
+      },
+      {
+        "entity_id": "ff2a32cd0c7de9aa3a9dd486d9d0c8860614a5f9c9fd6f26a96a7d753034920c",
+        "verdict": "supported",
+        "reason": "Repeatedly referenced across passages 5, 6, 8, 9, 10 as the central concept of the article."
+      },
+      {
+        "entity_id": "bd5e1868aab0b3aa1bb56ab949ce854549edb9a8c9d943c814ca73d962d715bb",
+        "verdict": "supported",
+        "reason": "Directly mentioned in passages 5 and 8 as a domain where AI excels."
+      },
+      {
+        "entity_id": "c3b130914a1458c6530f4b9eeb12f82b99361a1520c0fd4cd71b8d8aa178fe70",
+        "verdict": "supported",
+        "reason": "Cited in passages 9 and 23 as the domain where AI struggles."
+      },
+      {
+        "entity_id": "58e917ee66f3a97a218d280fed32f1be9957c6a9c5d789e3ac64847dfe88017b",
+        "verdict": "supported",
+        "reason": "Named in passages 5, 9, and 10 as the core problem area."
+      },
+      {
+        "entity_id": "541c8f7e152f7b0d6c48d63ea2901110efb08b8e98562867a9c3e9ea95a26d31",
+        "verdict": "supported",
+        "reason": "Multiple mentions across passages 3, 12, 13, 14, 16; alias 'novels' correctly captures plural usage."
+      },
+      {
+        "entity_id": "ace3984c071d0501293deb24dd5a70e88ba130e6eb32f1d85b050de0f4df799b",
+        "verdict": "supported",
+        "reason": "Appears in passage 3 as 'LLM' in the author's bio, clearly a concept."
+      },
+      {
+        "entity_id": "91ea3784dd9d1711cd27f337e88b273a1f6498f5ae8bc0dccb5a3a775bfff7d1",
+        "verdict": "supported",
+        "reason": "Listed in passage 3 as 'RAG', a known AI technique."
+      },
+      {
+        "entity_id": "e4bc5a2fb0a1ca0581efcbd459bf433b25355142b470b9831470433335f73c86",
+        "verdict": "supported",
+        "reason": "Passage 6 uses 'state machine', passage 13 uses 'state machines'; alias resolves the plural."
+      },
+      {
+        "entity_id": "04d8d725e8e40c5cbaf14bfa0d4d97ec48d75eeb5514c9464b5af8cc9b44befa",
+        "verdict": "supported",
+        "reason": "Passage 8 twice and passage 9 once use the exact phrase 'standard answers'."
+      },
+      {
+        "entity_id": "57c87673242d729083cf493100bae9e735483f15e13e123e06f5965383f21c63",
+        "verdict": "supported",
+        "reason": "Passage 9 explicitly labels the 'gray zone' of subjective judgment."
+      },
+      {
+        "entity_id": "6bcafcfd7f93c9e861fd3e2d32358567ddf5f615a7bbae5cc3280ca5ad02d265",
+        "verdict": "supported",
+        "reason": "Passages 18 and 19 repeatedly discuss 'outline' as a writing concept."
+      },
+      {
+        "entity_id": "b9786a2c3f4ac8ac3aa1ca2b1a6f874ed01ac9eb5961a742738a9b85374fd6f8",
+        "verdict": "supported",
+        "reason": "Passage 18 specifically names 'detective fiction' as a genre requiring tight logic."
+      },
+      {
+        "entity_id": "c9882a074fcd9952c36e65497c089b420a69ca8e1ece00a0918ce9eb06af0f53",
+        "verdict": "supported",
+        "reason": "Passage 18 defines 'cognitive efficiency' as a factor in creative output."
+      },
+      {
+        "entity_id": "a2757fa1251fce85fb64c9793751179613823a0085c1868bab06a27d654c7fc5",
+        "verdict": "supported",
+        "reason": "Passage 22 cites 'memory limits' as a constraint on long-form generation."
+      },
+      {
+        "entity_id": "c8d06d333f4d77ad0fdee5e0278649af17cf7cc3b9e80d9359d74fc85a3ef525",
+        "verdict": "supported",
+        "reason": "Passage 3 includes 'long-form output control' in the author's description."
+      },
+      {
+        "entity_id": "13a8513451d748fd148586f9a3f729df87758a6dd16a4520250c11a1d5f22f1b",
+        "verdict": "supported",
+        "reason": "Passage 22 explicitly mentions 'non-detective novels' as a target."
+      },
+      {
+        "entity_id": "df01f02ca408b71b36351d7933217dec2881bb88ac3e776b427e96311c8003e3",
+        "verdict": "supported",
+        "reason": "Passage 24 refers to 'human cognitive patterns' as the basis for the proposed methodology."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "creativity",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          15,
+          16
+        ]
+      },
+      {
+        "name": "hallucination",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          12
+        ]
+      },
+      {
+        "name": "world masterpieces",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          9
+        ]
+      },
+      {
+        "name": "Chinese male-targeted web novels",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "golden first three chapters",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          14
+        ]
+      },
+      {
+        "name": "human emotional instincts",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          9
+        ]
+      },
+      {
+        "name": "subjective intent",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          9
+        ]
+      },
+      {
+        "name": "high-level structural problems",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          15
+        ]
+      }
+    ],
+    "summary": "All 18 supplied entities are correctly typed, explicitly grounded in the cited passages, and properly merged where aliases exist (e.g., novel/novels, state machine/state machines). No entity requires revision. Eight significant concepts from the article—creativity, hallucination, world masterpieces, Chinese male-targeted web novels, golden first three chapters, human emotional instincts, subjective intent, and high-level structural problems—are not in the supplied list but are clearly present in the source and could be added for completeness.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-9462685ec08e42e4",
+  "usage": {
+    "input_tokens": 10505,
+    "output_tokens": 3070,
+    "total_tokens": 13575
+  },
+  "usage_scope": "final_response_only"
+}

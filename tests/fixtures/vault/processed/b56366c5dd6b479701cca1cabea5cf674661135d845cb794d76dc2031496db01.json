@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01",
+  "source_content_hash": "88e5e3b58845c869fbf7dc6433aea21aa9cb812490d4995ea7c220fd1e68db2d",
+  "raw_path": "raw/b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-forwards",
+    "source_name": "Supplied Telegram forwards",
+    "message_id": "people-list",
+    "captured_at": "2026-10-07T12:13:30+02:00",
+    "published_at": null,
+    "author_hint": {
+      "name": "AI assistant"
+    },
+    "forwarded_by": "Kirill R",
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [
+    {
+      "claim_id": "e797353298f52c49cd537338e8c7f899aa3a04637e02eeea3d7633b06456155b",
+      "statement": "Semantic entropy detects confabulations by sampling multiple answers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01",
+        "section_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    },
+    {
+      "claim_id": "2e21e24823c12e2e53a31de5e0d9fe507bcbf3ec3a87e92b877ce6875bfabdc0",
+      "statement": "Models show a limited, context-dependent form of introspective awareness.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01",
+        "section_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    },
+    {
+      "claim_id": "68381c60a9ad9e6581f0690ff135941c039ff1c009a79eda80a67a9f398a16c9",
+      "statement": "METR measures how long a task agents can complete autonomously.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01",
+        "section_id": "b56366c5dd6b479701cca1cabea5cf674661135d845cb794d76dc2031496db01:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "0dab1dd1705ebdd09d064d1a57ef41647375083c0105de1e9f96378d4d69b1b1",
+      "name": "Jack Lindsey",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "3e8d84dcdc549a20cf58c50b7bb0e6651228b886b36e9e6584accbad116582b1",
+      "name": "Yarin Gal",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "9d775dc822da7959c67de214d890fb0a2f2885d32f59e8c2ad29f6ab961f4c28",
+      "name": "Sebastian Farquhar",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "15bb9088473b38d1e82fa0a087419cd6e4234c07f34d1dc0ac19499698b6eea5",
+      "name": "Hamel Husain",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "2b615440675325c45149f49b05beac16110284e4ec4876aac8045161a77b66a3",
+      "name": "METR",
+      "kind": "organization",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}

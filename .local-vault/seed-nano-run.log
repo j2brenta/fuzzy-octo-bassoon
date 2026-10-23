@@ -1,0 +1,133 @@
+demo-correction: Captured
+demo-repost: Captured
+demo-original: Captured
+people-list: Captured
+introspection-list: Captured
+redis-talks: Captured
+economics-list: Captured
+eli5-post: Captured
+linkedin-math: Captured
+Imported 9 items: 9 new, 0 already captured.
+Records: .local-vault/seed-nano/raw
+== 35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042
+Triaged 35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042: {"keep": true, "kind": "post", "durability_class": "reference", "split_digest": false, "reason": "Provides a substantive curated list of key researchers and recent works across multiple AI subfields, offering valuable reference material."}
+Extracted 35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042: 15 claims.
+.local-vault/seed-nano/extractions/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json
+Quality: needs_revision | 20 claims | corrected=False | expanded=True
+.local-vault/seed-nano/coverage/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json
+Cached 35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042: needs_revision.
+.local-vault/seed-nano/reviews/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json
+Citation repair pending: No citation-only problems are eligible for repair.
+   evidence not applied for 35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042
+Entities: 40 | review: needs_revision
+.local-vault/seed-nano/entities/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json
+Packaged: 20 claims | 40 entities | quality=needs_revision
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042.json
+== 40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f
+Triaged 40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f: {"keep": true, "kind": "post", "durability_class": "reference", "split_digest": false, "reason": "Provides substantive explanation of Anthropic's ELI5 plugin usage and its practical benefits, constituting useful technical knowledge."}
+Extracted 40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f: 6 claims.
+.local-vault/seed-nano/extractions/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json
+Quality: accepted | 6 claims | corrected=False | expanded=False
+.local-vault/seed-nano/extractions/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json
+Cached 40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f: accepted.
+.local-vault/seed-nano/reviews/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json
+Entity processing pending: Entity output failed validation twice: Entity entry 1: Entity aliases must not repeat the canonical name or another alias. Original retained.
+   entities failed for 40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f
+Packaged: 6 claims | 0 entities | quality=pending
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json
+== 4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23
+Triaged 4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23: {"keep": true, "kind": "announcement", "durability_class": "news", "split_digest": false, "reason": "It provides an updated schedule for the demo workshop, correcting the previously announced time."}
+Extracted 4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23: 1 claims.
+.local-vault/seed-nano/extractions/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json
+Quality: accepted | 1 claims | corrected=False | expanded=False
+.local-vault/seed-nano/extractions/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json
+Cached 4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23: accepted.
+.local-vault/seed-nano/reviews/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json
+Entities: 1 | review: accepted
+.local-vault/seed-nano/entities/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json
+Packaged: 1 claims | 1 entities | quality=accepted
+Placement: stored_only | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json
+== 72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e
+Triaged 72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e: {"keep": true, "kind": "newsletter_digest", "durability_class": "reference", "split_digest": true, "reason": "The text summarizes two substantive technical talks on AI agent retrieval and memory, offering reusable knowledge suitable for a personal knowledge base."}
+Extracted 72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e: 13 claims.
+.local-vault/seed-nano/extractions/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json
+Quality: accepted | 13 claims | corrected=True | expanded=False
+.local-vault/seed-nano/repairs/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json
+Cached 72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e: needs_revision.
+.local-vault/seed-nano/reviews/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json
+Entities: 3 | review: needs_revision
+.local-vault/seed-nano/entities/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json
+Packaged: 13 claims | 3 entities | quality=needs_revision
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json
+== 8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54
+Triaged 8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54: {"keep": true, "kind": "announcement", "durability_class": "news", "split_digest": false, "reason": "It is an announcement of a specific future event, thus a substantive update to keep."}
+Extracted 8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54: 1 claims.
+.local-vault/seed-nano/extractions/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json
+Quality: accepted | 1 claims | corrected=False | expanded=False
+.local-vault/seed-nano/extractions/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json
+Cached 8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54: accepted.
+.local-vault/seed-nano/reviews/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json
+Entities: 2 | review: accepted
+.local-vault/seed-nano/entities/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json
+Packaged: 1 claims | 2 entities | quality=accepted
+Placement: stored_only | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json
+== 8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed
+Triaged 8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed: {"keep": true, "kind": "announcement", "durability_class": "news", "split_digest": false, "reason": "It announces a specific future workshop, which is substantive knowledge to retain."}
+Extracted 8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed: 1 claims.
+.local-vault/seed-nano/extractions/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json
+Quality: accepted | 1 claims | corrected=False | expanded=False
+.local-vault/seed-nano/extractions/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json
+Cached 8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed: accepted.
+.local-vault/seed-nano/reviews/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json
+Entities: 0 | review: accepted
+.local-vault/seed-nano/entities/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json
+Packaged: 1 claims | 0 entities | quality=accepted
+Placement: stored_only | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json
+== 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a
+Triaged 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a: {"keep": true, "kind": "post", "durability_class": "reference", "split_digest": false, "reason": "Provides detailed, substantive analysis of AI's mathematical vs creative writing capabilities with technical context and personal expertise."}
+Extracted 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a: 12 claims.
+.local-vault/seed-nano/extractions/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json
+Quality: accepted | 22 claims | corrected=False | expanded=True
+.local-vault/seed-nano/coverage/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json
+Cached 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a: needs_revision.
+.local-vault/seed-nano/reviews/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json
+Citation repair pending: No citation-only problems are eligible for repair.
+   evidence not applied for 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a
+Entity processing pending: Entity output failed validation twice: Entity entry 5: Entity name was not found as an exact mention in a cited passage. Original retained.
+   entities failed for 9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a
+Packaged: 22 claims | 0 entities | quality=pending
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json
+== c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf
+Triaged c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf: {"keep": true, "kind": "post", "durability_class": "reference", "split_digest": false, "reason": "Provides a substantive overview of alternative economists, fitting a post with reference durability."}
+Extracted c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf: 15 claims.
+.local-vault/seed-nano/extractions/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json
+Quality processing pending: Citation output failed validation twice; earlier results retained.
+   quality failed for c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf
+Cached c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf: needs_revision.
+.local-vault/seed-nano/reviews/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json
+Entities: 40 | review: needs_revision
+.local-vault/seed-nano/entities/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json
+Packaged: 23 claims | 40 entities | quality=needs_revision
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json
+== c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14
+Triaged c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14: {"keep": true, "kind": "post", "durability_class": "reference", "split_digest": false, "reason": "Contains detailed references to recent research, key contributors, and practical guidance, representing reusable technical material."}
+Extracted c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14: 15 claims.
+.local-vault/seed-nano/extractions/c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14.json
+Quality: accepted | 15 claims | corrected=True | expanded=False
+.local-vault/seed-nano/repairs/c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14.json
+Cached c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14: needs_revision.
+.local-vault/seed-nano/reviews/c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14.json
+Entity processing pending: Entity output failed validation twice: Entity entry 36: Entity aliases must not repeat the canonical name or another alias. Original retained.
+   entities failed for c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14
+Packaged: 15 claims | 0 entities | quality=pending
+Placement: pending_quality | graph_applied=False
+/Users/kirill/development/nebius-hackathon/.local-vault/seed-nano/processed/c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14.json
+rebuild: 3 items, 3 claims, 1 people, 6 held back, 0 overrides; wrote 8 notes to .local-vault/seed-nano/wiki

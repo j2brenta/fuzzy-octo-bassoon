@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "extraction_hash": "94d2b2c18e784bc945dc537533d78db2d54e2a4e2cedaa746ff49109400e0170",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:37:18.700146+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "7622efc40ba3be75d556cb2cd7c3fb09c0bb53f8fd3148822dc8ddee550bbe0c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 directly states that Anthropic team often uses skill ELI5 via /eli5 command explaining any topic as for a beginner through HTML artifact with large pictures and minimal text."
+      },
+      {
+        "claim_id": "0065d40afb8b2d367c10930bd8a5b81ed3fb537d03a71dc0baed441c824cbab3",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 2 reports Thariq Shihipar, Claude Code engineer at Anthropic, shared that official ELI5 plugin is not yet default but can be installed via community marketplace."
+      },
+      {
+        "claim_id": "fc703acdd46acb763784b41284e252112746c6698507fa1f958c4bcdce397cc4",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 provides the exact command to add the community plugins marketplace."
+      },
+      {
+        "claim_id": "b8bc73e574ca68ff2f962b0216592f14f5d4521f8d61f402756eb1f1bb7bc84b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 provides the exact command to install the ELI5 plugin from the community marketplace."
+      },
+      {
+        "claim_id": "328c96c0a901943692d5cba7e5f2e0af2eee8e3aa96eca1a1c392de464738e16",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 describes internal use not only for external topics but for work requests like explaining a module, analyzing a tradeoff, or incident cause, enabling quick context recovery without reading docs and logs from scratch."
+      },
+      {
+        "claim_id": "76dbfdfe19ae8cbd5626795a3a150e6ef149af574112d7328bd0bad96a33ffe0",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 6 expresses the author's opinion that AI makes smart people smarter and dumb people dumber, citing ELI5 as an example where quick understanding aids learning while blind reliance hinders thinking."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "All six claims are faithful to the source passages. Claims 1-5 accurately reflect factual and procedural content from passages 1-5. Claim 6 paraphrases the author's opinion in passage 6 about AI's divergent effects on different users, with ELI5 as an illustrative example. No claims are unsupported, duplicated, or misattributed. The extraction covers the central reusable ideas; minor metadata (URLs, hashtags, blog title) are omitted as non-central.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a189f5ed8998c320",
+  "usage": {
+    "input_tokens": 1938,
+    "output_tokens": 3545,
+    "total_tokens": 5483
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

@@ -1,0 +1,1968 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "raw_path": "raw/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-forwards",
+    "source_name": "Supplied Telegram forwards (simulated)",
+    "message_id": "supplied-economics-list",
+    "captured_at": "2026-10-20T10:33:54.678180+00:00",
+    "published_at": null,
+    "author_hint": null,
+    "forwarded_by": "Kirill R",
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 6145
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "4788df4dcff91a823de51e8952857f7d0f80f4c702f55ce56fb147780b377707",
+      "statement": "There’s a rich ecosystem of economists who embrace the “messy life” approach, though they’re often marginalized by mainstream departments.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 37,
+        "end_char": 237
+      }
+    },
+    {
+      "claim_id": "bd6a43a8bdc9ed9dc48362ac8f607b41fa38fa3df24a497ba8d4aff57e5b518e",
+      "statement": "Ha-Joon Chang (Cambridge) challenges free market orthodoxy with cultural and historical analysis, shows how informal institutions shape economic development, and his work “Bad Samaritans” demonstrates how culture and networks matter more than formal policies.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 275,
+          "end_char": 300
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 302,
+          "end_char": 372
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 373,
+          "end_char": 431
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 432,
+          "end_char": 519
+        }
+      ]
+    },
+    {
+      "claim_id": "0298bf70e51671aaf6d4178079fdff8cc9a329bea415f84dbd44f38e1167c4e8",
+      "statement": "Dani Rodrik (Harvard Kennedy School) advocates for methodological pluralism in “Economics Rules,” emphasizes context-dependency and local institutional knowledge, and argues against one-size-fits-all economic models.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 521,
+          "end_char": 557
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 559,
+          "end_char": 615
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 616,
+          "end_char": 679
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 680,
+          "end_char": 728
+        }
+      ]
+    },
+    {
+      "claim_id": "5aa00cde86ece92e9a1c60fe19cfe003ff68970397ea9ae5176ae6620d2ab545",
+      "statement": "Matthew Jackson (Stanford) is a pioneer in social network economics; his book “The Human Network” shows how informal connections drive economic outcomes, and his work is mathematically rigorous but incorporates real social dynamics.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1001,
+          "end_char": 1027
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1029,
+          "end_char": 1064
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1065,
+          "end_char": 1139
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1140,
+          "end_char": 1201
+        }
+      ]
+    },
+    {
+      "claim_id": "a9104807aec8795698b9d17f3ba223ba84a1cab4f4899ec442d6215abd013cb2",
+      "statement": "Brian Arthur (Santa Fe Institute) is a complexity economics founder who shows how technologies evolve through cultural and network processes, and his book “The Nature of Technology” is brilliant on emergent innovation.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1203,
+          "end_char": 1236
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1238,
+          "end_char": 1266
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1267,
+          "end_char": 1335
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1336,
+          "end_char": 1398
+        }
+      ]
+    },
+    {
+      "claim_id": "e9bc5d0e08148238963ba17810cbd00dc4bd66887a20e92b06ebd16c6c269b87",
+      "statement": "César Hidalgo (University of Toulouse) combines economics with network science in “Why Information Grows,” studies how knowledge flows through social networks, and his approach is data-driven but socially informed.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1400,
+          "end_char": 1438
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1440,
+          "end_char": 1503
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1504,
+          "end_char": 1555
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1556,
+          "end_char": 1589
+        }
+      ]
+    },
+    {
+      "claim_id": "fb61acc75934ac00b717620f8425c5eb07d9058d9b40ac814437f2e2764ca6da",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they understand network effects: how technologies spread through social connections rather than economic incentives alone.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4993,
+          "end_char": 5112
+        }
+      ]
+    },
+    {
+      "claim_id": "9083e4b099eb93b2b94518639e5404fd17655371529bd2579f5c3188f23ff8d5",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they study cultural adaptation: how societies reshape technologies rather than just being passively affected by them.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5114,
+          "end_char": 5228
+        }
+      ]
+    },
+    {
+      "claim_id": "646aad5df3521f6ae08a2a5b3d770d2a9ce13c7cfcf1628cdd8fb962d387a584",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they recognize emergent phenomena: how new forms of organization emerge from complex social interactions.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5230,
+          "end_char": 5332
+        }
+      ]
+    },
+    {
+      "claim_id": "63993ea74a3b059323299a0abfcd87f5d531eb33bec33dd3b9015dc2091ccea4",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they value ethnographic insight: spending time observing how systems actually work rather than just modeling them.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5334,
+          "end_char": 5442
+        }
+      ]
+    },
+    {
+      "claim_id": "ff97dcf6f97bcd1582a311fc675349b0543f080715c47c34061036dcd8dfe722",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they embrace methodological pluralism: using whatever methods work rather than being constrained by mathematical formalism.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5444,
+          "end_char": 5562
+        }
+      ]
+    },
+    {
+      "claim_id": "d88b2e0f05a30c505971482268fdabeca8853957bfdc70ef4147f5fafcc99a34",
+      "statement": "Most of these economists face career challenges: harder to publish in top economics journals, often relegated to policy schools or business schools, less influence on mainstream economic thinking, but often better at predicting real-world outcomes.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5593,
+          "end_char": 5641
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5643,
+          "end_char": 5686
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5687,
+          "end_char": 5760
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5761,
+          "end_char": 5807
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5808,
+          "end_char": 5858
+        }
+      ]
+    },
+    {
+      "claim_id": "1d4e3e0c4501530a6eea8cccbd013d95370f179f9cd8af2e938d6e80d6720656",
+      "statement": "The user’s intuition about needing economists who “grasp how it works on the ground” points toward this alternative tradition, which would likely recognize that AI + RAG + agentic behavior + cultural adaptation = much more transformation than Acemoglu’s 5% prediction.",
+      "kind": "opinion",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+        "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+        "start_char": 5860,
+        "end_char": 6145
+      }
+    },
+    {
+      "claim_id": "a5907107ab4f8f01d614f273828bb5e2abe534b0c82a27e44f79c742fa976e04",
+      "statement": "James Robinson (University of Chicago), a frequent co-author of Acemoglu, is more open to informal institutions and his work “The Narrow Corridor” explores how societies balance state and social power with ethnographic insight.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 730,
+          "end_char": 768
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 770,
+          "end_char": 847
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 848,
+          "end_char": 923
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 924,
+          "end_char": 968
+        }
+      ]
+    },
+    {
+      "claim_id": "7a41f3bf725ffa9f86d223ed41d51267d921dadcc4f0424f194e9dfc8b6555ef",
+      "statement": "Sendhil Mullainathan (University of Chicago) studies how cultural context shapes economic behavior, and his book “Scarcity” shows how social conditions affect cognitive capacity, combining rigorous methods with cultural sensitivity.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1623,
+          "end_char": 1667
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1669,
+          "end_char": 1722
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1723,
+          "end_char": 1787
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1788,
+          "end_char": 1839
+        }
+      ]
+    },
+    {
+      "claim_id": "228a884fea35eb906e0bbe9b51dcd278a2c03c6cd7b50b27cbe225541786bf65",
+      "statement": "Raghuram Rajan (University of Chicago) emphasizes community and social institutions in “The Third Pillar,” drawing on his experience as a former central banker to bridge academic theory with practical knowledge of informal networks.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1841,
+          "end_char": 1879
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1881,
+          "end_char": 1944
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 1945,
+          "end_char": 2018
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2019,
+          "end_char": 2068
+        }
+      ]
+    },
+    {
+      "claim_id": "1b3dcced74986764afb1f2577c8a3f8345b97e575f51744106cd7ede4029e6ed",
+      "statement": "Abhijit Banerjee and Esther Duflo (MIT) are development economists who spend time on the ground, and their book “Good Economics for Hard Times” incorporates cultural and social factors, reflecting their practice of listening to the people they study.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2070,
+          "end_char": 2107
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2109,
+          "end_char": 2160
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2161,
+          "end_char": 2233
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2234,
+          "end_char": 2288
+        }
+      ]
+    },
+    {
+      "claim_id": "75c260ca69774680d3db8065703ce5d456a7af6a0508ce16b7288a0acd0c0eb5",
+      "statement": "Post-Keynesian economists include Steve Keen (Kingston University), who incorporates network effects and cultural dynamics and critiques mathematical formalism in “Debunking Economics,” and Stephanie Kelton (Stony Brook), a Modern Monetary Theory advocate who emphasizes how political and social factors shape economic policy in “The Deficit Myth.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2308,
+          "end_char": 2333
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2334,
+          "end_char": 2366
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2419,
+          "end_char": 2473
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2522,
+          "end_char": 2552
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2586,
+          "end_char": 2651
+        }
+      ]
+    },
+    {
+      "claim_id": "48cf8fc7a5ed405416cf32035d8212d336b540d75d7ade55d9e4b67156d84890",
+      "statement": "Herman Daly (University of Maryland) represents Ecological Economics, studying the economy as embedded in social and ecological systems, emphasizing cultural values and social cooperation, and integrating social and environmental factors in “Beyond Growth.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2726,
+          "end_char": 2747
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2748,
+          "end_char": 2784
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2786,
+          "end_char": 2846
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2847,
+          "end_char": 2896
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 2897,
+          "end_char": 2956
+        }
+      ]
+    },
+    {
+      "claim_id": "2c868cd9aa14633a6f09344ee4c2752956acfa816b18aeac507950db25655f39",
+      "statement": "Economic sociologists such as Mark Granovetter (Stanford) pioneered embeddedness theory showing how informal networks drive economic outcomes in “Getting a Job,” Viviana Zelizer (Princeton) studies how cultural meanings shape economic behavior in “Purchase of Intimacy,” and Richard Swedberg (Cornell) examines how entrepreneurship emerges from social networks, bridging sociology and economics.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3001,
+          "end_char": 3038
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3109,
+          "end_char": 3141
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3195,
+          "end_char": 3232
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3288,
+          "end_char": 3366
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3426,
+          "end_char": 3462
+        }
+      ]
+    },
+    {
+      "claim_id": "d6c9e805364210a5b2df46d20ad645b6622571422327fd92f7c3bb23a0fd6313",
+      "statement": "Regional alternative traditions include Latin American Structuralism with Fernando Fajnzylber emphasizing cultural and institutional factors in development, Chinese Institutional Economics with Justin Yifu Lin studying how informal institutions guide China’s development in “Demystifying the Chinese Economy,” and African Development Economics with Benno Ndulu examining how traditional institutions interact with modern markets.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3626,
+          "end_char": 3655
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3695,
+          "end_char": 3762
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3813,
+          "end_char": 3845
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 3883,
+          "end_char": 3942
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4016,
+          "end_char": 4046
+        }
+      ]
+    },
+    {
+      "claim_id": "8eb12d9de9186fd040ec7f9f3c0fb831e0bc237f95d650319720a189ac0a8238",
+      "statement": "Contemporary innovators include Shoshana Zuboff (Harvard Business School) studying surveillance capitalism and how technology shapes social behavior, Nick Srnicek (King’s College London) analyzing platform capitalism and how digital networks reshape economics, and Raj Chetty (Harvard) using big data to study how social networks affect economic mobility in “The Fading American Dream.”",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4228,
+          "end_char": 4246
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4299,
+          "end_char": 4381
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4451,
+          "end_char": 4470
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4509,
+          "end_char": 4577
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4623,
+          "end_char": 4652
+        }
+      ]
+    },
+    {
+      "claim_id": "89339d6ee7cce90ee4592826a61cf01888505ad5338fc3057e95c2c85754ea46",
+      "statement": "These alternative economists would likely predict AI impacts more accurately because they understand network effects, study cultural adaptation, recognize emergent phenomena, value ethnographic insight, and embrace methodological pluralism.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.9,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4901,
+          "end_char": 4991
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 4993,
+          "end_char": 5112
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5114,
+          "end_char": 5228
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5230,
+          "end_char": 5332
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "start_char": 5334,
+          "end_char": 5442
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "46cf925e3d21bc00c239eaabe77eef59adf5ad36c8a4cc8e888b61afda2c25d6",
+      "name": "Kirill R",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 8,
+          "surface_name": "Kirill R"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "8a0b29f27e9b7bdd701040e492f54b14fed642a298de75ebbf17be2f0307095e",
+      "name": "Ha-Joon Chang",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 4,
+          "start_char": 275,
+          "end_char": 288,
+          "surface_name": "Ha-Joon Chang"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "d7dd601e89672292e4a53832c5902c6a988d656ce372c73d004a3d1810ee7603",
+      "name": "Dani Rodrik",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 8,
+          "start_char": 521,
+          "end_char": 532,
+          "surface_name": "Dani Rodrik"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "563805bacf8d899746b81f7f9960f1e07b22269cc7040d344ad8ba752efa0334",
+      "name": "James Robinson",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 12,
+          "start_char": 730,
+          "end_char": 744,
+          "surface_name": "James Robinson"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "ef4f6372ce375bb902059976a56be7f95c94c1c0eeeca8ade9536b9642fdf7d3",
+      "name": "Acemoglu",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 13,
+          "start_char": 770,
+          "end_char": 778,
+          "surface_name": "Acemoglu"
+        },
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 15,
+          "start_char": 960,
+          "end_char": 968,
+          "surface_name": "Acemoglu"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "f6a26d7db92df32d42347254c7b9a16f010ec354d22f090eb221392e95338cc2",
+      "name": "Matthew Jackson",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 17,
+          "start_char": 1001,
+          "end_char": 1016,
+          "surface_name": "Matthew Jackson"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "eb69e56c6c9055265f9021d3e39669a9ef1d4e8eb10aa89039705ce245102df0",
+      "name": "Brian Arthur",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 21,
+          "start_char": 1203,
+          "end_char": 1215,
+          "surface_name": "Brian Arthur"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "aff21097d3a3481f6559bedcc25008ceaa71948c9cab915a5b778930e6224d16",
+      "name": "César Hidalgo",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 25,
+          "start_char": 1400,
+          "end_char": 1413,
+          "surface_name": "César Hidalgo"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "9f4629ec953744509bf73f4648a55290ff8611994bc86962873916f9323e2b75",
+      "name": "Sendhil Mullainathan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 30,
+          "start_char": 1623,
+          "end_char": 1643,
+          "surface_name": "Sendhil Mullainathan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4398ddb0155df091ea0ff50ad3574f3c5aab8d0d1933d5b39307643a6e6cc3b5",
+      "name": "Raghuram Rajan",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 34,
+          "start_char": 1841,
+          "end_char": 1855,
+          "surface_name": "Raghuram Rajan"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e36635b1f980639e7c35b9b48e854b1c315126de8c82ddd193d9aa8dfe311433",
+      "name": "Abhijit Banerjee",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 38,
+          "start_char": 2070,
+          "end_char": 2086,
+          "surface_name": "Abhijit Banerjee"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "5013b7de7fd67afcb485da4cbbc2d0ac8269365c2ecd3d075109eadea8461171",
+      "name": "Esther Duflo",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 38,
+          "start_char": 2089,
+          "end_char": 2101,
+          "surface_name": "Esther Duflo"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "8d9b7caee61d11178a6489821c032039f43ea135ec45a09ff8fc78ac51db3d0a",
+      "name": "Steve Keen",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 44,
+          "start_char": 2334,
+          "end_char": 2344,
+          "surface_name": "Steve Keen"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4c1debef07eee6590a52df49e470efcb36dab6a7ec7f662c8aad51ebbf6eeea7",
+      "name": "Stephanie Kelton",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 48,
+          "start_char": 2522,
+          "end_char": 2538,
+          "surface_name": "Stephanie Kelton"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "7607954e5054c20a79548820d70537b9dab85be291fcd1012d970a973c6a5b55",
+      "name": "Herman Daly",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 53,
+          "start_char": 2748,
+          "end_char": 2759,
+          "surface_name": "Herman Daly"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e05542a94ccfcb12ef1551123d0be975f7479a52ce895863f687329faf024743",
+      "name": "Mark Granovetter",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 58,
+          "start_char": 3001,
+          "end_char": 3017,
+          "surface_name": "Mark Granovetter"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "14fdbb7de66b18aa663713a4c5966bcb8d9b8bd18815732b58f0aaaa23595370",
+      "name": "Viviana Zelizer",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 62,
+          "start_char": 3195,
+          "end_char": 3210,
+          "surface_name": "Viviana Zelizer"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "2454d4e12996a4e39db0846a5509a1733a12dee6cd97e556409f23c0b8cf138a",
+      "name": "Richard Swedberg",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 66,
+          "start_char": 3426,
+          "end_char": 3442,
+          "surface_name": "Richard Swedberg"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "453d1164604847024e72594696e73d0b136cc17f9458d1d8d12f7e5b29e458c3",
+      "name": "Fernando Fajnzylber",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 72,
+          "start_char": 3656,
+          "end_char": 3675,
+          "surface_name": "Fernando Fajnzylber"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "65e20be71ba5693fda28d12ae291b8baf26ed7c53865fe8759b6e6994730714a",
+      "name": "Justin Yifu Lin",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 76,
+          "start_char": 3846,
+          "end_char": 3861,
+          "surface_name": "Justin Yifu Lin"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "9a508a6d1d6cd13d3e26429af6412c40718d4bcc6456bc730e615ef06609af4f",
+      "name": "Benno Ndulu",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 80,
+          "start_char": 4047,
+          "end_char": 4058,
+          "surface_name": "Benno Ndulu"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "31231927ece797043626f11bfc84e86d07675ea061f5724dabd2afd96696e948",
+      "name": "Shoshana Zuboff",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 85,
+          "start_char": 4247,
+          "end_char": 4262,
+          "surface_name": "Shoshana Zuboff"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6c1da7e4f049f2a629d2d2b803fee9e4093d3fe776e8478eef85c7b4e5b4ec6e",
+      "name": "Nick Srnicek",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 89,
+          "start_char": 4471,
+          "end_char": 4483,
+          "surface_name": "Nick Srnicek"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "f94ce0a334a97bda4b9a4cfd5bdc877945e005d5cd386fa8b57acf3a2686b404",
+      "name": "Raj Chetty",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 93,
+          "start_char": 4653,
+          "end_char": 4663,
+          "surface_name": "Raj Chetty"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "ba4d43de815cc94173b34e8b4d626e4380502f34a32c15a4dbce272708e054d1",
+      "name": "Institutional & Cultural Economics",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 3,
+          "start_char": 239,
+          "end_char": 273,
+          "surface_name": "Institutional & Cultural Economics"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "5d241bf652f57eb37f624ec53581b0d15264666a80925dc30e9d05fd1f4fe87d",
+      "name": "Network & Complexity Economics",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 16,
+          "start_char": 969,
+          "end_char": 999,
+          "surface_name": "Network & Complexity Economics"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "0535dcef0f9a1923da76bc3ffc6b1cda30a5e4b586c22b58efc57be072baa4d2",
+      "name": "Behavioral & Cultural Economics",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 29,
+          "start_char": 1590,
+          "end_char": 1621,
+          "surface_name": "Behavioral & Cultural Economics"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "52132d673cb8ddf6bc61f9728cb3ac480e6a7f3bab39497df4512d2376935738",
+      "name": "Heterodox Schools",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 42,
+          "start_char": 2289,
+          "end_char": 2306,
+          "surface_name": "Heterodox Schools"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6a559ae215568ed21da0816013e4a2f6b5746d3bf52ddd3302934c32e9347c76",
+      "name": "Economic Sociologists (Economics-Adjacent)",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 57,
+          "start_char": 2957,
+          "end_char": 2999,
+          "surface_name": "Economic Sociologists (Economics-Adjacent)"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "b99f4a0f91b3e059a741ae8185409a843c934bb3959a8a5e92b481785d312ee2",
+      "name": "Regional/Alternative Traditions",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 70,
+          "start_char": 3593,
+          "end_char": 3624,
+          "surface_name": "Regional/Alternative Traditions"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "904bdaf3dcaaae48471b1ab0c701f6e0ad97b6e787720274ee94d0b9a8b58d2a",
+      "name": "Contemporary Innovators",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 83,
+          "start_char": 4203,
+          "end_char": 4226,
+          "surface_name": "Contemporary Innovators"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "b18abce0ba142e5623e16a27b7dd9f5101009b7766112aa8260d045de6266235",
+      "name": "Network Effects",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 99,
+          "start_char": 5007,
+          "end_char": 5022,
+          "surface_name": "Network Effects"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "30ea39575f09243aa3c1bc3b09eb869bbbd95656e795c0b23f3aa3a57537047b",
+      "name": "Cultural Adaptation",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 100,
+          "start_char": 5123,
+          "end_char": 5142,
+          "surface_name": "Cultural Adaptation"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "31680d8c122fc641c809463936a449f98a53cd0aaf93de65230d26d4385ca1be",
+      "name": "Emergent Phenomena",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 101,
+          "start_char": 5243,
+          "end_char": 5261,
+          "surface_name": "Emergent Phenomena"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "5be94a38746f887970a3705f531ecee1d91e7879e104c2191c6222be9439837a",
+      "name": "Ethnographic Insight",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 102,
+          "start_char": 5343,
+          "end_char": 5363,
+          "surface_name": "Ethnographic Insight"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4645a79b5c078af129419bae27f1fd0d022fb9de207f2e0a4f39aa7eaede6fb2",
+      "name": "Methodological Pluralism",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 103,
+          "start_char": 5455,
+          "end_char": 5479,
+          "surface_name": "Methodological Pluralism"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e8236791e1a1dcb35f97775319c561148ae0da824c12aa9a17df0bc98c7e4abf",
+      "name": "The Institutional Challenge",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 104,
+          "start_char": 5564,
+          "end_char": 5591,
+          "surface_name": "The Institutional Challenge"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "aa200a13796fc03ebf5c58c468dd2cf9949695c1781b47a78df102bdfff67342",
+      "name": "AI",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 110,
+          "start_char": 6038,
+          "end_char": 6040,
+          "surface_name": "AI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "4a754c4dac1d3452b02fd6f26fd75cfb37761d8f945fa6778e829583685bdf93",
+      "name": "RAG",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 110,
+          "start_char": 6043,
+          "end_char": 6046,
+          "surface_name": "RAG"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "16a3e0648523dd7ed66a7f1958dba98261849d2791d8a1331e692c245fd35f42",
+      "name": "agentic behavior",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+          "section_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:section:1",
+          "passage_id": 110,
+          "start_char": 6049,
+          "end_char": 6065,
+          "surface_name": "agentic behavior"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides a substantive overview of alternative economists, fitting a post with reference durability."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "4788df4dcff91a823de51e8952857f7d0f80f4c702f55ce56fb147780b377707",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 2 directly states there's a rich ecosystem of economists embracing the 'messy life' approach, often marginalized by mainstream departments."
+        },
+        {
+          "claim_id": "bd6a43a8bdc9ed9dc48362ac8f607b41fa38fa3df24a497ba8d4aff57e5b518e",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 4-7 collectively describe Ha-Joon Chang's challenges to free market orthodoxy, informal institutions, and 'Bad Samaritans'."
+        },
+        {
+          "claim_id": "0298bf70e51671aaf6d4178079fdff8cc9a329bea415f84dbd44f38e1167c4e8",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 8-11 cover Dani Rodrik's advocacy for methodological pluralism, context-dependency, and opposition to one-size-fits-all models."
+        },
+        {
+          "claim_id": "5aa00cde86ece92e9a1c60fe19cfe003ff68970397ea9ae5176ae6620d2ab545",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 17-20 confirm Matthew Jackson as pioneer in social network economics, 'The Human Network', and mathematically rigorous yet socially dynamic work."
+        },
+        {
+          "claim_id": "a9104807aec8795698b9d17f3ba223ba84a1cab4f4899ec442d6215abd013cb2",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 21-24 establish Brian Arthur as complexity economics founder, technology evolution through cultural/network processes, and 'The Nature of Technology' on emergent innovation."
+        },
+        {
+          "claim_id": "e9bc5d0e08148238963ba17810cbd00dc4bd66887a20e92b06ebd16c6c269b87",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 25-28 show César Hidalgo combines economics with network science in 'Why Information Grows', studies knowledge flows, data-driven but socially informed."
+        },
+        {
+          "claim_id": "fb61acc75934ac00b717620f8425c5eb07d9058d9b40ac814437f2e2764ca6da",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 98-99 state these economists would better predict AI impacts due to understanding network effects: technologies spread via social connections."
+        },
+        {
+          "claim_id": "9083e4b099eb93b2b94518639e5404fd17655371529bd2579f5c3188f23ff8d5",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 98 and 100 link better AI prediction to studying cultural adaptation: societies reshaping technologies."
+        },
+        {
+          "claim_id": "646aad5df3521f6ae08a2a5b3d770d2a9ce13c7cfcf1628cdd8fb962d387a584",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 98 and 101 link better AI prediction to recognizing emergent phenomena: new organizations from complex interactions."
+        },
+        {
+          "claim_id": "63993ea74a3b059323299a0abfcd87f5d531eb33bec33dd3b9015dc2091ccea4",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 98 and 102 link better AI prediction to valuing ethnographic insight: observing systems rather than just modeling."
+        },
+        {
+          "claim_id": "ff97dcf6f97bcd1582a311fc675349b0543f080715c47c34061036dcd8dfe722",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 98 and 103 link better AI prediction to embracing methodological pluralism: using whatever methods work."
+        },
+        {
+          "claim_id": "d88b2e0f05a30c505971482268fdabeca8853957bfdc70ef4147f5fafcc99a34",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 105-109 detail career challenges: harder to publish, relegated to policy/business schools, less mainstream influence, but better real-world prediction."
+        },
+        {
+          "claim_id": "1d4e3e0c4501530a6eea8cccbd013d95370f179f9cd8af2e938d6e80d6720656",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 110 directly states user's intuition points to this tradition, which would see AI+RAG+agentic+cultural adaptation as more transformative than Acemoglu's 5%."
+        },
+        {
+          "claim_id": "a5907107ab4f8f01d614f273828bb5e2abe534b0c82a27e44f79c742fa976e04",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 12-15 describe James Robinson as Acemoglu co-author more open to informal institutions, 'The Narrow Corridor' on state/social power balance, ethnographically informed."
+        },
+        {
+          "claim_id": "7a41f3bf725ffa9f86d223ed41d51267d921dadcc4f0424f194e9dfc8b6555ef",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 30-33 cover Sendhil Mullainathan's cultural context shaping behavior, 'Scarcity' on social conditions affecting cognition, rigorous methods with cultural sensitivity."
+        },
+        {
+          "claim_id": "228a884fea35eb906e0bbe9b51dcd278a2c03c6cd7b50b27cbe225541786bf65",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 34-37 describe Raghuram Rajan's 'The Third Pillar' on community/social institutions, former central banker bridging theory and informal networks."
+        },
+        {
+          "claim_id": "1b3dcced74986764afb1f2577c8a3f8345b97e575f51744106cd7ede4029e6ed",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 38-41 cover Abhijit Banerjee and Esther Duflo as development economists on the ground, 'Good Economics for Hard Times' with cultural/social factors, listening to people."
+        },
+        {
+          "claim_id": "75c260ca69774680d3db8065703ce5d456a7af6a0508ce16b7288a0acd0c0eb5",
+          "verdict": "needs_revision",
+          "issues": [
+            "wrong_evidence"
+          ],
+          "reason": "Cited passages [43,44,46,48,50] do not fully support the claim: Steve Keen's network effects/cultural dynamics (passage 45) and critique of formalism (46) are split; Stephanie Kelton's Modern Monetary Theory advocacy (49) and 'The Deficit Myth' (51) are missing from citations."
+        },
+        {
+          "claim_id": "48cf8fc7a5ed405416cf32035d8212d336b540d75d7ade55d9e4b67156d84890",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passages 52-56 describe Herman Daly representing Ecological Economics, economy embedded in social/ecological systems, cultural values/social cooperation, 'Beyond Growth' integrating social/environmental factors."
+        },
+        {
+          "claim_id": "2c868cd9aa14633a6f09344ee4c2752956acfa816b18aeac507950db25655f39",
+          "verdict": "needs_revision",
+          "issues": [
+            "wrong_evidence"
+          ],
+          "reason": "Cited passages [58,60,62,64,66] provide names and theory labels but omit key details: Granovetter's 'Getting a Job' (59), Zelizer's cultural meanings (63), Swedberg's entrepreneurship from networks (68)."
+        },
+        {
+          "claim_id": "d6c9e805364210a5b2df46d20ad645b6622571422327fd92f7c3bb23a0fd6313",
+          "verdict": "needs_revision",
+          "issues": [
+            "wrong_evidence"
+          ],
+          "reason": "Cited passages [71,73,75,77,79] are headers and descriptions but omit economist names (72,76,80) and book title 'Demystifying the Chinese Economy' (78)."
+        },
+        {
+          "claim_id": "8eb12d9de9186fd040ec7f9f3c0fb831e0bc237f95d650319720a189ac0a8238",
+          "verdict": "needs_revision",
+          "issues": [
+            "wrong_evidence"
+          ],
+          "reason": "Cited passages [84,86,88,90,92] are headers and book descriptions but omit economist names (85,89,93) and specific roles."
+        },
+        {
+          "claim_id": "89339d6ee7cce90ee4592826a61cf01888505ad5338fc3057e95c2c85754ea46",
+          "verdict": "needs_revision",
+          "issues": [
+            "wrong_evidence"
+          ],
+          "reason": "Cited passages [98,99,100,101,102] cover network effects, cultural adaptation, emergent phenomena, ethnographic insight, but omit methodological pluralism (passage 103)."
+        }
+      ],
+      "omitted_concepts": [
+        {
+          "passage_id": 47,
+          "description": "Steve Keen studies how debt flows through social networks."
+        },
+        {
+          "passage_id": 65,
+          "description": "Viviana Zelizer's approach is ethnographically informed but theoretically sophisticated."
+        },
+        {
+          "passage_id": 67,
+          "description": "Richard Swedberg is an economic sociology pioneer."
+        },
+        {
+          "passage_id": 69,
+          "description": "Richard Swedberg bridges sociology and economics effectively."
+        },
+        {
+          "passage_id": 74,
+          "description": "Latin American Structuralism uses a network-based approach to industrial development."
+        },
+        {
+          "passage_id": 82,
+          "description": "African Development Economics emphasizes social networks and cultural practices."
+        },
+        {
+          "passage_id": 87,
+          "description": "Shoshana Zuboff combines economics with cultural analysis of digital transformation."
+        },
+        {
+          "passage_id": 91,
+          "description": "Nick Srnicek's platform economics is Marxist-influenced but empirically grounded."
+        },
+        {
+          "passage_id": 96,
+          "description": "Raj Chetty's work is mathematically sophisticated but socially informed."
+        },
+        {
+          "passage_id": 51,
+          "description": "Stephanie Kelton's 'The Deficit Myth' shows how cultural narratives drive economic outcomes."
+        }
+      ],
+      "summary": "Reviewed 23 claims against 110 passages. 17 claims fully supported by cited passages. 6 claims need revision due to wrong_evidence: claims 18,20,21,22,23 cite passages that omit key details (e.g., economist names, specific book contributions, methodological pluralism). No duplicates found. Kinds and durability labels are reasonable. Omitted concepts include 10 major ideas from passages not covered by any claim, such as debt flow networks, ethnographically sophisticated approaches, network-based industrial development, and cultural narratives in deficit myths.",
+      "status": "needs_revision"
+    },
+    "entities": {
+      "entities": [
+        {
+          "entity_id": "46cf925e3d21bc00c239eaabe77eef59adf5ad36c8a4cc8e888b61afda2c25d6",
+          "verdict": "supported",
+          "reason": "Explicitly named in passage 1 as the message author."
+        },
+        {
+          "entity_id": "8a0b29f27e9b7bdd701040e492f54b14fed642a298de75ebbf17be2f0307095e",
+          "verdict": "supported",
+          "reason": "Named in passage 4 as Ha-Joon Chang (Cambridge)."
+        },
+        {
+          "entity_id": "d7dd601e89672292e4a53832c5902c6a988d656ce372c73d004a3d1810ee7603",
+          "verdict": "supported",
+          "reason": "Named in passage 8 as Dani Rodrik (Harvard Kennedy School)."
+        },
+        {
+          "entity_id": "563805bacf8d899746b81f7f9960f1e07b22269cc7040d344ad8ba752efa0334",
+          "verdict": "supported",
+          "reason": "Named in passage 12 as James Robinson (University of Chicago)."
+        },
+        {
+          "entity_id": "ef4f6372ce375bb902059976a56be7f95c94c1c0eeeca8ade9536b9642fdf7d3",
+          "verdict": "supported",
+          "reason": "Referenced in passages 13 and 15 as Acemoglu (last name only)."
+        },
+        {
+          "entity_id": "f6a26d7db92df32d42347254c7b9a16f010ec354d22f090eb221392e95338cc2",
+          "verdict": "supported",
+          "reason": "Named in passage 17 as Matthew Jackson (Stanford)."
+        },
+        {
+          "entity_id": "eb69e56c6c9055265f9021d3e39669a9ef1d4e8eb10aa89039705ce245102df0",
+          "verdict": "supported",
+          "reason": "Named in passage 21 as Brian Arthur (Santa Fe Institute)."
+        },
+        {
+          "entity_id": "aff21097d3a3481f6559bedcc25008ceaa71948c9cab915a5b778930e6224d16",
+          "verdict": "supported",
+          "reason": "Named in passage 25 as César Hidalgo (University of Toulouse)."
+        },
+        {
+          "entity_id": "9f4629ec953744509bf73f4648a55290ff8611994bc86962873916f9323e2b75",
+          "verdict": "supported",
+          "reason": "Named in passage 30 as Sendhil Mullainathan (University of Chicago)."
+        },
+        {
+          "entity_id": "4398ddb0155df091ea0ff50ad3574f3c5aab8d0d1933d5b39307643a6e6cc3b5",
+          "verdict": "supported",
+          "reason": "Named in passage 34 as Raghuram Rajan (University of Chicago)."
+        },
+        {
+          "entity_id": "e36635b1f980639e7c35b9b48e854b1c315126de8c82ddd193d9aa8dfe311433",
+          "verdict": "supported",
+          "reason": "Named in passage 38 as Abhijit Banerjee (MIT)."
+        },
+        {
+          "entity_id": "5013b7de7fd67afcb485da4cbbc2d0ac8269365c2ecd3d075109eadea8461171",
+          "verdict": "supported",
+          "reason": "Named in passage 38 as Esther Duflo (MIT)."
+        },
+        {
+          "entity_id": "8d9b7caee61d11178a6489821c032039f43ea135ec45a09ff8fc78ac51db3d0a",
+          "verdict": "supported",
+          "reason": "Named in passage 44 as Steve Keen (Kingston University)."
+        },
+        {
+          "entity_id": "4c1debef07eee6590a52df49e470efcb36dab6a7ec7f662c8aad51ebbf6eeea7",
+          "verdict": "supported",
+          "reason": "Named in passage 48 as Stephanie Kelton (Stony Brook)."
+        },
+        {
+          "entity_id": "7607954e5054c20a79548820d70537b9dab85be291fcd1012d970a973c6a5b55",
+          "verdict": "supported",
+          "reason": "Named in passage 53 as Herman Daly (University of Maryland)."
+        },
+        {
+          "entity_id": "e05542a94ccfcb12ef1551123d0be975f7479a52ce895863f687329faf024743",
+          "verdict": "supported",
+          "reason": "Named in passage 58 as Mark Granovetter (Stanford Sociology)."
+        },
+        {
+          "entity_id": "14fdbb7de66b18aa663713a4c5966bcb8d9b8bd18815732b58f0aaaa23595370",
+          "verdict": "supported",
+          "reason": "Named in passage 62 as Viviana Zelizer (Princeton Sociology)."
+        },
+        {
+          "entity_id": "2454d4e12996a4e39db0846a5509a1733a12dee6cd97e556409f23c0b8cf138a",
+          "verdict": "supported",
+          "reason": "Named in passage 66 as Richard Swedberg (Cornell Sociology)."
+        },
+        {
+          "entity_id": "453d1164604847024e72594696e73d0b136cc17f9458d1d8d12f7e5b29e458c3",
+          "verdict": "supported",
+          "reason": "Named in passage 72 as Fernando Fajnzylber (ECLAC tradition)."
+        },
+        {
+          "entity_id": "65e20be71ba5693fda28d12ae291b8baf26ed7c53865fe8759b6e6994730714a",
+          "verdict": "supported",
+          "reason": "Named in passage 76 as Justin Yifu Lin (Peking University)."
+        },
+        {
+          "entity_id": "9a508a6d1d6cd13d3e26429af6412c40718d4bcc6456bc730e615ef06609af4f",
+          "verdict": "supported",
+          "reason": "Named in passage 80 as Benno Ndulu (University of Cape Town)."
+        },
+        {
+          "entity_id": "31231927ece797043626f11bfc84e86d07675ea061f5724dabd2afd96696e948",
+          "verdict": "supported",
+          "reason": "Named in passage 85 as Shoshana Zuboff (Harvard Business School emeritus)."
+        },
+        {
+          "entity_id": "6c1da7e4f049f2a629d2d2b803fee9e4093d3fe776e8478eef85c7b4e5b4ec6e",
+          "verdict": "supported",
+          "reason": "Named in passage 89 as Nick Srnicek (King’s College London)."
+        },
+        {
+          "entity_id": "f94ce0a334a97bda4b9a4cfd5bdc877945e005d5cd386fa8b57acf3a2686b404",
+          "verdict": "supported",
+          "reason": "Named in passage 93 as Raj Chetty (Harvard)."
+        },
+        {
+          "entity_id": "ba4d43de815cc94173b34e8b4d626e4380502f34a32c15a4dbce272708e054d1",
+          "verdict": "supported",
+          "reason": "Heading in passage 3: Institutional & Cultural Economics."
+        },
+        {
+          "entity_id": "5d241bf652f57eb37f624ec53581b0d15264666a80925dc30e9d05fd1f4fe87d",
+          "verdict": "supported",
+          "reason": "Heading in passage 16: Network & Complexity Economics."
+        },
+        {
+          "entity_id": "0535dcef0f9a1923da76bc3ffc6b1cda30a5e4b586c22b58efc57be072baa4d2",
+          "verdict": "supported",
+          "reason": "Heading in passage 29: Behavioral & Cultural Economics."
+        },
+        {
+          "entity_id": "52132d673cb8ddf6bc61f9728cb3ac480e6a7f3bab39497df4512d2376935738",
+          "verdict": "supported",
+          "reason": "Heading in passage 42: Heterodox Schools."
+        },
+        {
+          "entity_id": "6a559ae215568ed21da0816013e4a2f6b5746d3bf52ddd3302934c32e9347c76",
+          "verdict": "supported",
+          "reason": "Heading in passage 57: Economic Sociologists (Economics-Adjacent)."
+        },
+        {
+          "entity_id": "b99f4a0f91b3e059a741ae8185409a843c934bb3959a8a5e92b481785d312ee2",
+          "verdict": "supported",
+          "reason": "Heading in passage 70: Regional/Alternative Traditions."
+        },
+        {
+          "entity_id": "904bdaf3dcaaae48471b1ab0c701f6e0ad97b6e787720274ee94d0b9a8b58d2a",
+          "verdict": "supported",
+          "reason": "Heading in passage 83: Contemporary Innovators."
+        },
+        {
+          "entity_id": "b18abce0ba142e5623e16a27b7dd9f5101009b7766112aa8260d045de6266235",
+          "verdict": "supported",
+          "reason": "Bullet point in passage 99: Network Effects."
+        },
+        {
+          "entity_id": "30ea39575f09243aa3c1bc3b09eb869bbbd95656e795c0b23f3aa3a57537047b",
+          "verdict": "supported",
+          "reason": "Bullet point in passage 100: Cultural Adaptation."
+        },
+        {
+          "entity_id": "31680d8c122fc641c809463936a449f98a53cd0aaf93de65230d26d4385ca1be",
+          "verdict": "supported",
+          "reason": "Bullet point in passage 101: Emergent Phenomena."
+        },
+        {
+          "entity_id": "5be94a38746f887970a3705f531ecee1d91e7879e104c2191c6222be9439837a",
+          "verdict": "supported",
+          "reason": "Bullet point in passage 102: Ethnographic Insight."
+        },
+        {
+          "entity_id": "4645a79b5c078af129419bae27f1fd0d022fb9de207f2e0a4f39aa7eaede6fb2",
+          "verdict": "supported",
+          "reason": "Bullet point in passage 103: Methodological Pluralism."
+        },
+        {
+          "entity_id": "e8236791e1a1dcb35f97775319c561148ae0da824c12aa9a17df0bc98c7e4abf",
+          "verdict": "supported",
+          "reason": "Heading in passage 104: The Institutional Challenge."
+        },
+        {
+          "entity_id": "aa200a13796fc03ebf5c58c468dd2cf9949695c1781b47a78df102bdfff67342",
+          "verdict": "supported",
+          "reason": "Mentioned in passage 110 as AI."
+        },
+        {
+          "entity_id": "4a754c4dac1d3452b02fd6f26fd75cfb37761d8f945fa6778e829583685bdf93",
+          "verdict": "supported",
+          "reason": "Mentioned in passage 110 as RAG."
+        },
+        {
+          "entity_id": "16a3e0648523dd7ed66a7f1958dba98261849d2791d8a1331e692c245fd35f42",
+          "verdict": "supported",
+          "reason": "Mentioned in passage 110 as agentic behavior."
+        }
+      ],
+      "omitted_entities": [
+        {
+          "name": "Post-Keynesian Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            43
+          ]
+        },
+        {
+          "name": "Ecological Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            52
+          ]
+        },
+        {
+          "name": "Latin American Structuralism",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            71
+          ]
+        },
+        {
+          "name": "Chinese Institutional Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            75
+          ]
+        },
+        {
+          "name": "African Development Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            79
+          ]
+        },
+        {
+          "name": "Digital Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            84
+          ]
+        },
+        {
+          "name": "Platform Economics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            88
+          ]
+        },
+        {
+          "name": "Inequality & Social Dynamics",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            92
+          ]
+        }
+      ],
+      "summary": "All 40 supplied entities are directly supported by the source passages with correct names and types. No unsafe merges or missed merges detected. Eight major sub‑school headings (e.g., Post‑Keynesian Economics, Ecological Economics) appear in the text but were not included in the entity list; they are noted as omitted entities.",
+      "status": "needs_revision"
+    }
+  },
+  "quality_status": "needs_revision",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "claim_candidate": "repairs",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "227b952f598151fe4fcfde114d312815ef7bd7e79dec7df0f353f9a0f3a182c7",
+    "entities/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "73b82cd54a646d51ec50869699282582340ea1e32d3abd3cdcf6112d08906721",
+    "entity-reviews/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "c45f14f01598a0d6f78f85d8198cd2f136c9b2357949ea521d21be285dafd9a8",
+    "extractions/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "6452844a162c5c73f3699cbddf1fac0d7d680260976e766385ac15deb87b931b",
+    "raw/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "f81c36b72fdcbee2c08704c2be067d904ab0414207639b3f33b3c805d594fd23",
+    "repair-reviews/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "e4697b7d8186f835f51048de2e547470e85221825bba66760a6c198d1613d696",
+    "repairs/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "08a961602bca578dc6e7f4cac5bd0bfdc74b97de7759dd966fa2867e9eb4b8e1",
+    "reviews/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "6d218790bf87c574c1ee0a74b0824e5e0abceddb7d5509879b1dfa66e803bf58",
+    "triage/c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf.json": "64ce2204a2ee1aefea53d7bbff8278cf6cac472cae3078d4d965a06ebbda57b6"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "b07f8b67da2752621c90fb24bce4959341c2d1950da035369044e42f35d42322",
+  "created_at": "2026-10-20T10:49:55.661669+00:00"
+}

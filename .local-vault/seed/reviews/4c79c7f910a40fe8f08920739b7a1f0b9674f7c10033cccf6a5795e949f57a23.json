@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "source_content_hash": "38cf2bf23c7779bc7ab209d2c99b9373b9992277f56007be94032c1adfebf115",
+  "extraction_hash": "9cb0d61a65b301ae6576455681fba23e268db66d6dc003b54ea8bbf341aaf120",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:22:16.049969+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 states the demo workshop starts at 16:00 UTC on 25 October 2026."
+      },
+      {
+        "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 1 states the new time replaces the previously announced 14:00 UTC time."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "Both claims are directly supported by the single source passage. The first claim captures the corrected start time; the second captures the previously announced time that is being replaced. No central ideas are omitted.",
+    "status": "accepted"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-892e86df82225eca",
+  "usage": {
+    "input_tokens": 850,
+    "output_tokens": 660,
+    "total_tokens": 1510
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

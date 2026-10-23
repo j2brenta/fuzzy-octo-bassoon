@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:22:39.154907+00:00",
+  "raw_path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+  "document_path": "documents/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+  "claims": [
+    {
+      "claim_id": "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208",
+      "statement": "At 18:30, Samuel Agbede will present a talk titled 'Building Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production'.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 0,
+          "end_char": 8
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 9,
+          "end_char": 101
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 597,
+          "end_char": 610
+        }
+      ]
+    },
+    {
+      "claim_id": "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7",
+      "statement": "At 19:00, Evangelos Resvanis will present a talk titled 'Building Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions'.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 611,
+          "end_char": 619
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 620,
+          "end_char": 703
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "start_char": 1161,
+          "end_char": 1179
+        }
+      ]
+    },
+    {
+      "claim_id": "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
+      "statement": "The 18:30 talk will explore how relevance, freshness, conflicting sources and existing context affect retrieval, including context poisoning, distraction, confusion and clash.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 102,
+        "end_char": 333
+      }
+    },
+    {
+      "claim_id": "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
+      "statement": "In the 18:30 talk, using a Redis-powered retail support agent, they will demonstrate hybrid search, filtering, incremental updates and token-aware context selection while keeping the model constant, and compare how the retrieval pipeline affects answer quality, latency and token usage.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 334,
+        "end_char": 594
+      }
+    },
+    {
+      "claim_id": "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
+      "statement": "The 19:00 talk will explore how to preserve continuity as an agent’s tasks, users and information change, covering working and long-term memory, separating active task state from reusable knowledge and user preferences.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 704,
+        "end_char": 904
+      }
+    },
+    {
+      "claim_id": "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
+      "statement": "In the 19:00 talk, using Redis, they will demonstrate how to scope memories, retrieve relevant information, incorporate corrections and retire outdated assumptions, and examine whether these changes improve consistency without continually expanding the agent’s context.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+        "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+        "start_char": 905,
+        "end_char": 1158
+      }
+    }
+  ],
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-98e6d69d33512f40",
+  "usage": {
+    "input_tokens": 768,
+    "output_tokens": 1721,
+    "total_tokens": 2489
+  }
+}

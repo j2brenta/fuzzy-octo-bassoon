@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:55:26.356777+00:00",
+  "entities": [
+    {
+      "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+      "name": "Samuel Agbede",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 5,
+          "start_char": 597,
+          "end_char": 610,
+          "surface_name": "Samuel Agbede"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+      "name": "Evangelos Resvanis",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 10,
+          "start_char": 1161,
+          "end_char": 1179,
+          "surface_name": "Evangelos Resvanis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c710b1d3fe17e97f39b912da0f5e949f84edf31527806d02f1c9efcbde69ba80",
+      "name": "Redis",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 4,
+          "start_char": 342,
+          "end_char": 347,
+          "surface_name": "Redis"
+        },
+        {
+          "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+          "section_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:section:1",
+          "passage_id": 9,
+          "start_char": 911,
+          "end_char": 916,
+          "surface_name": "Redis"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-9642b1e2bd5ad398",
+  "usage": {
+    "input_tokens": 774,
+    "output_tokens": 546,
+    "total_tokens": 1320
+  },
+  "usage_scope": "final_response_only"
+}

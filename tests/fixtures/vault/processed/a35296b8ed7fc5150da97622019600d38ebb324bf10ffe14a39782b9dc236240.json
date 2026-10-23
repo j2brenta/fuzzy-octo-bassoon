@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240",
+  "source_content_hash": "8f2401d07ed0f7d460622d97dd83409acf94a9dfb36887d4a81f76279ca1e495",
+  "raw_path": "raw/a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:synthetic-confirmation",
+    "source_name": "Synthetic newsletter",
+    "message_id": "confirm-1",
+    "captured_at": "2026-10-12T09:05:00+00:00",
+    "published_at": "2026-10-12T09:00:00+00:00",
+    "author_hint": {
+      "name": "Demo Author"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [
+    {
+      "claim_id": "5bf845597787cb00e0f8f9f654797fc3967355f4b50c11f7dd81dde78f9221a5",
+      "statement": "Semantic entropy detects confabulations by sampling multiple answers.",
+      "kind": "fact",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240",
+        "section_id": "a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "8363c2a2343a8b6018205211a9f227c89abf1d1470aeef7e3be27740c22d7af3",
+      "name": "Yarin Gal",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}

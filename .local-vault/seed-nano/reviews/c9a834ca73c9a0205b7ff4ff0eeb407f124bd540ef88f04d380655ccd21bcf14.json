@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "extraction_hash": "e9765ed544e521f27d5f018dac86615656c35738e3cb4fd3f1101005f80428a3",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:51:02.720502+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "ddaa7e1d2293363f44ea966cc5b8c3968cbfdb54f79638190ac2b12609ed0647",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 3 states Jack Lindsey leads the model psychiatry team, his paper shows limited functional introspective awareness that is highly limited and context-dependent, and he is arguably the most direct researcher on metacognition."
+      },
+      {
+        "claim_id": "227449e6cda9411bd2d9a68ea89cd074cef68b790a2588e850d99c675a970a16",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 4 states Chris Olah and Josh Batson work on circuit-tracing research and their publications are the main source for mechanistic explanations of hallucination."
+      },
+      {
+        "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 5 exactly matches the claim about Sam Marks' work on geometry of truth and auditing hidden objectives."
+      },
+      {
+        "claim_id": "1b897c63d1946b2ef35df8db29fb5ad57c89fe2163811cbf5a26418fbe5b1dea",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 7 identifies Sebastian Farquhar and Yarin Gal as lead authors of the semantic entropy method published in Nature 2024 for detecting confabulations."
+      },
+      {
+        "claim_id": "5aeb4578d203687afb85dd72ce015388d31fc94ec8b2f4d75010b3d50f88afc0",
+        "verdict": "needs_revision",
+        "issues": [
+          "lost_qualification"
+        ],
+        "reason": "Passage 8 says Adam Tauman Kalai is lead author of the 2025 paper, but claim says co‑authored, losing the lead author qualification."
+      },
+      {
+        "claim_id": "2e7272f1796dce096f37d17387491705254eb974a5eab0dcc1096eef2a05bdfb",
+        "verdict": "needs_revision",
+        "issues": [
+          "lost_qualification"
+        ],
+        "reason": "Passage 9 says Owain Evans co-authored early work on teaching models to express uncertainty, but claim says he has done influential work on that, overstating his role."
+      },
+      {
+        "claim_id": "fbfa3f2b8d48337414296fa5177e66d6e4cdbd71d8b27f924e3b2a1b7664b6a9",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 11 confirms Stephen Fleming is a leading neuroscientist, author of Know Thyself, applies metacognition to AI, and clarifies calibration-versus-discrimination."
+      },
+      {
+        "claim_id": "804ad6b34479891eec492769de7d3ea21aa1d17346eae673a470f60baef2010f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 13 confirms Arvind Narayanan and Sayash Kapoor wrote the agent reliability paper borrowing from nuclear/aviation safety and produce a skeptical data-driven newsletter."
+      },
+      {
+        "claim_id": "755053021704187a13677a11633d5826a94aa9d41c0a0baa8ecd71ab4cd8732c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 14 confirms METR founded by Beth Barnes measures autonomous task completion and is a key reference for reliability-over-horizon."
+      },
+      {
+        "claim_id": "181fce16dab191b428caafae969a76c6ed8c65f0b90c4e76e8bf3eb8e6d8920d",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 15 describes Andrej Karpathy popularizing the march of nines framing; claim kind is announcement but passage is factual, so wrong_kind."
+      },
+      {
+        "claim_id": "1981d842dc9786c768090a6eef4e5283ffb820c891f6739e59e1d57ad0ddb60f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 16 confirms Azalia Mirhoseini co-led LLM-as-a-Verifier work on scaling verification."
+      },
+      {
+        "claim_id": "1575ed08595d0b03f9ff99763d6eedb569dbbc22bfb34abadf7ae4d487d93065",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 18 describes Shreya Shankar's research on evaluating LLM pipelines and the Who Validates the Validators paper; claim kind is how-to but passage is factual, so wrong_kind."
+      },
+      {
+        "claim_id": "07c7b91e105914c494658c67806a1260784192f335bea2b0132982da8bbe177e",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 19 describes Hamel Husain as a practical voice on building evals; claim kind is how-to but passage is factual, so wrong_kind."
+      },
+      {
+        "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
+        "verdict": "needs_revision",
+        "issues": [
+          "wrong_kind"
+        ],
+        "reason": "Passage 20 describes Eugene Yan writing accessible practical pieces; claim kind is how-to but passage is factual, so wrong_kind."
+      },
+      {
+        "claim_id": "af62bb23ce590bedc36e9a53ce8976928799b05b4b4f88dae5a3b23ef660d002",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Passage 22 recommends a minimal set of sources to follow and arXiv search terms, matching the claim's how-to advice."
+      }
+    ],
+    "omitted_concepts": [],
+    "summary": "Reviewed 15 claims against 22 passages. 10 claims fully supported. 5 claims need revision: claim 5 misstates lead author as co-author (lost_qualification), claim 6 overstates role in teaching uncertainty (lost_qualification), claims 10, 12, 13, 14 have wrong_kind (should be fact not announcement/how-to). No duplicates. All central researcher contributions covered; omitted_concepts empty.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-907f3191fdedb14e",
+  "usage": {
+    "input_tokens": 3678,
+    "output_tokens": 9444,
+    "total_tokens": 13122
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

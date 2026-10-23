@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "channel": "telegram",
+  "source_id": "seed:demo-reposts",
+  "source_name": "Synthetic repost channel",
+  "message_id": "repost-1",
+  "captured_at": "2026-10-19T10:01:00+00:00",
+  "published_at": "2026-10-15T09:10:00+00:00",
+  "author_hint": null,
+  "forwarded_by": "Demo Forwarder",
+  "channel_metadata": null,
+  "url": null,
+  "kind": "text",
+  "text": "Forwarded synthetic announcement: The demo workshop starts at 14:00 UTC on 25 October 2026.\n",
+  "attachments": [],
+  "content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33"
+}

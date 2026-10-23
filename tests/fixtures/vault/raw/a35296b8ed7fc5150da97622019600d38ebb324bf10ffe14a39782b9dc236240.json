@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "item_id": "a35296b8ed7fc5150da97622019600d38ebb324bf10ffe14a39782b9dc236240",
+  "channel": "telegram",
+  "captured_at": "2026-10-12T09:05:00+00:00",
+  "published_at": "2026-10-12T09:00:00+00:00",
+  "author_hint": {
+    "name": "Demo Author"
+  },
+  "forwarded_by": null,
+  "url": null,
+  "kind": "text",
+  "source_id": "seed:synthetic-confirmation",
+  "message_id": "confirm-1",
+  "source_name": "Synthetic newsletter",
+  "text": "Synthetic: Semantic entropy detects confabulations by sampling multiple answers, as Gal's group showed.",
+  "attachments": [],
+  "content_hash": "8f2401d07ed0f7d460622d97dd83409acf94a9dfb36887d4a81f76279ca1e495"
+}

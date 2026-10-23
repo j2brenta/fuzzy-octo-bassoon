@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "stage": "extraction_review",
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "source_content_hash": "2cd3b209440ab28fe872f23edecc0f7b4933d44f71126d7b96408357b95e6c55",
+  "extraction_hash": "c2646bc59041ccc36f57a55f09a0b50073eb09c0e11fb69eedf001b081e51221",
+  "prompt_version": "judge-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:29:59.890270+00:00",
+  "review": {
+    "claims": [
+      {
+        "claim_id": "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 3."
+      },
+      {
+        "claim_id": "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 3."
+      },
+      {
+        "claim_id": "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 3."
+      },
+      {
+        "claim_id": "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 4."
+      },
+      {
+        "claim_id": "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 4."
+      },
+      {
+        "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 5."
+      },
+      {
+        "claim_id": "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 7."
+      },
+      {
+        "claim_id": "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 7."
+      },
+      {
+        "claim_id": "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 8."
+      },
+      {
+        "claim_id": "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 9."
+      },
+      {
+        "claim_id": "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 9."
+      },
+      {
+        "claim_id": "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 11."
+      },
+      {
+        "claim_id": "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 11."
+      },
+      {
+        "claim_id": "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 13."
+      },
+      {
+        "claim_id": "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 13."
+      },
+      {
+        "claim_id": "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 14."
+      },
+      {
+        "claim_id": "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 14."
+      },
+      {
+        "claim_id": "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 15."
+      },
+      {
+        "claim_id": "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 16."
+      },
+      {
+        "claim_id": "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 18."
+      },
+      {
+        "claim_id": "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 19."
+      },
+      {
+        "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 20."
+      },
+      {
+        "claim_id": "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 22."
+      },
+      {
+        "claim_id": "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 22."
+      },
+      {
+        "claim_id": "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 3."
+      },
+      {
+        "claim_id": "c687e0f2a9972027f40b6943e214311cd122158e6d870719638c9ebb59d3eea1",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 22."
+      },
+      {
+        "claim_id": "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833",
+        "verdict": "supported",
+        "issues": [],
+        "reason": "Directly supported by passage 19."
+      }
+    ],
+    "omitted_concepts": [
+      {
+        "passage_id": 2,
+        "description": "Section header: 'Introspection and model internals' organizing the first research area."
+      },
+      {
+        "passage_id": 6,
+        "description": "Section header: 'Uncertainty and hallucination detection' organizing the second research area."
+      },
+      {
+        "passage_id": 10,
+        "description": "Section header: 'The cognitive science bridge' organizing the third research area."
+      },
+      {
+        "passage_id": 12,
+        "description": "Section header: 'Agent reliability and evaluation science' organizing the fourth research area."
+      },
+      {
+        "passage_id": 17,
+        "description": "Section header: 'Engineering practice: evals in production' organizing the fifth research area."
+      },
+      {
+        "passage_id": 21,
+        "description": "Section header: 'How to follow efficiently' introducing the minimal reading list."
+      }
+    ],
+    "summary": "All 27 claims are directly supported by their cited passages. The claims accurately capture each researcher's affiliation, work focus, and key publications as described in the source. The source is a curated list of researchers grouped into six thematic sections; the claims cover every bullet point but not the section headers themselves, which are noted as omitted concepts. No duplicates, misattributions, or unsupported statements were found.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-930a590e123981ee",
+  "usage": {
+    "input_tokens": 5020,
+    "output_tokens": 8576,
+    "total_tokens": 13596
+  },
+  "usage_scope": "final_response_only",
+  "scope": "source_faithfulness_not_external_fact_checking"
+}

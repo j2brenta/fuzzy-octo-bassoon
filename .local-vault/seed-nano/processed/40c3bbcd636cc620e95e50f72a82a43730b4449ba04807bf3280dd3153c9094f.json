@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "raw_path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:rvnikita_blog",
+    "source_name": "Мысли Рвачева (t.me/rvnikita_blog)",
+    "message_id": "1899",
+    "captured_at": "2026-10-19T12:20:00+00:00",
+    "published_at": null,
+    "author_hint": {
+      "name": "Nikita Rvachev",
+      "handle": "rvnikita_blog"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 1349
+      }
+    }
+  ],
+  "links": [
+    {
+      "url": "https://x.com/trq212/status/2090884854590382515",
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "start_char": 1137,
+      "end_char": 1184,
+      "kind": "url"
+    },
+    {
+      "url": "https://t.me/rvnikita_blog/1899",
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "start_char": 1186,
+      "end_char": 1217,
+      "kind": "url"
+    }
+  ],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "7622efc40ba3be75d556cb2cd7c3fb09c0bb53f8fd3148822dc8ddee550bbe0c",
+      "statement": "В Anthropic внутри команды часто используют skill ELI5 — команда /eli5 объясняет любую тему как для новичка через HTML‑артефакт с крупными картинками и минимумом текста.",
+      "kind": "principle",
+      "durability_class": "foundation",
+      "half_life_days": 720,
+      "confidence": 0.96,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 0,
+        "end_char": 171
+      }
+    },
+    {
+      "claim_id": "0065d40afb8b2d367c10930bd8a5b81ed3fb537d03a71dc0baed441c824cbab3",
+      "statement": "Thariq Shihipar, инженер Claude Code в Anthropic, сообщил, что официальный плагин ELI5 пока не встроен по умолчанию, но его можно установить через community marketplace.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.92,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 173,
+        "end_char": 384
+      }
+    },
+    {
+      "claim_id": "fc703acdd46acb763784b41284e252112746c6698507fa1f958c4bcdce397cc4",
+      "statement": "Для добавления community plugins в Claude используйте команду `claude plugin marketplace add anthropics/claude-plugins-community`.",
+      "kind": "how-to",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.97,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 386,
+        "end_char": 451
+      }
+    },
+    {
+      "claim_id": "b8bc73e574ca68ff2f962b0216592f14f5d4521f8d61f402756eb1f1bb7bc84b",
+      "statement": "Для установки плагина ELI5 в Claude используйте команду `claude plugin install eli5@claude-community`.",
+      "kind": "how-to",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.97,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 452,
+        "end_char": 495
+      }
+    },
+    {
+      "claim_id": "328c96c0a901943692d5cba7e5f2e0af2eee8e3aa96eca1a1c392de464738e16",
+      "statement": "ELI5 используется внутри Anthropic не только для внешних тем, но и для быстрого восстановления контекста в рабочих запросах, таких как объяснение работы модуля, анализ tradeoff или инцидента, позволяя не читать документацию и логи.",
+      "kind": "principle",
+      "durability_class": "reference",
+      "half_life_days": 180,
+      "confidence": 0.93,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 497,
+        "end_char": 810
+      }
+    },
+    {
+      "claim_id": "76dbfdfe19ae8cbd5626795a3a150e6ef149af574112d7328bd0bad96a33ffe0",
+      "statement": "ELI5 служит примером, где AI ускоряет умных людей и ухудшает глупых, позволяя быстро разобраться в теме за две минуты и показывая риск бездумного доверия к AI.",
+      "kind": "opinion",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.85,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+        "start_char": 812,
+        "end_char": 1135
+      }
+    }
+  ],
+  "entities": [],
+  "triage": {
+    "keep": true,
+    "kind": "post",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "Provides substantive explanation of Anthropic's ELI5 plugin usage and its practical benefits, constituting useful technical knowledge."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "7622efc40ba3be75d556cb2cd7c3fb09c0bb53f8fd3148822dc8ddee550bbe0c",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 directly states that Anthropic team often uses skill ELI5 via /eli5 command explaining any topic as for a beginner through HTML artifact with large pictures and minimal text."
+        },
+        {
+          "claim_id": "0065d40afb8b2d367c10930bd8a5b81ed3fb537d03a71dc0baed441c824cbab3",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 2 reports Thariq Shihipar, Claude Code engineer at Anthropic, shared that official ELI5 plugin is not yet default but can be installed via community marketplace."
+        },
+        {
+          "claim_id": "fc703acdd46acb763784b41284e252112746c6698507fa1f958c4bcdce397cc4",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 3 provides the exact command to add the community plugins marketplace."
+        },
+        {
+          "claim_id": "b8bc73e574ca68ff2f962b0216592f14f5d4521f8d61f402756eb1f1bb7bc84b",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 4 provides the exact command to install the ELI5 plugin from the community marketplace."
+        },
+        {
+          "claim_id": "328c96c0a901943692d5cba7e5f2e0af2eee8e3aa96eca1a1c392de464738e16",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 5 describes internal use not only for external topics but for work requests like explaining a module, analyzing a tradeoff, or incident cause, enabling quick context recovery without reading docs and logs from scratch."
+        },
+        {
+          "claim_id": "76dbfdfe19ae8cbd5626795a3a150e6ef149af574112d7328bd0bad96a33ffe0",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 6 expresses the author's opinion that AI makes smart people smarter and dumb people dumber, citing ELI5 as an example where quick understanding aids learning while blind reliance hinders thinking."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "All six claims are faithful to the source passages. Claims 1-5 accurately reflect factual and procedural content from passages 1-5. Claim 6 paraphrases the author's opinion in passage 6 about AI's divergent effects on different users, with ELI5 as an illustrative example. No claims are unsupported, duplicated, or misattributed. The extraction covers the central reusable ideas; minor metadata (URLs, hashtags, blog title) are omitted as non-central.",
+      "status": "accepted"
+    },
+    "entities": {
+      "status": "pending"
+    }
+  },
+  "quality_status": "pending",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "pending",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json": "615fd53ba7b207366fffa40fb31aff070de148de1b4550803f202de17c91b493",
+    "extractions/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json": "94d2b2c18e784bc945dc537533d78db2d54e2a4e2cedaa746ff49109400e0170",
+    "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json": "32ede0dfe8588a73f77e1a26ed773fa204bcad7bc0fc7a53a9f68b2dfb5b74ce",
+    "reviews/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json": "284adf00e7266694f9e5b504b36b2c8bea8044aaa0e00a356ac03a8c05f26632",
+    "triage/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json": "20f608ac7aeb293410c1711bed92e01fd4e25cc1aa1363b9373e91039da7db84"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "b89c2b48d3960610808b2c4f08d4445687a1cca79b6bd8d4d6dbb50b1b699ebd",
+  "created_at": "2026-10-20T10:37:37.847335+00:00"
+}

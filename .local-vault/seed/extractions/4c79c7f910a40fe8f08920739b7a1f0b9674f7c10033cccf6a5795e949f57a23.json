@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "stage": "claim_extraction",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "source_content_hash": "38cf2bf23c7779bc7ab209d2c99b9373b9992277f56007be94032c1adfebf115",
+  "parser_version": "text-v1",
+  "prompt_version": "extract-v4",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:22:13.625521+00:00",
+  "raw_path": "raw/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+  "document_path": "documents/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+  "claims": [
+    {
+      "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+      "statement": "The demo workshop starts at 16:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+        "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+        "start_char": 0,
+        "end_char": 143
+      }
+    },
+    {
+      "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+      "statement": "The demo workshop was previously announced to start at 14:00 UTC.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+        "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+        "start_char": 0,
+        "end_char": 143
+      }
+    }
+  ],
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-9624bd190c4da2f5",
+  "usage": {
+    "input_tokens": 495,
+    "output_tokens": 752,
+    "total_tokens": 1247
+  }
+}

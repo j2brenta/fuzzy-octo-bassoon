@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:39:16.875030+00:00",
+  "entities": [
+    {
+      "entity_id": "9b3a5e4dbed792a0e5949ccc20eb68c133d8b8982dc22d03e027be80542fb37f",
+      "name": "Synthetic test fixture",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+          "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 22,
+          "surface_name": "Synthetic test fixture"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "b9bbe82ec6fc445b69088cc6d2ad481a64560226ba1cfa8a6fa56a2670fc8092",
+      "name": "UTC",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+          "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+          "passage_id": 1,
+          "start_char": 58,
+          "end_char": 61,
+          "surface_name": "UTC"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-a115a44c5044e04a",
+  "usage": {
+    "input_tokens": 487,
+    "output_tokens": 1311,
+    "total_tokens": 1798
+  },
+  "usage_scope": "final_response_only"
+}

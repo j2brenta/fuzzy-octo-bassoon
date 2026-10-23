@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "raw_path": "raw/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:demo-reposts",
+    "source_name": "Synthetic repost channel",
+    "message_id": "repost-1",
+    "captured_at": "2026-10-19T10:01:00+00:00",
+    "published_at": "2026-10-15T09:10:00+00:00",
+    "author_hint": null,
+    "forwarded_by": "Demo Forwarder",
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 92
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+      "statement": "The demo workshop starts at 14:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.95,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+        "section_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:section:1",
+        "start_char": 0,
+        "end_char": 91
+      }
+    }
+  ],
+  "entities": [],
+  "triage": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "news",
+    "split_digest": false,
+    "reason": "It announces a specific future workshop, which is substantive knowledge to retain."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 states 'The demo workshop starts at 14:00 UTC on 25 October 2026,' which matches the claim exactly. The kind 'announcement' and durability 'news' are appropriate for a specific event notice."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "The claim is fully supported by the cited passage. The passage announces the demo workshop start time, and the claim accurately extracts that information with correct kind and durability labels.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [],
+      "omitted_entities": [],
+      "summary": "No entities were supplied for review. The single passage mentions a demo workshop scheduled for 25 October 2026 at 14:00 UTC, but no named persons, organizations, or defined concepts are present that would warrant entity extraction.",
+      "status": "accepted"
+    }
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "c173a0e77c5c0369d7c4db3493fce075cbcafe9f2b31f276acd450ae6b5d97a4",
+    "entities/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "5e55be2334d6d695bacbfa95e76d0647859d684225793668cece49e266b3a889",
+    "entity-reviews/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "5e2bcfe591d6ca9acf9b6a26971e2a319440e50395c0bd57442044eb737967f3",
+    "extractions/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "9f5ecab4daf7fee7858e0fa2d63504b69d7e57c17fb34a37185228738259e5dd",
+    "raw/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "361385f3676dda230ebc781949ca2c72361e82a8d39da44d4b550903923f2688",
+    "reviews/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "e2a2594aa395351f25071885855dff5c4dff7f69c83ce20871436eacc17898a2",
+    "triage/8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed.json": "6689b2a257cf8d9367e6b5992b9e9012204f0d89984ac04d83a36ed616671f59"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "dbe2b816462ac0bdb62b07a7eb0aec43ca330e5e038aa6893b1db0b1b3300193",
+  "created_at": "2026-10-20T10:39:40.754602+00:00"
+}

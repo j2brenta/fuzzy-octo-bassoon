@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "parser_version": "text-v1",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "raw_path": "raw/40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f.json",
+  "source_content_hash": "2b6a970f1ab7bf4a69e8e60557a4dbb073745e91ab7331d535274b33c8698658",
+  "sections": [
+    {
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 1349
+      }
+    }
+  ],
+  "links": [
+    {
+      "url": "https://x.com/trq212/status/2090884854590382515",
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "start_char": 1137,
+      "end_char": 1184,
+      "kind": "url"
+    },
+    {
+      "url": "https://t.me/rvnikita_blog/1899",
+      "section_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f:section:1",
+      "start_char": 1186,
+      "end_char": 1217,
+      "kind": "url"
+    }
+  ]
+}

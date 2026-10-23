@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "source_content_hash": "38cf2bf23c7779bc7ab209d2c99b9373b9992277f56007be94032c1adfebf115",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T07:54:49.545844+00:00",
+  "entities": [
+    {
+      "entity_id": "830426a5bb896088a8c8cbf61176fafce050142f2611e817be90fe26c83c59c3",
+      "name": "Synthetic test fixture correction",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+          "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+          "passage_id": 1,
+          "start_char": 0,
+          "end_char": 33,
+          "surface_name": "Synthetic test fixture correction"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "80d1eeb2cb5f9e40a8f0eb7a79a33be08bca4624f18ca8b8c1e74e269b8d96a4",
+      "name": "demo workshop",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+          "section_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:section:1",
+          "passage_id": 1,
+          "start_char": 39,
+          "end_char": 52,
+          "surface_name": "demo workshop"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8c314d9b9f80abe6",
+  "usage": {
+    "input_tokens": 501,
+    "output_tokens": 419,
+    "total_tokens": 920
+  },
+  "usage_scope": "final_response_only"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "channel": "telegram",
+  "source_id": "seed:demo-organizer",
+  "source_name": "Synthetic demo organizer",
+  "message_id": "original-1",
+  "captured_at": "2026-10-19T10:02:00+00:00",
+  "published_at": "2026-10-15T09:00:00+00:00",
+  "author_hint": {
+    "name": "Demo Organizer"
+  },
+  "forwarded_by": null,
+  "channel_metadata": null,
+  "url": null,
+  "kind": "text",
+  "text": "Synthetic test fixture: The demo workshop starts at 14:00 UTC on 25 October 2026.\n",
+  "attachments": [],
+  "content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e"
+}

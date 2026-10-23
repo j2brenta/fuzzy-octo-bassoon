@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "parser_version": "text-v1",
+  "prompt_version": "triage-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/nemotron-3-super-120b-a12b",
+  "created_at": "2026-10-20T10:24:44.606959+00:00",
+  "labels": {
+    "keep": true,
+    "kind": "thought",
+    "durability_class": "reference",
+    "split_digest": false,
+    "reason": "The text provides a substantive overview of alternative economists and their relevance to AI impacts, offering reusable reference information."
+  },
+  "attempts": 1,
+  "usage_scope": "final_response_only",
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/nemotron-3-super-120b-a12b",
+  "request_id": "chatcmpl-86d6414399b00119",
+  "usage": {
+    "input_tokens": 1534,
+    "output_tokens": 227,
+    "total_tokens": 1761
+  }
+}

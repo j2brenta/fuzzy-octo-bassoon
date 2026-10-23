@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "fixture",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "raw_path": "raw/7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:supplied-talks",
+    "source_name": "Supplied Redis talks",
+    "message_id": "redis-talks",
+    "captured_at": "2026-10-19T11:52:00+02:00",
+    "published_at": null,
+    "author_hint": null,
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169:section:1",
+      "kind": "text"
+    }
+  ],
+  "links": [],
+  "claims": [
+    {
+      "claim_id": "16f6cbb253dffef0cc830470b34bcfc7598bb5e68ecfd12fa8d9762a1fbada92",
+      "statement": "A talk on real-time retrieval for AI agents starts at 18:30.",
+      "kind": "announcement",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169",
+        "section_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    },
+    {
+      "claim_id": "79ac30dda7cc5a7abaf5ed0690835a7eddbcce7cfd9869d0d31709e55c7363d9",
+      "statement": "A talk on building memory for AI agents starts at 19:00.",
+      "kind": "announcement",
+      "durability_class": "ephemeral",
+      "half_life_days": 7,
+      "confidence": 0.8,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169",
+        "section_id": "7d8d8ed8d1199790c7d0f33765b2523198c97346db6437eee87b2c8fe1ad6169:section:1",
+        "start_char": 0,
+        "end_char": 10
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "552702edd7c0d9512c02fa990702bec0ef25b26b14c1d6a47bc6b2954eadbf34",
+      "name": "Samuel Agbede",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "cf74d381c158c2c1e4d1753aa60f8ad373f09101a1b6fbc2e48dc6073625a777",
+      "name": "Evangelos Resvanis",
+      "kind": "person",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    },
+    {
+      "entity_id": "cf8f14dd5427d84fd1e865fec9cfa36b90332b4cfe3e66132ee56a88ef712801",
+      "name": "Redis",
+      "kind": "organization",
+      "mentions": [],
+      "identity_status": "local_mention_not_resolved"
+    }
+  ],
+  "triage": {
+    "keep": true,
+    "kind": "announcement",
+    "durability_class": "ephemeral",
+    "split_digest": false,
+    "reason": "fixture"
+  },
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "graph_status": "not_applied",
+  "chunks": [],
+  "embeddings_status": "not_implemented"
+}

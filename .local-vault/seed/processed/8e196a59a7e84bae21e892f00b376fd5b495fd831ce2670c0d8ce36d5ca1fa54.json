@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "stage": "processed_extraction",
+  "builder_version": "handoff-v1",
+  "contract_status": "provisional_awaiting_shared_schema",
+  "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+  "source_content_hash": "facf5db7109f01e374657fbef9dbd7489185bf09f7d7240ccda8d09909864f3e",
+  "raw_path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+  "source": {
+    "channel": "telegram",
+    "source_id": "seed:demo-organizer",
+    "source_name": "Synthetic demo organizer",
+    "message_id": "original-1",
+    "captured_at": "2026-10-19T10:02:00+00:00",
+    "published_at": "2026-10-15T09:00:00+00:00",
+    "author_hint": {
+      "name": "Demo Organizer"
+    },
+    "forwarded_by": null,
+    "url": null,
+    "kind": "text"
+  },
+  "sections": [
+    {
+      "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+      "kind": "text",
+      "provenance": {
+        "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+        "field": "text",
+        "start_char": 0,
+        "end_char": 82
+      }
+    }
+  ],
+  "links": [],
+  "attachments": [],
+  "channel_metadata_ref": {
+    "path": "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json",
+    "field": "channel_metadata"
+  },
+  "claims": [
+    {
+      "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+      "statement": "The demo workshop starts at 14:00 UTC on 25 October 2026.",
+      "kind": "announcement",
+      "durability_class": "news",
+      "half_life_days": 30,
+      "confidence": 0.96,
+      "support_status": "quoted_not_fact_checked",
+      "evidence": {
+        "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
+        "section_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54:section:1",
+        "start_char": 0,
+        "end_char": 81
+      }
+    }
+  ],
+  "entities": [],
+  "triage": {
+    "keep": false,
+    "kind": "announcement",
+    "durability_class": "ephemeral",
+    "split_digest": false,
+    "reason": "The message is a time‑specific logistical detail with no lasting knowledge value."
+  },
+  "reviews": {
+    "claims": {
+      "claims": [
+        {
+          "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+          "verdict": "supported",
+          "issues": [],
+          "reason": "Passage 1 states exactly that the demo workshop starts at 14:00 UTC on 25 October 2026, matching the claim."
+        }
+      ],
+      "omitted_concepts": [],
+      "summary": "The single claim is fully supported by the cited passage. The passage includes a prefatory phrase 'Synthetic test fixture:' which is not a central idea and does not affect the claim's accuracy.",
+      "status": "accepted"
+    },
+    "entities": {
+      "entities": [],
+      "omitted_entities": [
+        {
+          "name": "demo workshop",
+          "kind": "concept",
+          "evidence_passage_ids": [
+            1
+          ]
+        }
+      ],
+      "summary": "No entities supplied; omitted entity 'demo workshop' identified from passage 1.",
+      "status": "needs_revision"
+    }
+  },
+  "quality_status": "skipped",
+  "quality_gate_passed": false,
+  "graph_status": "not_applied",
+  "claim_candidate": "extractions",
+  "entity_status": "saved",
+  "chunks": [],
+  "embeddings_status": "not_implemented",
+  "inputs": {
+    "documents/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "c91f1d12d66a97e0e8bfff170981dcf56be9344599d7c6aa45574e20b941d5cb",
+    "entities/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "1a988e9ea7c2f8948abe5fba1d95e423f7fba0e7da3b667df67719bb41f3742f",
+    "entity-reviews/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "39d1931d2da223f2dedf33543863755c9fd7cf049d18db0abdf1baf5ff7d19dc",
+    "extractions/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "6bcc96699dca1f36f3f93bbc812eb44ca861d49ac1459c1c9d0f8e6b1d8f6124",
+    "raw/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "9cd28e36cfb3e4113fab924a8dbeda6a1955418e9d5ceb1caa58c65660c71175",
+    "reviews/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "2d032fa43545070ad6af9b99c557c672a389898c6da67ab17c283c6b696f916d",
+    "triage/8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54.json": "bacf7c864b8e1995bced937c16205fe6bea5f17b683c186890fbf1b0f7d5dade"
+  },
+  "ignored_candidates": [],
+  "bundle_id": "45d2e440a0ebcd3f767b2138674abe950dee2b4e21b77cdb093f845cfcf1817e",
+  "created_at": "2026-10-20T10:22:51.550487+00:00"
+}

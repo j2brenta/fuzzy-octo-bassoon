@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "stage": "entity_review",
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "entity_extraction_hash": "fce1d5cd63b8201cc8a140ad953e4e1ffb03b69d348ade992226cdcea8b211ca",
+  "prompt_version": "entity-review-v3",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:38:58.186984+00:00",
+  "review": {
+    "entities": [
+      {
+        "entity_id": "6c1ad12e5a2cb2f47a8caa8e0fe407084ebd9f38c5dcfc0a93c58368175e69af",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage 5 as speaker for the 18:30 PM session; person type correct."
+      },
+      {
+        "entity_id": "e073ba2174d755398029d9dc041ff6465a1f73013c2ecd577a3f7f39a351f242",
+        "verdict": "supported",
+        "reason": "Explicitly named in passage 10 as speaker for the 19:00 PM session; person type correct."
+      },
+      {
+        "entity_id": "152cf82f0e354142303da53cce8f630bee475818d7aaf5355907c3c8bfb17836",
+        "verdict": "supported",
+        "reason": "Named in passages 4 and 9 as the technology powering the demo agents; organization type appropriate for Redis the company/product."
+      }
+    ],
+    "omitted_entities": [
+      {
+        "name": "Building Real-Time Retrieval for AI Agents: Keeping Context Fresh and Relevant in Production",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          2
+        ]
+      },
+      {
+        "name": "Building Memory for AI Agents: Maintaining Useful Context Across Tasks and Sessions",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          7
+        ]
+      },
+      {
+        "name": "retail support agent",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          4
+        ]
+      },
+      {
+        "name": "context poisoning",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          3
+        ]
+      },
+      {
+        "name": "working and long term memory",
+        "kind": "concept",
+        "evidence_passage_ids": [
+          8
+        ]
+      }
+    ],
+    "summary": "All three supplied entities are directly grounded in the source passages with correct types and no merge issues. Five additional concept entities from talk titles and key technical terms are noted as omitted but within budget.",
+    "status": "needs_revision"
+  },
+  "attempts": 1,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-bef87bf2fd9aaa6b",
+  "usage": {
+    "input_tokens": 1741,
+    "output_tokens": 1126,
+    "total_tokens": 2867
+  },
+  "usage_scope": "final_response_only"
+}

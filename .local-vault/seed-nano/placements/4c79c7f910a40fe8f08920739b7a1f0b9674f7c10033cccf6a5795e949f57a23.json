@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "adapter": "storage_only_v1",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "bundle_id": "147ba9e85ba0f826ddc7b83e5045e4f729e2a501034815c83a696de302a6bcd1",
+  "processed_path": "processed/4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23.json",
+  "status": "stored_only",
+  "graph_applied": false,
+  "quality_status": "accepted",
+  "quality_gate_passed": true,
+  "reason": "graph_adapter_pending",
+  "node_ids": [],
+  "edge_ids": []
+}

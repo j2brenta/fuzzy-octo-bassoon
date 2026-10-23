@@ -1,0 +1,551 @@
+{
+  "schema_version": 1,
+  "stage": "entity_extraction",
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "source_content_hash": "c15ce644b1f84cf2495a4f34b3272d2e7a58955ce4dbdff9d27b8f0afeb480e4",
+  "parser_version": "text-v1",
+  "prompt_version": "entities-v2",
+  "provider": "nebius",
+  "model_provider": "nebius",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "created_at": "2026-10-20T10:48:28.699597+00:00",
+  "entities": [
+    {
+      "entity_id": "14364ecf132824a84766f933f3783f3876dade817991dd2fee220310ebcd524b",
+      "name": "Jianfeng Liu",
+      "kind": "person",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 2,
+          "start_char": 74,
+          "end_char": 86,
+          "surface_name": "Jianfeng Liu"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "ff2a32cd0c7de9aa3a9dd486d9d0c8860614a5f9c9fd6f26a96a7d753034920c",
+      "name": "AI",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 5,
+          "start_char": 330,
+          "end_char": 332,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 6,
+          "start_char": 478,
+          "end_char": 480,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 6,
+          "start_char": 583,
+          "end_char": 585,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 6,
+          "start_char": 772,
+          "end_char": 774,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 1119,
+          "end_char": 1121,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 1412,
+          "end_char": 1414,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 2396,
+          "end_char": 2398,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 10,
+          "start_char": 2894,
+          "end_char": 2896,
+          "surface_name": "AI"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 10,
+          "start_char": 2946,
+          "end_char": 2948,
+          "surface_name": "AI"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "bd5e1868aab0b3aa1bb56ab949ce854549edb9a8c9d943c814ca73d962d715bb",
+      "name": "mathematics",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 5,
+          "start_char": 354,
+          "end_char": 365,
+          "surface_name": "mathematics"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 1008,
+          "end_char": 1019,
+          "surface_name": "mathematics"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 1468,
+          "end_char": 1479,
+          "surface_name": "mathematics"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c3b130914a1458c6530f4b9eeb12f82b99361a1520c0fd4cd71b8d8aa178fe70",
+      "name": "humanities",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 1953,
+          "end_char": 1963,
+          "surface_name": "humanities"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 2524,
+          "end_char": 2534,
+          "surface_name": "humanities"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 23,
+          "start_char": 8241,
+          "end_char": 8251,
+          "surface_name": "humanities"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "58e917ee66f3a97a218d280fed32f1be9957c6a9c5d789e3ac64847dfe88017b",
+      "name": "text generation",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 5,
+          "start_char": 377,
+          "end_char": 392,
+          "surface_name": "text generation"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 2023,
+          "end_char": 2038,
+          "surface_name": "text generation"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 10,
+          "start_char": 2699,
+          "end_char": 2714,
+          "surface_name": "text generation"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "541c8f7e152f7b0d6c48d63ea2901110efb08b8e98562867a9c3e9ea95a26d31",
+      "name": "novel",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 3,
+          "start_char": 168,
+          "end_char": 173,
+          "surface_name": "novel"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 12,
+          "start_char": 3354,
+          "end_char": 3359,
+          "surface_name": "novel"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 13,
+          "start_char": 3451,
+          "end_char": 3456,
+          "surface_name": "novel"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 14,
+          "start_char": 4065,
+          "end_char": 4071,
+          "surface_name": "novels"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 14,
+          "start_char": 4169,
+          "end_char": 4174,
+          "surface_name": "novel"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 14,
+          "start_char": 4390,
+          "end_char": 4396,
+          "surface_name": "novels"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 16,
+          "start_char": 5871,
+          "end_char": 5876,
+          "surface_name": "novel"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "novels"
+      ]
+    },
+    {
+      "entity_id": "ace3984c071d0501293deb24dd5a70e88ba130e6eb32f1d85b050de0f4df799b",
+      "name": "LLM",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 3,
+          "start_char": 114,
+          "end_char": 117,
+          "surface_name": "LLM"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "91ea3784dd9d1711cd27f337e88b273a1f6498f5ae8bc0dccb5a3a775bfff7d1",
+      "name": "RAG",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 3,
+          "start_char": 237,
+          "end_char": 240,
+          "surface_name": "RAG"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "e4bc5a2fb0a1ca0581efcbd459bf433b25355142b470b9831470433335f73c86",
+      "name": "state machine",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 6,
+          "start_char": 486,
+          "end_char": 499,
+          "surface_name": "state machine"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 13,
+          "start_char": 3592,
+          "end_char": 3606,
+          "surface_name": "state machines"
+        }
+      ],
+      "identity_status": "resolved_within_item",
+      "aliases": [
+        "state machines"
+      ]
+    },
+    {
+      "entity_id": "04d8d725e8e40c5cbaf14bfa0d4d97ec48d75eeb5514c9464b5af8cc9b44befa",
+      "name": "standard answers",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 941,
+          "end_char": 957,
+          "surface_name": "standard answers"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 8,
+          "start_char": 1224,
+          "end_char": 1240,
+          "surface_name": "standard answers"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 1657,
+          "end_char": 1673,
+          "surface_name": "standard answers"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "57c87673242d729083cf493100bae9e735483f15e13e123e06f5965383f21c63",
+      "name": "gray zone",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 9,
+          "start_char": 1827,
+          "end_char": 1836,
+          "surface_name": "gray zone"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "6bcafcfd7f93c9e861fd3e2d32358567ddf5f615a7bbae5cc3280ca5ad02d265",
+      "name": "outline",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6198,
+          "end_char": 6205,
+          "surface_name": "outline"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6400,
+          "end_char": 6407,
+          "surface_name": "outline"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6506,
+          "end_char": 6513,
+          "surface_name": "outline"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6677,
+          "end_char": 6684,
+          "surface_name": "outline"
+        },
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 19,
+          "start_char": 7385,
+          "end_char": 7392,
+          "surface_name": "outline"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "b9786a2c3f4ac8ac3aa1ca2b1a6f874ed01ac9eb5961a742738a9b85374fd6f8",
+      "name": "detective fiction",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6244,
+          "end_char": 6261,
+          "surface_name": "detective fiction"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c9882a074fcd9952c36e65497c089b420a69ca8e1ece00a0918ce9eb06af0f53",
+      "name": "cognitive efficiency",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 18,
+          "start_char": 6950,
+          "end_char": 6970,
+          "surface_name": "cognitive efficiency"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "a2757fa1251fce85fb64c9793751179613823a0085c1868bab06a27d654c7fc5",
+      "name": "memory limits",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 22,
+          "start_char": 7888,
+          "end_char": 7901,
+          "surface_name": "memory limits"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "c8d06d333f4d77ad0fdee5e0278649af17cf7cc3b9e80d9359d74fc85a3ef525",
+      "name": "long-form output control",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 3,
+          "start_char": 118,
+          "end_char": 142,
+          "surface_name": "long-form output control"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "13a8513451d748fd148586f9a3f729df87758a6dd16a4520250c11a1d5f22f1b",
+      "name": "non-detective novels",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 22,
+          "start_char": 7947,
+          "end_char": 7967,
+          "surface_name": "non-detective novels"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    },
+    {
+      "entity_id": "df01f02ca408b71b36351d7933217dec2881bb88ac3e776b427e96311c8003e3",
+      "name": "human cognitive patterns",
+      "kind": "concept",
+      "mentions": [
+        {
+          "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+          "section_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:section:1",
+          "passage_id": 24,
+          "start_char": 8422,
+          "end_char": 8446,
+          "surface_name": "human cognitive patterns"
+        }
+      ],
+      "identity_status": "local_mention_not_resolved",
+      "aliases": []
+    }
+  ],
+  "raw_path": "raw/9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a.json",
+  "attempts": 2,
+  "actual_provider": "nebius",
+  "actual_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "request_id": "chatcmpl-8fc5ed46b2472c33",
+  "usage": {
+    "input_tokens": 3071,
+    "output_tokens": 6178,
+    "total_tokens": 9249
+  },
+  "usage_scope": "final_response_only"
+}
