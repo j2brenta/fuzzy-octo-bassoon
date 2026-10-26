@@ -482,11 +482,50 @@ uv run refresher enrich --vault VAULT --limit 5          # most involved people 
 uv run refresher enrich --vault VAULT --person "Yarin Gal"
 ```
 
-Open `wiki/graph/index.html` in a browser; it works from disk with no server.
-It draws items, Ideas, people and sources, with typed edges (supersedes,
-contradicts, confirms, adds detail, repeats). Mentions are left out on purpose.
-Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`, taken from Victor's
-news map.
+### The hourly review and your decisions
+
+Placement files each item at once. Once an hour (after a capture, when the last
+run is more than an hour old), or when you send `/consolidate` to the bot, the
+review looks at the whole graph:
+
+1. Items whose stored verdicts missed a closer claim that arrived later are judged
+   again, so an original captured after its correction still gets superseded.
+2. Applied without asking: item duplicates, and Ideas confirmed by two independent
+   authors become firm.
+3. Proposed to you: topics (groups of 3+ Ideas from 2+ sources that sit close
+   together, named by the model), merging two Ideas that say the same thing in
+   other words, merging two people (same surname, compatible first names,
+   something in common), and confirming a relation that replaces or contradicts a
+   reference or foundation claim (it is live already; rejecting removes it).
+4. The three most involved people not yet looked up are enriched, and `wiki/` and
+   the map are rebuilt.
+
+Proposals are stored in `graph-reviews/proposals/`, your answers in
+`graph-reviews/decisions/` (never rewritten). Each proposal keeps a fingerprint of
+the claims it covers, and the page hands out a token for what you saw: if the
+evidence changed since, the decision is refused and the proposal waits for the next
+review. An accepted topic takes close new Ideas provisionally as they arrive.
+
+```bash
+uv run refresher consolidate --vault VAULT            # the hourly job; --lexical for no model or web calls
+uv run refresher serve --vault VAULT                  # the map on http://127.0.0.1:8765 with Accept / Reject
+uv run refresher proposals --vault VAULT              # the same list in the terminal, with tokens
+uv run refresher decide --vault VAULT ID accept --token TOKEN
+```
+
+Candidates and topics use embeddings: by default word stems hashed offline; set
+`NEBIUS_EMBED_MODEL` in `.env` to use a Nebius embedding model (vectors are cached
+in the vault's `.cache/`). The thresholds are tuned for the offline embedder.
+
+### The map
+
+Open `wiki/graph/index.html` in a browser; it works from disk with no server, or
+run `refresher serve` to decide proposals on it. The map is Victor's News Atlas
+viewer from his news map branch, translated and fed from this graph: topics as
+regions, a timeline with filters, a Sources mode (items and how their claims
+relate) and a Claims mode, an evidence panel with the exact passage behind every
+claim, and a side-by-side comparison. Edges are marked automatic, accepted by you
+or proposed. Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`.
 
 ## Validation
 

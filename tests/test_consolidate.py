@@ -47,6 +47,7 @@ def test_lexical_consolidation_writes_proposals_views_and_the_stamp(tmp_path):
     assert (v / "wiki" / "graph" / "index.html").exists() and (v / "wiki" / "index.md").exists()
     assert not job.due(v, AT + timedelta(minutes=59)) and job.due(v, AT + timedelta(hours=1))
     assert "4 waiting for you" in (v / "log.md").read_text()
+    assert "Review: 4 proposals waiting for you, 0 stale" in (v / "wiki" / "health.md").read_text()
     assert job.consolidate(v, at=AT).proposed == 0
 
 

@@ -38,6 +38,9 @@ class KnowledgeReport:
     unreviewed: dict[str, str] = field(default_factory=dict)  # placed without passing the quality gate
     ideas: Counter = field(default_factory=Counter)  # status -> count
     conflicted_ideas: list[str] = field(default_factory=list)  # titles of Ideas holding a CONTRADICTS edge
+    topics: int = 0
+    attached: int = 0  # Ideas a topic took provisionally since it was accepted
+    proposals: Counter = field(default_factory=Counter)  # status -> count
     people: int = 0
     people_pending: int = 0
     fading_soon: list[ClaimScore] = field(default_factory=list)  # fresh now, fading within SOON
@@ -76,6 +79,9 @@ def run(store: GraphStore, at: datetime) -> KnowledgeReport:
     r.ideas = Counter(i.status for i in ideas)
     contradicted = {e.src for e in store.edges() if e.type == "CONTRADICTS"}
     r.conflicted_ideas = sorted(i.title for i in ideas if i.members & contradicted)
+    topics = list(store.topics()) if hasattr(store, "topics") else []
+    r.topics, r.attached = len(topics), sum(len(t.attached) for t in topics)
+    r.proposals = Counter(st.status for st in getattr(store, "proposals", {}).values())
     people = list(store.people())
     r.people, r.people_pending = len(people), sum(p.enrichment_status == "pending" for p in people)
 
@@ -100,7 +106,9 @@ def render(r: KnowledgeReport, store: GraphStore) -> str:
              f"{r.items} items, {r.claims} claims, {r.people} people ({r.people_pending} awaiting enrichment). "
              f"{r.noise} claims collapsed as noise, {r.confirmations} confirmations.", "",
              f"{sum(r.ideas.values())} Ideas: {r.ideas['firm']} firm, {r.ideas['provisional']} provisional, "
-             f"{len(r.conflicted_ideas)} with conflicts.", "",
+             f"{len(r.conflicted_ideas)} with conflicts. {r.topics} topics ({r.attached} Ideas attached provisionally).",
+             "", f"Review: {r.proposals['proposed']} proposals waiting for you, {r.proposals['stale']} stale, "
+             f"{r.proposals['accepted']} accepted, {r.proposals['rejected']} rejected.", "",
              "## Freshness by durability", "", "| durability | half-life | " + " | ".join(BANDS) + " |",
              "|---|---|" + "---|" * len(BANDS)]
     for d in DURABILITIES:

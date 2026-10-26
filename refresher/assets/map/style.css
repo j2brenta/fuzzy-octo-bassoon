@@ -8,7 +8,8 @@
 .proposal.waiting{border-color:var(--orange)}
 .proposal h3{font-size:14px;margin:0;overflow-wrap:anywhere}
 .proposal .kind{font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--orange);text-transform:uppercase}
-.proposal ul{margin:0;padding-left:16px;font-size:12px}
+.proposal ul{margin:0;padding:0;list-style:none;font-size:12px;display:grid;gap:4px}
+.proposal li{border-left:2px solid var(--line);padding-left:8px}
 .proposal li button{border:0;background:none;padding:0;text-align:left;color:var(--teal);font-size:12px}
 .proposal .why{font-size:11px;color:var(--muted);margin:0}
 .proposal .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
