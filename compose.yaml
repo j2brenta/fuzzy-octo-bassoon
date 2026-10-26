@@ -1,0 +1,115 @@
+name: refresher
+
+x-runtime: &runtime
+  image: refresher:local
+  build:
+    context: .
+    target: production
+  init: true
+  user: "${LOCAL_UID:-10001}:${LOCAL_GID:-10001}"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+  pids_limit: 128
+  mem_limit: 1g
+  cpus: 1.0
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-config: &config
+  # Optional so offline commands/tests can run before credentials are configured.
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    REFRESHER_VAULT: /data/telegram
+
+x-vault: &vault
+  type: bind
+  source: ${VAULT_DIR:-./.local-vault}
+  target: /data
+  bind:
+    create_host_path: false
+
+services:
+  frontend:
+    <<: [*runtime, *config]
+    command: ["python", "-m", "refresher.web", "--host", "0.0.0.0", "--port", "8080", "--vault", "/data/jury"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: "on-failure:3"
+    volumes:
+      - *vault
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/submissions', timeout=5).close()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+  neo4j:
+    image: neo4j:2026.10.0
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - neo4j-data:/data
+    restart: "on-failure:3"
+    stop_grace_period: 30s
+    mem_limit: 2g
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-}
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$${NEO4J_AUTH#*/}\" 'RETURN 1' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 15s
+      start_period: 60s
+      retries: 5
+
+  telegram:
+    <<: [*runtime, *config]
+    # Bounded retries avoid endlessly restarting with invalid credentials.
+    restart: "on-failure:3"
+    volumes:
+      - *vault
+
+  cli:
+    <<: [*runtime, *config]
+    profiles: [tools]
+    command: ["refresher", "--help"]
+    volumes:
+      - *vault
+
+  viewer:
+    <<: *runtime
+    profiles: [tools]
+    command: ["refresher-view", "--vault", "/data/telegram"]
+    environment:
+      TERM: ${TERM:-xterm-256color}
+    stdin_open: true
+    tty: true
+    network_mode: none
+    volumes:
+      - <<: *vault
+        read_only: true
+
+  test:
+    <<: *runtime
+    image: refresher:test
+    build:
+      context: .
+      target: test
+    profiles: [test]
+    network_mode: none
+
+volumes:
+  neo4j-data:

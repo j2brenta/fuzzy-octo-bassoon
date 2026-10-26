@@ -17,6 +17,44 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
+## Docker Compose
+
+See [the container guide](docs/docker.md) for the codebase analysis, service
+boundaries, offline commands, persistence, backups and troubleshooting.
+Requires Docker with Compose **2.24 or newer**.
+
+```bash
+cp .env.example .env  # once; fill in your bot token, owner ID and Nebius key
+mkdir -p .local-vault/telegram
+docker compose build
+docker compose up -d telegram
+docker compose logs -f telegram
+```
+
+`make up` builds the app and pulls Neo4j. Set `NEO4J_AUTH=neo4j/<your-password>`
+in `.env`, then run `docker compose up -d --wait neo4j` to start the database.
+Its browser opens at <http://localhost:7474>; the app's Neo4j adapter is still
+pending. See the container guide for database persistence and connection details.
+
+Stop any existing polling process for the same Telegram token first. Leave the
+owner ID blank only for setup mode (`/start` returns your ID without capturing).
+Enabling AI processing sends captured text to the configured Nebius API and can
+incur charges; use `TRIAGE_PROVIDER=off`, `JUDGE_PROVIDER=off` and
+`ENTITY_EXTRACTION=off` for capture without AI calls. `WEB_FETCH=off` also
+disables article downloads. On Linux, set `LOCAL_UID` and `LOCAL_GID` as described
+in the guide so the container can write your vault.
+
+```bash
+# Credential-free tests: no network and no real-vault mount.
+docker compose --profile test build test
+docker compose run --rm test
+
+# On-demand tools share the persistent vault.
+docker compose run --rm cli python -m engine.results /data/telegram
+docker compose run --rm viewer
+docker compose down
+```
+
 ## Capture text and provenance
 
 Run from the repository root:

@@ -1,0 +1,25 @@
+# Allowlist: private captures, credentials, Git history and host environments
+# must never enter the build context.
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!refresher/
+!refresher/**
+!channels/
+!channels/**
+!engine/
+!engine/**
+!graph/
+!graph/**
+!store/
+!store/**
+!eval/
+!eval/seed_corpus/
+!eval/seed_corpus/**
+!tests/
+!tests/**
+**/__pycache__/
+**/*.pyc
+**/.env
+**/.env.*
