@@ -60,6 +60,7 @@ def main(argv=None) -> int:
     if not (args.vault / "processed").is_dir():
         ap.error(f"{args.vault} has no processed/ folder; run ingestion first")
     at = _at(args.at)
+    _embedder(args.vault)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
@@ -112,6 +113,14 @@ def main(argv=None) -> int:
         print(text, end="")
         return 0 if all(c.ok is not False for c in checks) else 1
     return 0
+
+
+def _embedder(vault_path: Path) -> None:
+    """Nebius embeddings when NEBIUS_EMBED_MODEL is set in .env (cached in the vault), else the offline stems."""
+    from dotenv import dotenv_values
+    from graph import embed
+    env = {**dotenv_values(Path(__file__).resolve().parents[1] / ".env"), **os.environ}  # .env without exporting it
+    embed.use(embed.from_environment(vault_path, env))
 
 
 def _proposals(vault_path: Path, everything: bool) -> int:

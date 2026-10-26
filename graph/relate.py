@@ -17,12 +17,14 @@ from typing import Protocol
 from pydantic import ValidationError
 
 from engine.llm import JsonModel, ModelOutputError
+from graph import embed
 from refresher.schemas import Claim, Entity, Extraction, Relation, Source, Verdict
 
 CANDIDATES = 5
 CLAIM_SIMILARITY = 0.8  # claim statement, word-set Jaccard: the lexical relator's SAME
 ENTITY_BOOST = 0.1  # per entity both items name
-RECHECK_SCORE = CLAIM_SIMILARITY / 2  # a new candidate this close makes stored verdicts worth judging again
+MIN_SIMILARITY = 0.1  # embedding cosine below this is not a candidate
+RECHECK_SCORE = 0.5  # a new candidate this close makes stored verdicts worth judging again
 WORD = re.compile(r"\w+", re.UNICODE)
 
 
@@ -64,9 +66,9 @@ class Relator(Protocol):
 
 
 def score(claim: Claim, entities: set[str], c: Candidate) -> float:
-    """Word overlap, boosted by shared entities; 0 when no word is shared. Embeddings can replace it here."""
-    overlap = jaccard(set(words(claim.statement)), set(words(c.statement)))
-    return overlap + ENTITY_BOOST * len(entities & c.entities) if overlap > 0 else 0.0
+    """Embedding similarity (graph/embed.py), boosted by shared entities; 0 below MIN_SIMILARITY."""
+    similar = embed.similarity(claim.statement, c.statement)
+    return similar + ENTITY_BOOST * len(entities & c.entities) if similar >= MIN_SIMILARITY else 0.0
 
 
 def candidates(claim: Claim, entities: set[str], pool: list[Candidate], k: int = CANDIDATES) -> list[Candidate]:
