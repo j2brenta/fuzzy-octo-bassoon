@@ -6,11 +6,9 @@ each big enough component becomes a topic proposal, named by one model call or b
 """
 from collections import Counter
 
-from graph.embed import STOP, cosine, stem, words
+from graph.embed import STOP, cosine, stem, thresholds, words
 
 K = 5  # neighbours per Idea in the review's graph
-TOPIC_LINK = 0.3  # cosine for an edge between two unsorted Ideas
-TOPIC_ATTACH = 0.35  # cosine to a topic's centroid for a new Idea to join it provisionally
 TOPIC_MIN_IDEAS = 3
 TOPIC_MIN_SOURCES = 2
 
@@ -21,14 +19,17 @@ def centroid(vectors: list[list[float]]) -> list[float]:
     return [x / norm for x in total] if norm else total
 
 
-def attach(vector: list[float], centroids: dict[str, list[float]], threshold: float = TOPIC_ATTACH) -> str | None:
-    """The closest topic at or above the threshold; ties go to the smaller id, so replays agree."""
+def attach(vector: list[float], centroids: dict[str, list[float]], threshold: float | None = None) -> str | None:
+    """The closest topic at or above the threshold (the embedder's topic_attach); ties go to the smaller id."""
+    threshold = thresholds().topic_attach if threshold is None else threshold
     scored = sorted((-cosine(vector, c), tid) for tid, c in centroids.items())
     return scored[0][1] if scored and -scored[0][0] >= threshold else None
 
 
-def components(ids: list[str], vectors: list[list[float]], link: float = TOPIC_LINK, k: int = K) -> list[list[str]]:
-    """Connected components of the k-nearest-neighbour graph, keeping edges at or above `link`."""
+def components(ids: list[str], vectors: list[list[float]], link: float | None = None, k: int = K) -> list[list[str]]:
+    """Connected components of the k-nearest-neighbour graph, keeping edges at or above `link` (the embedder's
+    topic_link)."""
+    link = thresholds().topic_link if link is None else link
     parent = list(range(len(ids)))
 
     def find(i):

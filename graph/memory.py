@@ -22,7 +22,6 @@ REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its matc
 REVIEW_CLAIM_MATCH = 0.5  # word-set Jaccard for the review's item-duplicate check
 REVIEW_DUPLICATE_SHARE = 0.7  # an item whose claims match one other item this much is a duplicate of it
 REVIEW_MIN_CLAIMS = 3  # fewer claims are too few to call an item a duplicate; reposts and relations cover those
-IDEA_MERGE = 0.75  # embedding cosine between two Ideas' statements for the review to propose merging them
 CONFIRM_DURABILITY = {"reference", "foundation"}  # a SUPERSEDES or CONTRADICTS onto these asks the user to confirm
 WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
@@ -95,6 +94,9 @@ class MemoryStore:
         self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
         self.proposals: dict = {}  # proposal id -> ProposalState, filled by vault.replay
         self.held_back: dict[str, str] = {}  # item id -> reason
+        # SAME verdicts of held-back claims: a verdict judged with unreviewed items in the pool may target one,
+        # and a strict rebuild follows this to the placed claim it repeats.
+        self._held_same: dict[str, str] = {}
 
     # --- writes ---
 
@@ -105,6 +107,9 @@ class MemoryStore:
         skipped = ex.triage is not None and not ex.triage.keep
         if not skipped and not ex.quality_gate_passed and not self.include_unreviewed:
             self.held_back[ex.item_id] = ex.quality_status
+            if relation is not None and relation.matches(ex):
+                self._held_same.update({v.claim_id: v.target_id for v in relation.verdicts if v.label == "SAME"})
+                self._refresh()
             return Placement(ex.item_id, "held_back")
 
         item = ItemNode(ex.item_id, src, _title(text, src.source_name or ex.item_id), text,
@@ -316,6 +321,10 @@ class MemoryStore:
         related = set()
         for node, label, target, why in links:
             cid = node.claim.claim_id
+            seen = set()
+            while target not in parent and target in self._held_same and target not in seen:
+                seen.add(target)  # a held-back repeat: relate to what it repeats
+                target = redirect.get(self._held_same[target], self._held_same[target])
             if target not in parent or target == cid or frozenset((cid, target)) in related | self._suppressed:
                 continue  # not placed (yet), a profile fact, already related, or the user rejected the relation
             related.add(frozenset((cid, target)))
@@ -565,7 +574,7 @@ class MemoryStore:
                 if frozenset((a.idea_id, b.idea_id)) in related:
                     continue
                 similar = embed.cosine(vectors[a.idea_id], vectors[b.idea_id])
-                if similar >= IDEA_MERGE and (confirm is None or confirm(a.title, b.title)):
+                if similar >= embed.thresholds().idea_merge and (confirm is None or confirm(a.title, b.title)):
                     add("merge_ideas", {"claims": [a.canonical_claim_id, b.canonical_claim_id]},
                         f"The two statements are close (similarity {similar:.2f}) and nothing relates them yet.")
 

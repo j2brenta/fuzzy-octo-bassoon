@@ -415,3 +415,15 @@ def test_neighbours_show_relations_and_provenance_without_spans(tmp_path):
     *_, around = gather(store, ["16:00"])
     assert {"SUPERSEDES", "PART_OF", "PUBLISHED_IN", "AUTHORED_BY"} <= around["correction"]
     assert "FROM" not in around["correction"] and "DUPLICATES" in around["repost"]
+
+
+def test_a_verdict_onto_a_held_back_repeat_follows_it_to_the_placed_claim():
+    """Model verdicts are judged with unreviewed items in the pool; a strict rebuild holds the repost back, so the
+    correction's UPDATES onto the repost's claim must reach the original it repeats."""
+    held = REPOST.model_copy(update={"quality_status": "needs_revision", "quality_gate_passed": False})
+    store = MemoryStore()
+    store.apply(ORIGINAL, TEXT["original"], TRIO_VERDICTS["original"])
+    store.apply(held, TEXT["repost"], TRIO_VERDICTS["repost"])
+    store.apply(CORRECTION, TEXT["correction"], verdicts("correction", ("c16", "UPDATES", "r14"), ("cprev", "NONE", None)))
+    assert "repost" in store.held_back
+    assert ("c16", "o14") in {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}

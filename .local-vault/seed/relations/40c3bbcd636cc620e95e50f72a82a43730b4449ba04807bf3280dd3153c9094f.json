@@ -1,0 +1,127 @@
+{
+  "stage": "relations",
+  "item_id": "40c3bbcd636cc620e95e50f72a82a43730b4449ba04807bf3280dd3153c9094f",
+  "relator": "model",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "prompt_version": "relate-v1",
+  "candidates": {
+    "d91d9356f6b49d62c6061ab68119a52d381fded0f9642eeff30c432113570c7b": [],
+    "92a10ac35b2239c080212d292096345f8c2b794a67f64306be5847d0c722324f": [],
+    "7216bb3c38a755f4786603769e87864e082fa65b96ad11687b614966e0d20a34": [],
+    "683a6170ded31c618c57da671f72919fb3955a1dcebd6d79be43bb1032c0a9cd": [],
+    "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650": [
+      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184"
+    ],
+    "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8": [
+      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184"
+    ],
+    "4cb2dd29cf699ec0b821439f08cca71496c8da9f1c2f73c17c7e0e3c9b7e082a": [],
+    "17c28e8b9a0e9f1aece0185af52ed27add5eab2f77af611741d8c26b27af08bd": [],
+    "2847cabccafe8788522e4dda4cf642778476af2f67188da29ad7f50eff59e5e1": [
+      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184",
+      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
+      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2"
+    ],
+    "fffbcc3452f7c092cf2969d41fd90488de9a81ab00c5ccb29769e4a2a2e22ea5": [],
+    "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b": [],
+    "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8": []
+  },
+  "verdicts": [
+    {
+      "claim_id": "d91d9356f6b49d62c6061ab68119a52d381fded0f9642eeff30c432113570c7b",
+      "subject": "organization",
+      "subject_name": "Anthropic",
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "92a10ac35b2239c080212d292096345f8c2b794a67f64306be5847d0c722324f",
+      "subject": "person",
+      "subject_name": "Thariq Shihipar",
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "7216bb3c38a755f4786603769e87864e082fa65b96ad11687b614966e0d20a34",
+      "subject": "organization",
+      "subject_name": "Anthropic",
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "683a6170ded31c618c57da671f72919fb3955a1dcebd6d79be43bb1032c0a9cd",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "4cb2dd29cf699ec0b821439f08cca71496c8da9f1c2f73c17c7e0e3c9b7e082a",
+      "subject": "organization",
+      "subject_name": "Anthropic",
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "17c28e8b9a0e9f1aece0185af52ed27add5eab2f77af611741d8c26b27af08bd",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "2847cabccafe8788522e4dda4cf642778476af2f67188da29ad7f50eff59e5e1",
+      "subject": "person",
+      "subject_name": "Nikita Rvachev",
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "fffbcc3452f7c092cf2969d41fd90488de9a81ab00c5ccb29769e4a2a2e22ea5",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    },
+    {
+      "claim_id": "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8",
+      "subject": "world",
+      "subject_name": null,
+      "label": "NONE",
+      "target_id": null,
+      "rationale": "No matching candidate claim found."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "stage": "relations",
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "relator": "model",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "prompt_version": "relate-v1",
+  "candidates": {
+    "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023": [
+      "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908"
+    ]
+  },
+  "verdicts": [
+    {
+      "claim_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+      "subject": "world",
+      "subject_name": null,
+      "label": "SAME",
+      "target_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+      "rationale": "Both statements convey identical information about the demo workshop start time."
+    }
+  ]
+}

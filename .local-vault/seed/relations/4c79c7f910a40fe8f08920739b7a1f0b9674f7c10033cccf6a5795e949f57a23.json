@@ -1,0 +1,33 @@
+{
+  "stage": "relations",
+  "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+  "relator": "model",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "prompt_version": "relate-v1",
+  "candidates": {
+    "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c": [
+      "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023"
+    ],
+    "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273": [
+      "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023"
+    ]
+  },
+  "verdicts": [
+    {
+      "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+      "subject": "world",
+      "subject_name": null,
+      "label": "UPDATES",
+      "target_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+      "rationale": "The claim updates the workshop start time from 14:00 to 16:00 UTC on the same date."
+    },
+    {
+      "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+      "subject": "world",
+      "subject_name": null,
+      "label": "ADDS_DETAIL",
+      "target_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
+      "rationale": "The claim adds the detail that the 14:00 UTC time was a prior announcement, which the candidate lacks."
+    }
+  ]
+}

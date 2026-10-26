@@ -8,6 +8,7 @@ import json
 import os
 import re
 import socket
+import time
 from typing import Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -55,7 +56,22 @@ def _nebius_request(api_key: str, base_url: str, path: str, payload: dict | None
     )
     try:
         with urlopen(request, timeout=timeout) as response:
-            body = response.read(5_000_001)
+            # The socket timeout bounds each read, not the whole answer: a server that keeps sending a byte now and
+            # then held one call open for almost two hours. Read in chunks against a deadline instead.
+            read1 = getattr(response, "read1", None)  # what has arrived, never waiting for more
+            if read1 is None:
+                body = response.read(5_000_001)
+            else:
+                deadline, chunks, size = time.monotonic() + timeout, [], 0
+                while size <= 5_000_000:
+                    if time.monotonic() > deadline:
+                        raise TimeoutError
+                    chunk = read1(65536)
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    size += len(chunk)
+                body = b"".join(chunks)
         if len(body) > 5_000_000:
             raise ModelError("Nebius response exceeded the expected size.")
         data = json.loads(body)

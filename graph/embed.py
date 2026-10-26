@@ -9,6 +9,7 @@ import json
 import math
 import os
 import re
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
@@ -35,6 +36,22 @@ def stem(word: str) -> str:
     return word
 
 
+@dataclass(frozen=True)
+class Thresholds:
+    """Cosines mean different things for different embedders, so each carries its own cut-offs."""
+    candidate: float  # below this a claim is not a relation candidate
+    recheck: float  # a new candidate this close makes stored verdicts worth judging again
+    topic_link: float  # edge between two unsorted Ideas when clustering topics
+    topic_attach: float  # a new Idea joins an accepted topic at this cosine to its centroid
+    idea_merge: float  # two Ideas this close are proposed for a merge (the model confirms when there is one)
+
+
+HASHED = Thresholds(candidate=0.1, recheck=0.5, topic_link=0.3, topic_attach=0.35, idea_merge=0.75)
+# Measured on Qwen/Qwen3-Embedding-8B, 26 October: unrelated statements 0.30-0.46, same topic 0.73-0.93, a paraphrase
+# 0.98, but two different assertions on one topic 0.91 and 14:00 against 16:00 0.99, so merges need the model's check.
+QWEN3 = Thresholds(candidate=0.5, recheck=0.8, topic_link=0.6, topic_attach=0.65, idea_merge=0.95)
+
+
 def _unit(vector: list[float]) -> list[float]:
     norm = math.sqrt(sum(x * x for x in vector))
     return [x / norm for x in vector] if norm else vector
@@ -46,12 +63,14 @@ def cosine(a: list[float], b: list[float]) -> float:
 
 class Embedder(Protocol):
     name: str
+    thresholds: Thresholds
 
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 
 class HashedEmbedder:
     name = "hashed-stems-v1"
+    thresholds = HASHED
 
     def embed(self, texts):
         return [self._one(t) for t in texts]
@@ -74,8 +93,10 @@ class HashedEmbedder:
 class NebiusEmbedder:
     """OpenAI-compatible /embeddings on Nebius, with a disk cache so rebuilds stay offline after the first run."""
 
-    def __init__(self, api_key: str, model: str, base_url: str, cache: Path | None = None, batch: int = 64):
+    def __init__(self, api_key: str, model: str, base_url: str, cache: Path | None = None, batch: int = 64,
+                 thresholds: Thresholds = QWEN3):
         self.api_key, self.model, self.base_url, self.cache, self.batch = api_key, model, base_url, cache, batch
+        self.thresholds = thresholds  # calibrated for Qwen3-Embedding-8B; another model needs its own
         self.name = f"nebius:{model}"
         self._known: dict[str, list[float]] = {}
         if cache is not None and cache.exists():
@@ -113,6 +134,10 @@ _current: Embedder = HashedEmbedder()
 
 def current() -> Embedder:
     return _current
+
+
+def thresholds() -> Thresholds:
+    return _current.thresholds
 
 
 def use(embedder: Embedder) -> None:

@@ -235,3 +235,24 @@ class TelegramTriageTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_a_trickling_response_hits_the_overall_deadline(monkeypatch):
+    """The socket timeout bounds each read; the whole answer must also finish within the timeout."""
+    import engine.llm as llm
+    from engine.llm import ModelError, _nebius_request
+
+    class Trickle:
+        def __enter__(self): return self
+        def __exit__(self, *exc): return False
+        def read1(self, n): return b" "  # a byte at a time, forever
+
+    clock = iter(range(0, 10_000, 1))
+    monkeypatch.setattr(llm, "urlopen", lambda request, timeout: Trickle())
+    monkeypatch.setattr(llm.time, "monotonic", lambda: next(clock))
+    try:
+        _nebius_request("key", "https://example.invalid", "/chat/completions", {}, 5)
+    except ModelError as error:
+        assert "timeout" in str(error)
+    else:
+        raise AssertionError("a trickling response must time out")
