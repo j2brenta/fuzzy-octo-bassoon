@@ -11,6 +11,8 @@
   const kinds = {merge_ideas: 'Merge two Ideas', topic: 'New topic', merge_people: 'Same person',
     relation: 'Confirm a relation'};
   const basisWords = {auto: 'automatic', accepted: 'accepted by you', proposal: 'proposed, waiting for you'};
+  const contextFields = {subject: 'Subject', version: 'Version', metric: 'Metric', dataset: 'Dataset',
+    unit: 'Unit', conditions: 'Conditions', time_attribution: 'Time / attribution', unknowns: 'Unknown'};
   function el(tag, text, cls) {
     const node = document.createElement(tag);
     if (text !== undefined && text !== null) node.textContent = String(text);
@@ -161,6 +163,7 @@
         'text-background-color': '#f3f5ef', 'text-background-opacity': .95, 'text-background-padding': 3}},
       {selector: 'edge[kind="SUPERSEDES"]', style: {'line-color': '#4c6e91', 'target-arrow-color': '#4c6e91', 'width': 1.8}},
       {selector: 'edge[kind="CONTRADICTS"]', style: {'line-color': '#b5553c', 'target-arrow-color': '#b5553c', 'width': 1.8}},
+      {selector: 'edge[kind="ABSTAIN"]', style: {'line-style': 'dotted', 'line-color': '#a7b0aa', 'target-arrow-shape': 'none', 'color': '#7b8a84'}},
       {selector: 'edge[basis="accepted"]', style: {'line-color': '#176a61', 'target-arrow-color': '#176a61', 'width': 2.2}},
       {selector: 'edge[basis="proposal"]', style: {'line-style': 'dashed', 'line-color': '#be8656', 'target-arrow-color': '#be8656'}},
       {selector: '.dim', style: {'opacity': .2}},
@@ -301,6 +304,7 @@
     state.detailItems = ends.map(id => claims.get(id)?.item || (items.has(id) ? id : null)).filter(Boolean);
     $('detail').replaceChildren(el('h3', edge.label, 'detail-title'), el('p', `${edge.kind} · ${basisWords[edge.basis]}`, 'detail-meta'));
     if (edge.rationale) $('detail').append(el('p', edge.rationale));
+    if (edge.context) $('detail').append(contextTable(edge.context, 'The relator\u2019s reading of this pair'));
     if (edge.said) $('detail').append(el('p', 'Later: ' + edge.said, 'small'), el('p', 'Earlier: ' + edge.about, 'small'));
     const pair = claims.has(edge.source) ? ends : [edge.said, edge.about].map(s => data.claims.find(c => c.statement === s && ends.includes(c.item))?.id);
     pair.filter(Boolean).forEach(id => $('detail').append(claimCard(claims.get(id))));
@@ -310,6 +314,14 @@
     }
     if (edge.proposal) $('detail').append(el('p', 'The review asked you about this relation; see Waiting for you above.', 'chip warn'));
     state.selection = edge.source; renderTimeline(filteredItems()); highlight();
+  }
+  function contextTable(context, caption) {
+    const table = el('table', null, 'context-table');
+    if (caption) table.append(el('caption', caption, 'small quiet'));
+    for (const [key, label] of Object.entries(contextFields)) {
+      const row = el('tr'); row.append(el('th', label), el('td', context[key] || 'Not stated')); table.append(row);
+    }
+    return table;
   }
   function toggleCompare(id) {
     if (state.comparison.includes(id)) state.comparison = state.comparison.filter(x => x !== id);
@@ -334,6 +346,7 @@
         const row = el('tr'); row.append(el('th', label), el('td', value)); table.append(row);
       }
       card.append(table);
+      if (relation?.context && i === 0) card.append(contextTable(relation.context, 'What the pair shares and where it differs (from the relator)'));
       c.anchors.forEach(a => card.append(quote(a))); $('comparison').append(card);
     }
   }

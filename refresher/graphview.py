@@ -20,7 +20,8 @@ MAP_ASSETS = ("index.html", "app.js", "style.css")
 VENDOR = ("cytoscape.min.js", "CYTOSCAPE-LICENSE.txt")
 CLAIM_RELATIONS = ("SUPERSEDES", "CONTRADICTS", "SUPPORTS", "ELABORATES", "DUPLICATES")
 LABELS = {"SUPERSEDES": "supersedes", "CONTRADICTS": "contradicts", "SUPPORTS": "confirms",
-          "ELABORATES": "adds detail to", "DUPLICATES": "repeats", "MERGE": "same as? (proposed)"}
+          "ELABORATES": "adds detail to", "DUPLICATES": "repeats", "MERGE": "same as? (proposed)",
+          "not_comparable": "not comparable", "insufficient_evidence": "not enough to compare"}
 CONTEXT = 80  # characters of text shown before and after a quoted passage
 
 
@@ -103,8 +104,10 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
         if e.type not in CLAIM_RELATIONS or e.src not in claims or e.dst not in claims:
             continue
         st = basis.get(frozenset((e.src, e.dst)))
+        judged = next((v for v in (store.verdict(e.src), store.verdict(e.dst))
+                       if v is not None and v.target_id in (e.src, e.dst) and v.context), None)
         row = {"id": f"{e.src}>{e.type}>{e.dst}", "source": e.src, "target": e.dst, "kind": e.type,
-               "label": LABELS[e.type], "rationale": e.rationale,
+               "label": LABELS[e.type], "rationale": e.rationale, "context": judged.context if judged else None,
                "basis": "proposal" if st and st.status == "proposed" else "accepted" if st and st.status == "accepted"
                else "auto", "proposal": st.proposal.proposal_id if st else None}
         edges.append(row)
@@ -113,6 +116,11 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             item_edges.setdefault((a, b), {**row, "id": f"{a}>{e.type}>{b}", "source": a, "target": b,
                                            "said": claims[e.src].claim.statement,
                                            "about": claims[e.dst].claim.statement})
+    for v in store.abstentions():  # the relator would not guess: drawn dotted, with what it saw
+        if v.claim_id in claims and v.target_id in claims:
+            edges.append({"id": f"{v.claim_id}>ABSTAIN>{v.target_id}", "source": v.claim_id, "target": v.target_id,
+                          "kind": "ABSTAIN", "label": LABELS[v.abstention], "rationale": v.rationale,
+                          "context": v.context, "basis": "auto", "proposal": None})
     for st in states.values():  # a pending merge is drawn dashed between the two statements
         if st.proposal.kind == "merge_ideas" and st.status == "proposed":
             a, b = st.proposal.payload["claims"][:2]

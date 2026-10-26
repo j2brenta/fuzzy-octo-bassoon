@@ -527,6 +527,14 @@ class MemoryStore:
     def verdict(self, claim_id: str) -> Verdict | None:
         return self._verdicts.get(claim_id)
 
+    def abstentions(self) -> list[Verdict]:
+        """Verdicts where the relator would not guess (not comparable, or not enough evidence), between visible
+        claims. They are recorded, drawn as no relation, and listed for the reader."""
+        visible = {c.claim.claim_id for c in self.claims()}
+        return sorted((v for cid, v in self._verdicts.items()
+                       if v.abstention and cid in visible and v.target_id in self._claims),
+                      key=lambda v: v.claim_id)
+
     def org_facts(self) -> dict[str, set[str]]:
         return {oid: set(ids) for oid, ids in self._org_facts.items()}
 
