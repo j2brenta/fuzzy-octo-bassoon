@@ -22,3 +22,9 @@ include = ["refresher*", "channels*", "engine*", "store*", "graph*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[project.optional-dependencies]
+web = ["pypdfium2>=4,<6"]
+
+[tool.setuptools.package-data]
+refresher = ["static/*.html", "static/*.css", "static/*.js", "static/*.png"]

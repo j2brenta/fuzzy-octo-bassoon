@@ -485,3 +485,33 @@ is not a model ranking.
 ## License
 
 Apache-2.0; see [LICENSE](LICENSE).
+
+## Jury web workspace
+
+Run the first browser frontend locally, without Telegram:
+
+```bash
+python -m pip install -e '.[web]'
+python -m refresher.web --port 8080
+```
+
+Open **http://127.0.0.1:8080**. Sources are isolated in `.local-vault/jury/`;
+`--vault PATH` selects another workspace. Existing `.env` model settings apply.
+Capture returns after durable storage; one background worker runs the existing
+triage, extraction, quality review, entity and packaging stages. Open a saved
+source to see real claims, review status, exact evidence excerpts and original
+text. A processed submission can still contain pending or rejected reviews.
+
+- Paste text, conversations, newsletter content or transcripts (60,000 characters).
+- Submit public article URLs using the existing bounded, public-address-only fetcher.
+- Upload UTF-8 `.txt`, `.md`, `.csv`, `.json`, `.log`, `.eml` files or native-text PDFs.
+  PDF extras are required; limits are 20 pages and 50,000 extracted characters.
+- Every nonempty file up to 20 MB can be retained and downloaded unchanged.
+  Images, scanned PDFs, audio/video and other formats explicitly remain pending:
+  their specialized parsers are absent from this checkout. Paste text/transcripts
+  to analyze those sources. No successful OCR or transcription is implied.
+
+No API key is sent to the browser. AI-disabled, blocked-link and interrupted/error
+states preserve originals. Refreshers, graph visualization and retrieval are not
+part of this first ingestion frontend. This server binds to loopback and is a
+single shared local demo workspace; public hosting/authentication is separate work.
