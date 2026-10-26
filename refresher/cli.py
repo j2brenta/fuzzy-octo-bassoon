@@ -9,6 +9,7 @@
     uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
     uv run refresher enrich [--vault V] [--limit N] [--person NAME]   look people up with Tavily, stored in people/
     uv run refresher consolidate [--vault V] [--lexical]   the hourly job: relate, review, enrich, rebuild
+    uv run refresher serve [--vault V] [--port P]     the map on 127.0.0.1, where you decide the proposals
     uv run refresher proposals [--vault V] [--all]     what the review suggests, with the token to decide it
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
 
@@ -34,7 +35,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate"):
+    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -48,6 +49,8 @@ def main(argv=None) -> int:
             p.add_argument("--person", action="append", default=[], help="look up this person (repeatable)")
         if name == "relate":
             p.add_argument("--lexical", action="store_true", help="store lexical verdicts instead of calling the model")
+        if name == "serve":
+            p.add_argument("--port", type=int, default=8765)
         if name == "consolidate":
             p.add_argument("--lexical", action="store_true", help="no model or web calls: wording and similarity only")
         if name == "proposals":
@@ -68,6 +71,10 @@ def main(argv=None) -> int:
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
         return _enrich(args.vault, args.limit, args.person, at)
+    if args.command == "serve":
+        from refresher.serve import serve
+        serve(args.vault, args.port)
+        return 0
     if args.command == "consolidate":
         return _consolidate(args.vault, args.lexical, at)
     if args.command == "proposals":
