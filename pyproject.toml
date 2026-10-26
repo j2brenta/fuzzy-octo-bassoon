@@ -21,7 +21,10 @@ build-backend = "setuptools.build_meta"
 include = ["refresher*", "channels*", "engine*", "store*", "graph*"]
 
 [tool.setuptools.package-data]
-refresher = ["assets/*"]
+refresher = ["assets/*", "assets/map/*", "static/*.html", "static/*.css", "static/*.js", "static/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[project.optional-dependencies]
+web = ["pypdfium2>=4,<6"]
