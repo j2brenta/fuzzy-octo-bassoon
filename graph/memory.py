@@ -12,7 +12,8 @@ from typing import Iterable
 
 from graph import relate
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
-from graph.store import ClaimNode, Edge, IdeaNode, ItemNode, PersonNode, Placement, ReviewReport, SourceNode
+from graph.store import (ClaimNode, Edge, IdeaNode, ItemNode, PersonNode, Placement, ReviewReport, SourceNode,
+                         TopicNode)
 from refresher import scoring
 from refresher.schemas import Extraction, Override, Relation, Verdict
 
@@ -71,6 +72,13 @@ class MemoryStore:
         self._edges: list[Edge] = []  # what an item brings: source, author, mentions, reposts, spans
         self._relations: list[Edge] = []  # what the verdicts imply; recomputed by _resolve
         self._firm: set[str] = set()  # idea ids the review firmed up
+        # What accepted (or rejected) proposals say; graph/proposals.py decides which apply.
+        self._merges: list[tuple[str, str]] = []  # claim pairs whose Ideas the user merged
+        self._suppressed: set[frozenset] = set()  # claim pairs whose relation the user rejected
+        self._topic_specs: dict[str, tuple[str, list[str]]] = {}  # topic id -> (title, claim ids)
+        self._topics: dict[str, TopicNode] = {}
+        self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
+        self.proposals: dict = {}  # proposal id -> ProposalState, filled by vault.replay
         self.held_back: dict[str, str] = {}  # item id -> reason
 
     # --- writes ---
@@ -161,6 +169,7 @@ class MemoryStore:
         self._recount_duplicates()
         self._derive()
         self._build_ideas(groups)
+        self._build_topics()
 
     def apply_review(self, report: ReviewReport) -> None:
         """Replay a stored review: item duplicates and firmed Ideas. Unknown ids (not placed here) are skipped."""
@@ -172,6 +181,38 @@ class MemoryStore:
             self._edges.append(e)
         self._firm |= set(report.firmed)
         self._refresh()
+
+    def apply_proposal(self, state) -> None:
+        """Replay a decided proposal (a graph.proposals.ProposalState): accepted ones change the graph, a rejected
+        relation is taken out. Proposed, stale and unplaced ones change nothing."""
+        p = state.proposal
+        if state.status == "rejected" and p.kind == "relation":
+            self._suppressed.add(frozenset(p.payload["claims"]))
+        elif state.status != "accepted":
+            return
+        elif p.kind == "merge_ideas":
+            claims = p.payload["claims"]
+            self._merges += [(claims[0], other) for other in claims[1:]]
+        elif p.kind == "topic":
+            self._topic_specs["topic:" + p.proposal_id[2:14]] = (p.payload["title"], list(p.payload["claims"]))
+        elif p.kind == "merge_people":
+            self._merge_person(*p.payload["people"])
+        self._refresh()
+
+    def _merge_person(self, absorbed: str, kept: str) -> None:
+        gone, person = self._people.get(absorbed), self._people.get(kept)
+        if gone is None or person is None or absorbed == kept:
+            return
+        self._aliases[absorbed] = kept
+        person.handles |= gone.handles
+        person.authored |= gone.authored
+        person.mentioned_in |= gone.mentioned_in
+        del self._people[absorbed]
+        for item in self._items.values():
+            if item.author_id == absorbed:
+                item.author_id = kept
+        self._edges = list(dict.fromkeys(Edge(e.src, e.type, kept if e.dst == absorbed else e.dst, e.rationale, e.at)
+                                         for e in self._edges))
 
     def candidate_pool(self, item_id: str) -> list[Candidate]:
         """World claims from other items, hidden stubs included, for relate.judge. A repost's claims are left
@@ -215,7 +256,7 @@ class MemoryStore:
                 continue
             # A profile fact: it joins the person's or organization's profile and gets no Idea.
             if verdict.subject == "person":
-                node.subject_id = person_id(verdict.subject_name)
+                node.subject_id = self._aliases.get(person_id(verdict.subject_name), person_id(verdict.subject_name))
                 if not hidden:
                     self._person(verdict.subject_name).facts.add(node.claim.claim_id)
             else:
@@ -260,8 +301,8 @@ class MemoryStore:
         related = set()
         for node, label, target, why in links:
             cid = node.claim.claim_id
-            if target not in parent or target == cid or frozenset((cid, target)) in related:
-                continue  # the target is not placed (yet), is a profile fact, or the pair is already related
+            if target not in parent or target == cid or frozenset((cid, target)) in related | self._suppressed:
+                continue  # not placed (yet), a profile fact, already related, or the user rejected the relation
             related.add(frozenset((cid, target)))
             other = self._claims[target]
             first, later = sorted((other, node), key=self._order)
@@ -280,11 +321,16 @@ class MemoryStore:
                 # The newer claim replaces every earlier sighting of the older statement, not just the one judged.
                 new = later.claim.claim_id
                 for old in sorted(same[first.claim.claim_id]):
-                    if old != new and self._order(self._claims[old]) < self._order(later):
+                    if old != new and self._order(self._claims[old]) < self._order(later) \
+                            and frozenset((new, old)) not in self._suppressed:
                         related.add(frozenset((new, old)))
                         self._relations.append(Edge(new, "SUPERSEDES", old, why, at))
             else:
                 self._relations.append(Edge(later.claim.claim_id, EDGE_FOR[label], first.claim.claim_id, why, at))
+
+        for a, b in self._merges:  # Ideas the user merged
+            if a in parent and b in parent:
+                parent[find(a)] = find(b)
 
         groups: dict[str, list[str]] = {}
         for cid in parent:
@@ -312,6 +358,14 @@ class MemoryStore:
             for node in nodes:
                 node.idea_id = idea.idea_id
                 self._relations.append(Edge(node.claim.claim_id, "PART_OF", idea.idea_id))
+
+    def _build_topics(self):
+        """Accepted topics, found again through the claims they were proposed with."""
+        self._topics = {}
+        for topic_id, (title, claims) in sorted(self._topic_specs.items()):
+            ideas = {self._claims[cid].idea_id for cid in claims if cid in self._claims and self._claims[cid].idea_id}
+            if ideas:
+                self._topics[topic_id] = TopicNode(topic_id, title, ideas)
 
     def _recount_duplicates(self):
         dup_claims = {e.src for e in self._relations if e.type == "DUPLICATES"}
@@ -351,7 +405,7 @@ class MemoryStore:
             node.half_life_days = scoring.half_life(base, node.confirmations)
 
     def _person(self, name: str) -> PersonNode:
-        pid = person_id(name)
+        pid = self._aliases.get(person_id(name), person_id(name))
         return self._people.setdefault(pid, PersonNode(pid, name))
 
     def apply_override(self, override: Override) -> None:
@@ -412,6 +466,9 @@ class MemoryStore:
 
     def idea(self, idea_id: str) -> IdeaNode:
         return self._ideas[idea_id]
+
+    def topics(self):
+        return self._topics.values()
 
     def review(self, at: datetime) -> ReviewReport:
         """The minimal review, deterministic and without a model: item duplicates and firming up Ideas.

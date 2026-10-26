@@ -8,6 +8,8 @@
     uv run refresher review [--vault V] [--at DATE]    item duplicates and firm Ideas, stored in graph-reviews/
     uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
     uv run refresher enrich [--vault V] [--limit N] [--person NAME]   look people up with Tavily, stored in people/
+    uv run refresher proposals [--vault V] [--all]     what the review suggests, with the token to decide it
+    uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -31,7 +33,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich"):
+    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -45,6 +47,13 @@ def main(argv=None) -> int:
             p.add_argument("--person", action="append", default=[], help="look up this person (repeatable)")
         if name == "relate":
             p.add_argument("--lexical", action="store_true", help="store lexical verdicts instead of calling the model")
+        if name == "proposals":
+            p.add_argument("--all", action="store_true", help="also list decided, stale and unplaced proposals")
+        if name == "decide":
+            p.add_argument("proposal")
+            p.add_argument("action", choices=("accept", "reject", "defer"))
+            p.add_argument("--token", required=True, help="from `refresher proposals`; refused if anything changed")
+            p.add_argument("--why", default="", help="your reason, kept with the decision")
     args = ap.parse_args(argv)
     if not args.vault:
         ap.error("pass --vault or set REFRESHER_VAULT")
@@ -55,6 +64,17 @@ def main(argv=None) -> int:
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
         return _enrich(args.vault, args.limit, args.person, at)
+    if args.command == "proposals":
+        return _proposals(args.vault, args.all)
+    if args.command == "decide":
+        try:
+            d = vault.decide(args.vault, args.proposal, args.action, args.token, args.why, at)
+        except KeyError:
+            sys.exit(f"decide: no proposal {args.proposal}")
+        except vault.StaleToken as error:
+            sys.exit(f"decide: refused: {error}")
+        print(f"decide: {d.action} {d.proposal_id}")
+        return 0
     if args.command == "review":
         # Like relate, the review sees unreviewed items too, so its file serves either kind of rebuild.
         report = vault.replay(args.vault, include_unreviewed=True).review(at)
@@ -91,6 +111,22 @@ def main(argv=None) -> int:
             args.out.write_text(text, encoding="utf-8")
         print(text, end="")
         return 0 if all(c.ok is not False for c in checks) else 1
+    return 0
+
+
+def _proposals(vault_path: Path, everything: bool) -> int:
+    store = vault.replay(vault_path, include_unreviewed=True)
+    claims = {c.claim.claim_id: c.claim.statement for c in store.claims(hidden=True)}
+    shown = [s for s in sorted(store.proposals.values(), key=lambda s: (s.proposal.at, s.proposal.proposal_id))
+             if everything or s.status == "proposed"]
+    for s in shown:
+        p = s.proposal
+        print(f"{p.proposal_id} {p.kind} [{s.status}] {p.payload.get('title') or p.payload.get('type') or ''}".rstrip())
+        for ref in p.payload.get("claims", []) + p.payload.get("people", []):
+            print(f"    {claims.get(ref, ref)}")
+        print(f"    why: {p.rationale}" + (f"; {s.reason}" if s.reason else ""))
+        print(f"    token: {s.token}")
+    print(f"proposals: {sum(s.status == 'proposed' for s in store.proposals.values())} waiting")
     return 0
 
 
