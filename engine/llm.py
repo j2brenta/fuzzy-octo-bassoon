@@ -154,6 +154,57 @@ class NebiusModel:
         )
 
 
+class BudgetExceeded(ModelError):
+    """The run's token or time budget would be exceeded by the next call; the rest waits for the next run."""
+
+
+RUN_TOKENS = 2_000_000  # per run; REFRESHER_RUN_TOKENS overrides
+RUN_SECONDS = 1800  # per run; REFRESHER_RUN_SECONDS overrides
+
+
+class BudgetedModel:
+    """A spending cap for one run, after the metered gate in Victor's news map: each call reserves its worst case
+    (input estimated at one token per 3 bytes, plus the model's whole output allowance) and is refused before it is
+    sent if that could pass the run's token budget, or if its timeout could pass the run's time budget. Afterwards
+    the call is charged what the provider reports (or the estimate). Tokens, not money: a price per token is not
+    verified for every model, so a currency cap would only look precise."""
+
+    def __init__(self, model: JsonModel, max_tokens: int | None = None, max_seconds: float | None = None,
+                 clock=time.monotonic):
+        self.model, self.clock = model, clock
+        self.provider = getattr(model, "provider", None)
+        self.model_provider = getattr(model, "model_provider", None)
+        self.model_name = getattr(model, "model_name", None)
+        self.max_tokens = max_tokens if max_tokens is not None else int(os.environ.get("REFRESHER_RUN_TOKENS") or RUN_TOKENS)
+        self.max_seconds = max_seconds if max_seconds is not None else \
+            float(os.environ.get("REFRESHER_RUN_SECONDS") or RUN_SECONDS)
+        self.started, self.spent, self.calls = clock(), 0, 0
+
+    @staticmethod
+    def estimate(text: str) -> int:
+        return -(-len(text.encode("utf-8")) // 3)
+
+    def complete_json(self, system_prompt: str, content: str) -> ModelReply:
+        prompt = self.estimate(system_prompt) + self.estimate(content)
+        reserve = prompt + getattr(self.model, "max_tokens", 16384)
+        if self.spent + reserve > self.max_tokens:
+            raise BudgetExceeded(f"Run budget reached: {self.spent:,} of {self.max_tokens:,} tokens used, and the next "
+                                 f"call could use {reserve:,}; the rest waits for the next run.")
+        elapsed = self.clock() - self.started
+        if elapsed + getattr(self.model, "timeout_seconds", 120) > self.max_seconds:
+            raise BudgetExceeded(f"Run time budget reached after {elapsed:.0f} of {self.max_seconds:.0f} seconds; "
+                                 "the rest waits for the next run.")
+        self.calls += 1
+        try:
+            reply = self.model.complete_json(system_prompt, content)
+        except ModelError:
+            self.spent += prompt  # a failed call still read the prompt
+            raise
+        used = reply.usage.get("total_tokens") or prompt + self.estimate(json.dumps(reply.data, ensure_ascii=False))
+        self.spent += used
+        return reply
+
+
 def list_nebius_models(api_key: str, base_url: str = NEBIUS_BASE_URL) -> list[str]:
     data = _nebius_request(api_key, base_url, "/models", None, 30)
     return sorted(m["id"] for m in data.get("data", []) if isinstance(m, dict) and isinstance(m.get("id"), str))

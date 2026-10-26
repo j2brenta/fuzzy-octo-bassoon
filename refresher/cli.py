@@ -168,12 +168,15 @@ def _relate(vault_path: Path, lexical: bool) -> int:
             sys.exit(str(error))
         if model is None:
             sys.exit("Set TRIAGE_PROVIDER=nebius in .env to judge relations with the model, or pass --lexical.")
+        from engine.llm import BudgetedModel
+        model = BudgetedModel(model)  # REFRESHER_RUN_TOKENS / REFRESHER_RUN_SECONDS cap the run
         relator = relation_stage.ModelRelator(model)
     run = place.relate_pending(vault_path, relator, log=print, warn=lambda m: print(m, file=sys.stderr))
     if run.error:
         print(f"relate: stopped after {run.judged} items", file=sys.stderr)
         return 1
-    print(f"relate: judged {run.judged} items, {run.failed} failed")
+    print(f"relate: judged {run.judged} items, {run.failed} failed"
+          + (f"; {model.calls} model calls, about {model.spent:,} tokens" if not lexical else ""))
     return 1 if run.failed else 0
 
 

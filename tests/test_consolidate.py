@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from aiogram.types import Message
 
 from channels.telegram import handle_message
@@ -93,3 +94,41 @@ class BotConsolidateTests(unittest.IsolatedAsyncioTestCase):
         replies = [c.args[0] for c in answer.call_args_list]
         assert replies[0].startswith("Reviewing the whole graph")
         assert "4 new proposals" in replies[-1] and "4 proposal(s) wait for you" in replies[-1]
+
+
+# --- the spending cap per run ---
+
+def test_the_budget_reserves_the_worst_case_and_charges_what_was_used():
+    from engine.llm import BudgetedModel, BudgetExceeded
+
+    class Tiny(FakeModel):
+        max_tokens, timeout_seconds = 100, 10
+    model = Tiny()
+    budget = BudgetedModel(model, max_tokens=250, max_seconds=60)
+    budget.complete_json(job.NAMER_PROMPT, "- a")  # reserves ~78 prompt + 100 output tokens: fits in 250
+    assert budget.calls == 1 and 78 < budget.spent < 100  # charged the prompt and the short answer, not the reserve
+    with pytest.raises(BudgetExceeded, match="Run budget reached"):
+        budget.complete_json(job.NAMER_PROMPT, "- a")  # spent + the same reservation would pass 250
+    assert model.calls["name"] == 1  # the refused call was never sent
+
+
+def test_the_time_budget_refuses_a_call_that_could_run_past_it():
+    from engine.llm import BudgetedModel, BudgetExceeded
+    now = [0.0]
+    budget = BudgetedModel(FakeModel(), max_tokens=10**9, max_seconds=300, clock=lambda: now[0])
+    now[0] = 200.0  # 200 s gone, and a call may take its 120 s timeout
+    with pytest.raises(BudgetExceeded, match="time budget"):
+        budget.complete_json(job.NAMER_PROMPT, "- a")
+
+
+def test_a_run_over_budget_falls_back_to_wording_and_says_so(tmp_path):
+    from engine.llm import BudgetedModel
+    v = topical_vault(tmp_path)
+    class Capped(FakeModel):
+        max_tokens = 500
+    model = Capped()
+    run = job.consolidate(v, BudgetedModel(model, max_tokens=5_000, max_seconds=600), at=AT)
+    assert "Run budget reached" in run.summary() and "model calls" in run.summary()
+    assert 0 < model.calls["relate"] < 10  # stopped part-way
+    assert all(vault.load_relation(v, ex) is not None for ex, _ in vault.load_extractions(v))  # the rest by wording
+    assert run.proposed == 4

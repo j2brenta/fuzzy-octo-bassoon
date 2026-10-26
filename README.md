@@ -513,6 +513,16 @@ uv run refresher proposals --vault VAULT              # the same list in the ter
 uv run refresher decide --vault VAULT ID accept --token TOKEN
 ```
 
+Each `relate` or `consolidate` run has a spending cap (`REFRESHER_RUN_TOKENS`, default
+2,000,000, and `REFRESHER_RUN_SECONDS`, default 1800). Every model call reserves its
+worst case (the prompt plus the model's whole output allowance) and is refused before it
+is sent if that could pass the cap; what was not judged is related by wording and waits
+for the next run. The cap is in tokens, not money, because prices per model are not
+verified. The relator may also decline to guess: a pair that is not comparable (different
+conditions, version, unit, dataset or time) or lacks evidence is recorded, drawn dotted on
+the map and listed in the health report, and every UPDATES or CONFLICTS verdict carries
+what the pair shares and where it differs.
+
 Candidates and topics use embeddings: by default word stems hashed offline; set
 `NEBIUS_EMBED_MODEL` in `.env` to use a Nebius embedding model (vectors are cached
 in the vault's `.cache/`). The thresholds are tuned for the offline embedder.

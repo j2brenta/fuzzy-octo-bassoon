@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
 
-from engine.llm import JsonModel, ModelError
+from engine.llm import BudgetedModel, JsonModel, ModelError
 from graph import cluster, relate
 from refresher import graphview, vault
 from refresher.place import RelateRun, _quiet, relate_pending
@@ -57,6 +57,7 @@ class ConsolidateRun:
     waiting: int = 0
     enriched: int = 0
     notes: list[str] = None
+    budget: BudgetedModel | None = None
 
     def summary(self) -> str:
         parts = []
@@ -66,6 +67,8 @@ class ConsolidateRun:
                   f"{self.proposed} new proposals", f"{self.waiting} waiting for you"]
         if self.enriched:
             parts.append(f"{self.enriched} people looked up")
+        if self.budget is not None:
+            parts.append(f"{self.budget.calls} model calls, about {self.budget.spent:,} tokens")
         return "consolidate: " + ", ".join(parts) + "".join(f"; {n}" for n in self.notes or [])
 
 
@@ -85,6 +88,9 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
     similarity alone."""
     at = at or datetime.now(timezone.utc)
     run = ConsolidateRun(at, notes=[])
+    if model is not None and not isinstance(model, BudgetedModel):
+        model = BudgetedModel(model)  # one spending cap for the whole run: relating, naming, confirming, people
+    run.budget = model
     with vault.lock(vault_path):
         if model is not None:
             run.relate = relate_pending(vault_path, relate.ModelRelator(model), log=log, warn=warn)
