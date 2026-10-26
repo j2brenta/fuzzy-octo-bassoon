@@ -72,6 +72,11 @@ def place(vault_path: Path, item_id: str, relator: relate.Relator | None = None,
     """Judge the item's relations with `relator`, store them, replay the vault, refresh wiki/ and return where the
     item went. Without a relator, or when the model fails, the item is related lexically and not stored, so a later
     `refresher relate` can still judge it; the note says so."""
+    with vault.lock(vault_path):  # the hourly job and the accept page write the same files
+        return _place(vault_path, item_id, relator, at)
+
+
+def _place(vault_path, item_id, relator, at):
     note = None
     if relator is not None:
         run = relate_pending(vault_path, relator, only=[item_id])

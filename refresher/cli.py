@@ -8,6 +8,7 @@
     uv run refresher review [--vault V] [--at DATE]    item duplicates and firm Ideas, stored in graph-reviews/
     uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
     uv run refresher enrich [--vault V] [--limit N] [--person NAME]   look people up with Tavily, stored in people/
+    uv run refresher consolidate [--vault V] [--lexical]   the hourly job: relate, review, enrich, rebuild
     uv run refresher proposals [--vault V] [--all]     what the review suggests, with the token to decide it
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
 
@@ -33,7 +34,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide"):
+    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -47,6 +48,8 @@ def main(argv=None) -> int:
             p.add_argument("--person", action="append", default=[], help="look up this person (repeatable)")
         if name == "relate":
             p.add_argument("--lexical", action="store_true", help="store lexical verdicts instead of calling the model")
+        if name == "consolidate":
+            p.add_argument("--lexical", action="store_true", help="no model or web calls: wording and similarity only")
         if name == "proposals":
             p.add_argument("--all", action="store_true", help="also list decided, stale and unplaced proposals")
         if name == "decide":
@@ -65,6 +68,8 @@ def main(argv=None) -> int:
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
         return _enrich(args.vault, args.limit, args.person, at)
+    if args.command == "consolidate":
+        return _consolidate(args.vault, args.lexical, at)
     if args.command == "proposals":
         return _proposals(args.vault, args.all)
     if args.command == "decide":
@@ -168,9 +173,10 @@ def _relate(vault_path: Path, lexical: bool) -> int:
 def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int:
     """Look up the most involved people not yet enriched (or the ones named), at most 3 Tavily searches each."""
     from dotenv import load_dotenv
-    from engine.llm import ModelError, ModelOutputError, client_from_environment
-    from engine.people import SearchError, enrich, search_from_environment
+    from engine.llm import ModelError, client_from_environment
+    from engine.people import search_from_environment
     from graph.memory import person_id
+    from refresher.consolidate import enrich_people, pick_people
     load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
     search = search_from_environment()
     if search is None:
@@ -189,37 +195,33 @@ def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int
         if missing:
             print(f"enrich: not in the graph: {', '.join(missing)}", file=sys.stderr)
     else:
-        def involvement(p):
-            return 2 * len(p.facts) + 2 * len(p.authored) + len(p.mentioned_in)
-        chosen = sorted((p for p in people.values() if not vault.enriched(vault_path, p.person_id)),
-                        key=lambda p: (-involvement(p), p.person_id))[:limit]
-    claims = {c.claim.claim_id: c for c in store.claims()}
-    orgs = store.organizations()
-    done = 0
-    for p in chosen:
-        facts = [claims[cid].claim.statement for cid in sorted(p.facts) if cid in claims]
-        titles = [store.item(i).title for i in sorted(p.authored | p.mentioned_in)]
-        affiliation = next((name for name in orgs.values() for f in facts if name.casefold() in f.casefold()), None)
-        context = facts + [f"Wrote: {store.item(i).title}" for i in sorted(p.authored)] + \
-                  [f"Mentioned in: {store.item(i).title}" for i in sorted(p.mentioned_in)]
-        try:
-            record = enrich(p.person_id, p.name, context, affiliation, titles[0] if titles else None, search, model,
-                            log=lambda message: print(f"{p.name}: {message}"))
-        except ModelOutputError as error:  # a bad answer: this person waits for the next run
-            print(f"{p.name}: not enriched: {error}", file=sys.stderr)
-            continue
-        except (SearchError, ModelError) as error:  # key, credit or network: every other person would fail too
-            print(f"{p.name}: not enriched: {error}", file=sys.stderr)
-            print(f"enrich: stopped after {done} people", file=sys.stderr)
-            return 1
-        vault.save_enrichment(vault_path, record)
-        done += 1
-        found = ", ".join(f["value"] for f in (record["role"], record["affiliation"]) if f) or "no match"
-        print(f"{p.name}: {found}; {len(record['domains'])} domains")
+        chosen = pick_people(vault_path, store, limit)
+    done, error = enrich_people(vault_path, store, chosen, search, model, log=print,
+                                warn=lambda m: print(m, file=sys.stderr))
+    if error:
+        print(f"enrich: stopped after {done} people", file=sys.stderr)
+        return 1
     vault.log(vault_path, at, f"enrich: {done} people looked up with Tavily")
     print(f"enrich: {done} people")
     return 0
 
+
+def _consolidate(vault_path: Path, lexical: bool, at: datetime) -> int:
+    from refresher.consolidate import consolidate
+    model = search = None
+    if not lexical:
+        from dotenv import load_dotenv
+        from engine.llm import ModelError, client_from_environment
+        from engine.people import search_from_environment
+        load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+        try:
+            model = client_from_environment()
+        except ModelError as error:
+            sys.exit(str(error))
+        search = search_from_environment()
+    run = consolidate(vault_path, model, search, at, log=print, warn=lambda m: print(m, file=sys.stderr))
+    print(run.summary())
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
