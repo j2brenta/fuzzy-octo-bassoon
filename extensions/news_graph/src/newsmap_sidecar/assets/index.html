@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>News Atlas · Карта доказательств</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="cytoscape.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<header class="masthead">
+  <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><div><b>NEWS ATLAS</b><span class="eyebrow">Карта новостей и доказательств</span></div></div>
+  <div class="header-note"><span class="status-dot"></span>Локальный snapshot <span id="snapshot-date"></span><span id="scope-badge" class="badge"></span></div>
+</header>
+<main>
+  <section class="intro">
+    <div><p class="eyebrow">СОБЫТИЯ → ИСТОЧНИКИ → КОНТЕКСТ</p><h1>Увидеть связи.<br><span>Проверить основания.</span></h1></div>
+    <div class="intro-copy"><p>От темы — к истории, от связи — к точной цитате.<br>Повторение новости ещё не означает независимое подтверждение.</p><div id="stats" class="stats"></div></div>
+  </section>
+  <section aria-label="Темы" class="topic-section"><div class="section-top"><h2>Обзор тем</h2><button id="reset" class="text-button">Все материалы ↗</button></div><div id="topics" class="topics"></div></section>
+  <p id="reading-scope" class="small quiet" role="status"></p>
+  <section class="workspace">
+    <aside class="timeline-column">
+      <div class="section-top"><h2>Хронология</h2><span id="list-count" class="small"></span></div>
+      <label class="field">История<select id="story-filter"><option value="">Все истории</option><option value="unassigned">Без истории</option></select></label>
+      <div class="filter-row"><label class="field">Quality<select id="quality-filter"><option value="">Все состояния</option><option value="accepted">Accepted</option><option value="pending">Pending</option><option value="needs_revision">Needs revision</option><option value="skipped">Skipped</option></select></label><label class="field">Роль<select id="role-filter"><option value="">Все роли</option><option value="author_hint">Автор указан</option><option value="forwarder_hint">Переслал</option><option value="extracted_mention">Упоминание</option></select></label></div>
+      <label class="field">С даты (публикация, иначе capture)<input id="date-filter" type="date"></label>
+      <label class="check"><input type="checkbox" id="historical">Показать невыбранные ревизии</label>
+      <label class="field">Поиск по разрешённым заголовкам<input id="search" type="search" placeholder="Найти материал…"></label>
+      <div id="timeline" class="timeline" aria-label="Список материалов"></div>
+      <p class="small quiet">Дата публикации при наличии; иначе отмечена дата захвата. Исчезновение из vault не доказывает отзыв.</p>
+    </aside>
+    <section class="map-column" aria-label="Интерактивная карта">
+      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Источники</button><button id="mode-claims" aria-pressed="false">Утверждения</button></div><select id="review-filter" aria-label="Состояние review"><option value="">Все связи</option><option value="active">Активное review</option><option value="proposal">Предложения / неактивные</option></select></div>
+      <div class="map-title"><h2 id="map-title">Карта источников</h2><span id="map-count" class="small"></span></div>
+      <div class="canvas-wrap"><div id="graph" aria-label="Граф; все узлы и связи доступны в списке ниже"></div><div class="map-controls"><button id="zoom-in" aria-label="Приблизить">+</button><button id="zoom-out" aria-label="Отдалить">−</button><button id="fit" aria-label="Показать весь граф">⌖</button></div><div id="map-empty" hidden>В этом срезе пока нет материалов.</div></div>
+      <div class="map-footer"><span><i class="line structural"></i>Структурная ссылка</span><span><i class="line reviewed"></i>Ручное review</span><span><i class="line proposal"></i>Предложение</span></div>
+      <p class="geometry">Области — редакционные темы; материалы с несколькими темами показаны в одной из них. Положение внутри области служит чтению, а не обозначает причинность. Стрелки показывают указанные связи.</p>
+      <div class="focus-actions"><button id="ego" disabled>Окружение выбранного узла</button><button id="clear-focus" hidden>Снять фокус</button><span id="hidden-count" class="small"></span></div>
+      <details class="accessible"><summary>Текстовый доступ к узлам и связям карты</summary><div id="graph-list"></div></details>
+    </section>
+    <aside class="evidence-column" aria-label="Основания и цитаты"><div class="section-top"><h2>Основания</h2><span class="badge">Версия + цитата</span></div><div id="detail" aria-live="polite"><div class="empty-detail"><span>◎</span><h3>У каждой связи есть основание</h3><p>Выберите материал или стрелку. Здесь появятся сохранённые фрагменты, роли источников и история review.</p></div></div></aside>
+  </section>
+  <section class="compare-section" aria-label="Сравнение доказательств"><div class="section-top"><div><p class="eyebrow">ПРОВЕРКА СОПОСТАВИМОСТИ</p><h2>Одни условия — или разные истории?</h2></div><button id="clear-compare" class="text-button">Очистить сравнение</button></div><p class="quiet">Выберите до двух утверждений. Неизвестные условия остаются неизвестными. Ручная интерпретация не удостоверяет истинность.</p><p id="compare-scope" class="small quiet"></p><div id="comparison" class="comparison"></div></section>
+  <footer><span>News Atlas / офлайн-карта доказательств</span><span>Организация историй и semantic review — явные решения оператора. Независимость источников: неизвестна.</span></footer>
+</main>
+<script type="application/json" id="newsmap-data"><!--NEWSMAP_DATA--></script>
+</body>
+</html>
