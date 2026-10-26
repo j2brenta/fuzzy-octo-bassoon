@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from graph.memory import person_id
+from graph.memory import MemoryStore, person_id
+from graph.store import GraphStore
 from refresher import evaluate, km, vault
 from refresher.cli import main
 from refresher.schemas import Extraction, Override
@@ -133,3 +134,40 @@ def test_include_unreviewed_places_failed_items_with_a_mark(vault_dir):
     assert "[!warning] Unreviewed" in note.read_text()
     assert main(["rebuild", "--vault", str(vault_dir), "--at", "2026-10-19"]) == 0
     assert not note.exists()  # the default rebuild drops it again
+
+
+def test_memory_store_satisfies_the_graph_store_contract():
+    assert isinstance(MemoryStore(), GraphStore)
+
+
+def test_query_baseline_on_fixture_vault(vault_dir):
+    store = vault.replay(vault_dir)
+    hits = store.claims_for(["semantic entropy"], hops=0)
+    assert hits and all("entropy" in c.claim.statement.casefold() for c in hits)
+    assert len(store.claims_for(["semantic entropy"])) >= len(hits)
+    claim = hits[0]
+    assert store.chain(claim.claim.claim_id) == [claim]  # nothing supersedes it in the fixture
+    author = store.item(claim.item_id).author_id
+    assert author in {p.person_id for p in store.people_for([claim.claim.claim_id])}
+    assert any(e.type == "PUBLISHED_IN" for e in store.neighbours(claim.item_id))
+    assert claim.idea_id in {i.idea_id for i in store.ideas()}
+    assert store.review(TODAY).firmed == [claim.idea_id]  # Demo Author and the synthetic confirmation agree
+
+
+def _scored(store):
+    claims = {c.claim.claim_id: (c.half_life_days, c.clock_start, c.confirmations, c.duplicate_rank, c.superseded_by)
+              for c in store.claims()}
+    return claims, {p.person_id: store.trust(p.person_id) for p in store.people()}, set(store.edges())
+
+
+@pytest.mark.parametrize("vault_path", [FIXTURES / "vault", Path(__file__).parent.parent / ".local-vault" / "seed"])
+def test_scores_do_not_depend_on_arrival_order(vault_path):
+    if not (vault_path / "processed").is_dir():
+        pytest.skip("seed vault not checked out")
+    records = list(vault.load_extractions(vault_path))
+    forward, backward = MemoryStore(include_unreviewed=True), MemoryStore(include_unreviewed=True)
+    for ex, text in records:
+        forward.apply(ex, text)
+    for ex, text in reversed(records):
+        backward.apply(ex, text)
+    assert _scored(forward) == _scored(backward)

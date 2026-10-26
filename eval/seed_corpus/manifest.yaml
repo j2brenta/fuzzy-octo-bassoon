@@ -2,6 +2,13 @@ schema_version: 1
 corpus_id: refresher-seed-v1
 # Labels are expected FUTURE processing results, not results already computed.
 # Synthetic items intentionally arrive in reverse event-time order.
+# Claims that should form one Idea, as "seed id:phrase from the claim". Groups also stay apart from each other;
+# refresher eval scores them pairwise. Profile facts get no Idea, so a group holding one passes only by staying apart.
+ideas:
+  - ["people-list:minimal follow set", "introspection-list:minimal set to follow"]  # A: the follow set
+  - ["demo-original:starts at 14:00", "demo-repost:starts at 14:00", "demo-correction:starts at 16:00"]  # D: workshop time
+  - ["people-list:best known method for detecting confabulations"]  # E: the method ...
+  - ["introspection-list:farquhar and yarin gal are lead authors"]  # F: ... kept apart from its authors
 items:
   - id: demo-correction
     file: originals/demo_correction.txt

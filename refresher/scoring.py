@@ -24,6 +24,13 @@ def confirm(half_life_days: float) -> float:
     return min(half_life_days * CONFIRM_FACTOR, MAX_HALF_LIFE)
 
 
+def half_life(base_days: float, confirmations: int) -> float:
+    """The half-life after this many independent confirmations."""
+    for _ in range(confirmations):
+        base_days = confirm(base_days)
+    return base_days
+
+
 def band(score: float) -> str:
     return "fresh" if score >= FRESH else "fading" if score >= FADING else "stale"
 
