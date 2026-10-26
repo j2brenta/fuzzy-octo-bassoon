@@ -37,6 +37,9 @@ from engine.entities import EntityError, entity_client_from_environment, extract
 from engine.package import PackageError, build_extraction
 from engine.placement import apply_storage_stub
 from engine.results import write_item_note, entity_summary
+from graph.relate import ModelRelator
+from refresher.consolidate import consolidate, due
+from refresher.place import place, reply_text
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -140,8 +143,18 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if message.text is None:
         await message.answer("Not saved: this version supports text only. Please paste the text; files and voice come later.")
         return
+    if message.forward_origin is None and command == "/consolidate":
+        await message.answer("Reviewing the whole graph: relations, topics, merges and people…")
+        try:
+            run = await asyncio.to_thread(consolidate_now, vault_path, client_from_environment())
+        except (ModelError, OSError, ValueError) as error:
+            logger.error("Consolidation failed (%s).", type(error).__name__)
+            await message.answer(f"Review failed ({type(error).__name__}); the graph is unchanged.")
+            return
+        await message.answer(review_text(run))
+        return
     if message.forward_origin is None and command.startswith("/"):
-        await message.answer("Only /start and /help are available. Topic refreshers are not implemented yet.")
+        await message.answer("Only /start, /help and /consolidate are available. Topic refreshers are not implemented yet.")
         return
     try:
         result = await asyncio.to_thread(capture_message, message, vault_path)
@@ -309,12 +322,51 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
 
     try:
         packaged = await asyncio.to_thread(build_extraction, result.path, claims_from=quality.extraction_path.parent.name)
-        placement = await asyncio.to_thread(apply_storage_stub, packaged.path)
+        await asyncio.to_thread(apply_storage_stub, packaged.path)  # validates the record, keeps a receipt
     except (PackageError, ExtractionError, EntityError, JudgeError, TriageError, OSError, ValueError):
         await message.answer("Claims and entities saved; the combined extraction handoff remains pending.")
         return
-    message_status = "awaiting the graph adapter" if placement["quality_gate_passed"] else "awaiting quality resolution"
-    await message.answer(f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities; {message_status}. No graph placement has been applied.")
+    saved = f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities."
+    try:
+        placed, store, note = await asyncio.to_thread(
+            place, packaged.path.parent.parent, packaged.path.stem, graph_relator(client))
+    except (OSError, ValueError) as error:
+        logger.error("Graph placement failed (%s).", type(error).__name__)
+        await message.answer(f"{saved}\nGraph placement failed; the next rebuild places it.")
+        return
+    waiting = sum(s.status == "proposed" for s in store.proposals.values())
+    tail = f"\n{waiting} proposal(s) wait for you: run `refresher serve` to review them." if waiting else ""
+    await message.answer(f"{saved}\n{reply_text(placed, store, note)}{tail}")
+    vault_path = packaged.path.parent.parent
+    if due(vault_path):
+        # The hourly review rides on captures, after the reply: the user is not kept waiting, and the bot
+        # handles one message at a time, so the next capture simply starts when it is done.
+        try:
+            await asyncio.to_thread(consolidate_now, vault_path, client)
+        except (ModelError, OSError, ValueError) as error:
+            logger.error("Hourly consolidation failed (%s).", type(error).__name__)
+
+
+def consolidate_now(vault_path: Path, client):
+    """The hourly job with the bot's model (none when GRAPH_RELATOR=lexical) and Tavily when its key is set."""
+    from engine.people import search_from_environment
+    model = client if client is not None and graph_relator(client) is not None else None
+    return consolidate(vault_path, model, search_from_environment() if model is not None else None)
+
+
+def review_text(run) -> str:
+    lines = [f"Reviewed: {run.duplicates} duplicate items, {run.firmed} Ideas firmed, {run.proposed} new proposals."]
+    if run.enriched:
+        lines.append(f"Looked up {run.enriched} people.")
+    lines.append(f"{run.waiting} proposal(s) wait for you: run `refresher serve` to review them."
+                 if run.waiting else "Nothing waits for you.")
+    lines += [n[0].upper() + n[1:] + "." for n in run.notes or []]
+    return "\n".join(lines)
+
+
+def graph_relator(client):
+    """The model judges relations unless GRAPH_RELATOR=lexical; place() falls back to wording if the model fails."""
+    return None if os.environ.get("GRAPH_RELATOR", "model").strip().lower() == "lexical" else ModelRelator(client)
 
 
 async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:

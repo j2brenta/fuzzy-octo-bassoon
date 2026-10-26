@@ -415,3 +415,75 @@ def test_neighbours_show_relations_and_provenance_without_spans(tmp_path):
     *_, around = gather(store, ["16:00"])
     assert {"SUPERSEDES", "PART_OF", "PUBLISHED_IN", "AUTHORED_BY"} <= around["correction"]
     assert "FROM" not in around["correction"] and "DUPLICATES" in around["repost"]
+
+
+def test_a_verdict_onto_a_held_back_repeat_follows_it_to_the_placed_claim():
+    """Model verdicts are judged with unreviewed items in the pool; a strict rebuild holds the repost back, so the
+    correction's UPDATES onto the repost's claim must reach the original it repeats."""
+    held = REPOST.model_copy(update={"quality_status": "needs_revision", "quality_gate_passed": False})
+    store = MemoryStore()
+    store.apply(ORIGINAL, TEXT["original"], TRIO_VERDICTS["original"])
+    store.apply(held, TEXT["repost"], TRIO_VERDICTS["repost"])
+    store.apply(CORRECTION, TEXT["correction"], verdicts("correction", ("c16", "UPDATES", "r14"), ("cprev", "NONE", None)))
+    assert "repost" in store.held_back
+    assert ("c16", "o14") in {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}
+
+
+# --- relate-v2: abstention and pair context, from Victor's news map ---
+
+CONTEXT = {"subject": "demo workshop", "version": "", "metric": "start time", "dataset": "", "unit": "UTC",
+           "conditions": "", "time_attribution": "25 October 2026", "unknowns": ""}
+
+
+def test_abstention_is_a_none_verdict_with_a_target_and_context_needs_every_field():
+    Verdict(claim_id="a", abstention="not_comparable", target_id="b", context=CONTEXT)
+    with pytest.raises(ValidationError):
+        Verdict(claim_id="a", label="SAME", target_id="b", abstention="not_comparable")
+    with pytest.raises(ValidationError):
+        Verdict(claim_id="a", abstention="insufficient_evidence")  # no target
+    with pytest.raises(ValidationError):
+        Verdict(claim_id="a", label="UPDATES", target_id="b", context={"subject": "x"})
+
+
+def test_model_relator_keeps_abstentions_and_context():
+    model = FakeModel({"verdicts": [
+        {"claim": "c1", "label": "UPDATES", "target": "k1", "context": {**CONTEXT, "extra": "dropped"},
+         "rationale": "New time."},
+        {"claim": "c2", "label": "NONE", "abstain": "not_comparable", "target": "k1", "context": CONTEXT,
+         "rationale": "Different question."}]})
+    relation = relate.judge(CORRECTION, TEXT["correction"], trio().candidate_pool("correction"),
+                            relate.ModelRelator(model))
+    c16, cprev = {v.claim_id: v for v in relation.verdicts}["c16"], {v.claim_id: v for v in relation.verdicts}["cprev"]
+    assert c16.label == "UPDATES" and c16.context == CONTEXT and c16.abstention is None
+    assert cprev.label == "NONE" and cprev.abstention == "not_comparable" and cprev.target_id == c16.target_id
+    assert relation.prompt_version == "relate-v2"
+
+
+def test_an_abstention_draws_no_relation_and_is_listed():
+    from refresher import graphview, km
+    store = MemoryStore()
+    store.apply(REPOST, TEXT["repost"], verdicts("repost", ("r14", "NONE", None)))
+    abstained = Relation(item_id="correction", relator="model", prompt_version="relate-v2",
+                         candidates={"c16": ["r14"], "cprev": ["r14"]}, verdicts=[
+                             Verdict(claim_id="c16", label="UPDATES", target_id="r14", context=CONTEXT),
+                             Verdict(claim_id="cprev", abstention="insufficient_evidence", target_id="r14",
+                                     context=CONTEXT, rationale="Says only that a time was announced.")])
+    store.apply(CORRECTION, TEXT["correction"], abstained)
+    from graph.memory import RELATION_TYPES
+    assert not any("cprev" in (e.src, e.dst) for e in store.edges() if e.type in RELATION_TYPES)
+    assert [v.claim_id for v in store.abstentions()] == ["cprev"]
+    report = km.render(km.run(store, datetime(2026, 10, 20, tzinfo=timezone.utc)), store)
+    assert "Not compared: the relator would not guess" in report and "insufficient evidence" in report
+    data = graphview.map_data(store, datetime(2026, 10, 20, tzinfo=timezone.utc))
+    assert any(e["kind"] == "ABSTAIN" and e["source"] == "cprev" for e in data["edges"])
+    assert next(e for e in data["edges"] if e["kind"] == "SUPERSEDES")["context"] == CONTEXT
+
+
+def test_a_correction_never_supersedes_a_claim_in_its_own_item():
+    """The model may call the correction's 'previously 14:00' claim SAME as the old time; spreading the UPDATES
+    across that SAME class must not make the new time supersede its own item's claim."""
+    store = MemoryStore()
+    store.apply(ORIGINAL, TEXT["original"], TRIO_VERDICTS["original"])
+    store.apply(CORRECTION, TEXT["correction"], verdicts("correction", ("c16", "UPDATES", "o14"), ("cprev", "SAME", "o14")))
+    supersedes = {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}
+    assert ("c16", "o14") in supersedes and ("c16", "cprev") not in supersedes

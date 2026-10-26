@@ -1,0 +1,349 @@
+{
+  "stage": "relations",
+  "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
+  "relator": "model",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "prompt_version": "relate-v2",
+  "candidates": {
+    "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c": [],
+    "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd": [],
+    "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40": [],
+    "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254": [],
+    "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278": [],
+    "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f": [
+      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e"
+    ],
+    "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b": [],
+    "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
+    ],
+    "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
+    ],
+    "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
+    ],
+    "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13": [],
+    "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988": [
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
+    ],
+    "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6": [],
+    "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087": [],
+    "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e": [
+      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
+    ],
+    "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034": [],
+    "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
+    ],
+    "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b"
+    ],
+    "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863": [
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
+    ],
+    "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37": [],
+    "c687e0f2a9972027f40b6943e214311cd122158e6d870719638c9ebb59d3eea1": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
+    ],
+    "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833": []
+  },
+  "verdicts": [
+    {
+      "claim_id": "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c",
+      "subject": "person",
+      "subject_name": "Jack Lindsey",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd",
+      "subject": "person",
+      "subject_name": "Jack Lindsey",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40",
+      "subject": "person",
+      "subject_name": "Jack Lindsey",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254",
+      "subject": "person",
+      "subject_name": "Chris Olah and Josh Batson",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01",
+      "subject": "person",
+      "subject_name": "Chris Olah and Josh Batson",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
+      "subject": "person",
+      "subject_name": "Sam Marks",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f",
+      "subject": "person",
+      "subject_name": "Sebastian Farquhar and Yarin Gal",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b",
+      "subject": "person",
+      "subject_name": "Yarin Gal",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911",
+      "subject": "person",
+      "subject_name": "Adam Tauman Kalai",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db",
+      "subject": "person",
+      "subject_name": "Owain Evans",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af",
+      "subject": "person",
+      "subject_name": "Owain Evans",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13",
+      "subject": "person",
+      "subject_name": "Stephen Fleming",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988",
+      "subject": "person",
+      "subject_name": "Stephen Fleming",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29",
+      "subject": "person",
+      "subject_name": "Arvind Narayanan and Sayash Kapoor",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6",
+      "subject": "person",
+      "subject_name": "Arvind Narayanan and Sayash Kapoor",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087",
+      "subject": "organization",
+      "subject_name": "METR (founded by Beth Barnes)",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Organization fact, default NONE."
+    },
+    {
+      "claim_id": "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d",
+      "subject": "organization",
+      "subject_name": "METR (founded by Beth Barnes)",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Organization fact, default NONE."
+    },
+    {
+      "claim_id": "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e",
+      "subject": "person",
+      "subject_name": "Andrej Karpathy",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034",
+      "subject": "person",
+      "subject_name": "Azalia Mirhoseini",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec",
+      "subject": "person",
+      "subject_name": "Shreya Shankar",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036",
+      "subject": "person",
+      "subject_name": "Hamel Husain",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
+      "subject": "person",
+      "subject_name": "Eugene Yan",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c",
+      "subject": "world",
+      "subject_name": null,
+      "label": "SAME",
+      "target_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "abstention": null,
+      "context": null,
+      "rationale": "Both statements recommend the same minimal follow set."
+    },
+    {
+      "claim_id": "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863",
+      "subject": "world",
+      "subject_name": null,
+      "label": "SAME",
+      "target_id": "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "abstention": null,
+      "context": null,
+      "rationale": "Both statements describe searching arXiv for those terms to surface recent work."
+    },
+    {
+      "claim_id": "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37",
+      "subject": "person",
+      "subject_name": "Jack Lindsey",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    },
+    {
+      "claim_id": "c687e0f2a9972027f40b6943e214311cd122158e6d870719638c9ebb59d3eea1",
+      "subject": "world",
+      "subject_name": null,
+      "label": "ADDS_DETAIL",
+      "target_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "abstention": null,
+      "context": null,
+      "rationale": "Claim adds detail about what the recommended set covers, beyond the mere recommendation."
+    },
+    {
+      "claim_id": "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833",
+      "subject": "person",
+      "subject_name": "Hamel Husain and Shreya Shankar",
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
+    }
+  ],
+  "pool": "69fead7baaa7a71d"
+}

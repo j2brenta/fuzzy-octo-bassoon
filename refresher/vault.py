@@ -4,24 +4,32 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     raw/<item_id>.json          captures, never changed
     processed/<item_id>.json    Extraction handoff records, replayed into the store
     relations/<item_id>.json    relation verdicts, written once by `refresher relate` and replayed
-    graph-reviews/<time>.json   the graph review's decisions, written by `refresher review` and replayed
+    graph-reviews/<time>.json   the graph review's automatic decisions, written by `refresher review` and replayed
                                 (reviews/ is ingestion's extraction reviews)
+    graph-reviews/proposals/<id>.json   what the review suggests and the user decides (graph/proposals.py)
+    graph-reviews/decisions/<time>-<id>.json   the user's answers, append-only; the latest per proposal counts
+    people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`
     overrides.yaml              the user's word: durability, trust, votes
     wiki/items|ideas|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
 """
+import fcntl
 import json
+import os
 import re
 import sys
+import tempfile
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
 import yaml
 from pydantic import ValidationError
 
+from graph import proposals as proposal_stage
 from graph.memory import MemoryStore
-from graph.store import Edge, GraphStore, ReviewReport
-from refresher import km
+from graph.store import Decision, Edge, GraphStore, Proposal, ReviewReport
+from refresher import km, scoring
 from refresher.schemas import Extraction, Override, Relation
 
 MARK = "<!-- your notes: everything below this line is kept on rebuild -->"
@@ -29,6 +37,34 @@ USER_KEYS = ("user_durability", "user_trust")
 INVERSE = {"DUPLICATES": "duplicated by", "SUPPORTS": "supported by", "SUPERSEDES": "superseded by",
            "CONTRADICTS": "contradicted by", "ELABORATES": "elaborated by"}
 UNSAFE = re.compile(r'[\\/:*?"<>|#^\[\]]+')
+
+
+# --- writing safely: the bot, the hourly review and the accept page can write at the same time ---
+
+def atomic_write(path: Path, text: str) -> Path:
+    """Write to a temporary file beside `path`, then rename it over: a reader sees the old file or the new one."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+    return path
+
+
+@contextmanager
+def lock(vault: Path):
+    """One writer at a time for read-check-write steps (a decision, a review, a rebuild)."""
+    vault.mkdir(parents=True, exist_ok=True)
+    with (vault / ".refresher.lock").open("a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 # --- truth: read ---
@@ -58,21 +94,18 @@ def load_relation(vault: Path, extraction: Extraction) -> Relation | None:
 
 
 def save_relation(vault: Path, relation: Relation) -> Path:
-    path = vault / "relations" / f"{relation.item_id}.json"
-    path.parent.mkdir(exist_ok=True)
-    path.write_text(relation.model_dump_json(indent=2) + "\n", encoding="utf-8")
-    return path
+    return atomic_write(vault / "relations" / f"{relation.item_id}.json", relation.model_dump_json(indent=2) + "\n")
 
 
 def save_review(vault: Path, report: ReviewReport) -> Path:
     path = vault / "graph-reviews" / f"{report.at.astimezone().strftime('%Y%m%dT%H%M%S%z')}.json"
-    path.parent.mkdir(exist_ok=True)
     data = {"at": report.at.isoformat(),
             "item_duplicates": [{"src": e.src, "dst": e.dst, "rationale": e.rationale} for e in report.item_duplicates],
             "firmed": report.firmed, "merged_ideas": report.merged_ideas, "topics": report.topics,
             "merged_people": report.merged_people}
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return path
+    for p in report.proposals:
+        save_proposal(vault, p)
+    return atomic_write(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
 def load_reviews(vault: Path) -> list[ReviewReport]:
@@ -87,6 +120,63 @@ def load_reviews(vault: Path) -> list[ReviewReport]:
     return sorted(out, key=lambda r: r.at)
 
 
+def save_proposal(vault: Path, p: Proposal) -> Path:
+    data = {"proposal_id": p.proposal_id, "kind": p.kind, "payload": p.payload, "rationale": p.rationale,
+            "at": p.at.isoformat(), "fingerprint": p.fingerprint}
+    return atomic_write(vault / "graph-reviews" / "proposals" / f"{p.proposal_id}.json",
+                        json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+def load_proposals(vault: Path) -> list[Proposal]:
+    out = []
+    for path in sorted((vault / "graph-reviews" / "proposals").glob("*.json")):
+        d = json.loads(path.read_text(encoding="utf-8"))
+        out.append(Proposal(d["proposal_id"], d["kind"], d["payload"], d.get("rationale", ""),
+                            datetime.fromisoformat(d["at"]), d["fingerprint"]))
+    return out
+
+
+def save_decision(vault: Path, d: Decision) -> Path:
+    data = {"proposal_id": d.proposal_id, "action": d.action, "token": d.token, "fingerprint": d.fingerprint,
+            "rationale": d.rationale, "at": d.at.isoformat()}
+    name = f"{d.at.astimezone().strftime('%Y%m%dT%H%M%S%f%z')}-{d.proposal_id}.json"
+    return atomic_write(vault / "graph-reviews" / "decisions" / name, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+def load_decisions(vault: Path) -> list[Decision]:
+    out = []
+    for path in sorted((vault / "graph-reviews" / "decisions").glob("*.json")):
+        d = json.loads(path.read_text(encoding="utf-8"))
+        out.append(Decision(d["proposal_id"], d["action"], d["token"], d["fingerprint"], d.get("rationale", ""),
+                            datetime.fromisoformat(d["at"])))
+    return sorted(out, key=lambda d: d.at)
+
+
+class StaleToken(Exception):
+    """The proposal or its evidence changed after the user looked at it."""
+
+
+def decide(vault: Path, proposal_id: str, action: str, token: str, rationale: str = "",
+           at: datetime | None = None) -> Decision:
+    """Record the user's answer if `token` is the one the current graph gives; otherwise raise StaleToken."""
+    from datetime import timezone
+    if action not in proposal_stage.ACTIONS:
+        raise ValueError(f"action must be one of {', '.join(proposal_stage.ACTIONS)}")
+    with lock(vault):
+        store = replay(vault, include_unreviewed=True)
+        state = store.proposals.get(proposal_id)
+        if state is None:
+            raise KeyError(proposal_id)
+        if state.token != token:
+            raise StaleToken("The evidence or the proposal changed since you looked; look again.")
+        if action == "accept" and state.status in ("stale", "unplaced"):
+            raise StaleToken(state.reason)
+        current = proposal_stage.fingerprint(store, state.proposal.kind, state.proposal.payload)
+        decision = Decision(proposal_id, action, token, current, rationale, at or datetime.now(timezone.utc))
+        save_decision(vault, decision)
+        return decision
+
+
 def load_overrides(vault: Path) -> list[Override]:
     path = vault / "overrides.yaml"
     rows = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
@@ -95,7 +185,7 @@ def load_overrides(vault: Path) -> list[Override]:
 
 def save_overrides(vault: Path, overrides: list[Override]) -> None:
     rows = [o.model_dump(mode="json", exclude_none=True) for o in overrides]
-    (vault / "overrides.yaml").write_text(yaml.safe_dump(rows, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    atomic_write(vault / "overrides.yaml", yaml.safe_dump(rows, allow_unicode=True, sort_keys=False))
 
 
 def note_overrides(vault: Path) -> list[Override]:
@@ -125,13 +215,43 @@ def merged_overrides(vault: Path) -> list[Override]:
 
 def replay(vault: Path, overrides: list[Override] | None = None, include_unreviewed: bool = False) -> MemoryStore:
     store = MemoryStore(include_unreviewed=include_unreviewed)
-    for ex, text in load_extractions(vault):
-        store.apply(ex, text, load_relation(vault, ex))
+    with store.deferred():  # one recomputation for the whole vault
+        for ex, text in load_extractions(vault):
+            store.apply(ex, text, load_relation(vault, ex))
     for report in load_reviews(vault):
         store.apply_review(report)
+    # Every state is judged against the graph before any proposal applies, so the order of decisions never
+    # changes a fingerprint, and the accept page sees the same tokens a rebuild does.
+    decisions = load_decisions(vault)
+    store.proposals = {p.proposal_id: proposal_stage.state(store, p, decisions) for p in load_proposals(vault)}
+    for state in sorted(store.proposals.values(), key=lambda s: (s.proposal.at, s.proposal.proposal_id)):
+        store.apply_proposal(state)
     for o in merged_overrides(vault) if overrides is None else overrides:
         store.apply_override(o)
+    people = {p.person_id: p for p in store.people()}
+    for record in load_enrichments(vault):
+        person = people.get(record["person_id"])
+        if person is not None:
+            person.enrichment_status = "enriched" if record.get("match") else "no_match"
+            person.role, person.affiliation = record.get("role"), record.get("affiliation")
+            person.domains = list(record.get("domains") or [])
     return store
+
+
+def _person_file(vault: Path, person_id: str) -> Path:
+    return vault / "people" / f"{person_id.replace(':', '-')}.json"
+
+
+def load_enrichments(vault: Path) -> list[dict]:
+    return [json.loads(path.read_text(encoding="utf-8")) for path in sorted((vault / "people").glob("*.json"))]
+
+
+def save_enrichment(vault: Path, record: dict) -> Path:
+    return atomic_write(_person_file(vault, record["person_id"]), json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+
+
+def enriched(vault: Path, person_id: str) -> bool:
+    return _person_file(vault, person_id).exists()
 
 
 # --- views: write ---
@@ -179,6 +299,7 @@ def note_names(store: GraphStore) -> dict[str, str]:
 def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     """Write wiki/ from the store. Same store and `at` give the same bytes."""
     wiki = vault / "wiki"
+    wiki.mkdir(parents=True, exist_ok=True)
     names = note_names(store)
     link = lambda key: f"[[{names[key]}]]" if key in names else f"`{key[:12]}`"
     scores = km.score_claims(store, at)
@@ -267,10 +388,21 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
         _write_note(wiki / "ideas" / f"{names[idea.idea_id]}.md", meta, "\n".join(lines), written)
 
     for p in sorted(store.people(), key=lambda p: p.person_id):
-        lines = [f"# {p.name}", "", f"Trust {store.trust(p.person_id):.2f} · enrichment {p.enrichment_status}"]
+        lines = [f"# {p.name}", ""]
+        who = " at ".join(f"[{f['value']}]({f['url']})" for f in (p.role, p.affiliation) if f)
+        if who:
+            lines += [who, ""]
+        trust = scoring.trust_rationale(p.confirmations, p.contradictions, p.up, p.down, p.trust_pinned)
+        lines.append(f"Trust {trust} · enrichment {p.enrichment_status}")
+        if p.domains:
+            lines += ["", "## Works on", ""] + [f"- [{d['value']}]({d['url']})" for d in p.domains]
         facts = sorted((all_claims[cid] for cid in p.facts), key=lambda c: (c.clock_start, c.claim.claim_id))
         if facts:
             lines += ["", "## Profile", ""] + [f"- {c.claim.statement} ({where(c)})" for c in facts]
+        ideas = sorted({c.idea_id for c in all_claims.values() if c.idea_id and c.idea_id in names
+                        and (c.item_id in p.authored or c.claim.claim_id in p.facts)})
+        if ideas:
+            lines += ["", "## Ideas", ""] + [f"- {link(i)}" for i in ideas]
         for head, ids in (("Wrote", p.authored), ("Mentioned in", p.mentioned_in)):
             if ids:
                 lines += ["", f"## {head}", ""] + [f"- {link(i)}" for i in sorted(ids, key=lambda i: names[i])]

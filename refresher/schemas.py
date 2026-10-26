@@ -144,24 +144,39 @@ class Extraction(_Handoff):
 # --- Relations: the graph's verdict stage, relations/<item_id>.json, written once and replayed ---
 
 RelationLabel = Literal["SAME", "UPDATES", "CONFLICTS", "ADDS_DETAIL", "NONE"]
+Abstention = Literal["insufficient_evidence", "not_comparable"]
+# What the two claims share and where they differ, from Victor's news map: it is what tells an update from a conflict.
+CONTEXT_FIELDS = ("subject", "version", "metric", "dataset", "unit", "conditions", "time_attribution", "unknowns")
 
 
 class Verdict(_Model):
     """How one claim relates to the candidates it was shown. The label is symmetric: event time decides which
-    claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES."""
+    claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES.
+
+    A relator may abstain on its best candidate instead of guessing: NONE with `abstention` and a target, recorded but
+    drawn as no relation. `context` says what the pair shares and where it differs (CONTEXT_FIELDS, "" when unknown)."""
     claim_id: str
     subject: Literal["person", "organization", "world"] = "world"
     subject_name: str | None = None  # the person or organization a profile fact is about
     label: RelationLabel = "NONE"
-    target_id: str | None = None  # a candidate claim id; None exactly when the label is NONE
+    target_id: str | None = None  # a candidate claim id; None exactly when the label is NONE and nothing was abstained
+    abstention: Abstention | None = None
+    context: dict[str, str] | None = None
     rationale: str = ""
 
     @model_validator(mode="after")
     def _consistent(self):
-        if (self.label == "NONE") != (self.target_id is None):
-            raise ValueError("target_id is required for a relation and must be empty for NONE")
+        if self.abstention is not None and self.label != "NONE":
+            raise ValueError("an abstention is a NONE verdict")
+        if (self.label != "NONE" or self.abstention is not None) != (self.target_id is not None):
+            raise ValueError("target_id is required for a relation or an abstention, and must be empty otherwise")
         if (self.subject != "world") != bool(self.subject_name):
             raise ValueError("subject_name is required for a person or organization subject, and only then")
+        if self.context is not None:
+            if self.target_id is None:
+                raise ValueError("context describes a pair; it needs a target")
+            if set(self.context) != set(CONTEXT_FIELDS):
+                raise ValueError(f"context needs exactly these fields: {', '.join(CONTEXT_FIELDS)}")
         return self
 
 
@@ -173,6 +188,9 @@ class Relation(_Model):
     prompt_version: str
     candidates: dict[str, list[str]]  # claim id -> candidate claim ids, as the relator saw them
     verdicts: list[Verdict]
+    # Fingerprint of the items placed before this one when it was judged. While it matches, nothing earlier has
+    # arrived since and the verdicts cannot have missed a candidate, so relate skips the costly staleness check.
+    pool: str | None = None
 
     @model_validator(mode="after")
     def _targets_were_candidates(self):

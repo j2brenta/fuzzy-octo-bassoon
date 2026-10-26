@@ -69,7 +69,10 @@ class PersonNode:
     down: int = 0
     trust_pinned: float | None = None
     facts: set[str] = field(default_factory=set)  # claim ids about this person: their profile
-    enrichment_status: str = "pending"
+    enrichment_status: str = "pending"  # pending | enriched | no_match (the web results were about someone else)
+    role: dict | None = None  # {"value", "url"} from enrichment, like affiliation and each domain
+    affiliation: dict | None = None
+    domains: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -98,17 +101,56 @@ class Placement:
     author: str | None = None
     duplicate_of: str | None = None
     relations: list[Edge] = field(default_factory=list)
+    ideas: list[str] = field(default_factory=list)  # Idea ids its claims joined, in claim order
+
+
+@dataclass
+class TopicNode:
+    """Ideas about one subject. A proposal the user accepted makes it; ingest attaches new Ideas provisionally."""
+    topic_id: str
+    title: str
+    ideas: set[str] = field(default_factory=set)  # accepted members
+    attached: set[str] = field(default_factory=set)  # provisional members, attached by similarity at ingest
+
+
+PROPOSAL_KINDS = ("merge_ideas", "merge_people", "topic", "relation")
+
+
+@dataclass(frozen=True)
+class Proposal:
+    """A change the review suggests and the user decides. The payload names claims (or people), not Ideas,
+    because Idea ids move as members join. The fingerprint is what the claims said when it was proposed."""
+    proposal_id: str
+    kind: str  # one of PROPOSAL_KINDS
+    payload: dict  # merge_ideas/topic: {"claims": [...], "title"?}; relation: {"claims": [src, dst], "type"};
+                   # merge_people: {"people": [absorbed, kept]}
+    rationale: str
+    at: datetime
+    fingerprint: str
+
+
+@dataclass(frozen=True)
+class Decision:
+    """The user's answer to a proposal, bound to the fingerprint they saw. Append-only: the latest one counts."""
+    proposal_id: str
+    action: str  # accept | reject | defer
+    token: str
+    fingerprint: str
+    rationale: str
+    at: datetime
 
 
 @dataclass
 class ReviewReport:
-    """What graph.review() decided. The verdicts are also written to reviews/ so a rebuild replays them."""
+    """What graph.review() decided. The automatic part is written to graph-reviews/ and replayed; proposals wait
+    for the user in graph-reviews/proposals/."""
     at: datetime
     item_duplicates: list[Edge] = field(default_factory=list)  # later item DUPLICATES first item
     firmed: list[str] = field(default_factory=list)  # idea ids, provisional -> firm
     merged_ideas: list[tuple[str, str]] = field(default_factory=list)  # (absorbed, kept)
     topics: dict[str, list[str]] = field(default_factory=dict)  # topic title -> idea ids (3+, 2+ sources)
     merged_people: list[tuple[str, str]] = field(default_factory=list)  # (absorbed, kept)
+    proposals: list[Proposal] = field(default_factory=list)
 
 
 @runtime_checkable

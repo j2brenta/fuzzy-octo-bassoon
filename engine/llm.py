@@ -8,7 +8,8 @@ import json
 import os
 import re
 import socket
-from typing import Protocol
+import time
+from typing import Callable, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -55,7 +56,22 @@ def _nebius_request(api_key: str, base_url: str, path: str, payload: dict | None
     )
     try:
         with urlopen(request, timeout=timeout) as response:
-            body = response.read(5_000_001)
+            # The socket timeout bounds each read, not the whole answer: a server that keeps sending a byte now and
+            # then held one call open for almost two hours. Read in chunks against a deadline instead.
+            read1 = getattr(response, "read1", None)  # what has arrived, never waiting for more
+            if read1 is None:
+                body = response.read(5_000_001)
+            else:
+                deadline, chunks, size = time.monotonic() + timeout, [], 0
+                while size <= 5_000_000:
+                    if time.monotonic() > deadline:
+                        raise TimeoutError
+                    chunk = read1(65536)
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    size += len(chunk)
+                body = b"".join(chunks)
         if len(body) > 5_000_000:
             raise ModelError("Nebius response exceeded the expected size.")
         data = json.loads(body)
@@ -90,6 +106,8 @@ class NebiusModel:
     timeout_seconds: int = 120
     # Reasoning models spend part of the budget thinking; a small cap leaves the answer empty.
     max_tokens: int = 16384
+    # Optional transport injection; the ordinary CLI retains the existing transport.
+    request_transport: Callable = field(default=_nebius_request, repr=False, compare=False)
 
     def complete_json(self, system_prompt: str, content: str) -> ModelReply:
         payload = {
@@ -99,7 +117,7 @@ class NebiusModel:
             "temperature": 0,
             "max_tokens": self.max_tokens,
         }
-        response_data = _nebius_request(self.api_key, self.base_url, "/chat/completions", payload, self.timeout_seconds)
+        response_data = self.request_transport(self.api_key, self.base_url, "/chat/completions", payload, self.timeout_seconds)
         try:
             choice = response_data["choices"][0]
             text = choice["message"]["content"]
@@ -134,6 +152,57 @@ class NebiusModel:
             request_id=request_id if isinstance(request_id, str) else None,
             usage=usage,
         )
+
+
+class BudgetExceeded(ModelError):
+    """The run's token or time budget would be exceeded by the next call; the rest waits for the next run."""
+
+
+RUN_TOKENS = 2_000_000  # per run; REFRESHER_RUN_TOKENS overrides
+RUN_SECONDS = 1800  # per run; REFRESHER_RUN_SECONDS overrides
+
+
+class BudgetedModel:
+    """A spending cap for one run, after the metered gate in Victor's news map: each call reserves its worst case
+    (input estimated at one token per 3 bytes, plus the model's whole output allowance) and is refused before it is
+    sent if that could pass the run's token budget, or if its timeout could pass the run's time budget. Afterwards
+    the call is charged what the provider reports (or the estimate). Tokens, not money: a price per token is not
+    verified for every model, so a currency cap would only look precise."""
+
+    def __init__(self, model: JsonModel, max_tokens: int | None = None, max_seconds: float | None = None,
+                 clock=time.monotonic):
+        self.model, self.clock = model, clock
+        self.provider = getattr(model, "provider", None)
+        self.model_provider = getattr(model, "model_provider", None)
+        self.model_name = getattr(model, "model_name", None)
+        self.max_tokens = max_tokens if max_tokens is not None else int(os.environ.get("REFRESHER_RUN_TOKENS") or RUN_TOKENS)
+        self.max_seconds = max_seconds if max_seconds is not None else \
+            float(os.environ.get("REFRESHER_RUN_SECONDS") or RUN_SECONDS)
+        self.started, self.spent, self.calls = clock(), 0, 0
+
+    @staticmethod
+    def estimate(text: str) -> int:
+        return -(-len(text.encode("utf-8")) // 3)
+
+    def complete_json(self, system_prompt: str, content: str) -> ModelReply:
+        prompt = self.estimate(system_prompt) + self.estimate(content)
+        reserve = prompt + getattr(self.model, "max_tokens", 16384)
+        if self.spent + reserve > self.max_tokens:
+            raise BudgetExceeded(f"Run budget reached: {self.spent:,} of {self.max_tokens:,} tokens used, and the next "
+                                 f"call could use {reserve:,}; the rest waits for the next run.")
+        elapsed = self.clock() - self.started
+        if elapsed + getattr(self.model, "timeout_seconds", 120) > self.max_seconds:
+            raise BudgetExceeded(f"Run time budget reached after {elapsed:.0f} of {self.max_seconds:.0f} seconds; "
+                                 "the rest waits for the next run.")
+        self.calls += 1
+        try:
+            reply = self.model.complete_json(system_prompt, content)
+        except ModelError:
+            self.spent += prompt  # a failed call still read the prompt
+            raise
+        used = reply.usage.get("total_tokens") or prompt + self.estimate(json.dumps(reply.data, ensure_ascii=False))
+        self.spent += used
+        return reply
 
 
 def list_nebius_models(api_key: str, base_url: str = NEBIUS_BASE_URL) -> list[str]:

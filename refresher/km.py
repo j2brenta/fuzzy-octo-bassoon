@@ -34,10 +34,14 @@ class KnowledgeReport:
     duplicates: list[tuple[str, str]] = field(default_factory=list)  # (later item, first item)
     supersessions: list[tuple[str, str]] = field(default_factory=list)
     contradictions: list[tuple[str, str]] = field(default_factory=list)
+    abstentions: list = field(default_factory=list)  # Verdicts where the relator would not guess
     held_back: dict[str, str] = field(default_factory=dict)
     unreviewed: dict[str, str] = field(default_factory=dict)  # placed without passing the quality gate
     ideas: Counter = field(default_factory=Counter)  # status -> count
     conflicted_ideas: list[str] = field(default_factory=list)  # titles of Ideas holding a CONTRADICTS edge
+    topics: int = 0
+    attached: int = 0  # Ideas a topic took provisionally since it was accepted
+    proposals: Counter = field(default_factory=Counter)  # status -> count
     people: int = 0
     people_pending: int = 0
     fading_soon: list[ClaimScore] = field(default_factory=list)  # fresh now, fading within SOON
@@ -71,11 +75,15 @@ def run(store: GraphStore, at: datetime) -> KnowledgeReport:
         elif e.type == "CONTRADICTS":
             r.contradictions.append((e.src, e.dst))
     r.held_back = dict(getattr(store, "held_back", {}))
+    r.abstentions = store.abstentions() if hasattr(store, "abstentions") else []
     r.unreviewed = {i.item_id: i.review_status for i in store.items() if i.review_status != "accepted"}
     ideas = list(store.ideas())
     r.ideas = Counter(i.status for i in ideas)
     contradicted = {e.src for e in store.edges() if e.type == "CONTRADICTS"}
     r.conflicted_ideas = sorted(i.title for i in ideas if i.members & contradicted)
+    topics = list(store.topics()) if hasattr(store, "topics") else []
+    r.topics, r.attached = len(topics), sum(len(t.attached) for t in topics)
+    r.proposals = Counter(st.status for st in getattr(store, "proposals", {}).values())
     people = list(store.people())
     r.people, r.people_pending = len(people), sum(p.enrichment_status == "pending" for p in people)
 
@@ -96,11 +104,23 @@ def render(r: KnowledgeReport, store: GraphStore) -> str:
         except (AttributeError, KeyError):
             return item_id
 
+    claims = {c.claim.claim_id: c.claim.statement for c in store.claims(hidden=True)}
+
+    def statement(cid):
+        text = claims.get(cid, cid)
+        return f"«{text[:80]}{'…' if len(text) > 80 else ''}»"
+
+    def context(v):
+        text = "; ".join(f"{k.replace('_', ' ')}: {value}" for k, value in (v.context or {}).items() if value)
+        return text[:240]
+
     lines = [f"# Knowledge health at {r.at:%Y-%m-%d %H:%M %Z}", "",
              f"{r.items} items, {r.claims} claims, {r.people} people ({r.people_pending} awaiting enrichment). "
              f"{r.noise} claims collapsed as noise, {r.confirmations} confirmations.", "",
              f"{sum(r.ideas.values())} Ideas: {r.ideas['firm']} firm, {r.ideas['provisional']} provisional, "
-             f"{len(r.conflicted_ideas)} with conflicts.", "",
+             f"{len(r.conflicted_ideas)} with conflicts. {r.topics} topics ({r.attached} Ideas attached provisionally).",
+             "", f"Review: {r.proposals['proposed']} proposals waiting for you, {r.proposals['stale']} stale, "
+             f"{r.proposals['accepted']} accepted, {r.proposals['rejected']} rejected.", "",
              "## Freshness by durability", "", "| durability | half-life | " + " | ".join(BANDS) + " |",
              "|---|---|" + "---|" * len(BANDS)]
     for d in DURABILITIES:
@@ -111,6 +131,10 @@ def render(r: KnowledgeReport, store: GraphStore) -> str:
         ("Supersessions", [f"- `{a[:8]}` supersedes `{b[:8]}`" for a, b in r.supersessions]),
         ("Open contradictions", [f"- `{a[:8]}` contradicts `{b[:8]}`" for a, b in r.contradictions]),
         ("Ideas with conflicts", [f"- {t}" for t in r.conflicted_ideas]),
+        ("Not compared: the relator would not guess", [
+            f"- {statement(v.claim_id)} / {statement(v.target_id)}: "
+            f"{v.abstention.replace('_', ' ')}" + (f" ({context(v)})" if context(v) else "")
+            for v in r.abstentions]),
         (f"Fading within {SOON.days} days", [f"- {s.freshness:.2f} {s.node.durability}: {s.node.claim.statement}"
                                              for s in r.fading_soon[:20]]),
         ("Worth a refresher: durable knowledge going stale", [f"- {title(i)}: {n} claims" for i, n in r.refresh_due[:20]]),
