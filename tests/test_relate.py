@@ -227,3 +227,22 @@ def test_world_labels_map_to_edges_and_ideas():
     assert shared.durability == "foundation" and shared.canonical_claim_id == "b1"
     b1 = next(c for c in store.claims() if c.claim.claim_id == "b1")
     assert b1.confirmations == 1 and store.person(person_id("Bob")).contradictions == 1
+
+
+# --- Phase 5: grouping and relation precision in the eval ---
+
+def test_eval_scores_groupings_pairwise_and_relation_precision():
+    from refresher import evaluate
+    store = trio()
+    expectations = [evaluate.Expect(name, {"source_id": f"seed:{name}"}, {}, rels) for name, rels in
+                    (("original", []), ("repost", [("DUPLICATES", "original")]),
+                     ("correction", [("SUPERSEDES", "original")]))]
+    extractions = {ex.item_id: ex for ex in (ORIGINAL, REPOST, CORRECTION)}
+    groupings = [[("original", "starts at 14:00"), ("correction", "starts at 16:00")],
+                 [("correction", "previously announced")]]  # kept apart from the workshop time
+    checks = {c.name: c for c in evaluate.evaluate(store, expectations, extractions, groupings)}
+    assert checks["ideas pairwise recall"].got == 1.0
+    assert checks["ideas pairwise precision"].got == 0.33  # "previously" joined the Idea through SAME
+    # correction DUPLICATES original (the "previously" claim) is not in the manifest.
+    assert checks["relation precision"].got.startswith("0.67") and not checks["relation precision"].ok
+    assert checks["SUPERSEDES original"].ok and checks["DUPLICATES original"].ok

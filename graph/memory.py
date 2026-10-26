@@ -17,6 +17,7 @@ from refresher import scoring
 from refresher.schemas import Extraction, Override, Relation, Verdict
 
 REPOST_SIMILARITY = 0.8  # item text, word 3-gram Jaccard
+REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its match in the original
 WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
 EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADICTS", "ADDS_DETAIL": "ELABORATES"}
@@ -207,15 +208,16 @@ class MemoryStore:
                 cid = parent[cid]
             return cid
 
-        # A repost's claims follow the matching claim of the original item, whatever their own verdicts say.
+        # A repost's claims follow their match in the original item, whatever their own verdicts say. A claim that
+        # matches nothing there, or matches a profile fact, stands on its own.
         redirect = {}
         for node in world:
             original = self._items[node.item_id].duplicate_of
             mine = set(_words(node.claim.statement))
-            matches = sorted((n for n in world if n.item_id == original),
-                             key=lambda n: (-_jaccard(mine, set(_words(n.claim.statement))), n.claim.claim_id))
-            if matches:
-                redirect[node.claim.claim_id] = matches[0].claim.claim_id
+            scored = sorted((-_jaccard(mine, set(_words(n.claim.statement))), n.claim.claim_id)
+                            for n in self._claims.values() if n.item_id == original)
+            if scored and -scored[0][0] >= REPOST_CLAIM_SIMILARITY and scored[0][1] in parent:
+                redirect[node.claim.claim_id] = scored[0][1]
 
         related = set()
         for node in world:

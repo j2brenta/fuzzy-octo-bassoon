@@ -65,7 +65,8 @@ def main(argv=None) -> int:
         print(km.render(km.run(store, at), store), end="")
     else:
         extractions = {ex.item_id: ex for ex, _ in vault.load_extractions(args.vault)}
-        checks = evaluate.evaluate(store, evaluate.load_expectations(args.manifest), extractions)
+        checks = evaluate.evaluate(store, evaluate.load_expectations(args.manifest), extractions,
+                                   evaluate.load_groupings(args.manifest))
         text = evaluate.render(checks)
         if args.out:
             args.out.write_text(text, encoding="utf-8")
@@ -78,7 +79,7 @@ def _relate(vault_path: Path, lexical: bool) -> int:
     """Replay in event-time order and judge each item that has no current verdict file against what precedes it.
     Every item is judged, unreviewed ones too, so the files serve rebuilds with or without --include-unreviewed."""
     from pydantic import ValidationError
-    from engine.llm import ModelError
+    from engine.llm import ModelError, ModelOutputError
     if lexical:
         relator = relation_stage.LexicalRelator()
     else:
@@ -99,9 +100,13 @@ def _relate(vault_path: Path, lexical: bool) -> int:
         if relation is None and ex.claims:
             try:
                 relation = relation_stage.judge(ex, text, store.candidate_pool(ex.item_id), relator)
-            except (ModelError, ValidationError) as error:  # leaves the item for the next run
+            except (ModelOutputError, ValidationError) as error:  # a bad answer: the item waits for the next run
                 print(f"{ex.item_id[:12]}: not judged: {error}", file=sys.stderr)
                 failed += 1
+            except ModelError as error:  # key, credit, rate limit or network: every other item would fail too
+                print(f"{ex.item_id[:12]}: not judged: {error}", file=sys.stderr)
+                print(f"relate: stopped after {judged} items", file=sys.stderr)
+                return 1
             else:
                 vault.save_relation(vault_path, relation)
                 judged += 1
