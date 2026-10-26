@@ -173,6 +173,9 @@ class Relation(_Model):
     prompt_version: str
     candidates: dict[str, list[str]]  # claim id -> candidate claim ids, as the relator saw them
     verdicts: list[Verdict]
+    # Fingerprint of the items placed before this one when it was judged. While it matches, nothing earlier has
+    # arrived since and the verdicts cannot have missed a candidate, so relate skips the costly staleness check.
+    pool: str | None = None
 
     @model_validator(mode="after")
     def _targets_were_candidates(self):

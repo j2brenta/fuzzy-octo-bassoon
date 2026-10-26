@@ -42,13 +42,14 @@ def test_lexical_consolidation_writes_proposals_views_and_the_stamp(tmp_path):
     v = topical_vault(tmp_path)
     assert job.due(v, AT)
     run = job.consolidate(v, at=AT)
-    assert run.relate is None and run.proposed == 4 and run.waiting == 4
+    assert run.relate.judged == 10 and run.proposed == 4 and run.waiting == 4  # wording verdicts stored
     assert list((v / "graph-reviews" / "proposals").glob("*.json"))
     assert (v / "wiki" / "graph" / "index.html").exists() and (v / "wiki" / "index.md").exists()
     assert not job.due(v, AT + timedelta(minutes=59)) and job.due(v, AT + timedelta(hours=1))
     assert "4 waiting for you" in (v / "log.md").read_text()
     assert "Review: 4 proposals waiting for you, 0 stale" in (v / "wiki" / "health.md").read_text()
-    assert job.consolidate(v, at=AT).proposed == 0
+    again = job.consolidate(v, at=AT)
+    assert again.proposed == 0 and again.relate.judged == 0
 
 
 def test_with_a_model_it_relates_names_topics_and_confirms_merges(tmp_path):

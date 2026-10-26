@@ -77,18 +77,41 @@ def test_a_placed_item_is_not_judged_again(tmp_path):
     assert relator.calls == 1
 
 
-def test_a_model_failure_falls_back_to_wording_and_stores_nothing(tmp_path):
+def test_a_model_failure_falls_back_to_wording_and_a_later_model_run_replaces_it(tmp_path):
     capture(tmp_path, "original")
     placement, store, note = place(tmp_path, capture(tmp_path, "correction"), Down())
     assert "wording only: the model is unavailable" in note
-    assert not (tmp_path / "relations" / "correction.json").exists()
+    assert vault.load_relation(tmp_path, CORRECTION).relator == "lexical"
     assert placement.status == "placed" and "wording only" in reply_text(placement, store, note)
+    relator = Canned(LABELS)
+    relator.name = "model"
+    place(tmp_path, "correction", relator)
+    assert vault.load_relation(tmp_path, CORRECTION).relator == "model"
 
 
 def test_no_relator_is_lexical_and_says_so(tmp_path):
     placement, store, note = place(tmp_path, capture(tmp_path, "correction"))
     assert note == "Relations matched by wording only" and placement.ideas
-    assert vault.load_relation(tmp_path, CORRECTION) is None
+    assert vault.load_relation(tmp_path, CORRECTION).relator == "lexical"
+
+
+def test_the_costly_staleness_check_runs_only_when_an_earlier_item_arrived(tmp_path, monkeypatch):
+    from graph import relate
+    from refresher.place import relate_pending
+    capture(tmp_path, "repost")
+    capture(tmp_path, "correction")
+    relate_pending(tmp_path, Canned(LABELS))
+    checks = []
+    real = relate.stale
+    monkeypatch.setattr(relate, "stale", lambda *a: checks.append(1) or real(*a))
+    relate_pending(tmp_path, Canned(LABELS))
+    assert checks == []  # nothing new before either item
+    capture(tmp_path, "original")  # happened before both
+    relate_pending(tmp_path, Canned(LABELS))
+    assert len(checks) == 2
+    checks.clear()
+    relate_pending(tmp_path, Canned(LABELS))
+    assert checks == []  # the check was remembered
 
 
 def test_an_original_arriving_after_its_correction_gets_the_supersession(tmp_path):

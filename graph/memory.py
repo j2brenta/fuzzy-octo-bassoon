@@ -5,6 +5,7 @@ Used until the Neo4j store lands and kept afterwards as the test double. Relatio
 verdicts imply (relation edges, Ideas, profiles) and everything scoring decides is recomputed after each apply,
 so the result does not depend on the order items arrive in.
 """
+import hashlib
 import re
 import unicodedata
 from contextlib import contextmanager
@@ -50,6 +51,10 @@ def _affiliation(p: PersonNode) -> str | None:
 
 def org_id(name: str) -> str:
     return "org:" + "-".join(_words(name))
+
+
+def _id_hash(item_id: str) -> int:
+    return int.from_bytes(hashlib.blake2b(item_id.encode(), digest_size=8).digest(), "big")
 
 
 def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
@@ -100,6 +105,7 @@ class MemoryStore:
         self._held_same: dict[str, str] = {}
         self._shingle_cache: dict[str, set] = {}  # item id -> word 3-grams of its text, for the repost check
         self._deferred = self._dirty = False  # see deferred()
+        self._placed_hash = 0  # XOR of hashes of placed item ids: an order-free fingerprint of what is placed
 
     # --- writes ---
 
@@ -120,6 +126,7 @@ class MemoryStore:
                         review_status="skipped" if skipped else "accepted" if ex.quality_gate_passed else ex.quality_status,
                         hidden=skipped)
         self._items[ex.item_id] = item
+        self._placed_hash ^= _id_hash(ex.item_id)
         self._entities[ex.item_id] = frozenset(e.name.casefold() for e in ex.entities)
         new_edges: list[Edge] = []
 
@@ -260,6 +267,10 @@ class MemoryStore:
                 item.author_id = kept
         self._edges = list(dict.fromkeys(Edge(e.src, e.type, kept if e.dst == absorbed else e.dst, e.rationale, e.at)
                                          for e in self._edges))
+
+    def placed_fingerprint(self) -> str:
+        """Which items are placed, in O(1): stored with each verdict file (Relation.pool)."""
+        return f"{self._placed_hash:016x}"
 
     def candidate_pool(self, item_id: str) -> list[Candidate]:
         """World claims from other items, hidden stubs included, for relate.judge. A repost's claims are left

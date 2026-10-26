@@ -80,8 +80,9 @@ def due(vault_path: Path, at: datetime | None = None) -> bool:
 def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, at: datetime | None = None,
                 enrich_limit: int = ENRICH_LIMIT, log: Callable[[str], None] = _quiet,
                 warn: Callable[[str], None] = _quiet) -> ConsolidateRun:
-    """Without a model the job is lexical: nothing new is judged (rebuilds relate by wording), topics are named by
-    their shared words, and merges are proposed on similarity alone."""
+    """Without a model the job is lexical: items are related by wording (stored, so rebuilds stay fast; a later run
+    with the model judges them again), topics are named by their shared words, and merges are proposed on
+    similarity alone."""
     at = at or datetime.now(timezone.utc)
     run = ConsolidateRun(at, notes=[])
     with vault.lock(vault_path):
@@ -90,6 +91,9 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
             if run.relate.error:
                 run.notes.append(f"relations by wording only: {run.relate.error}")
                 model = None  # the same key or network would fail the namer too
+        if model is None:  # store wording verdicts for what the model did not judge, so rebuilds stay fast
+            lexical = relate_pending(vault_path, relate.LexicalRelator(), log=log, warn=warn)
+            run.relate = run.relate or lexical
         store = vault.replay(vault_path, include_unreviewed=True)
         report = store.review(at, namer=model_namer(model) if model else None,
                               confirm=model_confirm(model) if model else None)

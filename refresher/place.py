@@ -36,35 +36,53 @@ def relate_pending(vault_path: Path, relator: relate.Relator, only: Iterable[str
     """Replay in event-time order and judge each item that has no current verdict file against what precedes it.
     Every item is judged, unreviewed ones too, so the files serve rebuilds with or without --include-unreviewed.
     With `only`, just those items are judged; the others are related lexically on the way, as a rebuild would.
+    Verdicts stored by wording count as not yet judged when a model relator runs.
 
     Stored verdicts are judged again, whatever `only` says, when a close candidate they never saw has appeared
-    (relate.stale): an original that arrives after its correction. Model verdicts are never redone by wording."""
+    (relate.stale): an original that arrives after its correction. That check is costly, so it runs only when an
+    item placed before this one arrived after it was judged (Relation.pool). Model verdicts are never redone by
+    wording."""
     only = set(only) if only is not None else None
     run = RelateRun()
     store = MemoryStore(include_unreviewed=True)
-    for ex, text in vault.load_extractions(vault_path):
-        relation = vault.load_relation(vault_path, ex)
-        missing = relation is None and (only is None or ex.item_id in only)
-        recheck = relation is not None and not (relation.relator == "model" and relator.name == "lexical") \
-            and relate.stale(relation, ex, store.candidate_pool(ex.item_id))
-        if (missing or recheck) and ex.claims:
-            try:
-                relation = relate.judge(ex, text, store.candidate_pool(ex.item_id), relator)
-            except (ModelOutputError, ValidationError) as error:  # a bad answer: the item waits for the next run
-                warn(f"{ex.item_id[:12]}: not judged: {error}")
-                run.failed += 1
-            except ModelError as error:  # key, credit, rate limit or network: every other item would fail too
-                warn(f"{ex.item_id[:12]}: not judged: {error}")
-                run.error = str(error)
+    with store.deferred():  # the graph is recomputed only when a judgement needs it (candidate_pool)
+        for ex, text in vault.load_extractions(vault_path):
+            relation = _relate_one(vault_path, store, ex, text, relator, only, run, log, warn)
+            if run.error:
                 return run
-            else:
-                vault.save_relation(vault_path, relation)
-                run.judged += 1
-                related = sum(v.label != "NONE" for v in relation.verdicts)
-                log(f"{ex.item_id[:12]}: {len(relation.verdicts)} claims, {related} related ({relator.name})"
-                    + (", judged again: a closer candidate arrived" if recheck else ""))
-        store.apply(ex, text, relation)
+            store.apply(ex, text, relation)
     return run
+
+
+def _relate_one(vault_path, store, ex, text, relator, only, run, log, warn):
+    relation = vault.load_relation(vault_path, ex)
+    upgrade = relation is not None and relation.relator == "lexical" and relator.name != "lexical"
+    missing = (relation is None or upgrade) and (only is None or ex.item_id in only)
+    pool = store.placed_fingerprint()
+    recheck = False
+    if relation is not None and not missing and relation.pool != pool and ex.claims \
+            and not (relation.relator == "model" and relator.name == "lexical"):
+        recheck = relate.stale(relation, ex, store.candidate_pool(ex.item_id))
+        if not recheck:  # nothing closer arrived: remember what was checked
+            relation = relation.model_copy(update={"pool": pool})
+            vault.save_relation(vault_path, relation)
+    if (missing or recheck) and ex.claims:
+        try:
+            judged = relate.judge(ex, text, store.candidate_pool(ex.item_id), relator)
+        except (ModelOutputError, ValidationError) as error:  # a bad answer: the item waits for the next run
+            warn(f"{ex.item_id[:12]}: not judged: {error}")
+            run.failed += 1
+        except ModelError as error:  # key, credit, rate limit or network: every other item would fail too
+            warn(f"{ex.item_id[:12]}: not judged: {error}")
+            run.error = str(error)
+        else:
+            relation = judged.model_copy(update={"pool": pool})
+            vault.save_relation(vault_path, relation)
+            run.judged += 1
+            related = sum(v.label != "NONE" for v in relation.verdicts)
+            log(f"{ex.item_id[:12]}: {len(relation.verdicts)} claims, {related} related ({relator.name})"
+                + (", judged again: a closer candidate arrived" if recheck else ""))
+    return relation
 
 
 def place(vault_path: Path, item_id: str, relator: relate.Relator | None = None,
@@ -84,7 +102,12 @@ def _place(vault_path, item_id, relator, at):
             note = f"Relations matched by wording only: the model is unavailable ({run.error})"
         elif run.failed:
             note = "Relations matched by wording only: the model's answer did not validate"
-    if note is None and not (vault_path / "relations" / f"{item_id}.json").exists():
+    # Without a model verdict the item is related by wording, and that is stored too, so rebuilds do not judge it
+    # again; a later `refresher relate` or consolidate with the model replaces it.
+    relate_pending(vault_path, relate.LexicalRelator(), only=[item_id])
+    stored = vault.load_relation(vault_path, next(ex for ex, _ in vault.load_extractions(vault_path)
+                                                  if ex.item_id == item_id))
+    if note is None and (stored is None or stored.relator == "lexical"):
         note = "Relations matched by wording only"
     at = at or datetime.now(timezone.utc)
     store = vault.replay(vault_path, include_unreviewed=True)
