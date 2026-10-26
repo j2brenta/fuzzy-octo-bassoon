@@ -6,6 +6,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import stat
+import sys
 
 
 class NewsmapError(ValueError):
@@ -111,6 +112,9 @@ def outside_repositories(path):
 
 def mount_type(path):
     """Reject ambiguous stacked mounts and bind/subtree aliases."""
+    if sys.platform == 'darwin':
+        from .platform_storage import darwin_mount_type
+        return darwin_mount_type(path)
     mounts = Path('/proc/self/mountinfo')
     require(mounts.exists(), 'storage verification requires Linux mountinfo')
     choices = []
@@ -127,10 +131,10 @@ def mount_type(path):
 
 
 def local_storage(path):
-    """Fail closed on unknown/network/ephemeral mount types on Linux."""
+    """Fail closed on unknown/network/ephemeral mounts; Linux or verified Darwin APFS."""
     path = outside_repositories(path)
     kind = mount_type(path)
-    require(kind in {'ext2', 'ext3', 'ext4', 'xfs', 'btrfs', 'zfs'},
+    require(kind in {'ext2', 'ext3', 'ext4', 'xfs', 'btrfs', 'zfs', 'apfs'},
             'persistent local storage not verified: ' + kind)
     return path
 

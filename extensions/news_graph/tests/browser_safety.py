@@ -44,7 +44,7 @@ def main():
         def log_message(self, *args): pass
     receipts = []
     with sync_playwright() as p:
-        browser = p.chromium.launch(executable_path='/usr/bin/google-chrome', headless=True)
+        browser = p.chromium.launch(executable_path='/usr/bin/google-chrome', headless=True, args=['--disable-gpu'])
         for name, folder in [('hostile', root / 'viewer'), ('producer', producer_view), ('bounded', root / 'bounded-viewer')]:
             server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(folder)))
             Thread(target=server.serve_forever, daemon=True).start()

@@ -23,6 +23,7 @@ def export_view(db, output, allowlist=None):
     for filename, expected in manifest['files'].items():
         require(digest((ASSETS / filename).read_bytes()) == expected, 'bundled renderer checksum mismatch')
     serialized = json.dumps(data, ensure_ascii=False, allow_nan=False).replace('&', '\\u0026').replace('<', '\\u003c').replace('>', '\\u003e').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
+    require(len(serialized.encode('utf-8')) <= 8 * 1024 * 1024, 'export payload exceeds 8 MiB')
     html = (ASSETS / 'index.html').read_text().replace('<!--NEWSMAP_DATA-->', serialized)
     # Authorization/validation completes before any output directory is created.
     output.mkdir(mode=0o700)

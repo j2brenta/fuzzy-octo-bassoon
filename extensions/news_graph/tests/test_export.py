@@ -30,9 +30,9 @@ def test_public_review_never_rebinds_changed_evidence(workspace, monkeypatch):
     # Fault injection beyond the immutable database contract: never relabel changed
     # observed anchors as the exact snapshot the reviewer approved.
     state['packages'][0]['evidence']['claims'][0]['anchors_digest'] = 'different'
-    monkeypatch.setattr(projection, 'snapshot', lambda db: state)
-    assert not build(db, allow)['edges']
-    assert not build(db, allow)['decisions']
+    monkeypatch.setattr(projection, 'snapshot', lambda db, **kwargs: state)
+    with pytest.raises(NewsmapError, match='disclosed dependency'):
+        build(db, allow)
 
 
 def setup_items(db, vault):
@@ -60,6 +60,10 @@ def test_public_closure_excludes_private_rationale_premise_and_counts(workspace,
     people = [x for x in known if x['role'] == 'author_hint']
     identity = rv.identity_link(db, people[0]['id'], people[1]['id'], 'HIDDEN_IDENTITY_CANARY', [public_ref, private_ref], 'fixture_operator')
     allow = {'actor': 'fixture_operator', 'items': [grant(public)], 'decisions': [hidden_story, assignment, identity]}
+    # Explicitly requested but unclosed decisions now fail, rather than disappear.
+    with pytest.raises(NewsmapError, match='disclosed dependency'):
+        build(db, allow)
+    allow['decisions'] = []
     view = build(db, allow)
     payload = json.dumps(view)
     assert 'HIDDEN_' not in payload and 'demo' not in payload
@@ -150,7 +154,8 @@ def test_public_relation_needs_all_premises_review_and_full_quotes(workspace):
     pid = rv.propose(db, *refs, 'SUPPORTS', context, 'PERMITTED_MANUAL_RELATION', refs, [premise], 'fixture_operator')
     rid = rv.review(db, pid, 'accept', rv.show(db, pid)['token'], 'PERMITTED_REVIEW', 'fixture_operator')
     allow = {'actor': 'fixture_operator', 'items': [grant(public), grant(private)], 'decisions': [pid, rid]}
-    assert not build(db, allow)['edges']
+    with pytest.raises(NewsmapError, match='disclosed dependency'):
+        build(db, allow)
     allow['decisions'].append(premise)
     view = build(db, allow)
     assert len(view['edges']) == 1
@@ -158,11 +163,12 @@ def test_public_relation_needs_all_premises_review_and_full_quotes(workspace):
     assert not view['edges'][0]['active_reviewed']  # No claim about private current heads.
     allow['decisions'].remove(rid)
     hidden_review_view = build(db, allow)
-    assert not hidden_review_view['edges']
-    assert all(d['kind'] not in {'proposal', 'review'} for d in hidden_review_view['decisions'])
+    assert hidden_review_view['edges'][0]['review_record'] == 'proposed'
+    assert all(d['kind'] != 'review' for d in hidden_review_view['decisions'])
     allow['decisions'].append(rid)
     allow['items'][0]['claims'][0]['spans'] = [0]
-    assert not build(db, allow)['edges']
+    with pytest.raises(NewsmapError, match='disclosed dependency'):
+        build(db, allow)
 
 
 def test_parent_capture_is_structural_and_not_public_by_default(workspace):
@@ -199,6 +205,8 @@ def test_broad_item_citation_cannot_clear_unreleased_editorial_context(workspace
     story = rv.story_create(db, 'HIDDEN_CONTEXT_CANARY derived title', 'models', 'Broad item citation',
                            [rv.reference(row)], 'fixture_operator')
     g = grant(row); g['claims'][0]['spans'] = [0]
-    view = build(db, {'actor': 'fixture_operator', 'items': [g], 'decisions': [story]})
+    with pytest.raises(NewsmapError, match='disclosed dependency'):
+        build(db, {'actor': 'fixture_operator', 'items': [g], 'decisions': [story]})
+    view = build(db, {'actor': 'fixture_operator', 'items': [g], 'decisions': []})
     assert 'HIDDEN_CONTEXT_CANARY' not in json.dumps(view)
     assert not view['stories']

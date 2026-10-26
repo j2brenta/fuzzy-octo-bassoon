@@ -91,8 +91,8 @@ def import_batch(db, namespace, root, scope='processed', *, max_items=200, max_b
                     key = (namespace, record['item_id'], record['bundle_id'])
                     db.conn.execute('INSERT OR IGNORE INTO packages VALUES (?,?,?,?,?)', (*key, envelope_hash, contract))
                     db.conn.execute('INSERT OR IGNORE INTO associations VALUES (?,?,?,?)', (*key, envelope_hash))
-                    db.conn.execute('INSERT INTO sightings(batch,namespace,item,bundle,artifact_digest,path,raw_digest,text_digest,admission,evidence,reason) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                                    (batch, *key, envelope_hash, path, raw_hash, text_hash, admission, encoded(evidence_data).decode(), reason))
+                    db.conn.execute('INSERT INTO sightings(batch,namespace,item,bundle,artifact_digest,path,raw_digest,text_digest,admission,evidence_digest,reason) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                                    (batch, *key, envelope_hash, path, raw_hash, text_hash, admission, db.retain_evidence(evidence_data), reason))
                     if db.head(namespace, record['item_id']) is None:
                         event = db.event('select', {'namespace': namespace, 'item': record['item_id'],
                                                    'bundle': record['bundle_id'], 'method': 'first_valid_package_bootstrap'}, 'import_bootstrap')
@@ -121,21 +121,41 @@ def import_batch(db, namespace, root, scope='processed', *, max_items=200, max_b
         vault.close()
 
 
-def packages(db):
+def packages(db, *, keys=None, bounded=False):
     """One consistent snapshot, with best retained evidence and all state axes."""
     with db.transaction(write=False):
         rows = []
-        for pkg in db.conn.execute('SELECT * FROM packages ORDER BY namespace,item,bundle'):
+        query, values = 'SELECT * FROM packages', []
+        if keys is not None:
+            require(len(keys) <= 200, 'view package work limit exceeded')
+            query += ' WHERE ' + (' OR '.join('(namespace=? AND item=? AND bundle=?)' for _ in keys) or '0')
+            values = [v for k in keys for v in k]
+        query += ' ORDER BY namespace,item,bundle'
+        if bounded: query += ' LIMIT 201'
+        selected = list(db.conn.execute(query, values))
+        require(not bounded or len(selected) <= 200, 'view package work limit exceeded; narrow explicit grants')
+        admitted_bytes = 0
+        for pkg in selected:
+            if bounded:
+                admitted_bytes += db.conn.execute('SELECT length(data) FROM blobs WHERE digest=?', (pkg['envelope_digest'],)).fetchone()[0]
+                require(admitted_bytes <= 8 * 1024 * 1024, 'view input byte limit exceeded')
             row = dict(pkg)
             record = json.loads(db.bytes(row['envelope_digest']))
             obs = db.conn.execute('''SELECT * FROM sightings WHERE namespace=? AND item=? AND bundle=?
               ORDER BY (admission='valid') DESC,id DESC LIMIT 1''',
                                   (row['namespace'], row['item'], row['bundle'])).fetchone()
+            require(obs is not None, 'incomplete package: no retained observation')
             history = db.conn.execute('''SELECT min(batch),max(batch) FROM sightings
               WHERE namespace=? AND item=? AND bundle=?''', (row['namespace'], row['item'], row['bundle'])).fetchone()
+            if bounded and db.schema == 2:
+                admitted_bytes += db.conn.execute('SELECT length(data) FROM blobs WHERE digest=?', (obs['evidence_digest'],)).fetchone()[0]
+                require(admitted_bytes <= 8 * 1024 * 1024, 'view input byte limit exceeded')
+            elif bounded:
+                admitted_bytes += len(obs['evidence'].encode('utf-8'))
+                require(admitted_bytes <= 8 * 1024 * 1024, 'view input byte limit exceeded')
             head = db.head(row['namespace'], row['item'])
             selected = bool(head and head['bundle'] == row['bundle'])
-            rows.append({**row, 'record': record, 'admission': obs['admission'], 'evidence': json.loads(obs['evidence']),
+            rows.append({**row, 'record': record, 'admission': obs['admission'], 'evidence': db.evidence(obs),
                          'text_digest': obs['text_digest'], 'quality': record['quality_status'], 'selected': selected,
                          'eligible': selected and obs['admission'] == 'valid' and record['quality_gate_passed'],
                          'head_token': f"{head['bundle']}:{head['event']}" if head else None,

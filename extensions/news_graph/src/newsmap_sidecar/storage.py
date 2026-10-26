@@ -1,9 +1,11 @@
-"""SQLite is the sole authority. Views and exports can be rebuilt from it."""
+"""Extension snapshot/decision authority; producer Vault JSON remains authoritative upstream."""
 from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
 import sqlite3
+import sys
+import uuid
 
 from .common import (NewsmapError, BusyError, StaleError, digest, encoded, now, require,
                      local_storage, overlaps, checked_path, nonblank)
@@ -31,7 +33,7 @@ CREATE TABLE sightings(
  artifact_digest TEXT NOT NULL REFERENCES blobs(digest), path TEXT NOT NULL,
  raw_digest TEXT REFERENCES blobs(digest), text_digest TEXT REFERENCES blobs(digest),
  admission TEXT NOT NULL CHECK(admission IN ('valid','pending_evidence')),
- evidence TEXT NOT NULL, reason TEXT NOT NULL,
+ evidence_digest TEXT NOT NULL REFERENCES blobs(digest), reason TEXT NOT NULL,
  FOREIGN KEY(namespace,item,bundle,artifact_digest) REFERENCES associations(namespace,item,bundle,artifact_digest));
 CREATE TABLE quarantine(
  id INTEGER PRIMARY KEY, batch INTEGER NOT NULL REFERENCES batches(id), path TEXT NOT NULL,
@@ -47,9 +49,12 @@ CREATE INDEX sightings_package ON sightings(namespace,item,bundle);
 
 
 class Database:
-    def __init__(self, path, *, create=False, busy_ms=5000, quota=256 * 1024 * 1024):
+    def __init__(self, path, *, create=False, busy_ms=5000, quota=32 * 1024 * 1024,
+                 metadata_quota=8 * 1024 * 1024, database_quota=64 * 1024 * 1024):
         self.path = local_storage(path)
         self.quota = quota
+        self.metadata_quota = metadata_quota
+        self.database_quota = database_quota
         require(self.path.suffix == '.sqlite', 'authority path must end in .sqlite')
         require(create or self.path.is_file(), 'authority does not exist; run init')
         if create:
@@ -61,12 +66,14 @@ class Database:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute('PRAGMA foreign_keys=ON')
         self.conn.execute('PRAGMA synchronous=FULL')
+        if sys.platform == 'darwin':
+            self.conn.execute('PRAGMA fullfsync=ON')
         mode = self.conn.execute('PRAGMA journal_mode').fetchone()[0]
         require(mode == 'delete', 'authority must use DELETE journal mode')
         if create:
             self.conn.executescript('BEGIN IMMEDIATE;\n' + SCHEMA)
             try:
-                self.conn.execute("INSERT INTO meta VALUES ('schema','1')")
+                self.conn.execute("INSERT INTO meta VALUES ('schema','2')")
                 for table in ('blobs', 'packages', 'associations', 'sightings', 'quarantine', 'events'):
                     for action in ('UPDATE', 'DELETE'):
                         self.conn.execute(f'''CREATE TRIGGER immutable_{table}_{action.lower()}
@@ -75,8 +82,13 @@ class Database:
             except BaseException:
                 self.conn.execute('ROLLBACK')
                 raise
-        require(self.conn.execute("SELECT value FROM meta WHERE key='schema'").fetchone()[0] == '1',
-                'unsupported database schema')
+        self.schema = int(self.conn.execute("SELECT value FROM meta WHERE key='schema'").fetchone()[0])
+        require(self.schema in {1, 2}, 'unsupported database schema')
+        self.conn.execute('PRAGMA cache_size=-2048')
+        self.conn.execute('PRAGMA temp_store=FILE')
+        if self.schema == 2:
+            pagesize = self.conn.execute('PRAGMA page_size').fetchone()[0]
+            self.conn.execute(f'PRAGMA max_page_count={max(1, database_quota // pagesize)}')
 
     def close(self):
         self.conn.close()
@@ -87,9 +99,24 @@ class Database:
             # A caller's explicit transaction already provides the consistent snapshot.
             yield self.conn
             return
+        if write and self.conn.in_transaction:
+            require(self.schema == 2, 'schema 1 is read-only; use explicit migrate-copy')
+            savepoint = 'nested_' + uuid.uuid4().hex
+            self.conn.execute('SAVEPOINT ' + savepoint)
+            try:
+                yield self.conn
+                self.conn.execute('RELEASE ' + savepoint)
+            except BaseException:
+                self.conn.execute('ROLLBACK TO ' + savepoint)
+                self.conn.execute('RELEASE ' + savepoint)
+                raise
+            return
         try:
+            require(not write or self.schema == 2, 'schema 1 is read-only; use explicit migrate-copy')
             self.conn.execute('BEGIN IMMEDIATE' if write else 'BEGIN')
             yield self.conn
+            if write:
+                require(self.metadata_size() <= self.metadata_quota, 'metadata quota exceeded; transaction rolled back')
             self.conn.execute('COMMIT')
         except BaseException as exc:
             if self.conn.in_transaction:
@@ -98,6 +125,25 @@ class Database:
                     sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED}:
                 raise BusyError('authority busy; retry the complete command') from None
             raise
+
+    def metadata_size(self):
+        total = 0
+        for table in ('namespaces', 'batches', 'packages', 'associations', 'sightings', 'quarantine', 'events', 'heads'):
+            columns = [r[1] for r in self.conn.execute(f'PRAGMA table_info({table})')]
+            expr = '+'.join(f'coalesce(length(CAST("{c}" AS BLOB)),0)' for c in columns)
+            total += self.conn.execute(f'SELECT coalesce(sum({expr}),0) FROM {table}').fetchone()[0]
+        return total
+
+    def retain_evidence(self, evidence):
+        # Resolver version is part of content identity; all arrays preserve order.
+        return self.blob(encoded({'resolver': 'exact-unicode-v1', 'evidence': evidence}))
+
+    def evidence(self, observation):
+        if self.schema == 1:
+            return json.loads(observation['evidence'])
+        value = json.loads(self.bytes(observation['evidence_digest']))
+        require(value['resolver'] == 'exact-unicode-v1', 'unsupported retained resolver contract')
+        return value['evidence']
 
     def event(self, kind, payload, actor):
         require(self.conn.in_transaction, 'events require an explicit transaction')
@@ -182,7 +228,7 @@ class Database:
         integrity = self.conn.execute('PRAGMA integrity_check').fetchone()[0]
         foreign = [tuple(r) for r in self.conn.execute('PRAGMA foreign_key_check')]
         corrupt = sum(digest(bytes(r['data'])) != r['digest'] for r in self.conn.execute('SELECT * FROM blobs'))
-        return {'schema': 1, 'integrity': integrity, 'foreign_key_errors': len(foreign),
+        return {'schema': self.schema, 'integrity': integrity, 'foreign_key_errors': len(foreign),
                 'corrupt_blobs': corrupt, 'journal_mode': self.conn.execute('PRAGMA journal_mode').fetchone()[0],
                 'synchronous': self.conn.execute('PRAGMA synchronous').fetchone()[0]}
 

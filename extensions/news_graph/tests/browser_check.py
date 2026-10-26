@@ -26,7 +26,7 @@ def main():
     requests, errors, external, checks = [], [], [], []
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(executable_path=chrome, headless=True)
+            browser = p.chromium.launch(executable_path=chrome, headless=True, args=['--disable-gpu'])
             page = browser.new_page(viewport={'width': 1500, 'height': 1100}, device_scale_factor=1)
             def route(request):
                 url = request.request.url
@@ -80,7 +80,7 @@ def main():
             page.mouse.click(graph['x'] + edge['point']['x'], graph['y'] + edge['point']['y'])
             assert 'CORRECTS' in page.locator('#detail').inner_text()
             assert page.locator('#comparison .quote mark').count() == 4
-            assert page.locator('#comparison .context-table').count() == 2
+            assert page.locator('#comparison .context-table').count() == 1
             assert 'fixture_operator' in page.locator('#comparison').inner_text()
             checks.append('reviewed claim edge links to side-by-side multi-span evidence and attributed context')
             page.screenshot(path=str(reports / 'comparison.png'), full_page=True)

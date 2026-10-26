@@ -23,7 +23,6 @@ def key(ref):
 
 
 def build(db, allowlist=None):
-    state = snapshot(db)
     public = allowlist is not None
     grants = {}
     if public:
@@ -39,11 +38,13 @@ def build(db, allowlist=None):
             require(isinstance(g['claims'], list) and isinstance(g['links'], list) and
                     all(type(x) is int and x >= 0 for x in g['links']), 'invalid claims/links grants')
             grants[key(g)] = g
+        state = snapshot(db, public_grants={'items': list(grants), 'decisions': allowlist['decisions']}, bounded=True)
         known = {key(r) for r in state['packages']}
         require(set(grants) <= known, 'allowlist references an unknown revision')
         permitted_decisions = set(allowlist['decisions'])
         require(permitted_decisions <= {e['id'] for e in state['events']}, 'allowlist references unknown decisions')
     else:
+        state = snapshot(db, bounded=True)
         permitted_decisions = {e['id'] for e in state['events']}
         for r in state['packages']:
             grants[key(r)] = {'fields': ['source', 'url', 'time', 'quality', 'roles'],
@@ -64,7 +65,9 @@ def build(db, allowlist=None):
                 'time_basis': ('publication' if source.get('published_at') else 'capture') if 'time' in fields else 'not_disclosed',
                 'quality': row['quality'] if 'quality' in fields else 'not_disclosed',
                 'admission': row['admission'] if not public else 'authorized_excerpt',
-                'selected': row['selected'] if not public else True,
+                'selected': row['selected'] if not public else None,
+                'current_applicability': 'not_disclosed' if public else 'evaluated_in_snapshot',
+                'disclosure_authorized': public,
                 'revision': row['bundle'] if not public else 'Разрешённая версия',
                 'availability': 'upstream availability not confirmed', 'claims': [], 'roles': [],
                 'stories': [], 'topics': [], 'subjects': []}
@@ -134,8 +137,7 @@ def build(db, allowlist=None):
         return row_ids.get(key(ref))
 
     identity_map = {i['local_id']: i['id'] for i in ids}
-    log = state['events']
-    relation_states = {r['proposal']['id']: r for r in state['relations']}
+    log = [e for e in state['events'] if not public or e['id'] in permitted_decisions]
     exportable = {}
     for e in log:
         if e['id'] not in permitted_decisions:
@@ -154,20 +156,16 @@ def build(db, allowlist=None):
             if e['kind'] == 'proposal':
                 if not all(ref_allowed(p[side]['ref']) for side in ('left', 'right')) or not all(x in exportable for x in p['premises']):
                     continue
-                latest = relation_states[e['id']]['latest_review']
-                if public and latest and latest['id'] not in permitted_decisions:
-                    continue  # Exclude the whole incomplete decision, with no hidden-status placeholder.
                 # Public review records must refer to the exact frozen evidence.
                 if public and any(endpoint(rows, p[side]['ref']) != p[side] for side in ('left', 'right')):
                     continue
-            # Revocations are provenance too: do not disclose their hidden rationale or even state.
-            if public and any(x['id'] not in permitted_decisions for x in revocations(log, e['id'])):
-                continue
             exportable[e['id']] = e
         elif e['kind'] == 'review' and p['proposal'] in exportable:
             exportable[e['id']] = e
         elif e['kind'] == 'premise_revoke' and p['decision'] in exportable:
             exportable[e['id']] = e
+    if public:
+        require(permitted_decisions <= set(exportable), 'required disclosed dependency or exact evidence binding missing')
     decision_ids = {eid: 'decision-' + str(i + 1) for i, eid in enumerate(exportable)}
     stories, decisions = [], []
     item_by_id = {i['id']: i for i in items}
@@ -177,10 +175,15 @@ def build(db, allowlist=None):
              'rationale': p.get('rationale', ''), 'evidence': [map_ref(r) for r in p.get('evidence', [])]}
         if not public:
             d['authority_id'] = eid
+        d['assessment'] = 'MODEL_ASSESSED' if p.get('method') == 'model_assessed' else 'HUMAN_REVIEWED' if kind == 'review' else 'OPERATOR_DECISION'
+        if p.get('provenance'): d['provenance'] = p['provenance']
+        if kind == 'review':
+            d.update(action=p['action'], proposal=decision_ids[p['proposal']])
         decisions.append(d)
         if kind == 'story':
             stories.append({'id': d['id'], 'title': p['title'], 'topic': p['topic'], 'items': [], 'decision': d['id']})
-        if kind.endswith('_assign') and not revocations(log, eid):
+        human_override = p.get('method') == 'model_assessed' and any(x['kind'] == kind and x['payload'].get('target') == p.get('target') and x['payload'].get('method') != 'model_assessed' for x in log)
+        if kind.endswith('_assign') and not revocations(log, eid) and not human_override:
             target_item = item_by_id[row_ids[key(p['target'])]]
             if kind == 'story_assign':
                 sid = decision_ids[p['value']]
@@ -236,22 +239,38 @@ def build(db, allowlist=None):
         e = relation['proposal']
         if e['id'] not in exportable:
             continue
-        latest = relation['latest_review']
-        if latest and latest['id'] not in exportable:
-            continue  # Do not misrepresent a hidden review as a never-reviewed proposal.
+        disclosed_reviews = [x for x in log if x['kind'] == 'review' and x['payload']['proposal'] == e['id']]
+        latest = (disclosed_reviews[-1] if disclosed_reviews else None) if public else relation['latest_review']
+        status = (latest['payload']['action'] if latest else ('model_assessed' if e['payload'].get('method') == 'model_assessed' else 'proposed')) if public else relation['review_status']
         p = e['payload']
         # Public exports disclose the approved exact-revision review, never private current heads.
         active = relation['active_reviewed'] if not public else False
-        basis = ('review_record' if relation['review_status'] == 'accept' else 'proposal') if public else (
-            'reviewed' if active else 'proposal')
+        basis = ('review_record' if latest else 'proposal') if public else (
+            'reviewed' if active else 'model_assessed' if relation.get('active_model_assessed') else 'review_history' if latest else 'assessment_history' if p.get('method') == 'model_assessed' else 'proposal')
         edges.append({'source': map_ref(p['left']['ref']), 'target': map_ref(p['right']['ref']),
                       'kind': p['relation'], 'label': p['relation'].lower(), 'basis': basis,
                       'rationale': p['rationale'], 'context': p['context'], 'decision': decision_ids[e['id']],
-                      'review_status': relation['review_status'], 'actor': latest['actor'] if latest else e['actor'],
+                      'review_status': status, 'review_record': status if public else None,
+                      'current_applicability': 'not_disclosed' if public else 'evaluated_in_snapshot',
+                      'disclosure_authorized': public, 'actor': latest['actor'] if latest else e['actor'],
                       'at': latest['at'] if latest else e['at'], 'active_reviewed': active,
+                      'active_model_assessed': False if public else relation.get('active_model_assessed', False),
+                      'assessment': 'HUMAN_REVIEWED' if latest else 'MODEL_ASSESSED' if p.get('method') == 'model_assessed' else 'OPERATOR_PROPOSAL',
+                      'provenance': p.get('provenance'),
                       'blocked': relation['blocked'] if not public else [], 'historical': relation['historical'] if not public else [],
                       'applicability': 'private current selection not disclosed' if public else 'evaluated in authority snapshot',
-                      'needs_recheck': ['premise revoked'] if relation['needs_recheck'] else [], 'anchors': []})
+                      'needs_recheck': [] if public else (['premise revoked'] if relation['needs_recheck'] else []), 'anchors': []})
+    for eid, event in exportable.items():
+        if event['kind'] != 'identity_link': continue
+        p = event['payload']
+        edges.append({'source': identity_map[p['left']], 'target': identity_map[p['right']],
+                      'kind': 'IDENTITY_LINK', 'label': 'ручная гипотеза идентичности',
+                      'basis': 'review_record' if public else 'operator_identity',
+                      'rationale': p['rationale'], 'decision': decision_ids[eid], 'anchors': [],
+                      'actor': event['actor'], 'at': event['at'], 'assessment': 'OPERATOR_DECISION',
+                      'active_reviewed': False, 'review_status': 'historical_record' if public else
+                          ('revoked' if revocations(log,eid) else 'operator_asserted'),
+                      'current_applicability': 'not_disclosed' if public else 'evaluated_in_snapshot'})
     for i, edge in enumerate(edges):
         edge['id'] = 'edge-' + str(i + 1)
     for item in items:
@@ -266,5 +285,5 @@ def build(db, allowlist=None):
             'topics': [{'id': t, 'title': state['topics'][t], 'definition': state['topic_definitions'][t],
                         'count': sum(t in i['topics'] for i in items)} for t in active_topics],
             'counts': {'items': len(items), 'claims': len(claims), 'identities': len(ids), 'edges': len(edges), 'stories': len(stories)},
-            'limits': {'primary_nodes': 20}, 'independence': 'unknown',
-            'curation': 'Story assignments and semantic interpretations are explicit operator decisions.'}
+            'limits': {'primary_nodes': 20, 'edges': 60}, 'independence': 'unknown',
+            'curation': 'MODEL_ASSESSED and HUMAN_REVIEWED are distinct; stored interpretations do not establish independent truth.'}

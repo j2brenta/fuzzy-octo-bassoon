@@ -8,7 +8,7 @@ import json
 import os
 import re
 import socket
-from typing import Protocol
+from typing import Callable, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -90,6 +90,8 @@ class NebiusModel:
     timeout_seconds: int = 120
     # Reasoning models spend part of the budget thinking; a small cap leaves the answer empty.
     max_tokens: int = 16384
+    # Optional transport injection; the ordinary CLI retains the existing transport.
+    request_transport: Callable = field(default=_nebius_request, repr=False, compare=False)
 
     def complete_json(self, system_prompt: str, content: str) -> ModelReply:
         payload = {
@@ -99,7 +101,7 @@ class NebiusModel:
             "temperature": 0,
             "max_tokens": self.max_tokens,
         }
-        response_data = _nebius_request(self.api_key, self.base_url, "/chat/completions", payload, self.timeout_seconds)
+        response_data = self.request_transport(self.api_key, self.base_url, "/chat/completions", payload, self.timeout_seconds)
         try:
             choice = response_data["choices"][0]
             text = choice["message"]["content"]

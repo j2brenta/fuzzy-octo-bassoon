@@ -6,7 +6,7 @@ from .common import require, nonblank, fingerprint, StaleError
 from .intake import packages
 
 CONTEXT_FIELDS = ('subject', 'version', 'metric', 'dataset', 'unit', 'conditions', 'time_attribution', 'unknowns')
-RELATIONS = {'SUPPORTS', 'CONTRADICTS', 'CORRECTS'}
+RELATIONS = {'SUPPORTS', 'CONTRADICTS', 'CORRECTS', 'SUPERSEDES', 'DUPLICATES', 'ELABORATES'}
 _TOPIC_CONFIG = json.loads((Path(__file__).resolve().parent / 'assets' / 'topics.json').read_text())
 TOPICS = {t['id']: t['title'] for t in _TOPIC_CONFIG['topics']}
 TOPIC_DEFINITIONS = {t['id']: t['definition'] for t in _TOPIC_CONFIG['topics']}
@@ -64,7 +64,14 @@ def revocations(log, event_id):
     return [e for e in log if e['kind'] == 'premise_revoke' and e['payload']['decision'] == event_id]
 
 
-def story_create(db, title, topic, rationale, evidence_refs, actor):
+def decision_method(provenance, manual):
+    if provenance is None: return {'method': manual}
+    require(isinstance(provenance, dict) and set(provenance) == {'provider', 'model', 'prompt_version', 'request_id', 'origin'}, 'assessment provenance required')
+    require(all(nonblank(v) and len(v) <= 256 for v in provenance.values()), 'invalid assessment provenance')
+    return {'method': 'model_assessed', 'provenance': dict(provenance)}
+
+
+def story_create(db, title, topic, rationale, evidence_refs, actor, *, provenance=None):
     require(nonblank(title) and nonblank(rationale), 'story title and rationale required')
     require(topic in TOPICS, 'unknown news topic')
     with db.transaction():
@@ -73,10 +80,10 @@ def story_create(db, title, topic, rationale, evidence_refs, actor):
         for ref in evidence_refs:
             lookup(rows, ref)
         return db.event('story', {'title': title, 'topic': topic, 'rationale': rationale,
-                                 'evidence': evidence_refs, 'method': 'manual_editorial'}, actor)
+                                 'evidence': evidence_refs, **decision_method(provenance, 'manual_editorial')}, actor)
 
 
-def assign(db, kind, target, value, rationale, evidence_refs, actor):
+def assign(db, kind, target, value, rationale, evidence_refs, actor, *, provenance=None):
     require(kind in {'story_assign', 'topic_assign', 'subject_assign'}, 'unsupported assignment')
     require(nonblank(rationale), 'assignment rationale required')
     with db.transaction():
@@ -93,7 +100,7 @@ def assign(db, kind, target, value, rationale, evidence_refs, actor):
             require(isinstance(value, dict) and set(value) == {'subject', 'version'} and
                     all(nonblank(v) for v in value.values()), 'subject assignment needs subject and version (or explicit unknown)')
         return db.event(kind, {'target': target, 'value': value, 'rationale': rationale,
-                              'evidence': evidence_refs, 'method': 'manual_editorial'}, actor)
+                              'evidence': evidence_refs, **decision_method(provenance, 'manual_editorial')}, actor)
 
 
 def identity_link(db, left, right, rationale, evidence_refs, actor):
@@ -129,7 +136,7 @@ def endpoint(rows, ref):
             'anchors': observed['anchors'] if observed else [], 'statement': c['statement']}
 
 
-def propose(db, left, right, relation, context, rationale, evidence_refs, premises, actor):
+def propose(db, left, right, relation, context, rationale, evidence_refs, premises, actor, *, provenance=None):
     require(relation in RELATIONS, 'unsupported relation type')
     require(left != right, 'self relation is not supported')
     require(nonblank(rationale), 'relation rationale required')
@@ -146,7 +153,7 @@ def propose(db, left, right, relation, context, rationale, evidence_refs, premis
             get_event(log, p, {'identity_link', 'subject_assign'})
         payload = {'left': endpoint(rows, left), 'right': endpoint(rows, right), 'relation': relation,
                    'context': context, 'rationale': rationale, 'evidence': evidence_refs,
-                   'premises': premises, 'method': 'manual_interpretation'}
+                   'premises': premises, **decision_method(provenance, 'manual_interpretation')}
         payload['digest'] = fingerprint(payload)
         return db.event('proposal', payload, actor)
 
@@ -179,11 +186,13 @@ def _show(rows, log, proposal_id):
             recheck.append('premise ' + str(premise_id) + ' revoked')
     reviews = [e for e in log if e['kind'] == 'review' and e['payload']['proposal'] == proposal_id]
     latest = reviews[-1] if reviews else None
-    status = latest['payload']['action'] if latest else 'proposed'
+    model_assessed = p.get('method') == 'model_assessed'
+    status = latest['payload']['action'] if latest else ('model_assessed' if model_assessed else 'proposed')
     token = fingerprint({'proposal': proposal, 'endpoints': endpoints, 'premises': premise_states, 'latest_review': latest})
     return {'proposal': proposal, 'token': token, 'review_status': status, 'latest_review': latest,
             'reviews': reviews, 'blocked': blocked, 'historical': historical, 'needs_recheck': recheck,
             'active_reviewed': status == 'accept' and not blocked and not historical and not recheck,
+            'active_model_assessed': model_assessed and latest is None and not blocked and not historical and not recheck,
             'premise_states': premise_states, 'endpoints': endpoints,
             'label': 'reviewer-approved interpretation; not independent fact verification' if status == 'accept'
                      else 'manual proposal/review; not a truth assertion'}
@@ -208,9 +217,20 @@ def review(db, proposal_id, action, expected_token, rationale, actor):
                                   'rationale': rationale, 'proposal_digest': current['proposal']['payload']['digest']}, actor)
 
 
-def snapshot(db):
+def snapshot(db, *, public_grants=None, bounded=False):
     with db.transaction(write=False):
-        rows, log = packages(db), events(db)
+        rows = packages(db, keys=public_grants['items'] if public_grants is not None else None, bounded=bounded)
+        if public_grants is not None:
+            ids = public_grants['decisions']
+            require(len(ids) <= 2000, 'view decision work limit exceeded')
+            log = [dict(e) for e in db.conn.execute('SELECT * FROM events WHERE id IN (' + (','.join('?' for _ in ids) or 'NULL') + ') ORDER BY id', ids)]
+            for e in log: e['payload'] = json.loads(e['payload'])
+        else:
+            if bounded:
+                require(db.conn.execute('SELECT count(*) FROM events').fetchone()[0] <= 2000, 'view decision work limit exceeded')
+            log = events(db)
+        if bounded:
+            require(sum(len(r['record']['claims']) for r in rows) <= 200, 'view claim work limit exceeded')
         return {'packages': rows, 'identities': identities(rows), 'events': log,
-                'relations': [_show(rows, log, e['id']) for e in log if e['kind'] == 'proposal'],
+                'relations': [({'proposal': e} if public_grants is not None else _show(rows, log, e['id'])) for e in log if e['kind'] == 'proposal'],
                 'topics': TOPICS, 'topic_definitions': TOPIC_DEFINITIONS}

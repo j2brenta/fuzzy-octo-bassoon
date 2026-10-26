@@ -35,6 +35,8 @@ def parser():
     sub.add_parser('init', help='Создать новое хранилище')
     demo = sub.add_parser('demo', help='Создать синтетический walkthrough в новом внешнем каталоге')
     demo.add_argument('directory', type=Path)
+    migration = sub.add_parser('migrate-copy', help='Schema 1 → 2 в новый каталог; исходник неизменён')
+    migration.add_argument('destination', type=Path)
     sub.add_parser('doctor', help='Проверить целостность и параметры SQLite')
     sub.add_parser('rebuild', help='Пересобрать индекс выбранных ревизий из неизменяемого журнала')
     reg = sub.add_parser('register', help='Зарегистрировать namespace и read-only vault')
@@ -103,6 +105,9 @@ def parser():
         if action != 'show':
             action_parser.add_argument('--expect-token', required=True)
             decision_args(action_parser)
+    auto = sub.add_parser('assess-offline', help='MANUAL либо NEBIUS с явно синтетическим transport; без платных вызовов')
+    auto.add_argument('--mode', choices=['MANUAL','NEBIUS'], default='MANUAL')
+    auto.add_argument('--manifest', type=Path)
     sub.add_parser('view-data', help='Согласованный частный snapshot; не публичный экспорт')
     for command in ('export-local', 'export-public'):
         exp = sub.add_parser(command, help='Новый статический каталог; без публикации')
@@ -144,6 +149,9 @@ def main(argv=None):
             with db.transaction(write=False):
                 result = {t: [dict(r) for r in db.conn.execute('SELECT * FROM ' + t)]
                           for t in ('events', 'batches', 'quarantine')}
+        elif args.command == 'migrate-copy':
+            from .migration import migrate_copy
+            result = migrate_copy(db, args.destination)
         elif args.command == 'backup':
             result = db.backup(args.destination)
         elif args.command == 'restore-check':
@@ -172,6 +180,24 @@ def main(argv=None):
                 result = editorial.show(db, args.proposal)
             else:
                 result = {'decision': editorial.review(db, args.proposal, args.action, args.expect_token, args.rationale, args.actor)}
+        elif args.command == 'assess-offline':
+            from .automation import assess
+            if args.mode == 'MANUAL':
+                result = assess(db, None, mode='MANUAL')
+            else:
+                from .runner import SyntheticWire
+                from .metering import Ledger, MeteredModel
+                if args.manifest is None or args.manifest.stat().st_size > 65536:
+                    raise NewsmapError('explicit bounded offline manifest required')
+                m = parse_json(args.manifest.read_bytes())
+                if m.get('mode') != 'OFFLINE_SYNTHETIC' or m.get('model') != 'fixture-model' or m.get('paid_cap_micro',0) != 0:
+                    raise NewsmapError('only explicit offline fixture model is enabled')
+                ledger = Ledger(m['ledger'], m['project'], previous_micro=m.get('previous_micro',0))
+                try:
+                    ledger.stage(m['stage'], cap_micro=m.get('simulation_cap_micro',0))
+                    result = assess(db, MeteredModel(ledger,m['stage'],'map',m['model'],SyntheticWire(),
+                                     context={'stage':'automation'}),mode='NEBIUS')
+                finally: ledger.close()
         elif args.command == 'view-data':
             result = editorial.snapshot(db)
         elif args.command in {'export-local', 'export-public'}:
