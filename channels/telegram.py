@@ -37,6 +37,8 @@ from engine.entities import EntityError, entity_client_from_environment, extract
 from engine.package import PackageError, build_extraction
 from engine.placement import apply_storage_stub
 from engine.results import write_item_note, entity_summary
+from graph.relate import ModelRelator
+from refresher.place import place, reply_text
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
@@ -309,12 +311,24 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
 
     try:
         packaged = await asyncio.to_thread(build_extraction, result.path, claims_from=quality.extraction_path.parent.name)
-        placement = await asyncio.to_thread(apply_storage_stub, packaged.path)
+        await asyncio.to_thread(apply_storage_stub, packaged.path)  # validates the record, keeps a receipt
     except (PackageError, ExtractionError, EntityError, JudgeError, TriageError, OSError, ValueError):
         await message.answer("Claims and entities saved; the combined extraction handoff remains pending.")
         return
-    message_status = "awaiting the graph adapter" if placement["quality_gate_passed"] else "awaiting quality resolution"
-    await message.answer(f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities; {message_status}. No graph placement has been applied.")
+    saved = f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities."
+    try:
+        placed, store, note = await asyncio.to_thread(
+            place, packaged.path.parent.parent, packaged.path.stem, graph_relator(client))
+    except (OSError, ValueError) as error:
+        logger.error("Graph placement failed (%s).", type(error).__name__)
+        await message.answer(f"{saved}\nGraph placement failed; the next rebuild places it.")
+        return
+    await message.answer(f"{saved}\n{reply_text(placed, store, note)}")
+
+
+def graph_relator(client):
+    """The model judges relations unless GRAPH_RELATOR=lexical; place() falls back to wording if the model fails."""
+    return None if os.environ.get("GRAPH_RELATOR", "model").strip().lower() == "lexical" else ModelRelator(client)
 
 
 async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:

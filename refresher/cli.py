@@ -16,8 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from graph import relate as relation_stage
-from graph.memory import MemoryStore
-from refresher import evaluate, km, vault
+from refresher import evaluate, km, place, vault
 
 
 def _at(value: str | None) -> datetime:
@@ -86,10 +85,8 @@ def main(argv=None) -> int:
 
 
 def _relate(vault_path: Path, lexical: bool) -> int:
-    """Replay in event-time order and judge each item that has no current verdict file against what precedes it.
-    Every item is judged, unreviewed ones too, so the files serve rebuilds with or without --include-unreviewed."""
-    from pydantic import ValidationError
-    from engine.llm import ModelError, ModelOutputError
+    """Judge every item without a current verdict file (place.relate_pending) with the model, or lexically."""
+    from engine.llm import ModelError
     if lexical:
         relator = relation_stage.LexicalRelator()
     else:
@@ -103,28 +100,12 @@ def _relate(vault_path: Path, lexical: bool) -> int:
         if model is None:
             sys.exit("Set TRIAGE_PROVIDER=nebius in .env to judge relations with the model, or pass --lexical.")
         relator = relation_stage.ModelRelator(model)
-    store = MemoryStore(include_unreviewed=True)
-    judged = failed = 0
-    for ex, text in vault.load_extractions(vault_path):
-        relation = vault.load_relation(vault_path, ex)
-        if relation is None and ex.claims:
-            try:
-                relation = relation_stage.judge(ex, text, store.candidate_pool(ex.item_id), relator)
-            except (ModelOutputError, ValidationError) as error:  # a bad answer: the item waits for the next run
-                print(f"{ex.item_id[:12]}: not judged: {error}", file=sys.stderr)
-                failed += 1
-            except ModelError as error:  # key, credit, rate limit or network: every other item would fail too
-                print(f"{ex.item_id[:12]}: not judged: {error}", file=sys.stderr)
-                print(f"relate: stopped after {judged} items", file=sys.stderr)
-                return 1
-            else:
-                vault.save_relation(vault_path, relation)
-                judged += 1
-                related = sum(v.label != "NONE" for v in relation.verdicts)
-                print(f"{ex.item_id[:12]}: {len(relation.verdicts)} claims, {related} related ({relator.name})")
-        store.apply(ex, text, relation)
-    print(f"relate: judged {judged} items, {failed} failed")
-    return 1 if failed else 0
+    run = place.relate_pending(vault_path, relator, log=print, warn=lambda m: print(m, file=sys.stderr))
+    if run.error:
+        print(f"relate: stopped after {run.judged} items", file=sys.stderr)
+        return 1
+    print(f"relate: judged {run.judged} items, {run.failed} failed")
+    return 1 if run.failed else 0
 
 
 if __name__ == "__main__":

@@ -264,7 +264,8 @@ class EntityTests(unittest.TestCase):
 class TelegramEntityTests(unittest.IsolatedAsyncioTestCase):
     async def test_entities_get_a_separate_review_and_reply(self):
         with TemporaryDirectory() as folder:
-            extractor = FakeModel([ModelReply(dict(LABELS)), response()])
+            # Triage, extraction, then the graph's relation call (no verdicts: every claim is NONE).
+            extractor = FakeModel([ModelReply(dict(LABELS)), response(), ModelReply({'verdicts': []})])
             class ClaimJudge(FakeModel):
                 def complete_json(self, prompt, content):
                     return ModelReply(review_data(json.loads(content)['claims']))
@@ -277,7 +278,10 @@ class TelegramEntityTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(answer.await_count, 7)
                 self.assertIn('Review: accepted', answer.await_args_list[-2].args[0])
                 self.assertIn('Combined extraction saved', answer.await_args_list[-1].args[0])
+                self.assertIn('Filed under:', answer.await_args_list[-1].args[0])
                 self.assertTrue(list((Path(folder) / 'processed').glob('*.json')))
+                self.assertTrue(list((Path(folder) / 'relations').glob('*.json')))
+                self.assertTrue(list((Path(folder) / 'wiki' / 'ideas').glob('*.md')))
 
     async def test_entity_failure_preserves_claims_and_reports_pending(self):
         with TemporaryDirectory() as folder:

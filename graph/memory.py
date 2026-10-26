@@ -23,6 +23,7 @@ REVIEW_DUPLICATE_SHARE = 0.7  # an item whose claims match one other item this m
 REVIEW_MIN_CLAIMS = 3  # fewer claims are too few to call an item a duplicate; reposts and relations cover those
 WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
+RELATION_TYPES = {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
 EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADICTS", "ADDS_DETAIL": "ELABORATES"}
 
 
@@ -141,12 +142,19 @@ class MemoryStore:
 
         self._edges += new_edges
         self._refresh()
-        mine = {c.claim_id for c in ex.claims}
-        relations = [e for e in new_edges if e.type == "DUPLICATES"]
-        relations += [e for e in self._relations if (e.src in mine or e.dst in mine) and e.type in
-                      {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}]
-        return Placement(ex.item_id, "held_back" if skipped else "placed", len(ex.claims), item.author_id,
-                         item.duplicate_of, relations)
+        return self.placement(ex.item_id)
+
+    def placement(self, item_id: str) -> Placement:
+        """Where an item sits in the graph now, items placed after it included: what the bot reply says."""
+        item = self._items.get(item_id)
+        if item is None:
+            return Placement(item_id, "held_back")
+        mine = [cid for cid, node in self._claims.items() if node.item_id == item_id]
+        relations = [e for e in self._edges if e.type == "DUPLICATES" and item_id in (e.src, e.dst)]
+        relations += [e for e in self._relations if (e.src in mine or e.dst in mine) and e.type in RELATION_TYPES]
+        ideas = list(dict.fromkeys(self._claims[cid].idea_id for cid in mine if self._claims[cid].idea_id))
+        return Placement(item_id, "held_back" if item.hidden else "placed", len(mine), item.author_id,
+                         item.duplicate_of, relations, ideas)
 
     def _refresh(self):
         groups = self._resolve()

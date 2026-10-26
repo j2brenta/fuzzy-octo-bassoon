@@ -179,6 +179,7 @@ def note_names(store: GraphStore) -> dict[str, str]:
 def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     """Write wiki/ from the store. Same store and `at` give the same bytes."""
     wiki = vault / "wiki"
+    wiki.mkdir(parents=True, exist_ok=True)
     names = note_names(store)
     link = lambda key: f"[[{names[key]}]]" if key in names else f"`{key[:12]}`"
     scores = km.score_claims(store, at)

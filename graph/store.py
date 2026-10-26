@@ -98,6 +98,7 @@ class Placement:
     author: str | None = None
     duplicate_of: str | None = None
     relations: list[Edge] = field(default_factory=list)
+    ideas: list[str] = field(default_factory=list)  # Idea ids its claims joined, in claim order
 
 
 @dataclass
