@@ -371,3 +371,47 @@ def test_health_report_counts_ideas_by_status_and_conflict():
     report = km.run(store, datetime(2026, 10, 26, tzinfo=timezone.utc))
     assert report.ideas == {"firm": 1} and report.conflicted_ideas == ["Model X has a 128k context window."]
     assert "1 Ideas: 1 firm, 0 provisional, 1 with conflicts." in km.render(report, store)
+
+
+# --- Phase 8: graph.query, called the way the refresher gathers a topic ---
+
+def gather(store, terms):
+    """What the refresher does: claims for the topic, their chains, the people, the items around them."""
+    claims = store.claims_for(terms)
+    ids = [c.claim.claim_id for c in claims]
+    return (ids, {cid: [n.claim.claim_id for n in store.chain(cid)] for cid in ids},
+            [p.name for p in store.people_for(ids)],
+            {c.item_id: {e.type for e in store.neighbours(c.item_id)} for c in claims})
+
+
+def test_claims_for_matches_whole_terms_and_follows_ideas_not_items(tmp_path):
+    store = vault.replay(trio_vault(tmp_path))
+    assert [c.claim.claim_id for c in store.claims_for(["16:00"], hops=0)] == ["c16"]
+    ids, *_ = gather(store, ["16:00"])
+    assert ids[0] == "c16" and set(ids) == {"c16", "cprev", "r14"}  # Idea mates; o14 is held back
+    assert store.claims_for(["workshop starts", "nonexistent"], hops=0)  # one matching term is enough
+    assert store.claims_for(["workshop zebra"], hops=0) == []  # every word of a term must match
+
+
+def test_claims_for_starts_from_a_named_person(tmp_path):
+    store = vault.replay(trio_vault(tmp_path))
+    assert [c.claim.claim_id for c in store.claims_for(["Ada Lovelace"], hops=1)] == ["ada1"]
+
+
+def test_chain_runs_oldest_first_through_held_back_originals(tmp_path):
+    store = vault.replay(trio_vault(tmp_path))
+    _, chains, _, _ = gather(store, ["16:00"])
+    assert chains["c16"] == ["o14", "c16"] and chains["r14"] == ["r14", "c16"] and chains["cprev"] == ["cprev"]
+
+
+def test_people_for_names_authors_and_subjects_most_involved_first(tmp_path):
+    store = vault.replay(trio_vault(tmp_path))
+    assert [p.name for p in store.people_for(["c16", "cprev", "ada1"])] == ["Demo Organizer", "Ada Lovelace",
+                                                                          "Someone"]
+
+
+def test_neighbours_show_relations_and_provenance_without_spans(tmp_path):
+    store = vault.replay(trio_vault(tmp_path))
+    *_, around = gather(store, ["16:00"])
+    assert {"SUPERSEDES", "PART_OF", "PUBLISHED_IN", "AUTHORED_BY"} <= around["correction"]
+    assert "FROM" not in around["correction"] and "DUPLICATES" in around["repost"]

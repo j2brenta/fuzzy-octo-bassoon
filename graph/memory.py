@@ -449,21 +449,29 @@ class MemoryStore:
     # --- graph.query: lexical baseline ---
 
     def claims_for(self, terms: Iterable[str], hops: int = 2) -> list[ClaimNode]:
-        wanted = {w for t in terms for w in _words(t)}
-        found = {cid for cid, c in self._claims.items() if wanted & set(_words(c.claim.statement))}
-        # Undirected: edges, plus each claim to its item and Idea, so a hop reaches sibling claims via those.
-        pairs = [(e.src, e.dst) for e in self.edges()]
-        pairs += [(cid, c.item_id) for cid, c in self._claims.items()]
-        pairs += [(cid, c.idea_id) for cid, c in self._claims.items() if c.idea_id]
+        """A claim matches a term holding all its words; a term naming a person starts from that person. From
+        there, hops follow meaning only (Idea membership, profile facts, claim relations), never a whole item.
+        Visible claims, nearest first."""
+        starts = set()
+        for term in terms:
+            want = set(_words(term))
+            if not want:
+                continue
+            starts |= {cid for cid, c in self._claims.items() if want <= set(_words(c.claim.statement))}
+            if person_id(term) in self._people:
+                starts.add(person_id(term))
         near: dict[str, set[str]] = {}
-        for a, b in pairs:
-            near.setdefault(a, set()).add(b)
-            near.setdefault(b, set()).add(a)
-        frontier = set(found)
-        for _ in range(hops):
-            frontier = {n for f in frontier for n in near.get(f, ())} - found
-            found |= frontier
-        return sorted((self._claims[cid] for cid in found if cid in self._claims), key=lambda c: c.claim.claim_id)
+        for e in self._relations:  # PART_OF, ABOUT and the claim relations
+            near.setdefault(e.src, set()).add(e.dst)
+            near.setdefault(e.dst, set()).add(e.src)
+        distance = {node: 0 for node in starts}
+        frontier = set(starts)
+        for hop in range(1, hops + 1):
+            frontier = {n for f in frontier for n in near.get(f, ())} - distance.keys()
+            distance.update({n: hop for n in frontier})
+        found = [(d, cid) for cid, d in distance.items()
+                 if cid in self._claims and not self._items[self._claims[cid].item_id].hidden]
+        return [self._claims[cid] for d, cid in sorted(found)]
 
     def chain(self, claim_id: str) -> list[ClaimNode]:
         if claim_id not in self._claims:
@@ -479,17 +487,20 @@ class MemoryStore:
             out.insert(0, older[0])
 
     def people_for(self, claim_ids: Iterable[str]) -> list[PersonNode]:
-        pids = set()
+        """Authors of the claims' items and the people the claims are about, most involved first."""
+        count: dict[str, int] = {}
         for cid in claim_ids:
             node = self._claims.get(cid)
             if node is None:
                 continue
-            pids |= {node.subject_id, self._items[node.item_id].author_id} - {None}
-        return sorted((self._people[p] for p in pids if p in self._people), key=lambda p: p.person_id)
+            for pid in {node.subject_id, self._items[node.item_id].author_id} - {None}:
+                count[pid] = count.get(pid, 0) + 1
+        return [self._people[p] for p in sorted(count, key=lambda p: (-count[p], p)) if p in self._people]
 
     def neighbours(self, item_id: str) -> list[Edge]:
+        """Edges touching the item or its claims, without span bookkeeping (FROM)."""
         ids = {item_id} | {cid for cid, c in self._claims.items() if c.item_id == item_id}
-        return [e for e in self.edges() if e.src in ids or e.dst in ids]
+        return [e for e in self.edges() if (e.src in ids or e.dst in ids) and e.type != "FROM"]
 
     def trust(self, pid: str) -> float:
         p = self._people[pid]

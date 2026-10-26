@@ -129,10 +129,11 @@ class GraphStore(Protocol):
 
     # graph.query: what the refresher gathers from.
     def claims_for(self, terms: Iterable[str], hops: int = 2) -> list[ClaimNode]:
-        """Claims matching the terms, plus those within `hops` edges of a match (Idea, item, person)."""
+        """Claims holding all words of a term, or about a person a term names, plus those within `hops` edges
+        through Ideas, profiles and claim relations (not whole items). Visible claims, nearest first."""
     def chain(self, claim_id: str) -> list[ClaimNode]:
-        """The supersession chain through this claim, oldest first."""
+        """The supersession chain through this claim, oldest first, held-back originals included."""
     def people_for(self, claim_ids: Iterable[str]) -> list[PersonNode]:
-        """Authors of, and people the claims are about, for these claims."""
+        """Authors of the claims' items and the people the claims are about, most involved first."""
     def neighbours(self, item_id: str) -> list[Edge]:
-        """Edges touching the item or any of its claims."""
+        """Edges touching the item or any of its claims, without FROM span edges."""
