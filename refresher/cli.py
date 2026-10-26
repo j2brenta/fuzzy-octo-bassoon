@@ -6,6 +6,7 @@
     uv run refresher eval [--vault V] --manifest M     score against expected labels
     uv run refresher relate [--vault V] [--lexical]    judge relations for items without a relations/ verdict file
     uv run refresher review [--vault V] [--at DATE]    item duplicates and firm Ideas, stored in graph-reviews/
+    uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -16,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from graph import relate as relation_stage
-from refresher import evaluate, km, place, vault
+from refresher import evaluate, graphview, km, place, vault
 
 
 def _at(value: str | None) -> datetime:
@@ -29,7 +30,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate", "review"):
+    for name in ("rebuild", "km", "eval", "relate", "review", "graph"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -65,11 +66,14 @@ def main(argv=None) -> int:
         if overrides != vault.load_overrides(args.vault):
             vault.save_overrides(args.vault, overrides)
         written = vault.export(store, args.vault, at)
+        graphview.write(store, args.vault, at)
         report = km.run(store, at)
         message = (f"rebuild: {report.items} items ({len(report.unreviewed)} unreviewed), {report.claims} claims, "
                    f"{report.people} people, {len(store.held_back)} held back, {len(overrides)} overrides")
         vault.log(args.vault, at, message)
         print(f"{message}; wrote {len(written)} notes to {args.vault / 'wiki'}")
+    elif args.command == "graph":
+        print(f"graph: wrote {graphview.write(store, args.vault, at)}")
     elif args.command == "km":
         print(km.render(km.run(store, at), store), end="")
     else:

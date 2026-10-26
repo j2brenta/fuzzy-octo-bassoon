@@ -456,6 +456,27 @@ candidate. The command needs no API key and does not rerun models or send Telegr
 messages. With the full AI workflow enabled, Telegram adds a combined-handoff
 reply automatically. Restart the bot after updating its code.
 
+## Graph placement and the graph view
+
+After the storage receipt, the bot places the item in the graph and replies with
+where it went: the Ideas it was filed under, the author, and any duplicate,
+supersession, confirmation or contradiction. The model relates the new claims to
+what the vault already holds; its verdicts are stored in `relations/` so every
+rebuild replays them without model calls. Set `GRAPH_RELATOR=lexical` to match by
+wording only. Each placement also refreshes `wiki/` and the graph view.
+
+```bash
+uv run refresher relate --vault VAULT     # judge items that have no stored verdicts
+uv run refresher rebuild --vault VAULT    # replay the vault, write wiki/ and wiki/graph/
+uv run refresher graph --vault VAULT      # only the graph view
+```
+
+Open `wiki/graph/index.html` in a browser; it works from disk with no server.
+It draws items, Ideas, people and sources, with typed edges (supersedes,
+contradicts, confirms, adds detail, repeats). Mentions are left out on purpose.
+Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`, taken from Victor's
+news map.
+
 ## Validation
 
 ```bash

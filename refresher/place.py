@@ -15,7 +15,7 @@ from engine.llm import ModelError, ModelOutputError
 from graph import relate
 from graph.memory import MemoryStore
 from graph.store import Placement
-from refresher import vault
+from refresher import graphview, vault
 
 SHOWN = 3  # Ideas and relations listed in a reply before "and N more"
 
@@ -77,6 +77,7 @@ def place(vault_path: Path, item_id: str, relator: relate.Relator | None = None,
     at = at or datetime.now(timezone.utc)
     store = vault.replay(vault_path, include_unreviewed=True)
     vault.export(store, vault_path, at)
+    graphview.write(store, vault_path, at)
     placement = store.placement(item_id)
     vault.log(vault_path, at, f"place: {item_id[:12]} {placement.status}, {placement.claims} claims, "
                               f"{len(placement.ideas)} Ideas, {len(placement.relations)} relations")
