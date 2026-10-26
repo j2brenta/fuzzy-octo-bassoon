@@ -55,6 +55,20 @@ class CorrectnessGateTests(unittest.TestCase):
                 self.assertFalse(result.record['quality_gate_passed'])
                 self.assertEqual(apply_storage_stub(result.path)['status'], 'pending_quality')
 
+    def test_copied_header_metadata_refresh_preserves_paid_claim_caches(self):
+        handoff = build_extraction(self.raw.path)
+        apply_storage_stub(handoff.path)
+        document_path = self.vault / 'documents' / self.raw.path.name
+        document = json.loads(document_path.read_text())
+        document['telegram_copy'] = {'messages': [{'copied_at': '2026-10-07T12:00:00+02:00'}]}
+        before = self.claim_review.path.read_bytes()
+        atomic_json(document_path, document)
+        self.assertEqual(before, self.claim_review.path.read_bytes())
+        self.assertTrue(self.original.path.exists())
+        self.assertTrue(self.entities.path.exists())
+        self.assertFalse(handoff.path.exists())
+        self.assertFalse((self.vault / 'placements' / self.raw.path.name).exists())
+
     def test_changed_entities_invalidate_their_review_without_discarding_claim_review(self):
         handoff = build_extraction(self.raw.path)
         apply_storage_stub(handoff.path)

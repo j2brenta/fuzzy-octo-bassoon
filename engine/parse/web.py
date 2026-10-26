@@ -8,6 +8,7 @@ import socket
 from urllib.parse import quote, urljoin, urlsplit, urlunsplit
 
 MAX_HTML_BYTES = 2_000_000
+MAX_DOCUMENT_BYTES = 20_000_000
 MAX_REDIRECTS = 3
 TIMEOUT_SECONDS = 15
 
@@ -22,6 +23,7 @@ class HtmlPage:
     final_url: str
     content: bytes
     fetched_at: str
+    content_type: str = "text/html"
 
 
 def normalize_url(url: str) -> str:
@@ -83,7 +85,7 @@ def _connection(url: str):
     return connection
 
 
-def fetch_html(url: str) -> HtmlPage:
+def fetch_document(url: str) -> HtmlPage:
     requested = current = normalize_url(url)
     try:
         for hop in range(MAX_REDIRECTS + 1):
@@ -93,7 +95,7 @@ def fetch_html(url: str) -> HtmlPage:
                 target = urlunsplit(("", "", parts.path, parts.query, ""))
                 connection.request("GET", target, headers={
                     "User-Agent": "Refresher/0.1 (public article reader)",
-                    "Accept": "text/html, application/xhtml+xml",
+                    "Accept": "text/html, application/xhtml+xml, application/pdf",
                     "Accept-Encoding": "identity",
                 })
                 response = connection.getresponse()
@@ -108,16 +110,27 @@ def fetch_html(url: str) -> HtmlPage:
                 if response.status != 200:
                     raise WebError(f"Article download returned HTTP {response.status}; paste its text if access is restricted.")
                 content_type = response.getheader("Content-Type", "").split(";", 1)[0].strip().lower()
-                if content_type not in {"text/html", "application/xhtml+xml"}:
-                    raise WebError("This link is not an HTML article; PDF and media parsing come later.")
+                if content_type not in {"text/html", "application/xhtml+xml", "application/pdf", "application/octet-stream"}:
+                    raise WebError("This link is not a supported HTML page or PDF. Upload image files directly to Telegram; other media need separate handlers.")
                 if response.getheader("Content-Encoding", "identity").lower() not in {"", "identity"}:
                     raise WebError("Article server returned unsupported compressed content.")
-                body = response.read(MAX_HTML_BYTES + 1)
-                if len(body) > MAX_HTML_BYTES:
-                    raise WebError("Article HTML exceeds the 2 MB download limit.")
+                limit = MAX_HTML_BYTES if content_type in {"text/html", "application/xhtml+xml"} else MAX_DOCUMENT_BYTES
+                try:
+                    size = int(response.getheader("Content-Length", "0"))
+                except ValueError:
+                    size = 0
+                if size > limit:
+                    raise WebError("Linked document exceeds its download size limit (2 MB HTML / 20 MB PDF).")
+                body = response.read(limit + 1)
+                if len(body) > limit:
+                    raise WebError("Linked document exceeds its download size limit (2 MB HTML / 20 MB PDF).")
+                if content_type in {"application/pdf", "application/octet-stream"}:
+                    if b"%PDF-" not in body[:1024]:
+                        raise WebError("This linked file is not a readable PDF.")
+                    content_type = "application/pdf"
                 if not body.strip():
                     raise WebError("Article server returned an empty page.")
-                return HtmlPage(requested, current, body, datetime.now(timezone.utc).isoformat())
+                return HtmlPage(requested, current, body, datetime.now(timezone.utc).isoformat(), content_type)
             finally:
                 connection.close()
     except WebError:
@@ -125,3 +138,11 @@ def fetch_html(url: str) -> HtmlPage:
     except (OSError, HTTPException, UnicodeError, ValueError):
         raise WebError("Could not download the article; check the link or paste its text.") from None
     raise WebError("Article download did not complete.")
+
+
+def fetch_html(url: str) -> HtmlPage:
+    """Compatibility wrapper for consumers that explicitly require HTML."""
+    page = fetch_document(url)
+    if page.content_type not in {"text/html", "application/xhtml+xml"}:
+        raise WebError("This link is not an HTML article.")
+    return page

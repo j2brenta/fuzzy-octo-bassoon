@@ -70,16 +70,25 @@ def archive_descendants(destination: Path, value: dict) -> list[str]:
     destination = Path(destination)
     if destination.parent.name not in DEPENDENCIES or not re.fullmatch(r"[0-9a-f]{64}\.json", destination.name):
         return []
+    previous = None
     if destination.exists():
         try:
-            if json.loads(destination.read_text(encoding="utf-8")) == value:
+            previous = json.loads(destination.read_text(encoding="utf-8"))
+            if previous == value:
                 return []
         except (ValueError, UnicodeError):
             pass
     vault = destination.parent.parent
     if not (vault / "raw" / destination.name).exists():
         return []
-    pending = list(DEPENDENCIES[destination.parent.name])
+    # Copied-message metadata affects source timeline/handoff, not the text or
+    # source passages sent to existing extraction/review calls. Preserve those
+    # paid caches when this is the only document change.
+    copy_metadata_only = (destination.parent.name == "documents"
+                          and isinstance(previous, dict)
+                          and {k: v for k, v in previous.items() if k != "telegram_copy"}
+                          == {k: v for k, v in value.items() if k != "telegram_copy"})
+    pending = ["processed"] if copy_metadata_only else list(DEPENDENCIES[destination.parent.name])
     stages = set()
     while pending:
         stage = pending.pop()

@@ -10,15 +10,20 @@ from pathlib import Path
 import re
 import tempfile
 from urllib.parse import urlsplit
+from dotenv import load_dotenv
 
 from engine.artifacts import atomic_json
 from engine.parse import parse_capture
 from engine.parse.article import ARTICLE_PARSER_VERSION, parse_article
-from engine.parse.web import WebError, fetch_html, normalize_url
+from engine.parse.web import WebError, fetch_document, normalize_url
+from channels.pdf import save_pdf, interpret_pdf
+from engine.parse.pdf import PdfError, PDF_VERSION
+from engine.llm import ModelError
+from store.media import MediaError
 from store.raw import capture_text, normalize_timestamp
 
 MAX_LINKS = 3
-UNSUPPORTED_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".ogg", ".wav", ".zip"}
+UNSUPPORTED_LINK_SUFFIXES = { ".png", ".jpg", ".jpeg", ".gif", ".mp3", ".mp4", ".ogg", ".wav", ".zip"}
 
 
 def _save_snapshot(vault: Path, content: bytes) -> dict:
@@ -60,23 +65,28 @@ def _published_at(value: str | None) -> str | None:
 
 def _cached_child(vault: Path, row: dict, parent_id: str) -> Path | None:
     item_id = row.get("item_id")
-    snapshot_ref = row.get("snapshot")
-    digest = snapshot_ref.get("sha256") if isinstance(snapshot_ref, dict) else None
     if not isinstance(item_id, str) or not re.fullmatch(r"[0-9a-f]{64}", item_id):
         return None
-    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
-        return None
     path = vault / "raw" / f"{item_id}.json"
-    snapshot = vault / "web-snapshots" / f"{digest}.html"
     try:
         record = json.loads(path.read_text())
         metadata = record["channel_metadata"]
-        if (metadata["parent"]["item_id"] != parent_id
-            or metadata["web_article"]["parser_version"] != ARTICLE_PARSER_VERSION
-            or metadata["web_article"]["requested_url"] != row["url"]
-            or metadata["web_article"]["snapshot"]["sha256"] != digest
-            or hashlib.sha256(snapshot.read_bytes()).hexdigest() != digest):
+        if metadata["parent"]["item_id"] != parent_id:
             return None
+        if row.get("kind") == "pdf":
+            if metadata["pdf_reading"]["parser_version"] != PDF_VERSION:
+                return None
+        else:
+            snapshot_ref = row.get("snapshot")
+            digest = snapshot_ref.get("sha256") if isinstance(snapshot_ref, dict) else None
+            if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                return None
+            snapshot = vault / "web-snapshots" / f"{digest}.html"
+            if (metadata["web_article"]["parser_version"] != ARTICLE_PARSER_VERSION
+                or metadata["web_article"]["requested_url"] != row["url"]
+                or metadata["web_article"]["snapshot"]["sha256"] != digest
+                or hashlib.sha256(snapshot.read_bytes()).hexdigest() != digest):
+                return None
         parse_capture(path)
     except (OSError, ValueError, KeyError, TypeError):
         return None
@@ -117,61 +127,73 @@ def fetch_linked_articles(raw_path: Path, *, force: bool = False, fetcher=None) 
         except (ValueError, KeyError, TypeError, AttributeError):
             pass
     results = []
-    fetcher = fetcher or fetch_html
+    fetcher = fetcher or fetch_document
     for index, url in enumerate(urls):
         row = {"url": url}
         try:
             normalized = normalize_url(url)
             parts = urlsplit(normalized)
             host = parts.hostname
-            if (Path(parts.path).suffix.lower() in UNSUPPORTED_SUFFIXES
+            if (Path(parts.path).suffix.lower() in UNSUPPORTED_LINK_SUFFIXES
                 or host == "youtu.be" or host == "youtube.com" or host.endswith(".youtube.com")):
-                row.update(status="unsupported", reason="PDF, image, audio and video links need their own parsers.")
+                row.update(status="unsupported", reason="Image, audio, video and archive links are not downloaded here. Upload supported pictures directly to Telegram.")
             elif index >= MAX_LINKS:
                 row.update(status="deferred", reason="Only the first three links are downloaded per item.")
             elif url in cached and cached[url].get("status") == "captured" and _cached_child(vault, cached[url], parent["item_id"]) is not None:
                 row = {**cached[url], "reused": True}
             else:
                 page = fetcher(normalized)
-                snapshot = _save_snapshot(vault, page.content)
-                row["snapshot"] = snapshot
-                article = parse_article(page.content, page.final_url)
-                web = {**asdict(article), "parser_version": ARTICLE_PARSER_VERSION,
-                       "requested_url": url, "final_url": page.final_url,
-                       "fetched_at": page.fetched_at, "snapshot": snapshot}
-                web.pop("text")  # Article body lives once, in the child's raw text field.
                 shared_by = parent.get("forwarded_by") or parent.get("author_hint")
                 if isinstance(shared_by, str):
                     shared_by = {"name": shared_by}
                 if shared_by:
                     shared_by = {k: v for k, v in shared_by.items() if k in {"name", "handle", "email", "url"}}
-                link_identity = hashlib.sha256(normalized.encode()).hexdigest()
-                message_id = f"{parent['item_id']}:{ARTICLE_PARSER_VERSION}:{link_identity}:{snapshot['sha256']}"
-                child = capture_text(
-                    article.text,
-                    vault,
-                    channel="import",
-                    source_id=page.final_url,
-                    source_name=article.site_name or parts.hostname,
-                    message_id=message_id,
-                    captured_at=page.fetched_at,
-                    published_at=_published_at(article.publication_date),
-                    author_hint={"name": article.author} if article.author else None,
-                    forwarded_by=shared_by or None,
-                    url=page.final_url,
-                    channel_metadata={
-                        "web_article": web,
-                        "parent": {
-                            "item_id": parent["item_id"],
-                            "raw_path": f"raw/{raw_path.name}",
-                            "url": url,
+                if page.content_type == "application/pdf":
+                    digest = hashlib.sha256(page.content).hexdigest()
+                    fields = {"source_id": page.final_url, "source_name": Path(urlsplit(page.final_url).path).name or "Linked PDF",
+                              "message_id": f"{parent['item_id']}:{PDF_VERSION}:{digest}",
+                              "captured_at": page.fetched_at, "published_at": None, "author_hint": None,
+                              "forwarded_by": shared_by or None, "url": page.final_url,
+                              "channel_metadata": {"parent": {"item_id": parent["item_id"], "raw_path": f"raw/{raw_path.name}", "url": url}}}
+                    receipt = save_pdf(page.content, vault, fields, channel="import", identity=normalized)
+                    child = interpret_pdf(receipt)
+                else:
+                    snapshot = _save_snapshot(vault, page.content)
+                    row["snapshot"] = snapshot
+                    article = parse_article(page.content, page.final_url)
+                    web = {**asdict(article), "parser_version": ARTICLE_PARSER_VERSION,
+                           "requested_url": url, "final_url": page.final_url,
+                           "fetched_at": page.fetched_at, "snapshot": snapshot}
+                    web.pop("text")  # Article body lives once, in the child's raw text field.
+                    link_identity = hashlib.sha256(normalized.encode()).hexdigest()
+                    message_id = f"{parent['item_id']}:{ARTICLE_PARSER_VERSION}:{link_identity}:{snapshot['sha256']}"
+                    child = capture_text(
+                        article.text,
+                        vault,
+                        channel="import",
+                        source_id=page.final_url,
+                        source_name=article.site_name or parts.hostname,
+                        message_id=message_id,
+                        captured_at=page.fetched_at,
+                        published_at=_published_at(article.publication_date),
+                        author_hint={"name": article.author} if article.author else None,
+                        forwarded_by=shared_by or None,
+                        url=page.final_url,
+                        channel_metadata={
+                            "web_article": web,
+                            "parent": {
+                                "item_id": parent["item_id"],
+                                "raw_path": f"raw/{raw_path.name}",
+                                "url": url,
+                            },
                         },
-                    },
-                )
+                    )
                 parse_capture(child.path)
+                if page.content_type == "application/pdf":
+                    row["kind"] = "pdf"
                 row.update(status="captured", item_id=child.item_id, raw_path=f"raw/{child.path.name}", reused=child.duplicate)
-        except (WebError, ValueError) as error:
-            row.update(status="failed", reason=str(error) if isinstance(error, WebError) else "Article source validation failed; original retained.")
+        except (WebError, PdfError, ModelError, MediaError, ValueError) as error:
+            row.update(status="failed", reason=str(error) if isinstance(error, (WebError, PdfError, ModelError, MediaError)) else "Article source validation failed; original retained.")
         results.append(row)
         atomic_json(destination, {**identity, "links": [{k: v for k, v in r.items() if k != "reused"} for r in results]})
     return results
@@ -183,6 +205,7 @@ def main(argv=None) -> int:
     parser.add_argument("--vault", type=Path, default=Path(".local-vault/web"))
     parser.add_argument("--refresh", action="store_true", help="Download again; preserve earlier snapshots and child captures")
     args = parser.parse_args(argv)
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
     try:
         url = normalize_url(args.url)
         parent = capture_text(url, args.vault, channel="import", source_id=f"web-input:{url}", source_name="Web import")

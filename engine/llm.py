@@ -41,6 +41,7 @@ class JsonModel(Protocol):
 
 NEBIUS_BASE_URL = "https://api.tokenfactory.nebius.com/v1"
 DEFAULT_EXTRACTION_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+DEFAULT_VISION_MODEL = "nvidia/Nemotron-3.5-Super-VL"
 DEFAULT_JUDGE_MODEL = "nvidia/Nemotron-3-Ultra-550b-a55b"
 # Reasoning models may prefix the answer with a thinking block or wrap it in a code fence.
 _THINKING = re.compile(r"<think>.*?</think>", re.S)
@@ -109,7 +110,7 @@ class NebiusModel:
     # Optional transport injection; the ordinary CLI retains the existing transport.
     request_transport: Callable = field(default=_nebius_request, repr=False, compare=False)
 
-    def complete_json(self, system_prompt: str, content: str) -> ModelReply:
+    def complete_json(self, system_prompt: str, content: str | list[dict]) -> ModelReply:
         payload = {
             "model": self.model_name,
             "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": content}],
@@ -215,6 +216,8 @@ def _nebius_from_environment(model_variable: str, timeout_seconds: int) -> Nebiu
     if not key:
         raise ModelError("Add NEBIUS_API_KEY to .env to use Nebius Token Factory.")
     default = DEFAULT_JUDGE_MODEL if model_variable == "NEBIUS_JUDGE_MODEL" else DEFAULT_EXTRACTION_MODEL
+    if model_variable == "NEBIUS_VISION_MODEL":
+        default = DEFAULT_VISION_MODEL
     model_name = os.environ.get(model_variable, "").strip() or default
     budget = os.environ.get("NEBIUS_MAX_TOKENS", "32768").strip()
     if model_variable == "NEBIUS_JUDGE_MODEL":

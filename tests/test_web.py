@@ -182,7 +182,7 @@ class ArticleCaptureTests(unittest.TestCase):
 
     def test_retry_reuses_child_and_snapshot_without_fetching(self):
         first = self.fetch()[0]
-        with patch('channels.web.fetch_html', side_effect=AssertionError('No network on retry')):
+        with patch('channels.web.fetch_document', side_effect=AssertionError('No network on retry')):
             second = fetch_linked_articles(self.parent.path)[0]
         self.assertTrue(second['reused'])
         self.assertEqual(first['item_id'], second['item_id'])
@@ -258,7 +258,7 @@ class ArticleCaptureTests(unittest.TestCase):
         for row in rows:
             child = json.loads((self.vault / row['raw_path']).read_text())
             self.assertEqual(child['channel_metadata']['parent']['url'], row['url'])
-        with patch('channels.web.fetch_html', side_effect=AssertionError('No new requests')):
+        with patch('channels.web.fetch_document', side_effect=AssertionError('No new requests')):
             cached = fetch_linked_articles(raw.path)
         self.assertTrue(all(row['reused'] for row in cached))
 
@@ -267,7 +267,7 @@ class ArticleCaptureTests(unittest.TestCase):
         raw = capture_text(text, self.vault, channel='file', source_id='many-links', source_name='Fixture')
         fetcher = MagicMock(return_value=page())
         rows = fetch_linked_articles(raw.path, fetcher=fetcher)
-        self.assertEqual([r['status'] for r in rows], ['captured'] * 3 + ['deferred', 'unsupported', 'unsupported'])
+        self.assertEqual([r['status'] for r in rows], ['captured'] * 3 + ['deferred', 'deferred', 'unsupported'])
         self.assertEqual(fetcher.call_count, 3)
 
     def test_child_uses_existing_review_and_storage_pipeline_with_article_evidence(self):
@@ -296,7 +296,7 @@ class TelegramArticleTests(unittest.IsolatedAsyncioTestCase):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         vault = Path(temporary.name)
-        with patch.dict(os.environ, {'WEB_FETCH': setting}), patch('channels.web.fetch_html', fetcher or MagicMock(return_value=page())), patch('channels.telegram.process_capture', new_callable=AsyncMock) as process, patch.object(Message, 'answer', new_callable=AsyncMock) as answer:
+        with patch.dict(os.environ, {'WEB_FETCH': setting}), patch('channels.web.fetch_document', fetcher or MagicMock(return_value=page())), patch('channels.telegram.process_capture', new_callable=AsyncMock) as process, patch.object(Message, 'answer', new_callable=AsyncMock) as answer:
             await handle_message(message(text=text), vault, 100)
         return vault, process, answer
 
