@@ -1,35 +1,62 @@
 import json
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
 from refresher import graphview, vault
 from refresher.cli import main
+from tests.test_proposals import AT, propose, token, topical_vault
 from tests.test_relate import trio
 
 FIXTURES = Path(__file__).parent / "fixtures"
-AT = datetime(2026, 10, 20, tzinfo=timezone.utc)
 
 
-def test_trio_draws_the_correction_superseding_the_repost_without_hidden_stubs():
-    data = graphview.graph_data(trio(), AT)
-    ids = {n["id"] for n in data["nodes"]}
+def test_trio_map_has_the_correction_superseding_the_repost_without_hidden_stubs():
+    data = graphview.map_data(trio(), AT)
+    ids = {i["id"] for i in data["items"]}
     assert "original" not in ids  # a triage-skipped stub is not drawn
-    supersedes = [e for e in data["edges"] if e["type"] == "SUPERSEDES"]
-    assert [(e["source"], e["target"]) for e in supersedes] == [("correction", "repost")]
-    assert "16:00" in supersedes[0]["said"] and "14:00" in supersedes[0]["about"]
-    idea = next(n for n in data["nodes"] if n["type"] == "idea" and "16:00" in n["label"])
-    assert idea["chain"][-1].startswith("The demo workshop starts at 16:00")
+    [edge] = [e for e in data["item_edges"] if e["kind"] == "SUPERSEDES"]
+    assert (edge["source"], edge["target"]) == ("correction", "repost") and edge["basis"] == "auto"
+    assert "16:00" in edge["said"] and "14:00" in edge["about"]
+    story = next(s for s in data["stories"] if "16:00" in s["title"])
+    assert story["chain"][-1].startswith("The demo workshop starts at 16:00")
 
 
-def test_edges_are_typed_and_leave_out_mentions_and_spans():
-    data = graphview.graph_data(vault.replay(FIXTURES / "vault", [], include_unreviewed=True), AT)
-    ids = {n["id"] for n in data["nodes"]}
-    assert {e["type"] for e in data["edges"]} <= graphview.EDGE_TYPES
-    assert all(e["source"] in ids and e["target"] in ids and e["source"] != e["target"] for e in data["edges"])
-    # People appear only through an edge drawn here, not because an item mentions them.
-    linked = {end for e in data["edges"] for end in (e["source"], e["target"])}
-    assert all(n["id"] in linked for n in data["nodes"] if n["type"] == "person")
+def test_claims_carry_their_exact_passages():
+    data = graphview.map_data(vault.replay(FIXTURES / "vault", [], include_unreviewed=True), AT)
+    texts = {i.item_id: i.text for i in vault.replay(FIXTURES / "vault", [], include_unreviewed=True).items()}
+    anchored = [c for c in data["claims"] if c["anchors"]]
+    assert anchored
+    for c in anchored:
+        for a in c["anchors"]:
+            assert texts[c["item"]][a["start_char"]:a["end_char"]] == a["quote"]
+    claim_ids, item_ids = {c["id"] for c in data["claims"]}, {i["id"] for i in data["items"]}
+    assert all(e["source"] in claim_ids and e["target"] in claim_ids for e in data["edges"])
+    assert all(e["source"] in item_ids and e["target"] in item_ids for e in data["item_edges"])
+
+
+def test_proposals_topics_and_pending_merges_are_in_the_map(tmp_path):
+    v = topical_vault(tmp_path)
+    store = vault.replay(v, include_unreviewed=True)
+    report = store.review(AT)
+    vault.save_review(v, report)
+    gpu = next(p for p in report.proposals if p.kind == "topic" and "g1" in p.payload["claims"])
+    vault.decide(v, gpu.proposal_id, "accept", token(v, gpu.proposal_id), at=AT)
+    data = graphview.map_data(vault.replay(v, include_unreviewed=True), AT)
+    assert [t["title"] for t in data["topics"]] == [gpu.payload["title"]]
+    assert all(i["topics"] for i in data["items"] if i["claims"] and i["claims"][0].startswith("g"))
+    assert data["counts"]["waiting"] == 3
+    merge = next(e for e in data["edges"] if e["kind"] == "MERGE")
+    assert {merge["source"], merge["target"]} == {"m1", "m2"} and merge["basis"] == "proposal"
+    states = {p["kind"]: p["status"] for p in data["proposals"]}
+    assert states["merge_ideas"] == "proposed" and "accepted" in [p["status"] for p in data["proposals"]]
+
+
+def test_hostile_text_stays_inert_in_the_page():
+    data = {"items": [{"title": "</script><script>alert(1)</script><!--"}]}
+    html = graphview.page(data)
+    assert "</script><script>" not in html and "<!--</script>" not in html
+    inline = html.split('<script type="application/json" id="map-data">', 1)[1].split("</script>", 1)[0]
+    assert json.loads(inline)["items"][0]["title"].startswith("</script>")
 
 
 def test_cli_writes_a_page_that_opens_from_disk(tmp_path):
@@ -37,6 +64,7 @@ def test_cli_writes_a_page_that_opens_from_disk(tmp_path):
     assert main(["graph", "--vault", str(tmp_path / "vault"), "--at", "2026-10-20"]) == 0
     out = tmp_path / "vault" / "wiki" / "graph"
     page = (out / "index.html").read_text()
-    assert "/*GRAPH_DATA*/" not in page and '"nodes"' in page and "</script>" in page
-    assert json.loads((out / "graph.json").read_text())["at"].startswith("2026-10-20")
-    assert (out / "cytoscape.min.js").exists() and (out / "CYTOSCAPE-LICENSE.txt").exists()
+    assert "<!--MAP_DATA-->" not in page and '"items"' in page and "connect-src 'none'" in page
+    assert json.loads((out / "graph.json").read_text())["snapshot_at"].startswith("2026-10-20")
+    for name in ("app.js", "style.css", "cytoscape.min.js", "CYTOSCAPE-LICENSE.txt"):
+        assert (out / name).exists()

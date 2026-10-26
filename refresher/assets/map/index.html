@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Ported from Victor's News Atlas viewer (feat/newsmap-sidecar-v06, eba5443), translated and adapted to Refresher's graph. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Refresher Atlas</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="cytoscape.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<header class="masthead">
+  <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><div><b>REFRESHER ATLAS</b><span class="eyebrow">Your knowledge and what it rests on</span></div></div>
+  <div class="header-note"><span class="status-dot"></span>Snapshot <span id="snapshot-date"></span><span id="scope-badge" class="badge"></span></div>
+</header>
+<main>
+  <section class="intro">
+    <div><p class="eyebrow">TOPICS → IDEAS → EVIDENCE</p><h1>See how it connects.<br><span>Check what it rests on.</span></h1></div>
+    <div class="intro-copy"><p>From a topic to an Idea, from a relation to the exact passage.<br>A repeated claim is not an independent confirmation.</p><div id="stats" class="stats"></div></div>
+  </section>
+  <section class="proposal-section" aria-label="Proposals">
+    <div class="section-top"><div><p class="eyebrow">FROM THE HOURLY REVIEW</p><h2>Waiting for you</h2></div><label class="check"><input type="checkbox" id="show-decided">Show decided and stale</label></div>
+    <p id="proposal-note" class="small quiet"></p>
+    <div id="proposals" class="proposals"></div>
+  </section>
+  <section aria-label="Topics" class="topic-section"><div class="section-top"><h2>Topics</h2><button id="reset" class="text-button">All items ↗</button></div><div id="topics" class="topics"></div></section>
+  <p id="reading-scope" class="small quiet" role="status"></p>
+  <section class="workspace">
+    <aside class="timeline-column">
+      <div class="section-top"><h2>Timeline</h2><span id="list-count" class="small"></span></div>
+      <label class="field">Idea<select id="story-filter"><option value="">All Ideas</option></select></label>
+      <div class="filter-row"><label class="field">Quality<select id="quality-filter"><option value="">Any</option><option value="accepted">Accepted</option><option value="pending">Pending</option><option value="needs_revision">Needs revision</option></select></label><label class="field">Freshness<select id="band-filter"><option value="">Any</option><option value="fresh">Fresh</option><option value="fading">Fading</option><option value="stale">Stale</option></select></label></div>
+      <label class="field">From date (publication, else capture)<input id="date-filter" type="date"></label>
+      <label class="check"><input type="checkbox" id="hide-reposts">Hide reposts</label>
+      <label class="field">Search titles and sources<input id="search" type="search" placeholder="Find an item…"></label>
+      <div id="timeline" class="timeline" aria-label="Items"></div>
+      <p class="small quiet">Publication date when known; otherwise the capture date is shown.</p>
+    </aside>
+    <section class="map-column" aria-label="Interactive map">
+      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Sources</button><button id="mode-claims" aria-pressed="false">Claims</button></div><select id="review-filter" aria-label="Relation state"><option value="">All relations</option><option value="auto">Automatic</option><option value="accepted">Accepted by you</option><option value="proposal">Proposed</option></select></div>
+      <div class="map-title"><h2 id="map-title">Sources</h2><span id="map-count" class="small"></span></div>
+      <div class="canvas-wrap"><div id="graph" aria-label="Graph; every node and relation is also listed below"></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="fit" aria-label="Fit the graph">⌖</button></div><div id="map-empty" hidden>Nothing in this slice yet.</div></div>
+      <div class="map-footer"><span><i class="line auto"></i>Automatic</span><span><i class="line reviewed"></i>Accepted by you</span><span><i class="line proposal"></i>Proposed</span></div>
+      <p class="geometry">Regions are topics; an item with several topics is shown in one of them. Position inside a region is for reading, not causality. Arrows point from the later claim to the one it relates to.</p>
+      <div class="focus-actions"><button id="ego" disabled>Neighbourhood of the selection</button><button id="clear-focus" hidden>Clear focus</button><span id="hidden-count" class="small"></span></div>
+      <details class="accessible"><summary>Text list of the map's nodes and relations</summary><div id="graph-list"></div></details>
+    </section>
+    <aside class="evidence-column" aria-label="Evidence"><div class="section-top"><h2>Evidence</h2><span class="badge">Claim + passage</span></div><div id="detail" aria-live="polite"><div class="empty-detail"><span>◎</span><h3>Every relation has a reason</h3><p>Pick an item or an arrow. Its passages, its Ideas and why it is related appear here.</p></div></div></aside>
+  </section>
+  <section class="compare-section" aria-label="Compare claims"><div class="section-top"><div><p class="eyebrow">SIDE BY SIDE</p><h2>Same claim, or a different story?</h2></div><button id="clear-compare" class="text-button">Clear comparison</button></div><p class="quiet">Pick up to two claims. What is unknown stays unknown.</p><p id="compare-scope" class="small quiet"></p><div id="comparison" class="comparison"></div></section>
+  <footer><span>Refresher Atlas · offline map of your vault</span><span>Relations are filed automatically; the review proposes topics and merges, and you decide them.</span></footer>
+</main>
+<script type="application/json" id="map-data"><!--MAP_DATA--></script>
+</body>
+</html>
