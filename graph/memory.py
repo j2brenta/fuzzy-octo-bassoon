@@ -10,7 +10,7 @@ import unicodedata
 from datetime import datetime
 from typing import Iterable
 
-from graph import relate
+from graph import cluster, embed, proposals as proposal_stage, relate
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
 from graph.store import (ClaimNode, Edge, IdeaNode, ItemNode, PersonNode, Placement, ReviewReport, SourceNode,
                          TopicNode)
@@ -22,6 +22,8 @@ REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its matc
 REVIEW_CLAIM_MATCH = 0.5  # word-set Jaccard for the review's item-duplicate check
 REVIEW_DUPLICATE_SHARE = 0.7  # an item whose claims match one other item this much is a duplicate of it
 REVIEW_MIN_CLAIMS = 3  # fewer claims are too few to call an item a duplicate; reposts and relations cover those
+IDEA_MERGE = 0.75  # embedding cosine between two Ideas' statements for the review to propose merging them
+CONFIRM_DURABILITY = {"reference", "foundation"}  # a SUPERSEDES or CONTRADICTS onto these asks the user to confirm
 WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
 RELATION_TYPES = {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
@@ -31,6 +33,19 @@ EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADIC
 def person_id(name: str) -> str:
     folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode() or name
     return "person:" + "-".join(WORD.findall(folded.casefold()))
+
+
+def _same_person(a: str, b: str) -> bool:
+    """"Y. Gal" and "Yarin Gal": same last name, and first names equal or one an initial of the other."""
+    wa, wb = _words(a), _words(b)
+    if len(wa) < 2 or len(wb) < 2 or wa == wb or wa[-1] != wb[-1]:
+        return False
+    fa, fb = wa[0], wb[0]
+    return fa == fb or (min(len(fa), len(fb)) == 1 and fa[0] == fb[0])
+
+
+def _affiliation(p: PersonNode) -> str | None:
+    return p.affiliation["value"].casefold() if p.affiliation else None
 
 
 def org_id(name: str) -> str:
@@ -360,12 +375,23 @@ class MemoryStore:
                 self._relations.append(Edge(node.claim.claim_id, "PART_OF", idea.idea_id))
 
     def _build_topics(self):
-        """Accepted topics, found again through the claims they were proposed with."""
+        """Accepted topics, found again through the claims they were proposed with; any other Idea close to a
+        topic's centroid joins it provisionally (cluster.attach), with no model call."""
         self._topics = {}
         for topic_id, (title, claims) in sorted(self._topic_specs.items()):
             ideas = {self._claims[cid].idea_id for cid in claims if cid in self._claims and self._claims[cid].idea_id}
             if ideas:
                 self._topics[topic_id] = TopicNode(topic_id, title, ideas)
+        if not self._topics:
+            return
+        centroids = {tid: cluster.centroid(embed.vectors([self._ideas[i].title for i in sorted(t.ideas)]))
+                     for tid, t in self._topics.items()}
+        placed = set().union(*(t.ideas for t in self._topics.values()))
+        loose = sorted(i for i in self._ideas if i not in placed)
+        for idea_id, vector in zip(loose, embed.vectors([self._ideas[i].title for i in loose])):
+            tid = cluster.attach(vector, centroids)
+            if tid is not None:
+                self._topics[tid].attached.add(idea_id)
 
     def _recount_duplicates(self):
         dup_claims = {e.src for e in self._relations if e.type == "DUPLICATES"}
@@ -470,10 +496,13 @@ class MemoryStore:
     def topics(self):
         return self._topics.values()
 
-    def review(self, at: datetime) -> ReviewReport:
-        """The minimal review, deterministic and without a model: item duplicates and firming up Ideas.
-        Reports only what is new; apply_review applies it. Merges, splits and Topics come later."""
+    def review(self, at: datetime, namer=None, confirm=None) -> ReviewReport:
+        """The hourly review. Applied without asking: item duplicates and firming up Ideas. Proposed to the user:
+        topics, Idea and people merges, and relations that replace or contradict durable claims.
+        `namer(statements) -> title` names a topic (default: shared words); `confirm(a, b) -> bool` checks a
+        merge of two Idea statements (default: similarity alone). Reports only what is new."""
         report = ReviewReport(at)
+        report.proposals = self._propose(at, namer, confirm)
         visible = sorted((i for i in self._items.values() if not i.hidden and i.duplicate_of is None),
                          key=lambda i: (i.source.event_time, i.item_id))
         claims: dict[str, list[ClaimNode]] = {}
@@ -510,6 +539,67 @@ class MemoryStore:
             if idea.status == "provisional" and len(authors) >= 2:
                 report.firmed.append(idea.idea_id)
         return report
+
+    def _propose(self, at: datetime, namer, confirm) -> list:
+        known = {pid for pid, st in self.proposals.items() if st.status != "stale"}
+        pending_topic_claims = {cid for st in self.proposals.values()
+                                if st.proposal.kind == "topic" and st.status == "proposed"
+                                for cid in st.proposal.payload["claims"]}
+        out = []
+
+        def add(kind, payload, why):
+            p = proposal_stage.make(self, kind, payload, why, at)
+            if p.proposal_id not in known and p.fingerprint is not None:
+                known.add(p.proposal_id)
+                out.append(p)
+
+        ideas = sorted(self._ideas.values(), key=lambda i: (i.valid_at, i.idea_id))
+        vectors = dict(zip((i.idea_id for i in ideas), embed.vectors([i.title for i in ideas])))
+        related = {frozenset((self._claims[e.src].idea_id, self._claims[e.dst].idea_id))
+                   for e in self._relations if e.type in {"CONTRADICTS", "ELABORATES"}
+                   and e.src in self._claims and e.dst in self._claims}
+
+        # Ideas that say the same thing in other words: the ingest relator missed them.
+        for n, a in enumerate(ideas):
+            for b in ideas[n + 1:]:
+                if frozenset((a.idea_id, b.idea_id)) in related:
+                    continue
+                similar = embed.cosine(vectors[a.idea_id], vectors[b.idea_id])
+                if similar >= IDEA_MERGE and (confirm is None or confirm(a.title, b.title)):
+                    add("merge_ideas", {"claims": [a.canonical_claim_id, b.canonical_claim_id]},
+                        f"The two statements are close (similarity {similar:.2f}) and nothing relates them yet.")
+
+        # Topics from Ideas no topic holds yet.
+        in_topics = set().union(*(t.ideas | t.attached for t in self._topics.values())) if self._topics else set()
+        loose = [i for i in ideas if i.idea_id not in in_topics]
+        for group in cluster.components([i.idea_id for i in loose], [vectors[i.idea_id] for i in loose]):
+            members = [self._ideas[i] for i in group]
+            claims = sorted(i.canonical_claim_id for i in members)
+            sources = {self._items[self._claims[cid].item_id].source_key for i in members for cid in i.members
+                       if not self._items[self._claims[cid].item_id].hidden} - {None}
+            if len(members) < cluster.TOPIC_MIN_IDEAS or len(sources) < cluster.TOPIC_MIN_SOURCES \
+                    or pending_topic_claims & set(claims):
+                continue
+            statements = [i.title for i in members]
+            add("topic", {"claims": claims, "title": (namer or cluster.title)(statements)},
+                f"{len(members)} Ideas from {len(sources)} sources sit close together.")
+
+        # People who are probably one person: same surname, compatible first names, something in common.
+        people = sorted(self._people.values(), key=lambda p: p.person_id)
+        for n, a in enumerate(people):
+            for b in people[n + 1:]:
+                if _same_person(a.name, b.name) and ((a.authored | a.mentioned_in) & (b.authored | b.mentioned_in)
+                                                     or _affiliation(a) and _affiliation(a) == _affiliation(b)):
+                    absorbed, kept = sorted((a, b), key=lambda p: (len(p.name), p.person_id))
+                    add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
+                        f"{absorbed.name} and {kept.name} share a surname and appear together.")
+
+        # Replacing or contradicting a durable claim is live already; the user confirms or rejects it.
+        for e in sorted(self._relations, key=lambda e: (e.src, e.dst)):
+            if e.type in {"SUPERSEDES", "CONTRADICTS"} and e.dst in self._claims \
+                    and self._claims[e.dst].durability in CONFIRM_DURABILITY:
+                add("relation", {"claims": [e.src, e.dst], "type": e.type}, e.rationale or f"{e.type} by the relator.")
+        return out
 
     # --- graph.query: lexical baseline ---
 

@@ -13,7 +13,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
-DIMENSIONS = 1024
+DIMENSIONS = 512
 STOP = frozenset("""a an and are as at be by for from has have in is it its of on or that the this to was were will
 with not no but if than then so can may also into about over under more most less their there these those which who
 what when where how all any each other such only own same very just""".split())

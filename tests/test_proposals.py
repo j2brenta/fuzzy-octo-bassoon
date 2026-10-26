@@ -131,3 +131,78 @@ def test_a_proposal_about_a_held_back_item_is_unplaced_in_a_strict_rebuild(tmp_p
 def test_atomic_write_leaves_no_temporary_files(tmp_path):
     vault.atomic_write(tmp_path / "a" / "b.json", "{}")
     assert [p.name for p in (tmp_path / "a").iterdir()] == ["b.json"]
+
+
+# --- the review's proposals ---
+
+TOPICAL = {
+    "h1": ("Ann Lee", "Semantic entropy detects hallucinations in large language models."),
+    "h2": ("Bo Chen", "Hallucination detection improves when language models measure semantic uncertainty."),
+    "h3": ("Cy Ito", "Large language models hallucinate less with retrieval grounding."),
+    "h4": ("Ann Lee", "Detecting hallucinations with entropy probes is cheap at inference time."),
+    "m1": ("Di Roy", "Retrieval grounding reduces hallucination rates in chat assistants."),
+    "m2": ("Ed Fox", "Grounding chat assistants with retrieval lowers their hallucination rates."),
+    "g1": ("Fay Wu", "H100 GPU rental prices fell below two dollars per hour."),
+    "g2": ("Gus Ma", "Cloud GPU rental prices keep falling as H100 supply grows."),
+    "g3": ("Fay Wu", "Spot GPU rental prices are lowest on weekends."),
+}
+
+
+def topical_vault(path):
+    records = [item(f"item-{cid}", 1 + n, [(cid, text)], author=author)
+               for n, (cid, (author, text)) in enumerate(TOPICAL.items())]
+    records.append(item("item-gal", 20, [("y1", "Uncertainty estimates flag made-up answers.")], author="Y. Gal",
+                        entities=[("Yarin Gal", "person")]))
+    return write(path, *records)
+
+
+def review(v, **hooks):
+    with vault.lock(v):
+        report = vault.replay(v, include_unreviewed=True).review(AT, **hooks)
+        vault.save_review(v, report)
+    return report
+
+
+def by_kind(report):
+    out = {}
+    for p in report.proposals:
+        out.setdefault(p.kind, []).append(p)
+    return out
+
+
+def test_the_review_proposes_topics_merges_and_people(tmp_path):
+    v = topical_vault(tmp_path)
+    kinds = by_kind(review(v))
+    assert [p.payload["claims"] for p in kinds["merge_ideas"]] == [["m1", "m2"]]
+    topics = sorted(sorted(p.payload["claims"]) for p in kinds["topic"])
+    assert topics == [["g1", "g2", "g3"], ["h1", "h2", "h3", "h4", "m1", "m2"]]
+    assert any("Gpu" in p.payload["title"] or "GPU" in p.payload["title"] for p in kinds["topic"])
+    assert [p.payload["people"] for p in kinds["merge_people"]] == [["person:y-gal", "person:yarin-gal"]]
+    assert review(v).proposals == []  # nothing new the second time
+
+
+def test_a_namer_and_a_confirmer_are_used(tmp_path):
+    v = topical_vault(tmp_path)
+    kinds = by_kind(review(v, namer=lambda statements: f"Topic of {len(statements)}", confirm=lambda a, b: False))
+    assert "merge_ideas" not in kinds
+    assert sorted(p.payload["title"] for p in kinds["topic"]) == ["Topic of 3", "Topic of 6"]
+
+
+def test_an_accepted_topic_takes_new_close_ideas_provisionally(tmp_path):
+    v = topical_vault(tmp_path)
+    gpu = next(p for p in review(v).proposals if p.kind == "topic" and "g1" in p.payload["claims"])
+    vault.decide(v, gpu.proposal_id, "accept", token(v, gpu.proposal_id), at=AT)
+    write(v, item("item-g4", 25, [("g4", "GPU rental prices for H100 nodes dropped again.")], author="Hal Oh"))
+    store = vault.replay(v)
+    [topic] = store.topics()
+    assert len(topic.ideas) == 3 and topic.attached == {idea_of(store, "g4")}
+    # The accepted topic's Ideas are not clustered again.
+    assert all("g1" not in p.payload["claims"] for p in review(v).proposals if p.kind == "topic")
+
+
+def test_a_supersession_of_a_reference_claim_asks_for_confirmation(tmp_path):
+    old = item("spec", 3, [("s1", "The API rate limit is 100 requests per minute.")], durability="reference")
+    new = item("spec2", 9, [("s2", "The API rate limit is 300 requests per minute.")], durability="reference")
+    v = write(tmp_path, old, new)
+    [p] = [p for p in review(v).proposals if p.kind == "relation"]
+    assert p.payload == {"claims": ["s2", "s1"], "type": "SUPERSEDES"}

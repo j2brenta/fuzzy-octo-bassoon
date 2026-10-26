@@ -78,12 +78,14 @@ def main(argv=None) -> int:
         return 0
     if args.command == "review":
         # Like relate, the review sees unreviewed items too, so its file serves either kind of rebuild.
-        report = vault.replay(args.vault, include_unreviewed=True).review(at)
-        if not (report.item_duplicates or report.firmed):
-            print("review: nothing new")
-            return 0
-        path = vault.save_review(args.vault, report)
-        print(f"review: {len(report.item_duplicates)} item duplicates, {len(report.firmed)} Ideas firmed; wrote {path.name}")
+        with vault.lock(args.vault):
+            report = vault.replay(args.vault, include_unreviewed=True).review(at)
+            if not (report.item_duplicates or report.firmed or report.proposals):
+                print("review: nothing new")
+                return 0
+            path = vault.save_review(args.vault, report)
+        print(f"review: {len(report.item_duplicates)} item duplicates, {len(report.firmed)} Ideas firmed, "
+              f"{len(report.proposals)} new proposals; wrote {path.name}")
         return 0
 
     overrides = vault.merged_overrides(args.vault)
