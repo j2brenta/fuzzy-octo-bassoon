@@ -105,8 +105,13 @@ def subject_of(claim: Claim, entities: list[Entity]) -> tuple[str, str | None]:
     return "world", None
 
 
+def _numbers(text: str) -> set[str]:
+    return {w for w in words(text) if any(ch.isdigit() for ch in w)}
+
+
 class LexicalRelator:
-    """Today's baseline: a near-identical statement is SAME, anything else NONE. No network."""
+    """The offline baseline: a near-identical statement is SAME, or UPDATES when only its numbers differ
+    (a new time, figure or version); anything else is NONE."""
     name = "lexical"
     prompt_version = "lexical-v1"
     model_name = None
@@ -116,12 +121,16 @@ class LexicalRelator:
         for claim in claims:
             subject, subject_name = subject_of(claim, item.entities)
             mine = set(words(claim.statement))
-            same = next((c for c in candidates[claim.claim_id]
+            near = next((c for c in candidates[claim.claim_id]
                          if jaccard(mine, set(words(c.statement))) >= CLAIM_SIMILARITY), None)
-            out.append(Verdict(claim_id=claim.claim_id, subject=subject, subject_name=subject_name,
-                               label="SAME" if same and subject == "world" else "NONE",
-                               target_id=same.claim_id if same and subject == "world" else None,
-                               rationale="Near-identical statement." if same and subject == "world" else ""))
+            if near is None or subject != "world":
+                out.append(Verdict(claim_id=claim.claim_id, subject=subject, subject_name=subject_name))
+            elif _numbers(claim.statement) != _numbers(near.statement):
+                out.append(Verdict(claim_id=claim.claim_id, label="UPDATES", target_id=near.claim_id,
+                                   rationale="Near-identical statement with different numbers."))
+            else:
+                out.append(Verdict(claim_id=claim.claim_id, label="SAME", target_id=near.claim_id,
+                                   rationale="Near-identical statement."))
         return out
 
 

@@ -156,12 +156,14 @@ def _grouping_checks(store, groups: list[set[str]]) -> list[Check]:
 
 
 def _relation_precision(store, expectations, seed_item, groups) -> Check:
-    """Of the distinct (seed, relation, seed) triples the graph found, the share the manifest expects. A relation
-    between two claims labelled into the same Idea also counts as expected."""
+    """Of the distinct (seed, relation, seed) triples the graph found, the share the manifest expects. Also
+    expected: a relation between two claims labelled into the same Idea, and one onto an item that the manifest
+    says duplicates the expected target (a correction supersedes the repost of what it corrects too)."""
     seed_of = {item_id: seed_id for seed_id, item_id in seed_item.items()}
     claim_item = {c.claim.claim_id: c.item_id for c in store.claims(hidden=True)}
     expected = {(e.seed_id, rtype, target) for e in expectations for rtype, target in e.relations}
     same_group = {frozenset(p) for g in groups for p in combinations(g, 2)}
+    original_of = {e.seed_id: target for e in expectations for rtype, target in e.relations if rtype == "DUPLICATES"}
     found, right = set(), set()
     for e in store.edges():
         if e.type not in {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}:
@@ -171,7 +173,8 @@ def _relation_precision(store, expectations, seed_item, groups) -> Check:
             continue
         triple = (a, e.type, b)
         found.add(triple)
-        if triple in expected or frozenset((e.src, e.dst)) in same_group:
+        if (triple in expected or frozenset((e.src, e.dst)) in same_group
+                or (a, e.type, original_of.get(b)) in expected):
             right.add(triple)
     if not found:
         return Check(CORPUS, "relation precision", 1.0, None, None)

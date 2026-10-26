@@ -178,6 +178,7 @@ def test_demo_trio_forms_one_idea_with_the_correction_current(order):
     assert idea.canonical_claim_id == "c16" and idea.title.startswith("The demo workshop starts at 16:00")
     claims = {c.claim.claim_id: c for c in store.claims(hidden=True)}
     assert claims["c16"].superseded_by is None and claims["o14"].superseded_by == "c16"
+    assert claims["r14"].superseded_by == "c16"  # the update replaces the repost's sighting too
     assert [c.claim.claim_id for c in store.chain("o14")] == ["o14", "c16"]
     assert "original" not in {i.item_id for i in store.items()} and store.held_back["original"] == "skipped by triage"
     assert store.item("repost").duplicate_of == "original"
@@ -243,8 +244,9 @@ def test_eval_scores_groupings_pairwise_and_relation_precision():
     checks = {c.name: c for c in evaluate.evaluate(store, expectations, extractions, groupings)}
     assert checks["ideas pairwise recall"].got == 1.0
     assert checks["ideas pairwise precision"].got == 0.33  # "previously" joined the Idea through SAME
-    # correction DUPLICATES original (the "previously" claim) is not in the manifest.
-    assert checks["relation precision"].got.startswith("0.67") and not checks["relation precision"].ok
+    # correction SUPERSEDES repost counts: the repost duplicates the original. The "previously" claim's
+    # correction DUPLICATES original is not in the manifest.
+    assert checks["relation precision"].got == "0.75 (unexpected: correction DUPLICATES original)"
     assert checks["SUPERSEDES original"].ok and checks["DUPLICATES original"].ok
 
 
@@ -317,3 +319,55 @@ def test_seed_people_list_2_duplicates_list_1_and_survives_review_and_rebuild(tm
     vault.save_review(tmp_path / "seed", report)
     again = vault.replay(tmp_path / "seed", [], include_unreviewed=True)
     assert again.item(second.item_id).duplicate_of == first.item_id
+
+
+# --- Phase 7: views and the health report ---
+
+def trio_vault(tmp_path):
+    bio = item("bio", 10, [("ada1", "Ada Lovelace wrote the first published program.")], author="Someone",
+               entities=[("Ada Lovelace", "person")])
+    texts = {**TEXT, "bio": "Ada Lovelace wrote the first published program."}
+    for ex in (ORIGINAL, REPOST, CORRECTION, bio):
+        for folder in ("processed", "raw"):
+            (tmp_path / folder).mkdir(exist_ok=True)
+        (tmp_path / "processed" / f"{ex.item_id}.json").write_text(ex.model_dump_json())
+        (tmp_path / "raw" / f"{ex.item_id}.json").write_text(json.dumps({"text": texts[ex.item_id]}))
+    for relation in TRIO_VERDICTS.values():
+        vault.save_relation(tmp_path, relation)
+    return tmp_path
+
+
+def test_idea_note_shows_members_chain_and_sources(tmp_path):
+    v = trio_vault(tmp_path)
+    store = vault.replay(v)
+    vault.export(store, v, datetime(2026, 10, 20, tzinfo=timezone.utc))
+    [idea] = [i for i in store.ideas() if "c16" in i.members]
+    note = (v / "wiki" / "ideas" / f"{idea.idea_id.replace(':', '-')}.md").read_text()
+    assert note.splitlines()[note.splitlines().index("---", 1) + 1] == f"# {idea.title}"
+    assert "starts at 16:00 UTC on 25 October 2026. ([[" in note and "; current)" in note
+    assert "(a held-back item, 2026-10-15; superseded)" in note
+    chain = note.split("## Chain", 1)[1]
+    assert chain.index("14:00 UTC on 25 October 2026. (2026-10-15)") < chain.index("16:00 UTC")
+    assert "## Sources" in note
+    item_note = next((v / "wiki" / "items").glob("*Correction*.md")).read_text()
+    assert f"[[{idea.idea_id.replace(':', '-')}]]" in item_note
+
+
+def test_people_notes_list_profile_facts_with_sources(tmp_path):
+    v = trio_vault(tmp_path)
+    vault.export(vault.replay(v), v, datetime(2026, 10, 20, tzinfo=timezone.utc))
+    note = (v / "wiki" / "people" / "Ada Lovelace.md").read_text()
+    assert "## Profile\n\n- Ada Lovelace wrote the first published program. ([[" in note
+
+
+def test_health_report_counts_ideas_by_status_and_conflict():
+    from refresher import km
+    store = MemoryStore()
+    store.apply(item("base", 10, [("b1", "Model X has a 128k context window.")], author="Alice"), "")
+    store.apply(item("later", 12, [("s1", "Model X has a 128k token context window."),
+                                   ("x1", "Model X has a 32k context window.")], author="Bob"), "",
+                verdicts("later", ("s1", "SAME", "b1"), ("x1", "CONFLICTS", "b1")))
+    store.apply_review(store.review(datetime(2026, 10, 26, tzinfo=timezone.utc)))
+    report = km.run(store, datetime(2026, 10, 26, tzinfo=timezone.utc))
+    assert report.ideas == {"firm": 1} and report.conflicted_ideas == ["Model X has a 128k context window."]
+    assert "1 Ideas: 1 firm, 0 provisional, 1 with conflicts." in km.render(report, store)

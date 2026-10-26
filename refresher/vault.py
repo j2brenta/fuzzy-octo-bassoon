@@ -7,7 +7,7 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     graph-reviews/<time>.json   the graph review's decisions, written by `refresher review` and replayed
                                 (reviews/ is ingestion's extraction reviews)
     overrides.yaml              the user's word: durability, trust, votes
-    wiki/items|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
+    wiki/items|ideas|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
 """
 import json
@@ -162,8 +162,11 @@ def _write_note(path: Path, meta: dict, body: str, written: set[Path]) -> None:
 
 
 def note_names(store: GraphStore) -> dict[str, str]:
-    """Stable, readable, unique note names for items, people and sources, used as wikilink targets."""
+    """Stable, readable, unique note names for items, Ideas, people and sources, used as wikilink targets.
+    An Idea's title can change as members join, so its note is named after its id."""
     names = {}
+    for idea in store.ideas():
+        names[idea.idea_id] = idea.idea_id.replace(":", "-")
     for item in store.items():
         names[item.item_id] = _safe(f"{item.source.event_time:%Y-%m-%d} {item.title[:60]} {item.item_id[:6]}")
     for p in store.people():
@@ -209,7 +212,8 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
         for s in claims:
             c = s.node
             flags = " · noise" if s.noise else ""
-            lines.append(f"- **{c.claim.kind} · {c.durability} · {s.freshness:.2f} {s.band}{flags}** {c.claim.statement}")
+            where = (f" · {link(c.idea_id)}" if c.idea_id else f" · about {link(c.subject_id)}" if c.subject_id else "")
+            lines.append(f"- **{c.claim.kind} · {c.durability} · {s.freshness:.2f} {s.band}{flags}** {c.claim.statement}{where}")
             for label, other, why in rel.get(c.claim.claim_id, []):
                 lines.append(f"    - {label} a claim in {link(claim_item.get(other, other))}: {why}")
         mentions = sorted({e.dst for e in store.edges() if e.src == item.item_id and e.type == "MENTIONS"})
@@ -225,8 +229,48 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                 "review_status": item.review_status, "user_durability": None}
         _write_note(wiki / "items" / f"{names[item.item_id]}.md", meta, "\n".join(lines), written)
 
+    all_claims = {c.claim.claim_id: c for c in store.claims(hidden=True)}
+    hidden_items = {i.item_id for i in store.items(hidden=True) if i.hidden}
+
+    def where(node):
+        return "a held-back item" if node.item_id in hidden_items else link(node.item_id)
+
+    for idea in sorted(store.ideas(), key=lambda i: i.idea_id):
+        members = sorted((all_claims[cid] for cid in idea.members),
+                         key=lambda c: (c.clock_start, c.claim.claim_id))
+        sources = sorted({store.item(c.item_id).source_key for c in members if c.item_id not in hidden_items} - {None})
+        lines = [f"# {idea.title}", "",
+                 f"{idea.status} · {idea.durability} · latest {idea.valid_at:%Y-%m-%d} · "
+                 f"{len(members)} claims from {len({c.item_id for c in members})} items", "", "## Claims", ""]
+        for c in members:
+            s = scores.get(c.claim.claim_id)
+            flags = [f for f, on in (("current", c.claim.claim_id == idea.canonical_claim_id),
+                                     ("superseded", c.superseded_by), ("noise", s and s.noise)) if on]
+            lines.append(f"- {c.claim.statement} ({where(c)}, {store.item(c.item_id).source.event_time:%Y-%m-%d}"
+                         + (f"; {', '.join(flags)}" if flags else "") + ")")
+        chains = [store.chain(c.claim.claim_id) for c in members
+                  if c.superseded_by and not any(e.type == "SUPERSEDES" and e.src == c.claim.claim_id
+                                                 for e in store.edges())]
+        if chains:
+            lines += ["", "## Chain", ""]
+            lines += [" → ".join(f"{n.claim.statement} ({store.item(n.item_id).source.event_time:%Y-%m-%d})"
+                                 for n in chain) for chain in chains]
+        conflicts = [e for e in store.edges() if e.type == "CONTRADICTS" and e.src in idea.members]
+        if conflicts:
+            lines += ["", "## Conflicts", ""]
+            lines += [f"- {all_claims[e.src].claim.statement} contradicts {all_claims[e.dst].claim.statement}"
+                      for e in conflicts]
+        if sources:
+            lines += ["", "## Sources", "", ", ".join(link(k) for k in sources)]
+        meta = {"type": "idea", "idea_id": idea.idea_id, "status": idea.status, "durability": idea.durability,
+                "canonical_claim_id": idea.canonical_claim_id, "members": len(members)}
+        _write_note(wiki / "ideas" / f"{names[idea.idea_id]}.md", meta, "\n".join(lines), written)
+
     for p in sorted(store.people(), key=lambda p: p.person_id):
         lines = [f"# {p.name}", "", f"Trust {store.trust(p.person_id):.2f} · enrichment {p.enrichment_status}"]
+        facts = sorted((all_claims[cid] for cid in p.facts), key=lambda c: (c.clock_start, c.claim.claim_id))
+        if facts:
+            lines += ["", "## Profile", ""] + [f"- {c.claim.statement} ({where(c)})" for c in facts]
         for head, ids in (("Wrote", p.authored), ("Mentioned in", p.mentioned_in)):
             if ids:
                 lines += ["", f"## {head}", ""] + [f"- {link(i)}" for i in sorted(ids, key=lambda i: names[i])]
@@ -242,7 +286,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                     "channel": s.channel}, "\n".join(lines), written)
 
     # Remove generated notes that no longer exist in the store, unless the user wrote in them.
-    for folder in ("items", "people", "sources"):
+    for folder in ("items", "ideas", "people", "sources"):
         for path in (wiki / folder).glob("*.md") if (wiki / folder).exists() else []:
             if path not in written and not path.read_text(encoding="utf-8").split(MARK, 1)[-1].strip():
                 path.unlink()
@@ -252,6 +296,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     health.write_text(km.render(report, store), encoding="utf-8")
     index = ["# Knowledge base", "", f"Built {at:%Y-%m-%d %H:%M %Z}. See [[health]].", ""]
     for head, keys in (("Items", [i.item_id for i in sorted(store.items(), key=lambda i: i.source.event_time, reverse=True)]),
+                       ("Ideas", [i.idea_id for i in sorted(store.ideas(), key=lambda i: (-len(i.members), i.idea_id))]),
                        ("People", sorted((p.person_id for p in store.people()), key=lambda k: names[k])),
                        ("Sources", sorted((s.key for s in store.sources()), key=lambda k: names[k]))):
         index += [f"## {head}", ""] + [f"- {link(k)}" for k in keys] + [""]

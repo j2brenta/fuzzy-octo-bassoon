@@ -237,16 +237,21 @@ class MemoryStore:
             if scored and -scored[0][0] >= REPOST_CLAIM_SIMILARITY and scored[0][1] in parent:
                 redirect[node.claim.claim_id] = scored[0][1]
 
-        related = set()
+        links = []  # (node, label, target, rationale), SAME first so the update pass sees whole SAME classes
         for node in world:
             cid = node.claim.claim_id
             if cid in redirect:
-                label, target, why = "SAME", redirect[cid], "Repost of the original item."
-            else:
-                verdict = self._verdicts.get(cid)
-                if verdict is None or verdict.label == "NONE":
-                    continue
-                label, target, why = verdict.label, redirect.get(verdict.target_id, verdict.target_id), verdict.rationale
+                links.append((node, "SAME", redirect[cid], "Repost of the original item."))
+                continue
+            verdict = self._verdicts.get(cid)
+            if verdict is not None and verdict.label != "NONE":
+                links.append((node, verdict.label, redirect.get(verdict.target_id, verdict.target_id), verdict.rationale))
+        links.sort(key=lambda link: link[1] != "SAME")
+
+        same = {cid: {cid} for cid in parent}  # claims that say the same thing, through SAME links
+        related = set()
+        for node, label, target, why in links:
+            cid = node.claim.claim_id
             if target not in parent or target == cid or frozenset((cid, target)) in related:
                 continue  # the target is not placed (yet), is a profile fact, or the pair is already related
             related.add(frozenset((cid, target)))
@@ -257,10 +262,21 @@ class MemoryStore:
                 self._relations.append(Edge(cid, "ELABORATES", target, why, at))
                 continue
             parent[find(cid)] = find(target)
-            kind = EDGE_FOR[label]
-            if label == "SAME" and not self._independent(node, other):
-                kind = "DUPLICATES"
-            self._relations.append(Edge(later.claim.claim_id, kind, first.claim.claim_id, why, at))
+            if label == "SAME":
+                kind = "SUPPORTS" if self._independent(node, other) else "DUPLICATES"
+                self._relations.append(Edge(later.claim.claim_id, kind, first.claim.claim_id, why, at))
+                merged = same[cid] | same[target]
+                for member in merged:
+                    same[member] = merged
+            elif label == "UPDATES":
+                # The newer claim replaces every earlier sighting of the older statement, not just the one judged.
+                new = later.claim.claim_id
+                for old in sorted(same[first.claim.claim_id]):
+                    if old != new and self._order(self._claims[old]) < self._order(later):
+                        related.add(frozenset((new, old)))
+                        self._relations.append(Edge(new, "SUPERSEDES", old, why, at))
+            else:
+                self._relations.append(Edge(later.claim.claim_id, EDGE_FOR[label], first.claim.claim_id, why, at))
 
         groups: dict[str, list[str]] = {}
         for cid in parent:
@@ -450,15 +466,17 @@ class MemoryStore:
         return sorted((self._claims[cid] for cid in found if cid in self._claims), key=lambda c: c.claim.claim_id)
 
     def chain(self, claim_id: str) -> list[ClaimNode]:
-        older = {e.src: e.dst for e in self.edges() if e.type == "SUPERSEDES"}
-        newer = {v: k for k, v in older.items()}
-        first = claim_id
-        while first in older:
-            first = older[first]
-        out = [first]
-        while out[-1] in newer:
-            out.append(newer[out[-1]])
-        return [self._claims[cid] for cid in out if cid in self._claims]
+        if claim_id not in self._claims:
+            return []
+        out = [self._claims[claim_id]]
+        while out[-1].superseded_by and self._claims[out[-1].superseded_by] not in out:
+            out.append(self._claims[out[-1].superseded_by])
+        while True:  # an update can replace several sightings; walk back through the earliest
+            older = sorted((c for c in self._claims.values() if c.superseded_by == out[0].claim.claim_id),
+                           key=self._order)
+            if not older or older[0] in out:
+                return out
+            out.insert(0, older[0])
 
     def people_for(self, claim_ids: Iterable[str]) -> list[PersonNode]:
         pids = set()
