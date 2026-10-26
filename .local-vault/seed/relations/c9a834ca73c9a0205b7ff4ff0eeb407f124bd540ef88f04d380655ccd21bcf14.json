@@ -3,133 +3,75 @@
   "item_id": "c9a834ca73c9a0205b7ff4ff0eeb407f124bd540ef88f04d380655ccd21bcf14",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v1",
+  "prompt_version": "relate-v2",
   "candidates": {
-    "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c": [
-      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1"
-    ],
-    "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd": [
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2"
-    ],
-    "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96"
-    ],
-    "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254": [
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b",
-      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60"
-    ],
+    "4b9da1d463244f5f84d9f3cb80726abfcee0d07c5a9094085fefa2d563567a9c": [],
+    "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd": [],
+    "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40": [],
+    "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254": [],
     "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01": [
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b"
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
     ],
-    "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278": [
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e"
-    ],
+    "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278": [],
     "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f": [
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c",
-      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60"
+      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e"
     ],
     "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b": [],
     "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
+    ],
+    "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db": [
       "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
-    ],
-    "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db": [],
-    "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af": [
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184"
-    ],
-    "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13": [
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
-    "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184"
-    ],
-    "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29": [
-      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650"
-    ],
-    "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b"
-    ],
-    "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
-    ],
-    "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
-      "338c13f983b8a296e1d1a06a9f50c205d20b3a73f21dd6d75edc77334ebdabc8"
-    ],
-    "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
-      "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273"
-    ],
-    "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034": [
       "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
     ],
-    "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
+    "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
     ],
-    "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036": [
-      "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
+    "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13": [],
+    "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988": [
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
+    ],
+    "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6": [],
+    "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087": [],
+    "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d": [
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e": [
       "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
     ],
+    "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034": [],
+    "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
+    "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036": [
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d"
+    ],
     "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e"
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
     ],
     "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c": [
       "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8"
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b"
     ],
     "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863": [
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
+      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
     ],
-    "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37": [
-      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b"
-    ],
+    "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37": [],
     "c687e0f2a9972027f40b6943e214311cd122158e6d870719638c9ebb59d3eea1": [
       "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
+      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
+      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
       "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
     ],
-    "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833": [
-      "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ]
+    "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833": []
   },
   "verdicts": [
     {
@@ -138,7 +80,9 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Jack Lindsey leading Anthropic's model psychiatry team."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "1226269fc20ca48a66d78d73c84d53c192a3f0410303f90e49ccb6cef7aaaebd",
@@ -146,7 +90,9 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Jack Lindsey's paper testing models' internal state observation via concept injection."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "396f68ec80a07610ac0499a4e053f8cb3081f1b085cbf30485c69dea51342b40",
@@ -154,7 +100,9 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Jack Lindsey's conclusion on limited functional introspective awareness."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "4922740859332c8b2fd74843ab964db103ecbc5b9508a8c7b03ec0ee64332254",
@@ -162,7 +110,9 @@
       "subject_name": "Chris Olah and Josh Batson",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Chris Olah and Josh Batson working on circuit-tracing research that found the \"can't answer\" default pathway."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "e2f4474ec4aec1e1bafb8c10c478d7e23bb1e5014978fa31deb3c8e1b51aeb01",
@@ -170,7 +120,9 @@
       "subject_name": "Chris Olah and Josh Batson",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about their publications being the main source for mechanistic explanations of hallucination."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "e8d8b60f7d625d8f559943d6b465e3571c6aef57bc6b06faf64484a21e014278",
@@ -178,15 +130,19 @@
       "subject_name": "Sam Marks",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Sam Marks working on internal truth representation and hidden objective auditing."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "64c8a6915d7d2031e03c7c98fc811df191f540b4628b13082dc70e89702e7b1f",
       "subject": "person",
       "subject_name": "Sebastian Farquhar and Yarin Gal",
-      "label": "ADDS_DETAIL",
-      "target_id": "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "rationale": "Candidate k9 states the semantic entropy work is the best-known method for detecting confabulations by sampling multiple answers, matching the claim but lacking detail about lead authors and year."
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "e93804397833953a2025097deda2b611012fcc6d4015d9ae165fafacc65a495b",
@@ -194,15 +150,19 @@
       "subject_name": "Yarin Gal",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidates provided for the claim about Yarin Gal leading the OATML group at Oxford."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "8262b090acc3c23b5a61bcf5f3f189543585582dd05844a42a6617f721cdb911",
       "subject": "person",
       "subject_name": "Adam Tauman Kalai",
-      "label": "ADDS_DETAIL",
-      "target_id": "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "rationale": "Candidate k13 states the paper argues that training and evaluation reward guessing over admitting uncertainty, matching the claim but missing lead author and year."
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "27e0ae773ede8c19b2d38cf6a488fdc08ff45e59f425c9df9fd22cb4015cb2db",
@@ -210,7 +170,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Owain Evans' work on models knowing what they know and describing learned behaviors."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "00091b1861e70b6a4e3c54b15bdd0dd3b89e2f6ac65fcef3eb34a3850c2290af",
@@ -218,7 +180,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Owain Evans co-authoring early work on teaching models to express uncertainty and leading Truthful AI."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "7ad52b7b9b4312b1e7f369964cced8122ac16ed4cb30862729f1cb796a235f13",
@@ -226,7 +190,9 @@
       "subject_name": "Stephen Fleming",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Stephen Fleming being a leading neuroscientist of human metacognition and author of \"Know Thyself.\""
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "6f876ba3e330a7d87901f655dbce2ae286311a7e1177a404cf980193cb3bd988",
@@ -234,7 +200,9 @@
       "subject_name": "Stephen Fleming",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Stephen Fleming applying metacognition research to AI and clarifying the calibration-versus-discrimination distinction."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "9d92531fd0fbbabf4919f31c804f10008947fd6827585def8e1abd4fca6dfd29",
@@ -242,31 +210,39 @@
       "subject_name": "Arvind Narayanan and Sayash Kapoor",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Arvind Narayanan and Sayash Kapoor writing the agent reliability paper that borrowed methods from nuclear and aviation safety."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "e4cd6ab57949d225461f3b248c0a715689303b7b0323a6648a6d1599ddace8f6",
-      "subject": "world",
-      "subject_name": null,
+      "subject": "person",
+      "subject_name": "Arvind Narayanan and Sayash Kapoor",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about the Princeton newsletter being skeptical and data-driven, a good counterweight to hype."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "cbc502dff3d1221fd8f2679c4f720a5fb518be7c4c5d8711c654776fc765f087",
       "subject": "organization",
-      "subject_name": "METR",
+      "subject_name": "METR (founded by Beth Barnes)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about METR measuring how long a task agents can complete autonomously."
+      "abstention": null,
+      "context": null,
+      "rationale": "Organization fact, default NONE."
     },
     {
       "claim_id": "316196d8ad8f8c83814261a3a1a98a643698d80634f7a8208310a9bcd5deb06d",
       "subject": "organization",
-      "subject_name": "METR",
+      "subject_name": "METR (founded by Beth Barnes)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about METR's reports being a key reference for the reliability-over-horizon question."
+      "abstention": null,
+      "context": null,
+      "rationale": "Organization fact, default NONE."
     },
     {
       "claim_id": "82dd41bb098b9f76e3dfc14f89c858e1b49593d38fd0e29c398e7074596e3a5e",
@@ -274,7 +250,9 @@
       "subject_name": "Andrej Karpathy",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Andrej Karpathy popularizing the \"march of nines\" framing and writing about moving from demos to products."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "77b80ad26ec371afbf601b65b21c00c38dd27c618b419b3cf646a408ee497034",
@@ -282,7 +260,9 @@
       "subject_name": "Azalia Mirhoseini",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Azalia Mirhoseini co-leading the LLM-as-a-Verifier work on scaling verification as its own axis."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "044239bb223f0cb9359a69eead84d420f4e3d4082f9547529b49e1a4d1cc14ec",
@@ -290,7 +270,9 @@
       "subject_name": "Shreya Shankar",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Shreya Shankar researching LLM pipeline evaluation and the \"Who Validates the Validators?\" paper."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "8ce9cacbc46fc2ee861254cc6561bc3992181652e71e35e53e51357ec2c0a036",
@@ -298,7 +280,9 @@
       "subject_name": "Hamel Husain",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Hamel Husain being a practical voice on building evals for real products via error analysis, trace reading, and failure-check design."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "90bbd8c0b33c3e94b961d64d3545e20981ed5ee63cf8c0b3296635b4aca8a1d3",
@@ -306,7 +290,9 @@
       "subject_name": "Eugene Yan",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Eugene Yan writing accessible, practical pieces on LLM evaluation and production patterns."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "c09f97a97f2b62ed5da9d61c4006a741f0b3d7965e92358461df5ed8a9195d4c",
@@ -314,7 +300,9 @@
       "subject_name": null,
       "label": "SAME",
       "target_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "rationale": "Candidate k15 expresses the same recommendation for a minimal follow set as the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "Both statements recommend the same minimal follow set."
     },
     {
       "claim_id": "509b13a82c47d52366a5d101fac8b139eb380964e2cc0224536563f17ef40863",
@@ -322,7 +310,9 @@
       "subject_name": null,
       "label": "SAME",
       "target_id": "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "rationale": "Candidate k3 repeats the claim verbatim about searching arXiv for certain terms surfacing recent work."
+      "abstention": null,
+      "context": null,
+      "rationale": "Both statements describe searching arXiv for those terms to surface recent work."
     },
     {
       "claim_id": "de52013b1a827abb9288f9cccb2666c65c35d62f2f19e3e009bfe16380fe0e37",
@@ -330,23 +320,30 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Jack Lindsey being arguably the most direct researcher on 'metacognition' in the literal sense."
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     },
     {
       "claim_id": "c687e0f2a9972027f40b6943e214311cd122158e6d870719638c9ebb59d3eea1",
       "subject": "world",
       "subject_name": null,
-      "label": "NONE",
-      "target_id": null,
-      "rationale": "No candidate matches the claim about the combined coverage of Anthropic's interpretability publications, the Princeton newsletter, METR, and Husain and Shankar."
+      "label": "ADDS_DETAIL",
+      "target_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
+      "abstention": null,
+      "context": null,
+      "rationale": "Claim adds detail about what the recommended set covers, beyond the mere recommendation."
     },
     {
       "claim_id": "cd05e377f0618bd22e95478de8f813c82206a65c3a1dbab28c7ecb10d03f8833",
       "subject": "person",
       "subject_name": "Hamel Husain and Shreya Shankar",
-      "label": "ADDS_DETAIL",
-      "target_id": "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
-      "rationale": "Candidate k25 states that Hamel Husain and Shreya Shankar teach together, matching part of the claim but omitting the detail about Husain's writing pairing well with Shankar's research."
+      "label": "NONE",
+      "target_id": null,
+      "abstention": null,
+      "context": null,
+      "rationale": "Person fact, default NONE."
     }
-  ]
+  ],
+  "pool": "69fead7baaa7a71d"
 }

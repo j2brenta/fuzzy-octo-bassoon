@@ -3,160 +3,62 @@
   "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v1",
+  "prompt_version": "relate-v2",
   "candidates": {
-    "16d458bd0e6b17f0f0244b458ff462583263d15f4379abf3e6e8d1ecfac79735": [
-      "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea"
-    ],
+    "16d458bd0e6b17f0f0244b458ff462583263d15f4379abf3e6e8d1ecfac79735": [],
     "020a0e29b612e9d0b900b2bac22fb33e05f09572317d42959e1417f807acc647": [],
     "0e1d2b6cf3802c14bf6b0fedef2f58558ef48d6e2f97d5c04f5088675e0f94aa": [],
     "3f3047bc43acdc5775e20e50185bce876db49906bfa9d35bdf45ad6b83101a1b": [],
-    "35dc97b3b83e68742461099ff044178d894867c7fdebc3639b331b669290c285": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ],
-    "aa183481da8904e81e8bcee8df32107282988972f313c73eb448bebe89e1ed8f": [
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea"
-    ],
-    "26311a69c16d0f9abdff46e60e27b78274fae82fe9f32317c129043a462abb60": [
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60",
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c"
-    ],
-    "808a4e8f402465f076fdf0d05580ce7020d1420914251fe141d8178bd3a3d8c6": [
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b",
-      "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c"
-    ],
-    "9c84895e5c2e4dad6d18ad1f06f968e4600d3a5f352794f7384aa0587e6deda6": [
-      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1"
-    ],
-    "7e99d2e11022dd4be86c5a00bb01de258feb9b5aef75680223586ecc0237df70": [
-      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
-      "17c28e8b9a0e9f1aece0185af52ed27add5eab2f77af611741d8c26b27af08bd",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c"
-    ],
+    "35dc97b3b83e68742461099ff044178d894867c7fdebc3639b331b669290c285": [],
+    "aa183481da8904e81e8bcee8df32107282988972f313c73eb448bebe89e1ed8f": [],
+    "26311a69c16d0f9abdff46e60e27b78274fae82fe9f32317c129043a462abb60": [],
+    "808a4e8f402465f076fdf0d05580ce7020d1420914251fe141d8178bd3a3d8c6": [],
+    "9c84895e5c2e4dad6d18ad1f06f968e4600d3a5f352794f7384aa0587e6deda6": [],
+    "7e99d2e11022dd4be86c5a00bb01de258feb9b5aef75680223586ecc0237df70": [],
     "2aaff14598d29191f25e71e01c3ce3c16d84425604063ae114ce38ec8e654ad6": [
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96",
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a"
-    ],
-    "cc176d0f2bc51722bc29389ef4fca387056378f5fc34e3cd6d4bb14105fb08e6": [
-      "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea"
-    ],
-    "a86eda357ad8462227ad36126e40c0fa1031e0fac79f73985418067f4706aa15": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
-    "3abd1c31e90bb6aab61f962c85c15b68c28c18ca581c5566c9bbf8b94c4299fc": [],
-    "9ba1507e5b0a0e32e401a1afdf6650648c9cd33fee269b1080accd836af02bda": [
-      "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d"
-    ],
-    "366bf75d64cd6017dbd9da75bd319027b427e5b7a4aa5c1509d591738ccb77b0": [
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ],
-    "b4d8978b57d8f3e9504629a5f6d399a652640f3625c2e2e39fbc1877f3845651": [],
-    "eb5a6f47a16ffaf8e7e099a157a6ec3555971531f127d963becf2f9b8c6f464a": [
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
-    "6aac5b5566e9b0cb6b5c519fff82bab73606aa1aacf14652bc723ab331e41098": [],
-    "ef422ccf7ad4b45e33acfcd7ab2f7aa47a04533e03633d9a9b63c8ccccb59f4d": [
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
-    "64f73a95ad82c3fbacfdec6f0889ef83652381484ef8c5f155207f5bf8ff9409": [],
-    "750411ca7cb9f8781f8d3e95956046a046e5ce4cc1a3ffb13f27d243306043bd": [
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
-    ],
-    "bb41b27cd9d6ca6a2a291bf84aab23d50cb753119dcf2235f33f337cdb07f8c8": [
-      "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b"
-    ],
-    "78d08e61b7bd335388d17c635ae6847af87ebfc5f3688d12188042429cb7e857": [
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
-    "8fa2ce60c4ec170dddb3b6b4f705f7d9a02891baa56fb550c94286f733385b59": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
-      "683a6170ded31c618c57da671f72919fb3955a1dcebd6d79be43bb1032c0a9cd"
-    ],
-    "121ff871446275dfc8b56721f77d6a28cf8567db447fb1c929677214d5454678": [
-      "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554"
-    ],
-    "8eecb2c03d2fb7cf9db55e4d39e4a1085e97039411180d1ee4105109b0fdd414": [
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
-    "ca7441b95ecc72503362683eec3e4933ee82ee31a8e64cf03a3e14a49147b342": [
-      "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8"
-    ],
-    "e3ea53ef7a3c3ee134230ee40bff7fc9c5522dad8d0e4f110c40bc425ebcbca1": [
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ],
-    "8f8d5b2bcfd7cda5a3d08727d3a76526fb9f2085e06d55b0ebdd942f488e4a5b": [
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ],
-    "894c7e05df30d38c11b8340dc1c3a472b078b90d7be1b24bbbe1ceadc952ab93": [
-      "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273"
-    ],
-    "2b868b1eab5322bd247043f33cb3f4017dd978f6d28381c360cbafb9389c4b3f": [],
-    "e318f4edd9a92db3640fa8a874463465767ae27106b142387b5b999ebc9b77a6": [],
-    "301b20c040ec348815b28034a06d428f9dade2741f0487a6bf1b85facc7f2690": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "4163c0f0c0ebfde9043fda2d8cc21abe8d661783a77063b3c51bdbd1d444d284"
-    ],
-    "c0b31571be7821a1a83762ce0dc6c2b0b3aaf1adabad703317d58f8901cc3742": [],
-    "5b4a39686fa66a0f29728dd558b2a6d88c60048760d5bd1e8e54b76f609e6956": [
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b"
-    ],
-    "87163b917b05024671ad48daac5ae22660819b8ac311907d036dedd09b72d152": [],
-    "97753711ad7739ea907deb0ccdf226dfb6823b79c8f41c048dc8192f3cb586c1": [],
-    "e2aabd498d0a1b2a235745ab3c08f799ca7fbaf3510070a54a7592837c8d2842": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
-    "4782759d4d6bbe8aa8f831eaf60b7ef203dc5da0914113d88c1e3046d01d8f65": [
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
-    "d061d9878d5d809800450583f125128b30e1c18bf2f48cb3bc0a60ba4fae2979": [],
-    "d1653a6eac1acf5428be0c6681c93efc634fc0e804dd81e670634e34a3bf5606": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
+      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184",
       "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
-    "1e61113b96d7f1874a1365a7bfc535aefb5b56e8fd487e1f747abdb3dee6bf59": [
-      "fffbcc3452f7c092cf2969d41fd90488de9a81ab00c5ccb29769e4a2a2e22ea5",
       "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
     ],
-    "1b72d91d8d16b5c6fa69bf0b3480a5cc86a9b3bba935118d5ec6e82d1bcbea29": [
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8",
-      "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e"
-    ],
-    "8a8b48fff136fd8eb0dcebaab10030e76e3a96d94d2facb9f57336d11982fb46": [
-      "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f"
-    ],
+    "cc176d0f2bc51722bc29389ef4fca387056378f5fc34e3cd6d4bb14105fb08e6": [],
+    "a86eda357ad8462227ad36126e40c0fa1031e0fac79f73985418067f4706aa15": [],
+    "3abd1c31e90bb6aab61f962c85c15b68c28c18ca581c5566c9bbf8b94c4299fc": [],
+    "9ba1507e5b0a0e32e401a1afdf6650648c9cd33fee269b1080accd836af02bda": [],
+    "366bf75d64cd6017dbd9da75bd319027b427e5b7a4aa5c1509d591738ccb77b0": [],
+    "b4d8978b57d8f3e9504629a5f6d399a652640f3625c2e2e39fbc1877f3845651": [],
+    "eb5a6f47a16ffaf8e7e099a157a6ec3555971531f127d963becf2f9b8c6f464a": [],
+    "6aac5b5566e9b0cb6b5c519fff82bab73606aa1aacf14652bc723ab331e41098": [],
+    "ef422ccf7ad4b45e33acfcd7ab2f7aa47a04533e03633d9a9b63c8ccccb59f4d": [],
+    "64f73a95ad82c3fbacfdec6f0889ef83652381484ef8c5f155207f5bf8ff9409": [],
+    "750411ca7cb9f8781f8d3e95956046a046e5ce4cc1a3ffb13f27d243306043bd": [],
+    "bb41b27cd9d6ca6a2a291bf84aab23d50cb753119dcf2235f33f337cdb07f8c8": [],
+    "78d08e61b7bd335388d17c635ae6847af87ebfc5f3688d12188042429cb7e857": [],
+    "8fa2ce60c4ec170dddb3b6b4f705f7d9a02891baa56fb550c94286f733385b59": [],
+    "121ff871446275dfc8b56721f77d6a28cf8567db447fb1c929677214d5454678": [],
+    "8eecb2c03d2fb7cf9db55e4d39e4a1085e97039411180d1ee4105109b0fdd414": [],
+    "ca7441b95ecc72503362683eec3e4933ee82ee31a8e64cf03a3e14a49147b342": [],
+    "e3ea53ef7a3c3ee134230ee40bff7fc9c5522dad8d0e4f110c40bc425ebcbca1": [],
+    "8f8d5b2bcfd7cda5a3d08727d3a76526fb9f2085e06d55b0ebdd942f488e4a5b": [],
+    "894c7e05df30d38c11b8340dc1c3a472b078b90d7be1b24bbbe1ceadc952ab93": [],
+    "2b868b1eab5322bd247043f33cb3f4017dd978f6d28381c360cbafb9389c4b3f": [],
+    "e318f4edd9a92db3640fa8a874463465767ae27106b142387b5b999ebc9b77a6": [],
+    "301b20c040ec348815b28034a06d428f9dade2741f0487a6bf1b85facc7f2690": [],
+    "c0b31571be7821a1a83762ce0dc6c2b0b3aaf1adabad703317d58f8901cc3742": [],
+    "5b4a39686fa66a0f29728dd558b2a6d88c60048760d5bd1e8e54b76f609e6956": [],
+    "87163b917b05024671ad48daac5ae22660819b8ac311907d036dedd09b72d152": [],
+    "97753711ad7739ea907deb0ccdf226dfb6823b79c8f41c048dc8192f3cb586c1": [],
+    "e2aabd498d0a1b2a235745ab3c08f799ca7fbaf3510070a54a7592837c8d2842": [],
+    "4782759d4d6bbe8aa8f831eaf60b7ef203dc5da0914113d88c1e3046d01d8f65": [],
+    "d061d9878d5d809800450583f125128b30e1c18bf2f48cb3bc0a60ba4fae2979": [],
+    "d1653a6eac1acf5428be0c6681c93efc634fc0e804dd81e670634e34a3bf5606": [],
+    "1e61113b96d7f1874a1365a7bfc535aefb5b56e8fd487e1f747abdb3dee6bf59": [],
+    "1b72d91d8d16b5c6fa69bf0b3480a5cc86a9b3bba935118d5ec6e82d1bcbea29": [],
+    "8a8b48fff136fd8eb0dcebaab10030e76e3a96d94d2facb9f57336d11982fb46": [],
     "a5a41a15878968a945a61c99f3c4acd4d07b1109683b689d0cf822b73d12baad": [],
     "77ece57574aa3d95135f1406ed9c3a665ebd156a321f67c763202ae879daba22": [],
-    "5913af2b60744d7a5f69ac9349386af03b03b9be89319eea88e1ed1284739616": [
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b"
-    ],
+    "5913af2b60744d7a5f69ac9349386af03b03b9be89319eea88e1ed1284739616": [],
     "b61193d831ffabf0f4c8b7bc8f7dfb9378409e5b6e51c27cdd1e17500979d7f7": [],
-    "637a9536951644dc9b3d8f138037fcb7bb29048a50d26987bdf6dbe6d3040100": [
-      "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d"
-    ]
+    "637a9536951644dc9b3d8f138037fcb7bb29048a50d26987bdf6dbe6d3040100": []
   },
   "verdicts": [
     {
@@ -165,7 +67,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "020a0e29b612e9d0b900b2bac22fb33e05f09572317d42959e1417f807acc647",
@@ -173,7 +77,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "0e1d2b6cf3802c14bf6b0fedef2f58558ef48d6e2f97d5c04f5088675e0f94aa",
@@ -181,7 +87,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "3f3047bc43acdc5775e20e50185bce876db49906bfa9d35bdf45ad6b83101a1b",
@@ -189,7 +97,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "35dc97b3b83e68742461099ff044178d894867c7fdebc3639b331b669290c285",
@@ -197,7 +107,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "aa183481da8904e81e8bcee8df32107282988972f313c73eb448bebe89e1ed8f",
@@ -205,7 +117,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "26311a69c16d0f9abdff46e60e27b78274fae82fe9f32317c129043a462abb60",
@@ -213,7 +127,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "808a4e8f402465f076fdf0d05580ce7020d1420914251fe141d8178bd3a3d8c6",
@@ -221,7 +137,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "9c84895e5c2e4dad6d18ad1f06f968e4600d3a5f352794f7384aa0587e6deda6",
@@ -229,7 +147,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "7e99d2e11022dd4be86c5a00bb01de258feb9b5aef75680223586ecc0237df70",
@@ -237,7 +157,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "2aaff14598d29191f25e71e01c3ce3c16d84425604063ae114ce38ec8e654ad6",
@@ -245,319 +167,400 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate matches the claim about economists' prediction."
     },
     {
       "claim_id": "cc176d0f2bc51722bc29389ef4fca387056378f5fc34e3cd6d4bb14105fb08e6",
       "subject": "person",
-      "subject_name": "Ha-Joon Chang",
+      "subject_name": "Ha‑Joon Chang (Cambridge)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "a86eda357ad8462227ad36126e40c0fa1031e0fac79f73985418067f4706aa15",
       "subject": "person",
-      "subject_name": "Ha-Joon Chang",
+      "subject_name": "Ha‑Joon Chang (Cambridge)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "3abd1c31e90bb6aab61f962c85c15b68c28c18ca581c5566c9bbf8b94c4299fc",
       "subject": "person",
-      "subject_name": "Dani Rodrik",
+      "subject_name": "Dani Rodrik (Harvard Kennedy School)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "9ba1507e5b0a0e32e401a1afdf6650648c9cd33fee269b1080accd836af02bda",
       "subject": "person",
-      "subject_name": "Dani Rodrik",
+      "subject_name": "Dani Rodrik (Harvard Kennedy School)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "366bf75d64cd6017dbd9da75bd319027b427e5b7a4aa5c1509d591738ccb77b0",
       "subject": "person",
-      "subject_name": "Dani Rodrik",
+      "subject_name": "Dani Rodrik (Harvard Kennedy School)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "b4d8978b57d8f3e9504629a5f6d399a652640f3625c2e2e39fbc1877f3845651",
       "subject": "person",
-      "subject_name": "Matthew Jackson",
+      "subject_name": "Matthew Jackson (Stanford)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "eb5a6f47a16ffaf8e7e099a157a6ec3555971531f127d963becf2f9b8c6f464a",
       "subject": "person",
-      "subject_name": "Matthew Jackson",
+      "subject_name": "Matthew Jackson (Stanford)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "6aac5b5566e9b0cb6b5c519fff82bab73606aa1aacf14652bc723ab331e41098",
       "subject": "person",
-      "subject_name": "Brian Arthur",
+      "subject_name": "Brian Arthur (Santa Fe Institute)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "ef422ccf7ad4b45e33acfcd7ab2f7aa47a04533e03633d9a9b63c8ccccb59f4d",
       "subject": "person",
-      "subject_name": "Brian Arthur",
+      "subject_name": "Brian Arthur (Santa Fe Institute)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "64f73a95ad82c3fbacfdec6f0889ef83652381484ef8c5f155207f5bf8ff9409",
       "subject": "person",
-      "subject_name": "César Hidalgo",
+      "subject_name": "César Hidalgo (University of Toulouse)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "750411ca7cb9f8781f8d3e95956046a046e5ce4cc1a3ffb13f27d243306043bd",
       "subject": "person",
-      "subject_name": "César Hidalgo",
+      "subject_name": "César Hidalgo (University of Toulouse)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "bb41b27cd9d6ca6a2a291bf84aab23d50cb753119dcf2235f33f337cdb07f8c8",
       "subject": "person",
-      "subject_name": "Sendhil Mullainathan",
+      "subject_name": "Sendhil Mullainathan (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "78d08e61b7bd335388d17c635ae6847af87ebfc5f3688d12188042429cb7e857",
       "subject": "person",
-      "subject_name": "Sendhil Mullainathan",
+      "subject_name": "Sendhil Mullainathan (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "8fa2ce60c4ec170dddb3b6b4f705f7d9a02891baa56fb550c94286f733385b59",
       "subject": "person",
-      "subject_name": "Raghuram Rajan",
+      "subject_name": "Raghuram Rajan (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "121ff871446275dfc8b56721f77d6a28cf8567db447fb1c929677214d5454678",
       "subject": "person",
-      "subject_name": "James Robinson",
+      "subject_name": "James Robinson (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "8eecb2c03d2fb7cf9db55e4d39e4a1085e97039411180d1ee4105109b0fdd414",
       "subject": "person",
-      "subject_name": "James Robinson",
+      "subject_name": "James Robinson (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "ca7441b95ecc72503362683eec3e4933ee82ee31a8e64cf03a3e14a49147b342",
       "subject": "person",
-      "subject_name": "James Robinson",
+      "subject_name": "James Robinson (University of Chicago)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e3ea53ef7a3c3ee134230ee40bff7fc9c5522dad8d0e4f110c40bc425ebcbca1",
       "subject": "person",
-      "subject_name": "Abhijit Banerjee and Esther Duflo",
+      "subject_name": "Abhijit Banerjee and Esther Duflo (MIT)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "8f8d5b2bcfd7cda5a3d08727d3a76526fb9f2085e06d55b0ebdd942f488e4a5b",
       "subject": "person",
-      "subject_name": "Abhijit Banerjee and Esther Duflo",
+      "subject_name": "Abhijit Banerjee and Esther Duflo (MIT)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "894c7e05df30d38c11b8340dc1c3a472b078b90d7be1b24bbbe1ceadc952ab93",
       "subject": "person",
-      "subject_name": "Abhijit Banerjee and Esther Duflo",
+      "subject_name": "Abhijit Banerjee and Esther Duflo (MIT)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "2b868b1eab5322bd247043f33cb3f4017dd978f6d28381c360cbafb9389c4b3f",
       "subject": "person",
-      "subject_name": "Steve Keen",
+      "subject_name": "Steve Keen (Kingston University)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e318f4edd9a92db3640fa8a874463465767ae27106b142387b5b999ebc9b77a6",
       "subject": "person",
-      "subject_name": "Steve Keen",
+      "subject_name": "Steve Keen (Kingston University)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "301b20c040ec348815b28034a06d428f9dade2741f0487a6bf1b85facc7f2690",
       "subject": "person",
-      "subject_name": "Stephanie Kelton",
+      "subject_name": "Stephanie Kelton (Stony Brook)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "c0b31571be7821a1a83762ce0dc6c2b0b3aaf1adabad703317d58f8901cc3742",
       "subject": "person",
-      "subject_name": "Herman Daly",
+      "subject_name": "Herman Daly (University of Maryland)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "5b4a39686fa66a0f29728dd558b2a6d88c60048760d5bd1e8e54b76f609e6956",
       "subject": "person",
-      "subject_name": "Herman Daly",
+      "subject_name": "Herman Daly (University of Maryland)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "87163b917b05024671ad48daac5ae22660819b8ac311907d036dedd09b72d152",
       "subject": "person",
-      "subject_name": "Herman Daly",
+      "subject_name": "Herman Daly (University of Maryland)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "97753711ad7739ea907deb0ccdf226dfb6823b79c8f41c048dc8192f3cb586c1",
       "subject": "person",
-      "subject_name": "Mark Granovetter",
+      "subject_name": "Mark Granovetter (Stanford Sociology)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e2aabd498d0a1b2a235745ab3c08f799ca7fbaf3510070a54a7592837c8d2842",
       "subject": "person",
-      "subject_name": "Viviana Zelizer",
+      "subject_name": "Viviana Zelizer (Princeton Sociology)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "4782759d4d6bbe8aa8f831eaf60b7ef203dc5da0914113d88c1e3046d01d8f65",
       "subject": "person",
-      "subject_name": "Viviana Zelizer",
+      "subject_name": "Viviana Zelizer (Princeton Sociology)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "d061d9878d5d809800450583f125128b30e1c18bf2f48cb3bc0a60ba4fae2979",
       "subject": "person",
-      "subject_name": "Richard Swedberg",
+      "subject_name": "Richard Swedberg (Cornell Sociology)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "d1653a6eac1acf5428be0c6681c93efc634fc0e804dd81e670634e34a3bf5606",
       "subject": "person",
-      "subject_name": "Fernando Fajnzylber",
+      "subject_name": "Fernando Fajnzylber (ECLAC tradition)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "1e61113b96d7f1874a1365a7bfc535aefb5b56e8fd487e1f747abdb3dee6bf59",
       "subject": "person",
-      "subject_name": "Fernando Fajnzylber",
+      "subject_name": "Fernando Fajnzylber (ECLAC tradition)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "1b72d91d8d16b5c6fa69bf0b3480a5cc86a9b3bba935118d5ec6e82d1bcbea29",
       "subject": "person",
-      "subject_name": "Justin Yifu Lin",
+      "subject_name": "Justin Yifu Lin (Peking University)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "8a8b48fff136fd8eb0dcebaab10030e76e3a96d94d2facb9f57336d11982fb46",
       "subject": "person",
-      "subject_name": "Justin Yifu Lin",
+      "subject_name": "Justin Yifu Lin (Peking University)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "a5a41a15878968a945a61c99f3c4acd4d07b1109683b689d0cf822b73d12baad",
       "subject": "person",
-      "subject_name": "Benno Ndulu",
+      "subject_name": "Benno Ndulu (University of Cape Town)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "77ece57574aa3d95135f1406ed9c3a665ebd156a321f67c763202ae879daba22",
       "subject": "person",
-      "subject_name": "Benno Ndulu",
+      "subject_name": "Benno Ndulu (University of Cape Town)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "5913af2b60744d7a5f69ac9349386af03b03b9be89319eea88e1ed1284739616",
       "subject": "person",
-      "subject_name": "Shoshana Zuboff",
+      "subject_name": "Shoshana Zuboff (Harvard Business School emeritus)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "b61193d831ffabf0f4c8b7bc8f7dfb9378409e5b6e51c27cdd1e17500979d7f7",
       "subject": "person",
-      "subject_name": "Nick Srnicek",
+      "subject_name": "Nick Srnicek (King's College London)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "637a9536951644dc9b3d8f138037fcb7bb29048a50d26987bdf6dbe6d3040100",
       "subject": "person",
-      "subject_name": "Raj Chetty",
+      "subject_name": "Raj Chetty (Harvard)",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     }
-  ]
+  ],
+  "pool": "71ea7b77f51a0dfb"
 }

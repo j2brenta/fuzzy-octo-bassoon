@@ -3,32 +3,13 @@
   "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v1",
+  "prompt_version": "relate-v2",
   "candidates": {
-    "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208": [
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
-    ],
-    "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41",
-      "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679"
-    ],
+    "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208": [],
+    "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7": [],
     "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d": [],
-    "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f": [
-      "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8"
-    ],
-    "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e": [
-      "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96",
-      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184"
-    ],
+    "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f": [],
+    "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e": [],
     "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea": []
   },
   "verdicts": [
@@ -38,7 +19,9 @@
       "subject_name": "Samuel Agbede",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Samuel Agbede's talk."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7",
@@ -46,7 +29,9 @@
       "subject_name": "Evangelos Resvanis",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate matches the claim about Evangelos Resvanis's talk."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
@@ -54,7 +39,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidates provided for the description of the 18:30 talk's content."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
@@ -62,7 +49,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "Candidate k8 discusses unrelated paper content, not the Redis-powered demonstration."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
@@ -70,7 +59,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "None of the candidates k9, k6, k7, k10 describe the 19:00 talk's focus on memory and continuity."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
@@ -78,7 +69,10 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidates supplied for the description of the 19:00 talk's demonstration."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     }
-  ]
+  ],
+  "pool": "60d5cf68d901abf3"
 }

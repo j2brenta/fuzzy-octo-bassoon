@@ -385,8 +385,10 @@ class MemoryStore:
                 # The newer claim replaces every earlier sighting of the older statement, not just the one judged.
                 new = later.claim.claim_id
                 for old in sorted(same[first.claim.claim_id]):
-                    if old != new and self._order(self._claims[old]) < self._order(later) \
-                            and frozenset((new, old)) not in self._suppressed:
+                    earlier = self._claims[old]
+                    if old != new and earlier.item_id != later.item_id \
+                            and self._event_time(earlier) < self._event_time(later) \
+                            and frozenset((new, old)) not in self._suppressed:  # never its own item or moment
                         related.add(frozenset((new, old)))
                         self._relations.append(Edge(new, "SUPERSEDES", old, why, at))
             else:

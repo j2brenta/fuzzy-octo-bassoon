@@ -3,123 +3,53 @@
   "item_id": "35d90abd316319321d7838320a6e2bc47f0dc90cd5dd5c76a747cdb697cec042",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v1",
+  "prompt_version": "relate-v2",
   "candidates": {
-    "2c2e7b502a9729b9bcd7fdac054f7ada34e212e93dcaeb0b07a75b692389f5e2": [
-      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1"
-    ],
-    "4561aaa8c343f7563fe605cadbec24dfb48ab93e0d11197a56179dc9f755c0ec": [
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8"
-    ],
-    "62844514747345a947231ac0c55ef945755cf08f807bbc329f307d5bcc9c20ae": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96"
-    ],
-    "849c3a459dd111cbc68f7a59e9e09e88fee6b21f94b07294ec1e06121d00ef6c": [
-      "f1224276166692db4ba60fbcf76476780c4f37c3b52e9e3e765ce4e7b34b075b",
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
-      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60"
-    ],
-    "e70904c34aef40ea3dc934a3e8b057f9119c28db2e7e71df879858cd73d7a1d8": [
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
+    "2c2e7b502a9729b9bcd7fdac054f7ada34e212e93dcaeb0b07a75b692389f5e2": [],
+    "4561aaa8c343f7563fe605cadbec24dfb48ab93e0d11197a56179dc9f755c0ec": [],
+    "62844514747345a947231ac0c55ef945755cf08f807bbc329f307d5bcc9c20ae": [],
+    "849c3a459dd111cbc68f7a59e9e09e88fee6b21f94b07294ec1e06121d00ef6c": [],
+    "e70904c34aef40ea3dc934a3e8b057f9119c28db2e7e71df879858cd73d7a1d8": [],
     "b03b99688b0931da5fe7210bd21ee690688f56a6a76465fad113afded92c0979": [],
-    "b2ca0ad0bf4b8dd1e4e0c34054220fb509a89a10800bfa53ebe364f260861ddc": [
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c"
-    ],
-    "cf83dfd8d25f48b55b39b0e977743cf4efd0ef6801d1f3d444a95e531e08605e": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650"
-    ],
-    "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e": [
-      "df03dfb0ad82fc5f7548b54971c70f752bb7645bbaf0db28bf88433055ac4d4a",
-      "444039cdf658742536cefb387873e723244a9030cb3e194af0fe726a6d99651c",
-      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60"
-    ],
+    "b2ca0ad0bf4b8dd1e4e0c34054220fb509a89a10800bfa53ebe364f260861ddc": [],
+    "cf83dfd8d25f48b55b39b0e977743cf4efd0ef6801d1f3d444a95e531e08605e": [],
+    "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e": [],
     "f1c69c317cf62661fdfa5cb323372b68ce199ad3b243bc750103dd510f3cf212": [],
-    "da4550234a74ae4a41cef8d04d36714590991663d412c121cbf6efefea35cf71": [
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554"
-    ],
+    "da4550234a74ae4a41cef8d04d36714590991663d412c121cbf6efefea35cf71": [],
     "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
+      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
+      "ebb9706fb98b77921b8f44d85f9d1e7f7efdfe44ba41eca426655c754b526b60",
+      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1",
+      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
+      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
     ],
     "673430a11e281f0bee66ba37d645fe09ee8675d7de0c101732c645458e349b1d": [],
-    "a9ca94d4b97d53eb34e58d0b4cea0c76100ea09014e25f37a426c85105e2141c": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
-    ],
-    "b15049d3d97b634886f7d520f3918e38b20908be52533d5ecb8cb13b0175f8bc": [
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554"
-    ],
-    "e444a12b80265e6a1d61195e23a6f2e3d974ee13765dadc40e1f4dca6ad8956f": [
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96"
-    ],
-    "99dba5e23c9b7b7f87c3de2e8625b795420edfa447a118eab50390a061adf3fa": [
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "1ab85ac10ffd4e73ee267237b3305fe8ef90a31954a9bc18e05fae27edcbaf2c",
-      "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02"
-    ],
-    "c1ef17eee7e166ca302244969b91f69adc0944757a3fb3b664b1cf15521b14fe": [
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554"
-    ],
+    "a9ca94d4b97d53eb34e58d0b4cea0c76100ea09014e25f37a426c85105e2141c": [],
+    "b15049d3d97b634886f7d520f3918e38b20908be52533d5ecb8cb13b0175f8bc": [],
+    "e444a12b80265e6a1d61195e23a6f2e3d974ee13765dadc40e1f4dca6ad8956f": [],
+    "99dba5e23c9b7b7f87c3de2e8625b795420edfa447a118eab50390a061adf3fa": [],
+    "c1ef17eee7e166ca302244969b91f69adc0944757a3fb3b664b1cf15521b14fe": [],
     "200e4b0fbfe3914edc593e168d01ee673d391af65d2a3316372a91af584e1f7e": [
-      "a16109eeaecc0372103a4763507d77de71a987168d9d662eaf5dc8ecb0561013",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "23a925a1c122179eac37c48bab254d1ece013a01e8edadb152bc64bce3379184",
-      "9af1c8ddd79424c438c2b737227a2a2d5cbdb6f9560f9565fd16e4f866919b96"
+      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487"
     ],
-    "503640688c7d6a92b045f83b94f8c4411c29e25a809491961fb2276d08681ba5": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650"
-    ],
-    "7935ac30df720d7b32f229b911c8f8364dae047e08081148ba8859df74096fa1": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
-    ],
-    "e12d3872e1553bdc6d8cd01eeac1c0152f605720162a520f07c5cabf9f400d4a": [
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c"
-    ],
-    "f3e8540736f15aea56085afcb8dbf2aa5e219904ac3da3e024a6a20113ee34e3": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650"
-    ],
-    "021b50b4a573790fb8a7f368fefef167554c37bccba5ae43ccc0e737d2d46304": [
-      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1"
-    ],
+    "503640688c7d6a92b045f83b94f8c4411c29e25a809491961fb2276d08681ba5": [],
+    "7935ac30df720d7b32f229b911c8f8364dae047e08081148ba8859df74096fa1": [],
+    "e12d3872e1553bdc6d8cd01eeac1c0152f605720162a520f07c5cabf9f400d4a": [],
+    "f3e8540736f15aea56085afcb8dbf2aa5e219904ac3da3e024a6a20113ee34e3": [],
+    "021b50b4a573790fb8a7f368fefef167554c37bccba5ae43ccc0e737d2d46304": [],
     "e6b8c88f6e9bc55368347cba34f969712e77a85ac183c2e76ecda2f817eeefdd": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72",
-      "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
-      "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
-      "38776563e86c174d0e24693c62c9a2e1459e518a7df7fc2f2e9e14efe00ca2c1"
+      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
     ],
     "f04a51cb93ce733c67913bda7a396e8cf8427e49db3655e9db398d611bf1a501": [],
-    "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502": [
-      "c9af6f58d0cbac1b8679bc707e3f158e67e5f701f0bdbc68753d242d3441f1d2",
-      "550f18687323ab0f47e1989460b1cd7c0adff3ff3d2946ce91079bcbecd2f87c",
-      "7df8cbc29d444bae91e9d686bbf477bf40fce1b38012e087d49dd3e0f0435a02",
-      "4163c0f0c0ebfde9043fda2d8cc21abe8d661783a77063b3c51bdbd1d444d284"
-    ],
-    "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f": [
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
-    ],
+    "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502": [],
+    "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f": [],
     "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e": [],
-    "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c": [
-      "f2e5e27f7f116bfa97cb92e30fb8eb6e93b31c1326e73bc2980b0991427d4d72"
-    ],
-    "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d": [
-      "704218253fb7917b5d7215a8b3f7bf97d7dcde6346d2b840525e9d2eee8f2650",
-      "8d2083476caacaf26f511117f890488ba3b216389512f13f645f41c9165d85e8",
-      "7d402926320d24835e9d38e1f17b3e438cc59f84ea9e6516651d51a6cf7e1487",
-      "1cf8822118e7b34a79b7b9603f0cda1db802c72a625d027380a7b23ad4047b41"
-    ],
-    "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679": [],
-    "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b": [
+    "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c": [],
+    "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d": [],
+    "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679": [
       "3be42a31b93ff5849824a12a00da7f95cfd7a10ac3d8c873d72ed68bc27ed554"
-    ]
+    ],
+    "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b": []
   },
   "verdicts": [
     {
@@ -128,7 +58,9 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Jack Lindsey leading Anthropic's model psychiatry team."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "4561aaa8c343f7563fe605cadbec24dfb48ab93e0d11197a56179dc9f755c0ec",
@@ -136,7 +68,9 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Jack Lindsey's paper testing models' internal state observation."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "62844514747345a947231ac0c55ef945755cf08f807bbc329f307d5bcc9c20ae",
@@ -144,23 +78,29 @@
       "subject_name": "Jack Lindsey",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Jack Lindsey's conclusion on limited introspective awareness."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "849c3a459dd111cbc68f7a59e9e09e88fee6b21f94b07294ec1e06121d00ef6c",
       "subject": "person",
-      "subject_name": "Chris Olah and Josh Batson",
+      "subject_name": "Chris Olah",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Chris Olah and Josh Batson working on circuit‑tracing research."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e70904c34aef40ea3dc934a3e8b057f9119c28db2e7e71df879858cd73d7a1d8",
       "subject": "person",
-      "subject_name": "Chris Olah and Josh Batson",
+      "subject_name": "Chris Olah",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about their publications being the main source for mechanistic explanations of hallucination."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "b03b99688b0931da5fe7210bd21ee690688f56a6a76465fad113afded92c0979",
@@ -168,7 +108,9 @@
       "subject_name": "Sam Marks",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Sam Marks working on the geometry of truth."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "b2ca0ad0bf4b8dd1e4e0c34054220fb509a89a10800bfa53ebe364f260861ddc",
@@ -176,15 +118,19 @@
       "subject_name": "Sam Marks",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Sam Marks auditing models for hidden objectives."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "cf83dfd8d25f48b55b39b0e977743cf4efd0ef6801d1f3d444a95e531e08605e",
       "subject": "person",
-      "subject_name": "Sebastian Farquhar and Yarin Gal",
+      "subject_name": "Sebastian Farquhar",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Sebastian Farquhar and Yarin Gal being lead authors of the 2024 semantic entropy work."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e14c639d669b426128279681fa3b803b94984c5c448829b0df646b9ec572694e",
@@ -192,7 +138,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about semantic entropy being the best‑known method for detecting confabulations."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "f1c69c317cf62661fdfa5cb323372b68ce199ad3b243bc750103dd510f3cf212",
@@ -200,7 +148,9 @@
       "subject_name": "Yarin Gal",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Yarin Gal leading the OATML group at Oxford."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "da4550234a74ae4a41cef8d04d36714590991663d412c121cbf6efefea35cf71",
@@ -208,7 +158,9 @@
       "subject_name": "Adam Tauman Kalai",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Adam Tauman Kalai being lead author of the 2025 'Why Language Models Hallucinate' paper."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "022aecda839d68a6dc275e942b28d4091bece4ec31f5ce7ad3c3d21820db50b8",
@@ -216,7 +168,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about the paper arguing that training rewards guessing over admitting uncertainty."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate matches the claim about training/evaluation rewarding guessing."
     },
     {
       "claim_id": "673430a11e281f0bee66ba37d645fe09ee8675d7de0c101732c645458e349b1d",
@@ -224,7 +178,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Owain Evans' work on models knowing what they know."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "a9ca94d4b97d53eb34e58d0b4cea0c76100ea09014e25f37a426c85105e2141c",
@@ -232,7 +188,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about the 'Looking Inward' and 'Tell me about yourself' papers."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "b15049d3d97b634886f7d520f3918e38b20908be52533d5ecb8cb13b0175f8bc",
@@ -240,7 +198,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Owain Evans co‑authoring early work on teaching models to express uncertainty."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e444a12b80265e6a1d61195e23a6f2e3d974ee13765dadc40e1f4dca6ad8956f",
@@ -248,7 +208,9 @@
       "subject_name": "Owain Evans",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Owain Evans leading the research nonprofit Truthful AI."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "99dba5e23c9b7b7f87c3de2e8625b795420edfa447a118eab50390a061adf3fa",
@@ -256,7 +218,9 @@
       "subject_name": "Stephen Fleming",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Stephen Fleming being a leading neuroscientist of human metacognition."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "c1ef17eee7e166ca302244969b91f69adc0944757a3fb3b664b1cf15521b14fe",
@@ -264,7 +228,9 @@
       "subject_name": "Stephen Fleming",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Stephen Fleming authoring the book 'Know Thyself'."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "200e4b0fbfe3914edc593e168d01ee673d391af65d2a3316372a91af584e1f7e",
@@ -272,23 +238,29 @@
       "subject_name": "Stephen Fleming",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Stephen Fleming applying metacognition research to AI."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate matches the claim about applying metacognition research to AI."
     },
     {
       "claim_id": "503640688c7d6a92b045f83b94f8c4411c29e25a809491961fb2276d08681ba5",
       "subject": "person",
-      "subject_name": "Arvind Narayanan and Sayash Kapoor",
+      "subject_name": "Arvind Narayanan",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Arvind Narayanan and Sayash Kapoor writing the agent reliability paper borrowing from nuclear and aviation safety."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "7935ac30df720d7b32f229b911c8f8364dae047e08081148ba8859df74096fa1",
       "subject": "person",
-      "subject_name": "Arvind Narayanan and Sayash Kapoor",
+      "subject_name": "Arvind Narayanan",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about their newsletter being skeptical and data‑driven."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e12d3872e1553bdc6d8cd01eeac1c0152f605720162a520f07c5cabf9f400d4a",
@@ -296,7 +268,9 @@
       "subject_name": "METR",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about METR measuring how long agents can complete tasks autonomously."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "f3e8540736f15aea56085afcb8dbf2aa5e219904ac3da3e024a6a20113ee34e3",
@@ -304,7 +278,9 @@
       "subject_name": "METR",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about METR's reports being a key reference for reliability‑over‑horizon."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "021b50b4a573790fb8a7f368fefef167554c37bccba5ae43ccc0e737d2d46304",
@@ -312,7 +288,9 @@
       "subject_name": "Andrej Karpathy",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Andrej Karpathy popularizing the 'march of nines' framing."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "e6b8c88f6e9bc55368347cba34f969712e77a85ac183c2e76ecda2f817eeefdd",
@@ -320,7 +298,9 @@
       "subject_name": "Andrej Karpathy",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Andrej Karpathy writing clearly about moving from demos to products."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate matches the claim about writing clearly on moving from demos to products."
     },
     {
       "claim_id": "f04a51cb93ce733c67913bda7a396e8cf8427e49db3655e9db398d611bf1a501",
@@ -328,7 +308,9 @@
       "subject_name": "Azalia Mirhoseini",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Azalia Mirhoseini co‑leading the LLM‑as‑a‑Verifier work."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "a38851b1b8b4f518e883828cb8e4c427048abd6e4d9581f92550747a8fe0b502",
@@ -336,7 +318,9 @@
       "subject_name": "Shreya Shankar",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Shreya Shankar researching LLM pipeline evaluation and the 'Who Validates the Validators?' paper."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "4af249d3a15f8c3335ca8ce36283f584b547eb67a2744e7233798a71b0b33f0f",
@@ -344,15 +328,19 @@
       "subject_name": "Hamel Husain",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Hamel Husain being a practical voice on building evals for real products."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "16eba3610f5d0a86eab24014c6bbce22ebad96ceea8d3b876da775d300f0678e",
-      "subject": "world",
-      "subject_name": null,
+      "subject": "person",
+      "subject_name": "Hamel Husain",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Hamel Husain and Shreya Shankar teaching together."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "2017f74c675779e16e2b1e270bf51d34cebc2b445555a45f1dff3932408d985c",
@@ -360,7 +348,9 @@
       "subject_name": "Eugene Yan",
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about Eugene Yan writing accessible pieces on LLM evaluation and production patterns."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "76e7fe2f007a8ce544a676852e29ba6d79f2ae60a6c567c6adcab06ebe89617d",
@@ -368,7 +358,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about the recommended minimal follow set."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     },
     {
       "claim_id": "34938c269e38763f3cfbfd5df9aacf86c6d1ee29527c92ff269dfa5dfdca6679",
@@ -376,7 +368,9 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about searching arXiv for specific terms surfacing recent work."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate matches the claim about arXiv search surfacing recent work."
     },
     {
       "claim_id": "3a1b19a346d6239d0f1ae082db6f7c1fbc417e90d433b4a6c7c2c2114deacf2b",
@@ -384,7 +378,10 @@
       "subject_name": null,
       "label": "NONE",
       "target_id": null,
-      "rationale": "No candidate statement matches the claim about affiliations changing often and recommending checking latest pages."
+      "abstention": null,
+      "context": null,
+      "rationale": "No candidate claims provided for comparison."
     }
-  ]
+  ],
+  "pool": "0310110478124ea1"
 }

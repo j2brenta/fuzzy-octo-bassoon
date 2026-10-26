@@ -477,3 +477,13 @@ def test_an_abstention_draws_no_relation_and_is_listed():
     data = graphview.map_data(store, datetime(2026, 10, 20, tzinfo=timezone.utc))
     assert any(e["kind"] == "ABSTAIN" and e["source"] == "cprev" for e in data["edges"])
     assert next(e for e in data["edges"] if e["kind"] == "SUPERSEDES")["context"] == CONTEXT
+
+
+def test_a_correction_never_supersedes_a_claim_in_its_own_item():
+    """The model may call the correction's 'previously 14:00' claim SAME as the old time; spreading the UPDATES
+    across that SAME class must not make the new time supersede its own item's claim."""
+    store = MemoryStore()
+    store.apply(ORIGINAL, TEXT["original"], TRIO_VERDICTS["original"])
+    store.apply(CORRECTION, TEXT["correction"], verdicts("correction", ("c16", "UPDATES", "o14"), ("cprev", "SAME", "o14")))
+    supersedes = {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}
+    assert ("c16", "o14") in supersedes and ("c16", "cprev") not in supersedes
