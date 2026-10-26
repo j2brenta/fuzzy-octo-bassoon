@@ -1,0 +1,683 @@
+{
+  "review": [
+    {
+      "action": "initial",
+      "expected_token": 0,
+      "token": 0,
+      "human": false,
+      "model": true,
+      "history": 0,
+      "error": null
+    },
+    {
+      "action": "accept",
+      "expected_token": 0,
+      "token": 1,
+      "human": true,
+      "model": false,
+      "history": 1,
+      "error": null
+    },
+    {
+      "action": "import_new",
+      "expected_token": 1,
+      "token": 1,
+      "human": true,
+      "model": false,
+      "history": 1,
+      "error": null
+    },
+    {
+      "action": "select_new",
+      "expected_token": 1,
+      "token": 2,
+      "human": false,
+      "model": false,
+      "history": 1,
+      "error": null
+    },
+    {
+      "action": "stale_reject",
+      "expected_token": 1,
+      "token": 2,
+      "human": false,
+      "model": false,
+      "history": 1,
+      "error": "stale"
+    },
+    {
+      "action": "select_original",
+      "expected_token": 2,
+      "token": 3,
+      "human": true,
+      "model": false,
+      "history": 1,
+      "error": null
+    },
+    {
+      "action": "reject",
+      "expected_token": 3,
+      "token": 4,
+      "human": false,
+      "model": false,
+      "history": 2,
+      "error": null
+    },
+    {
+      "action": "rerun_model",
+      "expected_token": 4,
+      "token": 4,
+      "human": false,
+      "model": false,
+      "history": 2,
+      "error": null
+    },
+    {
+      "action": "revoke_premise",
+      "expected_token": 4,
+      "token": 5,
+      "human": false,
+      "model": false,
+      "history": 2,
+      "error": null
+    },
+    {
+      "action": "ineligible_accept",
+      "expected_token": 5,
+      "token": 5,
+      "human": false,
+      "model": false,
+      "history": 2,
+      "error": "invalid"
+    }
+  ],
+  "graph": {
+    "nodes": [
+      1,
+      2
+    ],
+    "edges": [
+      {
+        "id": 1,
+        "source": 1,
+        "target": 2,
+        "decision": 1,
+        "context": "context 1"
+      },
+      {
+        "id": 2,
+        "source": 2,
+        "target": 1,
+        "decision": 2,
+        "context": "selected reverse context"
+      },
+      {
+        "id": 3,
+        "source": 1,
+        "target": 2,
+        "decision": 3,
+        "context": "context 3"
+      },
+      {
+        "id": 4,
+        "source": 1,
+        "target": 2,
+        "decision": 4,
+        "context": "context 4"
+      },
+      {
+        "id": 5,
+        "source": 1,
+        "target": 2,
+        "decision": 5,
+        "context": "context 5"
+      },
+      {
+        "id": 6,
+        "source": 1,
+        "target": 2,
+        "decision": 6,
+        "context": "context 6"
+      },
+      {
+        "id": 7,
+        "source": 1,
+        "target": 2,
+        "decision": 7,
+        "context": "context 7"
+      },
+      {
+        "id": 8,
+        "source": 1,
+        "target": 2,
+        "decision": 8,
+        "context": "context 8"
+      },
+      {
+        "id": 9,
+        "source": 1,
+        "target": 2,
+        "decision": 9,
+        "context": "context 9"
+      },
+      {
+        "id": 10,
+        "source": 1,
+        "target": 2,
+        "decision": 10,
+        "context": "context 10"
+      },
+      {
+        "id": 11,
+        "source": 1,
+        "target": 2,
+        "decision": 11,
+        "context": "context 11"
+      },
+      {
+        "id": 12,
+        "source": 1,
+        "target": 2,
+        "decision": 12,
+        "context": "context 12"
+      },
+      {
+        "id": 13,
+        "source": 1,
+        "target": 2,
+        "decision": 13,
+        "context": "context 13"
+      },
+      {
+        "id": 14,
+        "source": 1,
+        "target": 2,
+        "decision": 14,
+        "context": "context 14"
+      },
+      {
+        "id": 15,
+        "source": 1,
+        "target": 2,
+        "decision": 15,
+        "context": "context 15"
+      },
+      {
+        "id": 16,
+        "source": 1,
+        "target": 2,
+        "decision": 16,
+        "context": "context 16"
+      },
+      {
+        "id": 17,
+        "source": 1,
+        "target": 2,
+        "decision": 17,
+        "context": "context 17"
+      },
+      {
+        "id": 18,
+        "source": 1,
+        "target": 2,
+        "decision": 18,
+        "context": "context 18"
+      },
+      {
+        "id": 19,
+        "source": 1,
+        "target": 2,
+        "decision": 19,
+        "context": "context 19"
+      },
+      {
+        "id": 20,
+        "source": 1,
+        "target": 2,
+        "decision": 20,
+        "context": "context 20"
+      },
+      {
+        "id": 21,
+        "source": 1,
+        "target": 2,
+        "decision": 21,
+        "context": "context 21"
+      },
+      {
+        "id": 22,
+        "source": 1,
+        "target": 2,
+        "decision": 22,
+        "context": "context 22"
+      },
+      {
+        "id": 23,
+        "source": 1,
+        "target": 2,
+        "decision": 23,
+        "context": "context 23"
+      },
+      {
+        "id": 24,
+        "source": 1,
+        "target": 2,
+        "decision": 24,
+        "context": "context 24"
+      },
+      {
+        "id": 25,
+        "source": 1,
+        "target": 2,
+        "decision": 25,
+        "context": "context 25"
+      },
+      {
+        "id": 26,
+        "source": 1,
+        "target": 2,
+        "decision": 26,
+        "context": "context 26"
+      },
+      {
+        "id": 27,
+        "source": 1,
+        "target": 2,
+        "decision": 27,
+        "context": "context 27"
+      },
+      {
+        "id": 28,
+        "source": 1,
+        "target": 2,
+        "decision": 28,
+        "context": "context 28"
+      },
+      {
+        "id": 29,
+        "source": 1,
+        "target": 2,
+        "decision": 29,
+        "context": "context 29"
+      },
+      {
+        "id": 30,
+        "source": 1,
+        "target": 2,
+        "decision": 30,
+        "context": "context 30"
+      },
+      {
+        "id": 31,
+        "source": 1,
+        "target": 2,
+        "decision": 31,
+        "context": "context 31"
+      },
+      {
+        "id": 32,
+        "source": 1,
+        "target": 2,
+        "decision": 32,
+        "context": "context 32"
+      },
+      {
+        "id": 33,
+        "source": 1,
+        "target": 2,
+        "decision": 33,
+        "context": "context 33"
+      },
+      {
+        "id": 34,
+        "source": 1,
+        "target": 2,
+        "decision": 34,
+        "context": "context 34"
+      },
+      {
+        "id": 35,
+        "source": 1,
+        "target": 2,
+        "decision": 35,
+        "context": "context 35"
+      },
+      {
+        "id": 36,
+        "source": 1,
+        "target": 2,
+        "decision": 36,
+        "context": "context 36"
+      },
+      {
+        "id": 37,
+        "source": 1,
+        "target": 2,
+        "decision": 37,
+        "context": "context 37"
+      },
+      {
+        "id": 38,
+        "source": 1,
+        "target": 2,
+        "decision": 38,
+        "context": "context 38"
+      },
+      {
+        "id": 39,
+        "source": 1,
+        "target": 2,
+        "decision": 39,
+        "context": "context 39"
+      },
+      {
+        "id": 40,
+        "source": 1,
+        "target": 2,
+        "decision": 40,
+        "context": "context 40"
+      },
+      {
+        "id": 41,
+        "source": 1,
+        "target": 2,
+        "decision": 41,
+        "context": "context 41"
+      },
+      {
+        "id": 42,
+        "source": 1,
+        "target": 2,
+        "decision": 42,
+        "context": "context 42"
+      },
+      {
+        "id": 43,
+        "source": 1,
+        "target": 2,
+        "decision": 43,
+        "context": "context 43"
+      },
+      {
+        "id": 44,
+        "source": 1,
+        "target": 2,
+        "decision": 44,
+        "context": "context 44"
+      },
+      {
+        "id": 45,
+        "source": 1,
+        "target": 2,
+        "decision": 45,
+        "context": "context 45"
+      },
+      {
+        "id": 46,
+        "source": 1,
+        "target": 2,
+        "decision": 46,
+        "context": "context 46"
+      },
+      {
+        "id": 47,
+        "source": 1,
+        "target": 2,
+        "decision": 47,
+        "context": "context 47"
+      },
+      {
+        "id": 48,
+        "source": 1,
+        "target": 2,
+        "decision": 48,
+        "context": "context 48"
+      },
+      {
+        "id": 49,
+        "source": 1,
+        "target": 2,
+        "decision": 49,
+        "context": "context 49"
+      },
+      {
+        "id": 50,
+        "source": 1,
+        "target": 2,
+        "decision": 50,
+        "context": "context 50"
+      },
+      {
+        "id": 51,
+        "source": 1,
+        "target": 2,
+        "decision": 51,
+        "context": "context 51"
+      },
+      {
+        "id": 52,
+        "source": 1,
+        "target": 2,
+        "decision": 52,
+        "context": "context 52"
+      },
+      {
+        "id": 53,
+        "source": 1,
+        "target": 2,
+        "decision": 53,
+        "context": "context 53"
+      },
+      {
+        "id": 54,
+        "source": 1,
+        "target": 2,
+        "decision": 54,
+        "context": "context 54"
+      },
+      {
+        "id": 55,
+        "source": 1,
+        "target": 2,
+        "decision": 55,
+        "context": "context 55"
+      },
+      {
+        "id": 56,
+        "source": 1,
+        "target": 2,
+        "decision": 56,
+        "context": "context 56"
+      },
+      {
+        "id": 57,
+        "source": 1,
+        "target": 2,
+        "decision": 57,
+        "context": "context 57"
+      },
+      {
+        "id": 58,
+        "source": 1,
+        "target": 2,
+        "decision": 58,
+        "context": "context 58"
+      },
+      {
+        "id": 59,
+        "source": 1,
+        "target": 2,
+        "decision": 59,
+        "context": "context 59"
+      },
+      {
+        "id": 60,
+        "source": 1,
+        "target": 2,
+        "decision": 60,
+        "context": "context 60"
+      },
+      {
+        "id": 61,
+        "source": 1,
+        "target": 2,
+        "decision": 61,
+        "context": "context 61"
+      },
+      {
+        "id": 62,
+        "source": 1,
+        "target": 2,
+        "decision": 62,
+        "context": "context 62"
+      },
+      {
+        "id": 63,
+        "source": 1,
+        "target": 2,
+        "decision": 63,
+        "context": "context 63"
+      },
+      {
+        "id": 64,
+        "source": 1,
+        "target": 2,
+        "decision": 64,
+        "context": "context 64"
+      },
+      {
+        "id": 65,
+        "source": 1,
+        "target": 2,
+        "decision": 65,
+        "context": "context 65"
+      },
+      {
+        "id": 66,
+        "source": 1,
+        "target": 2,
+        "decision": 66,
+        "context": "context 66"
+      },
+      {
+        "id": 67,
+        "source": 1,
+        "target": 2,
+        "decision": 67,
+        "context": "context 67"
+      },
+      {
+        "id": 68,
+        "source": 1,
+        "target": 2,
+        "decision": 68,
+        "context": "context 68"
+      },
+      {
+        "id": 69,
+        "source": 1,
+        "target": 2,
+        "decision": 69,
+        "context": "context 69"
+      },
+      {
+        "id": 70,
+        "source": 1,
+        "target": 2,
+        "decision": 70,
+        "context": "context 70"
+      },
+      {
+        "id": 71,
+        "source": 3,
+        "target": 1,
+        "decision": 71,
+        "context": "outside visible scope"
+      }
+    ],
+    "node_cap": 20,
+    "edge_cap": 60,
+    "expected_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60
+    ],
+    "selected": 2,
+    "selected_context": "selected reverse context",
+    "page_one_ids": [
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70
+    ]
+  },
+  "unicode": {
+    "text": "A🧭caféZ",
+    "start": 1,
+    "stop": 7,
+    "quote": "🧭café"
+  }
+}
