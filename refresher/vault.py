@@ -215,8 +215,9 @@ def merged_overrides(vault: Path) -> list[Override]:
 
 def replay(vault: Path, overrides: list[Override] | None = None, include_unreviewed: bool = False) -> MemoryStore:
     store = MemoryStore(include_unreviewed=include_unreviewed)
-    for ex, text in load_extractions(vault):
-        store.apply(ex, text, load_relation(vault, ex))
+    with store.deferred():  # one recomputation for the whole vault
+        for ex, text in load_extractions(vault):
+            store.apply(ex, text, load_relation(vault, ex))
     for report in load_reviews(vault):
         store.apply_review(report)
     # Every state is judged against the graph before any proposal applies, so the order of decisions never

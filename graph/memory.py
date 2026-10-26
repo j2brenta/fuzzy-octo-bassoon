@@ -7,6 +7,7 @@ so the result does not depend on the order items arrive in.
 """
 import re
 import unicodedata
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Iterable
 
@@ -97,6 +98,8 @@ class MemoryStore:
         # SAME verdicts of held-back claims: a verdict judged with unreviewed items in the pool may target one,
         # and a strict rebuild follows this to the placed claim it repeats.
         self._held_same: dict[str, str] = {}
+        self._shingle_cache: dict[str, set] = {}  # item id -> word 3-grams of its text, for the repost check
+        self._deferred = self._dirty = False  # see deferred()
 
     # --- writes ---
 
@@ -109,7 +112,7 @@ class MemoryStore:
             self.held_back[ex.item_id] = ex.quality_status
             if relation is not None and relation.matches(ex):
                 self._held_same.update({v.claim_id: v.target_id for v in relation.verdicts if v.label == "SAME"})
-                self._refresh()
+                self._changed()
             return Placement(ex.item_id, "held_back")
 
         item = ItemNode(ex.item_id, src, _title(text, src.source_name or ex.item_id), text,
@@ -150,11 +153,14 @@ class MemoryStore:
                     new_edges.append(Edge(ex.item_id, "MENTIONS", oid))
 
         # Repost check on the whole item, ordered by event time, not arrival order.
-        shingles = _shingles(text)
+        shingles = self._shingle_cache[ex.item_id] = _shingles(text)
         for other in self._items.values():
             if other.item_id == ex.item_id or not other.text:
                 continue
-            if _jaccard(shingles, _shingles(other.text)) >= REPOST_SIMILARITY:
+            theirs = self._shingle_cache.get(other.item_id)
+            if theirs is None:
+                theirs = self._shingle_cache[other.item_id] = _shingles(other.text)
+            if _jaccard(shingles, theirs) >= REPOST_SIMILARITY:
                 first, later = sorted((item, other), key=lambda i: (i.source.event_time, i.item_id))
                 later.duplicate_of = first.duplicate_of or first.item_id
                 new_edges.append(Edge(later.item_id, "DUPLICATES", first.item_id,
@@ -169,7 +175,7 @@ class MemoryStore:
             new_edges += [Edge(claim.claim_id, "FROM", s.section_id) for s in claim.spans]
 
         self._edges += new_edges
-        self._refresh()
+        self._changed()
         return self.placement(ex.item_id)
 
     def placement(self, item_id: str) -> Placement:
@@ -184,7 +190,28 @@ class MemoryStore:
         return Placement(item_id, "held_back" if item.hidden else "placed", len(mine), item.author_id,
                          item.duplicate_of, relations, ideas)
 
+    @contextmanager
+    def deferred(self):
+        """Apply many items and recompute the graph once at the end, not after each one: a rebuild of n items
+        otherwise recomputes it n times. The result is the same, because the recomputation does not depend on
+        arrival order; a placement returned inside the block may be incomplete. A lexical judgement inside the block
+        (an item without stored verdicts) still sees an up-to-date graph: candidate_pool refreshes first."""
+        self._deferred = True
+        try:
+            yield self
+        finally:
+            self._deferred = False
+            if self._dirty:
+                self._refresh()
+
+    def _changed(self):
+        if self._deferred:
+            self._dirty = True
+        else:
+            self._refresh()
+
     def _refresh(self):
+        self._dirty = False
         groups = self._resolve()
         self._recount_duplicates()
         self._derive()
@@ -237,6 +264,8 @@ class MemoryStore:
     def candidate_pool(self, item_id: str) -> list[Candidate]:
         """World claims from other items, hidden stubs included, for relate.judge. A repost's claims are left
         out: its original stands for them."""
+        if self._dirty:
+            self._refresh()
         out = []
         for cid, node in self._claims.items():
             verdict = self._verdicts.get(cid)
