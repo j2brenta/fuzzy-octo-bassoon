@@ -38,6 +38,21 @@ x-vault: &vault
     create_host_path: false
 
 services:
+  frontend:
+    <<: [*runtime, *config]
+    command: ["python", "-m", "refresher.web", "--host", "0.0.0.0", "--port", "8080", "--vault", "/data/jury"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: "on-failure:3"
+    volumes:
+      - *vault
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/submissions', timeout=5).close()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
   neo4j:
     image: neo4j:2026.10.0
     ports:

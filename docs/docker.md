@@ -5,6 +5,7 @@
 | Code | Runtime role | Compose service |
 | --- | --- | --- |
 | `channels/telegram.py` | One long-polling Telegram bot; invokes parsing, article fetching, triage, extraction and review in the same process | `telegram` (default) |
+| `refresher/web.py`, `refresher/static/` | Browser workspace with background ingestion and native PDF text reading | `frontend` (default) |
 | `channels/importer.py`, `channels/web.py`, `engine/*`, `refresher/cli.py` | Finite capture, processing, knowledge-base rebuild and evaluation commands | `cli` (`tools` profile) |
 | `refresher/viewer.py` | Interactive terminal evidence viewer using curses, jq and less | `viewer` (`tools` profile) |
 | `tests/` | Existing offline pytest and unittest suite and fixtures | `test` (`test` profile) |
@@ -12,12 +13,30 @@
 | `engine/llm.py` | HTTPS client for external Nebius Token Factory models | Configured external API |
 | Neo4j Community | Persistent graph database for the planned graph adapter | `neo4j` |
 
-There is no application HTTP server, frontend server, queue broker or database
-client in this checkout. `graph/store.py` describes a future Neo4j implementation;
+There is no queue broker or database client in this checkout.
+`graph/store.py` describes a future Neo4j implementation;
 the current implementation is `MemoryStore`. The Neo4j service prepares that
 database, but the application does not yet use it. Telegram uses outgoing HTTPS
 long polling and needs no published port or reverse proxy. Voice transcription
 is absent from this checkout and therefore has no container dependency.
+
+## Browser frontend
+
+Create the host vault directory, then build and start just the frontend:
+
+```bash
+mkdir -p .local-vault/jury
+docker compose up -d --build --wait frontend
+```
+
+Open <http://localhost:8080>. The frontend uses `.env` for model settings and
+stores submissions and uploads in `.local-vault/jury`, separately from Telegram.
+`VAULT_DIR` overrides the shared host parent directory. The web PDF extra and
+static assets are installed in the application image; no Node build is needed.
+The server listens on all interfaces inside its container, while the published
+host port is restricted to localhost. This is a local demo without authentication.
+The healthcheck verifies the submissions API. Restarting or removing the
+container preserves the host vault.
 
 ## Neo4j
 
@@ -159,7 +178,7 @@ configured UID/GID, set `VAULT_DIR` to that directory and start the bot.
   signals directly and gets 30 seconds to stop. Bot retries are bounded to
   three restarts on failure. Inspect logs for invalid credentials, webhook
   conflicts or a second polling receiver.
-- `.env` injects credentials only into the bot and CLI at runtime. Keep it local
+- `.env` injects credentials into the frontend, bot and CLI at runtime. Keep it local
   and restrict its permissions (`chmod 600 .env`). Environment variables remain
   visible to Docker administrators; this is a local deployment configuration.
   The current app does not implement Docker secret-file configuration.
