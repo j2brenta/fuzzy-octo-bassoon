@@ -471,6 +471,17 @@ uv run refresher rebuild --vault VAULT    # replay the vault, write wiki/ and wi
 uv run refresher graph --vault VAULT      # only the graph view
 ```
 
+People get a role, affiliation and domains from at most three Tavily searches each,
+read by the model, with the source URL kept for every value; when the results are
+about someone else with the same name, nothing is filled in. Records are stored in
+`people/`. People notes also show trust with its reason (confirmations,
+contradictions, your votes) and the Ideas the person wrote or is the subject of.
+
+```bash
+uv run refresher enrich --vault VAULT --limit 5          # most involved people first
+uv run refresher enrich --vault VAULT --person "Yarin Gal"
+```
+
 Open `wiki/graph/index.html` in a browser; it works from disk with no server.
 It draws items, Ideas, people and sources, with typed edges (supersedes,
 contradicts, confirms, adds detail, repeats). Mentions are left out on purpose.

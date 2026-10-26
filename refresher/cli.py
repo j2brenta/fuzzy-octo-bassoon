@@ -7,6 +7,7 @@
     uv run refresher relate [--vault V] [--lexical]    judge relations for items without a relations/ verdict file
     uv run refresher review [--vault V] [--at DATE]    item duplicates and firm Ideas, stored in graph-reviews/
     uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
+    uv run refresher enrich [--vault V] [--limit N] [--person NAME]   look people up with Tavily, stored in people/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -30,7 +31,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate", "review", "graph"):
+    for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -39,6 +40,9 @@ def main(argv=None) -> int:
         if name == "eval":
             p.add_argument("--manifest", type=Path, required=True)
             p.add_argument("--out", type=Path, help="write the markdown report here")
+        if name == "enrich":
+            p.add_argument("--limit", type=int, default=5, help="people to look up in this run (default 5)")
+            p.add_argument("--person", action="append", default=[], help="look up this person (repeatable)")
         if name == "relate":
             p.add_argument("--lexical", action="store_true", help="store lexical verdicts instead of calling the model")
     args = ap.parse_args(argv)
@@ -49,6 +53,8 @@ def main(argv=None) -> int:
     at = _at(args.at)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
+    if args.command == "enrich":
+        return _enrich(args.vault, args.limit, args.person, at)
     if args.command == "review":
         # Like relate, the review sees unreviewed items too, so its file serves either kind of rebuild.
         report = vault.replay(args.vault, include_unreviewed=True).review(at)
@@ -110,6 +116,62 @@ def _relate(vault_path: Path, lexical: bool) -> int:
         return 1
     print(f"relate: judged {run.judged} items, {run.failed} failed")
     return 1 if run.failed else 0
+
+
+def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int:
+    """Look up the most involved people not yet enriched (or the ones named), at most 3 Tavily searches each."""
+    from dotenv import load_dotenv
+    from engine.llm import ModelError, ModelOutputError, client_from_environment
+    from engine.people import SearchError, enrich, search_from_environment
+    from graph.memory import person_id
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    search = search_from_environment()
+    if search is None:
+        sys.exit("Set TAVILY_API_KEY in .env to look people up.")
+    try:
+        model = client_from_environment()
+    except ModelError as error:
+        sys.exit(str(error))
+    if model is None:
+        sys.exit("Set TRIAGE_PROVIDER=nebius in .env: the model reads the search results.")
+    store = vault.replay(vault_path, include_unreviewed=True)
+    people = {p.person_id: p for p in store.people()}
+    if names:
+        chosen = [people[pid] for pid in map(person_id, names) if pid in people]
+        missing = [n for n in names if person_id(n) not in people]
+        if missing:
+            print(f"enrich: not in the graph: {', '.join(missing)}", file=sys.stderr)
+    else:
+        def involvement(p):
+            return 2 * len(p.facts) + 2 * len(p.authored) + len(p.mentioned_in)
+        chosen = sorted((p for p in people.values() if not vault.enriched(vault_path, p.person_id)),
+                        key=lambda p: (-involvement(p), p.person_id))[:limit]
+    claims = {c.claim.claim_id: c for c in store.claims()}
+    orgs = store.organizations()
+    done = 0
+    for p in chosen:
+        facts = [claims[cid].claim.statement for cid in sorted(p.facts) if cid in claims]
+        titles = [store.item(i).title for i in sorted(p.authored | p.mentioned_in)]
+        affiliation = next((name for name in orgs.values() for f in facts if name.casefold() in f.casefold()), None)
+        context = facts + [f"Wrote: {store.item(i).title}" for i in sorted(p.authored)] + \
+                  [f"Mentioned in: {store.item(i).title}" for i in sorted(p.mentioned_in)]
+        try:
+            record = enrich(p.person_id, p.name, context, affiliation, titles[0] if titles else None, search, model,
+                            log=lambda message: print(f"{p.name}: {message}"))
+        except ModelOutputError as error:  # a bad answer: this person waits for the next run
+            print(f"{p.name}: not enriched: {error}", file=sys.stderr)
+            continue
+        except (SearchError, ModelError) as error:  # key, credit or network: every other person would fail too
+            print(f"{p.name}: not enriched: {error}", file=sys.stderr)
+            print(f"enrich: stopped after {done} people", file=sys.stderr)
+            return 1
+        vault.save_enrichment(vault_path, record)
+        done += 1
+        found = ", ".join(f["value"] for f in (record["role"], record["affiliation"]) if f) or "no match"
+        print(f"{p.name}: {found}; {len(record['domains'])} domains")
+    vault.log(vault_path, at, f"enrich: {done} people looked up with Tavily")
+    print(f"enrich: {done} people")
+    return 0
 
 
 if __name__ == "__main__":

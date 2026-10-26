@@ -69,7 +69,10 @@ class PersonNode:
     down: int = 0
     trust_pinned: float | None = None
     facts: set[str] = field(default_factory=set)  # claim ids about this person: their profile
-    enrichment_status: str = "pending"
+    enrichment_status: str = "pending"  # pending | enriched | no_match (the web results were about someone else)
+    role: dict | None = None  # {"value", "url"} from enrichment, like affiliation and each domain
+    affiliation: dict | None = None
+    domains: list[dict] = field(default_factory=list)
 
 
 @dataclass

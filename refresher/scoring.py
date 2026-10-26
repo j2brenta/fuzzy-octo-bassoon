@@ -50,3 +50,15 @@ def trust_learned(confirmations: int = 0, contradictions: int = 0, up: int = 0, 
     supersessions or contradictions inside the half-life and thumbs down."""
     good, bad = confirmations + up, contradictions + down
     return (prior * weight + good) / (weight + good + bad)
+
+
+def trust_rationale(confirmations: int = 0, contradictions: int = 0, up: int = 0, down: int = 0,
+                    pinned: float | None = None) -> str:
+    """Why a person's trust is what it is, in the words a people note shows."""
+    if pinned is not None:
+        return f"{pinned:.2f}: set by you"
+    parts = [f"{confirmations} independent confirmation{'s' * (confirmations != 1)}",
+             f"{contradictions} contradiction{'s' * (contradictions != 1)}"]
+    if up or down:
+        parts.append(f"{up} up, {down} down from you")
+    return f"{trust_learned(confirmations, contradictions, up, down):.2f}: " + ", ".join(parts)

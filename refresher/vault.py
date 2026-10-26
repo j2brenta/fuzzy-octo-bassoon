@@ -6,6 +6,7 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     relations/<item_id>.json    relation verdicts, written once by `refresher relate` and replayed
     graph-reviews/<time>.json   the graph review's decisions, written by `refresher review` and replayed
                                 (reviews/ is ingestion's extraction reviews)
+    people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`
     overrides.yaml              the user's word: durability, trust, votes
     wiki/items|ideas|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
@@ -21,7 +22,7 @@ from pydantic import ValidationError
 
 from graph.memory import MemoryStore
 from graph.store import Edge, GraphStore, ReviewReport
-from refresher import km
+from refresher import km, scoring
 from refresher.schemas import Extraction, Override, Relation
 
 MARK = "<!-- your notes: everything below this line is kept on rebuild -->"
@@ -131,7 +132,33 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
         store.apply_review(report)
     for o in merged_overrides(vault) if overrides is None else overrides:
         store.apply_override(o)
+    people = {p.person_id: p for p in store.people()}
+    for record in load_enrichments(vault):
+        person = people.get(record["person_id"])
+        if person is not None:
+            person.enrichment_status = "enriched" if record.get("match") else "no_match"
+            person.role, person.affiliation = record.get("role"), record.get("affiliation")
+            person.domains = list(record.get("domains") or [])
     return store
+
+
+def _person_file(vault: Path, person_id: str) -> Path:
+    return vault / "people" / f"{person_id.replace(':', '-')}.json"
+
+
+def load_enrichments(vault: Path) -> list[dict]:
+    return [json.loads(path.read_text(encoding="utf-8")) for path in sorted((vault / "people").glob("*.json"))]
+
+
+def save_enrichment(vault: Path, record: dict) -> Path:
+    path = _person_file(vault, record["person_id"])
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
+def enriched(vault: Path, person_id: str) -> bool:
+    return _person_file(vault, person_id).exists()
 
 
 # --- views: write ---
@@ -268,10 +295,21 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
         _write_note(wiki / "ideas" / f"{names[idea.idea_id]}.md", meta, "\n".join(lines), written)
 
     for p in sorted(store.people(), key=lambda p: p.person_id):
-        lines = [f"# {p.name}", "", f"Trust {store.trust(p.person_id):.2f} · enrichment {p.enrichment_status}"]
+        lines = [f"# {p.name}", ""]
+        who = " at ".join(f"[{f['value']}]({f['url']})" for f in (p.role, p.affiliation) if f)
+        if who:
+            lines += [who, ""]
+        trust = scoring.trust_rationale(p.confirmations, p.contradictions, p.up, p.down, p.trust_pinned)
+        lines.append(f"Trust {trust} · enrichment {p.enrichment_status}")
+        if p.domains:
+            lines += ["", "## Works on", ""] + [f"- [{d['value']}]({d['url']})" for d in p.domains]
         facts = sorted((all_claims[cid] for cid in p.facts), key=lambda c: (c.clock_start, c.claim.claim_id))
         if facts:
             lines += ["", "## Profile", ""] + [f"- {c.claim.statement} ({where(c)})" for c in facts]
+        ideas = sorted({c.idea_id for c in all_claims.values() if c.idea_id and c.idea_id in names
+                        and (c.item_id in p.authored or c.claim.claim_id in p.facts)})
+        if ideas:
+            lines += ["", "## Ideas", ""] + [f"- {link(i)}" for i in ideas]
         for head, ids in (("Wrote", p.authored), ("Mentioned in", p.mentioned_in)):
             if ids:
                 lines += ["", f"## {head}", ""] + [f"- {link(i)}" for i in sorted(ids, key=lambda i: names[i])]
