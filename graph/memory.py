@@ -18,6 +18,9 @@ from refresher.schemas import Extraction, Override, Relation, Verdict
 
 REPOST_SIMILARITY = 0.8  # item text, word 3-gram Jaccard
 REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its match in the original
+REVIEW_CLAIM_MATCH = 0.5  # word-set Jaccard for the review's item-duplicate check
+REVIEW_DUPLICATE_SHARE = 0.7  # an item whose claims match one other item this much is a duplicate of it
+REVIEW_MIN_CLAIMS = 3  # fewer claims are too few to call an item a duplicate; reposts and relations cover those
 WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
 EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADICTS", "ADDS_DETAIL": "ELABORATES"}
@@ -66,6 +69,7 @@ class MemoryStore:
         self._verdicts: dict[str, Verdict] = {}  # claim id -> verdict
         self._edges: list[Edge] = []  # what an item brings: source, author, mentions, reposts, spans
         self._relations: list[Edge] = []  # what the verdicts imply; recomputed by _resolve
+        self._firm: set[str] = set()  # idea ids the review firmed up
         self.held_back: dict[str, str] = {}  # item id -> reason
 
     # --- writes ---
@@ -136,16 +140,30 @@ class MemoryStore:
             new_edges += [Edge(claim.claim_id, "FROM", s.section_id) for s in claim.spans]
 
         self._edges += new_edges
-        groups = self._resolve()
-        self._recount_duplicates()
-        self._derive()
-        self._build_ideas(groups)
+        self._refresh()
         mine = {c.claim_id for c in ex.claims}
         relations = [e for e in new_edges if e.type == "DUPLICATES"]
         relations += [e for e in self._relations if (e.src in mine or e.dst in mine) and e.type in
                       {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}]
         return Placement(ex.item_id, "held_back" if skipped else "placed", len(ex.claims), item.author_id,
                          item.duplicate_of, relations)
+
+    def _refresh(self):
+        groups = self._resolve()
+        self._recount_duplicates()
+        self._derive()
+        self._build_ideas(groups)
+
+    def apply_review(self, report: ReviewReport) -> None:
+        """Replay a stored review: item duplicates and firmed Ideas. Unknown ids (not placed here) are skipped."""
+        for e in report.item_duplicates:
+            dup, first = self._items.get(e.src), self._items.get(e.dst)
+            if dup is None or first is None or dup.duplicate_of is not None:
+                continue
+            dup.duplicate_of = first.duplicate_of or first.item_id
+            self._edges.append(e)
+        self._firm |= set(report.firmed)
+        self._refresh()
 
     def candidate_pool(self, item_id: str) -> list[Candidate]:
         """World claims from other items, hidden stubs included, for relate.judge. A repost's claims are left
@@ -265,6 +283,7 @@ class MemoryStore:
                             canonical.claim.statement,
                             max((n.durability for n in independent), key=DURABILITY_RANK.__getitem__),
                             max(self._event_time(n) for n in nodes), {n.claim.claim_id for n in nodes})
+            idea.status = "firm" if idea.idea_id in self._firm else "provisional"
             self._ideas[idea.idea_id] = idea
             for node in nodes:
                 node.idea_id = idea.idea_id
@@ -371,7 +390,45 @@ class MemoryStore:
         return self._ideas[idea_id]
 
     def review(self, at: datetime) -> ReviewReport:
-        return ReviewReport(at)  # review.py (Victor) decides; nothing to firm up or merge without Ideas
+        """The minimal review, deterministic and without a model: item duplicates and firming up Ideas.
+        Reports only what is new; apply_review applies it. Merges, splits and Topics come later."""
+        report = ReviewReport(at)
+        visible = sorted((i for i in self._items.values() if not i.hidden and i.duplicate_of is None),
+                         key=lambda i: (i.source.event_time, i.item_id))
+        claims: dict[str, list[ClaimNode]] = {}
+        for node in self._claims.values():
+            claims.setdefault(node.item_id, []).append(node)
+        changed = {frozenset((e.src, e.dst)) for e in self._relations if e.type in {"SUPERSEDES", "CONTRADICTS"}}
+        same = {frozenset((e.src, e.dst)) for e in self._relations if e.type in {"SUPPORTS", "DUPLICATES"}}
+
+        def share(a: str, b: str) -> tuple[int, int]:
+            mine, theirs = claims.get(a, []), claims.get(b, [])
+            matched = sum(any(frozenset((c.claim.claim_id, d.claim.claim_id)) not in changed and (
+                frozenset((c.claim.claim_id, d.claim.claim_id)) in same
+                or _jaccard(set(_words(c.claim.statement)), set(_words(d.claim.statement))) >= REVIEW_CLAIM_MATCH)
+                for d in theirs) for c in mine)
+            return matched, len(mine)
+
+        duplicates: set[str] = set()
+        for n, first in enumerate(visible):
+            for later in visible[n + 1:]:
+                if first.item_id in duplicates or later.item_id in duplicates:
+                    continue
+                for dup, other in ((later, first), (first, later)):  # the later one, if both are covered
+                    matched, total = share(dup.item_id, other.item_id)
+                    if total >= REVIEW_MIN_CLAIMS and matched >= REVIEW_DUPLICATE_SHARE * total:
+                        duplicates.add(dup.item_id)
+                        report.item_duplicates.append(Edge(dup.item_id, "DUPLICATES", other.item_id,
+                                                           f"{matched} of {total} claims match the other item."))
+                        break
+
+        for idea in sorted(self._ideas.values(), key=lambda i: i.idea_id):
+            items = [self._items[i] for i in {self._claims[cid].item_id for cid in idea.members}]
+            authors = {i.author_id for i in items if not i.hidden and i.duplicate_of is None
+                       and i.item_id not in duplicates and i.author_id}
+            if idea.status == "provisional" and len(authors) >= 2:
+                report.firmed.append(idea.idea_id)
+        return report
 
     # --- graph.query: lexical baseline ---
 

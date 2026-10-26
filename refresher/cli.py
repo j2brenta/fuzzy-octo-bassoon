@@ -5,6 +5,7 @@
     uv run refresher km [--vault V] [--at DATE]        print the health report at a moment
     uv run refresher eval [--vault V] --manifest M     score against expected labels
     uv run refresher relate [--vault V] [--lexical]    judge relations for items without a relations/ verdict file
+    uv run refresher review [--vault V] [--at DATE]    item duplicates and firm Ideas, stored in graph-reviews/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -29,7 +30,7 @@ def _at(value: str | None) -> datetime:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
-    for name in ("rebuild", "km", "eval", "relate"):
+    for name in ("rebuild", "km", "eval", "relate", "review"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -48,6 +49,15 @@ def main(argv=None) -> int:
     at = _at(args.at)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
+    if args.command == "review":
+        # Like relate, the review sees unreviewed items too, so its file serves either kind of rebuild.
+        report = vault.replay(args.vault, include_unreviewed=True).review(at)
+        if not (report.item_duplicates or report.firmed):
+            print("review: nothing new")
+            return 0
+        path = vault.save_review(args.vault, report)
+        print(f"review: {len(report.item_duplicates)} item duplicates, {len(report.firmed)} Ideas firmed; wrote {path.name}")
+        return 0
 
     overrides = vault.merged_overrides(args.vault)
     store = vault.replay(args.vault, overrides, include_unreviewed=args.include_unreviewed)

@@ -246,3 +246,74 @@ def test_eval_scores_groupings_pairwise_and_relation_precision():
     # correction DUPLICATES original (the "previously" claim) is not in the manifest.
     assert checks["relation precision"].got.startswith("0.67") and not checks["relation precision"].ok
     assert checks["SUPERSEDES original"].ok and checks["DUPLICATES original"].ok
+
+
+# --- Phase 6: the minimal review ---
+
+LIST_1 = item("list1", 7, [("l1a", "Jack Lindsey leads Anthropic's model psychiatry team."),
+                           ("l1b", "Yarin Gal leads the OATML group at Oxford."),
+                           ("l1c", "METR measures how long a task agents can complete autonomously."),
+                           ("l1d", "Eugene Yan writes practical pieces on LLM evaluation.")], author=None)
+LIST_2 = item("list2", 8, [("l2a", "Jack Lindsey leads the model psychiatry team at Anthropic."),
+                           ("l2b", "At Oxford, Yarin Gal leads the OATML group."),
+                           ("l2c", "METR measures how long agents can autonomously complete a task.")], author=None)
+LIST_TEXT = {"list1": "People to follow: Lindsey, Gal, METR, Yan.", "list2": "A shorter, reworded list of three."}
+
+
+def lists_vault(tmp_path):
+    for ex in (LIST_1, LIST_2):
+        (tmp_path / "processed").mkdir(exist_ok=True)
+        (tmp_path / "raw").mkdir(exist_ok=True)
+        (tmp_path / "processed" / f"{ex.item_id}.json").write_text(ex.model_dump_json())
+        (tmp_path / "raw" / f"{ex.item_id}.json").write_text(json.dumps({"text": LIST_TEXT[ex.item_id]}))
+    return tmp_path
+
+
+def test_review_finds_a_reworded_list_and_a_rebuild_reproduces_it(tmp_path, capsys):
+    v = lists_vault(tmp_path)
+    assert vault.replay(v).item("list2").duplicate_of is None  # the texts differ, so no repost
+    assert main(["review", "--vault", str(v), "--at", "2026-10-26"]) == 0
+    [report] = vault.load_reviews(v)
+    assert [(e.src, e.dst) for e in report.item_duplicates] == [("list2", "list1")]
+    rebuilt = vault.replay(v)
+    assert rebuilt.item("list2").duplicate_of == "list1"
+    assert all(c.duplicate_rank == 1 for c in rebuilt.claims() if c.item_id == "list2")
+    assert main(["review", "--vault", str(v), "--at", "2026-10-27"]) == 0
+    assert capsys.readouterr().out.strip().endswith("review: nothing new")
+
+
+def test_review_does_not_call_a_correction_a_duplicate():
+    assert trio().review(datetime(2026, 10, 26, tzinfo=timezone.utc)).item_duplicates == []
+
+
+def test_review_firms_an_idea_with_two_independent_authors_and_replay_keeps_it():
+    a = item("a", 10, [("a1", "Model X has a 128k context window.")], author="Alice")
+    b = item("b", 11, [("b1", "Model X has a 128k token context window.")], author="Bob")
+    c = item("c", 12, [("c1", "Model X has a 128k context window, again.")], author="Alice")
+    store = MemoryStore()
+    store.apply(a, "")
+    store.apply(c, "", verdicts("c", ("c1", "SAME", "a1")))
+    assert store.review(datetime(2026, 10, 26, tzinfo=timezone.utc)).firmed == []  # one author twice
+    store.apply(b, "", verdicts("b", ("b1", "SAME", "a1")))
+    report = store.review(datetime(2026, 10, 26, tzinfo=timezone.utc))
+    [idea] = store.ideas()
+    assert report.firmed == [idea.idea_id] and idea.status == "provisional"
+    store.apply_review(report)
+    assert store.idea(idea.idea_id).status == "firm" and store.review(report.at).firmed == []
+
+
+SEED = Path(__file__).parent.parent / ".local-vault" / "seed"
+
+
+@pytest.mark.skipif(not (SEED / "processed").is_dir(), reason="seed vault not checked out")
+def test_seed_people_list_2_duplicates_list_1_and_survives_review_and_rebuild(tmp_path):
+    shutil.copytree(SEED, tmp_path / "seed")
+    store = vault.replay(tmp_path / "seed", [], include_unreviewed=True)
+    by_message = {i.source.message_id: i for i in store.items()}
+    first, second = by_message["supplied-people-list"], by_message["supplied-introspection-list"]
+    assert second.duplicate_of == first.item_id
+    report = store.review(datetime(2026, 10, 26, tzinfo=timezone.utc))
+    assert report.topics == {} and second.item_id not in {e.src for e in report.item_duplicates}
+    vault.save_review(tmp_path / "seed", report)
+    again = vault.replay(tmp_path / "seed", [], include_unreviewed=True)
+    assert again.item(second.item_id).duplicate_of == first.item_id

@@ -150,7 +150,8 @@ def test_query_baseline_on_fixture_vault(vault_dir):
     author = store.item(claim.item_id).author_id
     assert author in {p.person_id for p in store.people_for([claim.claim.claim_id])}
     assert any(e.type == "PUBLISHED_IN" for e in store.neighbours(claim.item_id))
-    assert claim.idea_id in {i.idea_id for i in store.ideas()} and store.review(TODAY).firmed == []
+    assert claim.idea_id in {i.idea_id for i in store.ideas()}
+    assert store.review(TODAY).firmed == [claim.idea_id]  # Demo Author and the synthetic confirmation agree
 
 
 def _scored(store):

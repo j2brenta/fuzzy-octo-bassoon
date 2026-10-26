@@ -4,6 +4,8 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     raw/<item_id>.json          captures, never changed
     processed/<item_id>.json    Extraction handoff records, replayed into the store
     relations/<item_id>.json    relation verdicts, written once by `refresher relate` and replayed
+    graph-reviews/<time>.json   the graph review's decisions, written by `refresher review` and replayed
+                                (reviews/ is ingestion's extraction reviews)
     overrides.yaml              the user's word: durability, trust, votes
     wiki/items|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
@@ -18,7 +20,7 @@ import yaml
 from pydantic import ValidationError
 
 from graph.memory import MemoryStore
-from graph.store import GraphStore
+from graph.store import Edge, GraphStore, ReviewReport
 from refresher import km
 from refresher.schemas import Extraction, Override, Relation
 
@@ -62,6 +64,29 @@ def save_relation(vault: Path, relation: Relation) -> Path:
     return path
 
 
+def save_review(vault: Path, report: ReviewReport) -> Path:
+    path = vault / "graph-reviews" / f"{report.at.astimezone().strftime('%Y%m%dT%H%M%S%z')}.json"
+    path.parent.mkdir(exist_ok=True)
+    data = {"at": report.at.isoformat(),
+            "item_duplicates": [{"src": e.src, "dst": e.dst, "rationale": e.rationale} for e in report.item_duplicates],
+            "firmed": report.firmed, "merged_ideas": report.merged_ideas, "topics": report.topics,
+            "merged_people": report.merged_people}
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
+def load_reviews(vault: Path) -> list[ReviewReport]:
+    out = []
+    for path in sorted((vault / "graph-reviews").glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        out.append(ReviewReport(datetime.fromisoformat(data["at"]),
+                                [Edge(d["src"], "DUPLICATES", d["dst"], d.get("rationale", ""))
+                                 for d in data.get("item_duplicates", [])],
+                                list(data.get("firmed", [])), [tuple(p) for p in data.get("merged_ideas", [])],
+                                dict(data.get("topics", {})), [tuple(p) for p in data.get("merged_people", [])]))
+    return sorted(out, key=lambda r: r.at)
+
+
 def load_overrides(vault: Path) -> list[Override]:
     path = vault / "overrides.yaml"
     rows = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
@@ -102,6 +127,8 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     store = MemoryStore(include_unreviewed=include_unreviewed)
     for ex, text in load_extractions(vault):
         store.apply(ex, text, load_relation(vault, ex))
+    for report in load_reviews(vault):
+        store.apply_review(report)
     for o in merged_overrides(vault) if overrides is None else overrides:
         store.apply_override(o)
     return store
