@@ -3,6 +3,7 @@
 Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.yaml and log.md):
     raw/<item_id>.json          captures, never changed
     processed/<item_id>.json    Extraction handoff records, replayed into the store
+    relations/<item_id>.json    relation verdicts, written once by `refresher relate` and replayed
     overrides.yaml              the user's word: durability, trust, votes
     wiki/items|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
@@ -19,12 +20,12 @@ from pydantic import ValidationError
 from graph.memory import MemoryStore
 from graph.store import GraphStore
 from refresher import km
-from refresher.schemas import Extraction, Override
+from refresher.schemas import Extraction, Override, Relation
 
 MARK = "<!-- your notes: everything below this line is kept on rebuild -->"
 USER_KEYS = ("user_durability", "user_trust")
 INVERSE = {"DUPLICATES": "duplicated by", "SUPPORTS": "supported by", "SUPERSEDES": "superseded by",
-           "CONTRADICTS": "contradicted by"}
+           "CONTRADICTS": "contradicted by", "ELABORATES": "elaborated by"}
 UNSAFE = re.compile(r'[\\/:*?"<>|#^\[\]]+')
 
 
@@ -39,6 +40,26 @@ def load_extractions(vault: Path) -> list[tuple[Extraction, str]]:
         text = json.loads(raw.read_text(encoding="utf-8")).get("text", "") if raw.exists() else ""
         out.append((ex, text))
     return sorted(out, key=lambda pair: (pair[0].source.event_time, pair[0].item_id))
+
+
+def load_relation(vault: Path, extraction: Extraction) -> Relation | None:
+    """The stored verdicts for an item, or None when there are none or they no longer fit its claims."""
+    path = vault / "relations" / f"{extraction.item_id}.json"
+    if not path.exists():
+        return None
+    try:
+        relation = Relation.model_validate_json(path.read_text(encoding="utf-8"))
+    except ValidationError as error:
+        print(f"warning: ignoring {path.name}: {error.errors()[0]['msg']}", file=sys.stderr)
+        return None
+    return relation if relation.matches(extraction) else None
+
+
+def save_relation(vault: Path, relation: Relation) -> Path:
+    path = vault / "relations" / f"{relation.item_id}.json"
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(relation.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    return path
 
 
 def load_overrides(vault: Path) -> list[Override]:
@@ -80,7 +101,7 @@ def merged_overrides(vault: Path) -> list[Override]:
 def replay(vault: Path, overrides: list[Override] | None = None, include_unreviewed: bool = False) -> MemoryStore:
     store = MemoryStore(include_unreviewed=include_unreviewed)
     for ex, text in load_extractions(vault):
-        store.apply(ex, text)
+        store.apply(ex, text, load_relation(vault, ex))
     for o in merged_overrides(vault) if overrides is None else overrides:
         store.apply_override(o)
     return store

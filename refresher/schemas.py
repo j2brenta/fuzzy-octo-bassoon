@@ -2,7 +2,7 @@
 import hashlib
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class _Model(BaseModel):
@@ -139,6 +139,56 @@ class Extraction(_Handoff):
     triage: Triage | None = None
     quality_status: str
     quality_gate_passed: bool
+
+
+# --- Relations: the graph's verdict stage, relations/<item_id>.json, written once and replayed ---
+
+RelationLabel = Literal["SAME", "UPDATES", "CONFLICTS", "ADDS_DETAIL", "NONE"]
+
+
+class Verdict(_Model):
+    """How one claim relates to the candidates it was shown. The label is symmetric: event time decides which
+    claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES."""
+    claim_id: str
+    subject: Literal["person", "organization", "world"] = "world"
+    subject_name: str | None = None  # the person or organization a profile fact is about
+    label: RelationLabel = "NONE"
+    target_id: str | None = None  # a candidate claim id; None exactly when the label is NONE
+    rationale: str = ""
+
+    @model_validator(mode="after")
+    def _consistent(self):
+        if (self.label == "NONE") != (self.target_id is None):
+            raise ValueError("target_id is required for a relation and must be empty for NONE")
+        if (self.subject != "world") != bool(self.subject_name):
+            raise ValueError("subject_name is required for a person or organization subject, and only then")
+        return self
+
+
+class Relation(_Model):
+    stage: Literal["relations"] = "relations"
+    item_id: str
+    relator: str  # lexical | model
+    model: str | None = None
+    prompt_version: str
+    candidates: dict[str, list[str]]  # claim id -> candidate claim ids, as the relator saw them
+    verdicts: list[Verdict]
+
+    @model_validator(mode="after")
+    def _targets_were_candidates(self):
+        for v in self.verdicts:
+            if v.claim_id not in self.candidates:
+                raise ValueError(f"verdict for {v.claim_id} has no candidate list")
+            if v.target_id is not None and v.target_id not in self.candidates[v.claim_id]:
+                raise ValueError(f"verdict for {v.claim_id} targets {v.target_id}, which was not a candidate")
+        if len({v.claim_id for v in self.verdicts}) != len(self.verdicts):
+            raise ValueError("one verdict per claim")
+        return self
+
+    def matches(self, extraction: "Extraction") -> bool:
+        """False when ingestion re-extracted the item since: the verdicts are stale and need judging again."""
+        return self.item_id == extraction.item_id and \
+            {v.claim_id for v in self.verdicts} == {c.claim_id for c in extraction.claims}
 
 
 class Override(_Model):

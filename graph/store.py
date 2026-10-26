@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Iterable, Protocol, runtime_checkable
 
-from refresher.schemas import Claim, Extraction, Override, Source
+from refresher.schemas import Claim, Extraction, Override, Relation, Source
 
 EDGE_TYPES = {"AUTHORED_BY", "PUBLISHED_IN", "MENTIONS", "FROM", "DUPLICATES", "SUPPORTS",
               "SUPERSEDES", "CONTRADICTS", "ELABORATES",
@@ -26,6 +26,7 @@ class ItemNode:
     durability: str | None = None  # triage class for the whole item
     duplicate_of: str | None = None  # earliest item it reposts
     review_status: str = "accepted"  # ingestion quality_status; other values only with include_unreviewed
+    hidden: bool = False  # a triage-skipped stub: listed nowhere, kept only as a target for SUPERSEDES
 
 
 @dataclass
@@ -67,6 +68,7 @@ class PersonNode:
     up: int = 0
     down: int = 0
     trust_pinned: float | None = None
+    facts: set[str] = field(default_factory=set)  # claim ids about this person: their profile
     enrichment_status: str = "pending"
 
 
@@ -111,7 +113,8 @@ class ReviewReport:
 
 @runtime_checkable
 class GraphStore(Protocol):
-    def apply(self, extraction: Extraction, text: str = "") -> Placement: ...
+    def apply(self, extraction: Extraction, text: str = "", relation: Relation | None = None) -> Placement:
+        """Place one item. `relation` is its stored verdicts; without them the store relates it lexically."""
     def apply_override(self, override: Override) -> None: ...
     def items(self) -> Iterable[ItemNode]: ...
     def claims(self) -> Iterable[ClaimNode]: ...

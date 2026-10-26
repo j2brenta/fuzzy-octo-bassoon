@@ -92,7 +92,7 @@ def evaluate(store: MemoryStore, expectations: list[Expect], extractions: dict) 
             checks.append(Check(exp.seed_id, "people recall", 1.0, round(recall, 2), recall >= 0.8))
             checks.append(Check(exp.seed_id, "people precision", 1.0, round(precision, 2), precision >= 0.8))
         if "superseded" in lb:
-            got = any(c.superseded_by for c in store.claims() if c.item_id == item_id)
+            got = any(c.superseded_by for c in store.claims(hidden=True) if c.item_id == item_id)
             checks.append(Check(exp.seed_id, "superseded", lb["superseded"], got, got == lb["superseded"]))
         for rtype, target in exp.relations:
             other = seed_item.get(target)
@@ -102,7 +102,7 @@ def evaluate(store: MemoryStore, expectations: list[Expect], extractions: dict) 
 
 
 def _related(store: MemoryStore, a: str, b: str, rtype: str) -> bool:
-    claim_item = {c.claim.claim_id: c.item_id for c in store.claims()}
+    claim_item = {c.claim.claim_id: c.item_id for c in store.claims(hidden=True)}
     for e in store.edges():
         if e.type != rtype:
             continue
