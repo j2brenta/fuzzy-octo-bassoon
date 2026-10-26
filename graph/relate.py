@@ -22,6 +22,7 @@ from refresher.schemas import Claim, Entity, Extraction, Relation, Source, Verdi
 CANDIDATES = 5
 CLAIM_SIMILARITY = 0.8  # claim statement, word-set Jaccard: the lexical relator's SAME
 ENTITY_BOOST = 0.1  # per entity both items name
+RECHECK_SCORE = CLAIM_SIMILARITY / 2  # a new candidate this close makes stored verdicts worth judging again
 WORD = re.compile(r"\w+", re.UNICODE)
 
 
@@ -62,14 +63,19 @@ class Relator(Protocol):
     def relate(self, item: ItemContext, claims: list[Claim], candidates: dict[str, list[Candidate]]) -> list[Verdict]: ...
 
 
+def score(claim: Claim, entities: set[str], c: Candidate) -> float:
+    """Word overlap, boosted by shared entities; 0 when no word is shared. Embeddings can replace it here."""
+    overlap = jaccard(set(words(claim.statement)), set(words(c.statement)))
+    return overlap + ENTITY_BOOST * len(entities & c.entities) if overlap > 0 else 0.0
+
+
 def candidates(claim: Claim, entities: set[str], pool: list[Candidate], k: int = CANDIDATES) -> list[Candidate]:
-    """Top k by word overlap, boosted by shared entities, one per Idea. Embeddings can replace the score here."""
-    mine = set(words(claim.statement))
+    """Top k by score, one per Idea."""
     scored = []
     for c in pool:
-        overlap = jaccard(mine, set(words(c.statement)))
-        if overlap > 0:
-            scored.append((-(overlap + ENTITY_BOOST * len(entities & c.entities)), c.event_time, c.claim_id, c))
+        s = score(claim, entities, c)
+        if s > 0:
+            scored.append((-s, c.event_time, c.claim_id, c))
     out, ideas = [], set()
     for *_, c in sorted(scored, key=lambda row: row[:3]):
         if c.idea_id is not None and c.idea_id in ideas:
@@ -91,6 +97,18 @@ def judge(extraction: Extraction, text: str, pool: list[Candidate], relator: Rel
                     prompt_version=relator.prompt_version,
                     candidates={cid: [c.claim_id for c in cands] for cid, cands in shown.items()},
                     verdicts=verdicts)
+
+
+def stale(relation: Relation, extraction: Extraction, pool: list[Candidate]) -> bool:
+    """True when a claim now has a close candidate it was never shown: an item that happened earlier arrived
+    later (the original after its correction), so the stored verdicts may miss the relation that matters."""
+    entities = {e.name.casefold() for e in extraction.entities}
+    for claim in extraction.claims:
+        shown = set(relation.candidates.get(claim.claim_id, []))
+        if any(c.claim_id not in shown and score(claim, entities, c) >= RECHECK_SCORE
+               for c in candidates(claim, entities, pool)):
+            return True
+    return False
 
 
 def subject_of(claim: Claim, entities: list[Entity]) -> tuple[str, str | None]:

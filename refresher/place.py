@@ -35,13 +35,19 @@ def relate_pending(vault_path: Path, relator: relate.Relator, only: Iterable[str
                    log: Callable[[str], None] = _quiet, warn: Callable[[str], None] = _quiet) -> RelateRun:
     """Replay in event-time order and judge each item that has no current verdict file against what precedes it.
     Every item is judged, unreviewed ones too, so the files serve rebuilds with or without --include-unreviewed.
-    With `only`, just those items are judged; the others are related lexically on the way, as a rebuild would."""
+    With `only`, just those items are judged; the others are related lexically on the way, as a rebuild would.
+
+    Stored verdicts are judged again, whatever `only` says, when a close candidate they never saw has appeared
+    (relate.stale): an original that arrives after its correction. Model verdicts are never redone by wording."""
     only = set(only) if only is not None else None
     run = RelateRun()
     store = MemoryStore(include_unreviewed=True)
     for ex, text in vault.load_extractions(vault_path):
         relation = vault.load_relation(vault_path, ex)
-        if relation is None and ex.claims and (only is None or ex.item_id in only):
+        missing = relation is None and (only is None or ex.item_id in only)
+        recheck = relation is not None and not (relation.relator == "model" and relator.name == "lexical") \
+            and relate.stale(relation, ex, store.candidate_pool(ex.item_id))
+        if (missing or recheck) and ex.claims:
             try:
                 relation = relate.judge(ex, text, store.candidate_pool(ex.item_id), relator)
             except (ModelOutputError, ValidationError) as error:  # a bad answer: the item waits for the next run
@@ -55,7 +61,8 @@ def relate_pending(vault_path: Path, relator: relate.Relator, only: Iterable[str
                 vault.save_relation(vault_path, relation)
                 run.judged += 1
                 related = sum(v.label != "NONE" for v in relation.verdicts)
-                log(f"{ex.item_id[:12]}: {len(relation.verdicts)} claims, {related} related ({relator.name})")
+                log(f"{ex.item_id[:12]}: {len(relation.verdicts)} claims, {related} related ({relator.name})"
+                    + (", judged again: a closer candidate arrived" if recheck else ""))
         store.apply(ex, text, relation)
     return run
 

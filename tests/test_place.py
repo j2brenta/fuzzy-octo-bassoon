@@ -89,3 +89,16 @@ def test_no_relator_is_lexical_and_says_so(tmp_path):
     placement, store, note = place(tmp_path, capture(tmp_path, "correction"))
     assert note == "Relations matched by wording only" and placement.ideas
     assert vault.load_relation(tmp_path, CORRECTION) is None
+
+
+def test_an_original_arriving_after_its_correction_gets_the_supersession(tmp_path):
+    relator = Canned(LABELS)
+    for name in ("correction", "repost", "original"):  # the correction is judged when nothing precedes it
+        _, store, _ = place(tmp_path, capture(tmp_path, name), relator)
+    supersedes = {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}
+    assert ("c16", "r14") in supersedes and ("c16", "o14") in supersedes
+    stored = vault.load_relation(tmp_path, CORRECTION)
+    assert {v.target_id for v in stored.verdicts if v.label == "UPDATES"} & {"o14", "r14"}
+    calls = relator.calls
+    place(tmp_path, "original", relator)  # nothing new arrived: nothing is judged again
+    assert relator.calls == calls
