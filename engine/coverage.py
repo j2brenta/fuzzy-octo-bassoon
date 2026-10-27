@@ -12,7 +12,7 @@ from engine.judge import JudgeError, JudgeResult, judge_capture
 from engine.llm import JsonModel, ModelOutputError
 from engine.parse import parse_capture
 
-PROMPT_VERSION = "coverage-v3"
+PROMPT_VERSION = "coverage-v4"
 SYSTEM_PROMPT = EXTRACT_PROMPT + '''
 This is an ADDITIVE coverage pass. User JSON contains source passages, existing
 claims already judged supported, and omitted_concepts from a fallible reviewer.
