@@ -4,7 +4,9 @@
 (() => {
   const data = JSON.parse(document.getElementById('map-data').textContent);
   const $ = id => document.getElementById(id);
-  const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: []};
+  const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: [],
+    lang: 'original', view: null};
+  try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
   const items = new Map(data.items.map(x => [x.id, x]));
   const claims = new Map(data.claims.map(x => [x.id, x]));
   const stories = new Map(data.stories.map(x => [x.id, x]));
@@ -34,17 +36,16 @@
     const a = el('a', 'Open the source ↗ (external site)');
     a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.referrerPolicy = 'no-referrer'; return a;
   }
-  function quote(anchor) {
+  function quote(anchor) {  // the passage in the language picked above the evidence, never both at once
     const box = el('blockquote', null, 'quote');
+    box.title = `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char}) of the original`;
+    if (state.lang === 'translation' && anchor.translation) {
+      box.append(el('mark', anchor.translation), el('div', `Machine translation into ${data.language}, for reading only`, 'locator'));
+      return box;
+    }
     if (anchor.prefix) box.append(el('span', anchor.prefix, 'context'));
     box.append(el('mark', anchor.quote));
     if (anchor.suffix) box.append(el('span', anchor.suffix, 'context'));
-    if (anchor.translation) {
-      const t = el('p', null, 'translation');
-      t.append(el('span', 'Machine translation, for reading only: ', 'locator'), el('span', anchor.translation));
-      box.append(t);
-    }
-    box.append(el('div', `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char}) of the original`, 'locator'));
     return box;
   }
   function band(claim) { return el('span', `${claim.band} ${claim.freshness}`, 'band ' + claim.band); }
@@ -331,75 +332,182 @@
     $('ego').disabled = !selected || !selected.length;
     $('clear-focus').hidden = !state.ego;
   }
-  function claimCard(claim) {
-    const box = el('article', null, 'claim-card' + (claim.superseded ? ' superseded' : ''));
-    const text = el('p', claim.statement); text.append(band(claim)); box.append(text);
-    const facts = [claim.kind, claim.durability, claim.superseded ? 'superseded' : null, claim.noise ? 'noise' : null].filter(Boolean);
-    box.append(el('p', facts.join(' · '), 'small quiet'));
-    const story = claim.idea && stories.get(claim.idea);
-    if (story && story.claims.length > 1) {
-      box.append(el('p', `Idea: ${story.title} (${story.status}, ${story.claims.length} claims)`, 'small'));
-      if (story.chain.length) { const chain = el('ol', null, 'chain'); story.chain.forEach(s => chain.append(el('li', s))); box.append(chain); }
+  // --- evidence: one view per selection; the text in one language at a time, and where it leads ---
+  const translated = item => state.lang === 'translation' && item && item.translation.length > 0;
+  function pill(text, action, kind, sub) {
+    const node = button('', action, 'pill ' + kind); node.append(el('span', text, 'pill-text'));
+    if (sub) node.append(el('span', sub, 'pill-sub')); return node;
+  }
+  function pills(nodes, more) {
+    const wrap = el('div', null, 'pills'); wrap.append(...nodes);
+    if (more) wrap.append(el('span', more, 'small quiet'));
+    return wrap;
+  }
+  const section = (head, nodes, more) => nodes.length ? [el('h3', head, 'detail-section'), pills(nodes, more)] : [];
+  function flow(steps) {  // post → claims → Ideas → clusters → topics: how far an item has grown
+    const row = el('div', null, 'flow'); row.setAttribute('aria-label', steps.map(([n, w]) => `${n} ${w}`).join(', then '));
+    steps.forEach(([n, word], i) => { if (i) row.append(el('span', '→', 'flow-arrow'));
+      const step = el('span', null, 'flow-step' + (n ? '' : ' none')); step.append(el('strong', n), el('span', n === 1 ? word : word + 's')); row.append(step); });
+    return row;
+  }
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const itemPill = (id, sub) => pill(items.get(id)?.title || id, () => selectItem(id), 'source', sub);
+  const clusterPill = id => pill(clusters.get(id)?.title || id, () => selectGroup(id), 'cluster',
+    clusters.has(id) ? plural(clusters.get(id).ideas.length, 'Idea') : null);
+  const topicPill = id => pill(topicTitle(id), () => selectGroup(id), 'topic');
+  const personPill = (id, sub) => pill(people.get(id)?.name || id, () => selectPerson(id), 'person', sub);
+  function peopleOf(itemIds) {  // person -> what they are to these posts: wrote, named, or told about
+    const roles = new Map(), names = new Map(), add = (id, role) => roles.set(id, new Set([...(roles.get(id) || []), role]));
+    for (const p of people.values()) itemIds.forEach(i => { if (p.items.includes(i)) add(p.id, 'wrote');
+      if (p.about_in.includes(i)) add(p.id, 'told about'); });
+    itemIds.forEach(i => (items.get(i)?.mentions || []).forEach(m => { names.set(m.id, m.name); add(m.id, 'named'); }));
+    // Someone only named, with nothing said about them, has no profile to open.
+    return [...roles].sort((a, b) => people.has(b[0]) - people.has(a[0])).map(([id, r]) => people.has(id) ? personPill(id, [...r].join(', '))
+      : pill(names.get(id), () => {}, 'person bare', 'named, no profile'));
+  }
+  function clustersOf(item) { return [...new Set(item.stories.map(s => stories.get(s)?.cluster).filter(Boolean))]; }
+  function relatedSources(item) {  // other posts, with the strongest reason they are close to this one
+    const why = new Map(), add = (id, reason) => id !== item.id && items.has(id) && !why.has(id) && why.set(id, reason);
+    if (item.repost_of) add(item.repost_of, 'repost of it');
+    data.item_edges.forEach(e => { if (e.source === item.id) add(e.target, e.label); if (e.target === item.id) add(e.source, e.label + ' this'); });
+    data.items.forEach(other => other.repost_of === item.id && add(other.id, 'reposts this'));
+    item.stories.forEach(s => (stories.get(s)?.items || []).forEach(i => add(i, 'same Idea')));
+    clustersOf(item).forEach(c => (clusters.get(c)?.items || []).forEach(i => add(i, 'cluster: ' + clusters.get(c).title)));
+    return [...why];
+  }
+  function sourceText(item, focus) {
+    // The whole post with each claim's passage marked; in Translation, the translated lines stand in for the original.
+    const box = el('div', null, 'source-text');
+    if (!item.text) { box.append(el('p', 'The text of this item is not in the vault.', 'quiet')); return box; }
+    const spans = item.claims.flatMap(cid => claims.get(cid).anchors.map(a => [a.start_char, a.end_char, cid]));
+    const covering = (s, e) => [...new Set(spans.filter(([a, b]) => a < e && b > s).map(x => x[2]))];
+    const piece = (text, s, e, cls) => {
+      const ids = covering(s, e);
+      if (!ids.length) { box.append(cls ? el('span', text, cls) : document.createTextNode(text)); return; }
+      const mark = el('mark', text, ids.includes(focus) ? 'on' : null);
+      mark.dataset.claims = ids.join(' '); mark.tabIndex = 0; mark.setAttribute('role', 'button');
+      mark.title = ids.map(id => '• ' + claims.get(id).statement).join('\n') + '\n\nOpen the claim';
+      const open = () => selectNode(ids.includes(focus) ? focus : ids[0]);
+      mark.addEventListener('click', open); mark.addEventListener('keydown', e => e.key === 'Enter' && open());
+      box.append(mark);
+    };
+    if (translated(item)) {
+      let at = 0;
+      for (const line of item.translation) {
+        const gap = item.text.slice(at, line.start);
+        if (gap.trim()) piece(gap, at, line.start, 'untranslated'); else if (at) box.append('\n'.repeat(Math.max(1, (gap.match(/\n/g) || []).length)));
+        piece(line.text, line.start, line.end); at = line.end;
+      }
+      if (item.text.slice(at).trim()) piece(item.text.slice(at), at, item.text.length, 'untranslated');
+    } else {
+      const cuts = [...new Set([0, item.text.length, ...spans.flatMap(([a, b]) => [a, b])])]
+        .filter(x => x >= 0 && x <= item.text.length).sort((a, b) => a - b);
+      for (let i = 0; i + 1 < cuts.length; i++) piece(item.text.slice(cuts[i], cuts[i + 1]), cuts[i], cuts[i + 1]);
     }
-    const compare = button(state.comparison.includes(claim.id) ? '✓ In comparison' : 'Add to comparison', () => toggleCompare(claim.id));
-    compare.dataset.compare = claim.id;
-    box.append(compare);
-    claim.anchors.forEach(a => box.append(quote(a)));
-    if (!claim.anchors.length) box.append(el('p', 'No passage is recorded for this claim.', 'small quiet'));
     return box;
   }
-  function selectItem(id) {
-    const item = items.get(id); if (!item) return;
+  function textBlock(item, focus) {
+    const box = sourceText(item, focus), wrap = el('div', null, 'text-block');
+    const note = translated(item) ? `Machine translation into ${data.language}, for reading only; claims were judged on the original.`
+      : 'Original text. Marked passages are where claims come from: hover to read the claim, click to open it.';
+    wrap.append(el('p', note, 'small quiet'), box);
+    if (item.translation.length && !translated(item)) wrap.append(el('p', `A translation into ${data.language} is available: switch Translation above.`, 'small quiet'));
+    const more = button('Show the whole text', () => { box.classList.toggle('open');
+      more.textContent = box.classList.contains('open') ? 'Show less' : 'Show the whole text'; }, 'text-button');
+    wrap.append(more);
+    requestAnimationFrame(() => { more.hidden = box.scrollHeight <= box.clientHeight + 4;
+      const on = box.querySelector('mark.on'); if (on) box.scrollTop = Math.max(0, on.offsetTop - box.clientHeight / 3); });
+    return wrap;
+  }
+  function claimRow(claim, showSource) {
+    // One line per claim: hover marks its passage in the text, click opens it with its passage and its Idea.
+    const row = button('', () => selectNode(claim.id), 'claim-row' + (claim.superseded ? ' superseded' : ''));
+    const text = el('span', claim.statement, 'claim-statement'); text.append(band(claim)); row.append(text);
+    const story = claim.idea && stories.get(claim.idea), cluster = story?.cluster && clusters.get(story.cluster);
+    const where = [claim.kind, story && story.claims.length > 1 ? `Idea of ${story.claims.length} claims` : null,
+      cluster ? cluster.title : null, showSource ? items.get(claim.item)?.source : null].filter(Boolean);
+    row.append(el('span', where.join(' · '), 'claim-where'));
+    const marks = on => document.querySelectorAll(`#detail mark[data-claims~="${claim.id}"]`).forEach(m => m.classList.toggle('on', on));
+    row.addEventListener('mouseenter', () => marks(true)); row.addEventListener('mouseleave', () => marks(false));
+    row.addEventListener('focus', () => marks(true)); row.addEventListener('blur', () => marks(false));
+    return row;
+  }
+  function claimCard(claim) {  // a claim with its passage, where the passage is the point (relations, comparisons)
+    const box = el('article', null, 'claim-card' + (claim.superseded ? ' superseded' : ''));
+    const text = el('p', claim.statement); text.append(band(claim)); box.append(text);
+    const item = items.get(claim.item);
+    box.append(button(`from ${item.source} · ${date(item)}`, () => selectNode(claim.id), 'text-button from'));
+    claim.anchors.forEach(a => box.append(quote(a)));
+    if (!claim.anchors.length) box.append(el('p', 'No passage is recorded for this claim.', 'small quiet'));
+    const compare = button(state.comparison.includes(claim.id) ? '✓ In comparison' : 'Add to comparison', () => toggleCompare(claim.id));
+    compare.dataset.compare = claim.id; box.append(compare);
+    return box;
+  }
+  function show(render, ...args) { state.view = [render, args]; }
+  function selectItem(id, focus) {
+    const item = items.get(id); if (!item) return; show(selectItem, id, focus);
     state.detailItems = [id];
-    state.selection = state.mode === 'claims' && item.claims.length ? item.claims[0] : id;
+    state.selection = state.mode === 'claims' && item.claims.length ? focus || item.claims[0] : id;
     if (!cy.getElementById(state.selection).length) renderGraph(filteredItems());
-    $('detail').replaceChildren(el('h3', item.title, 'detail-title'));
+    const ideaIds = item.stories, clusterIds = clustersOf(item), related = relatedSources(item);
     const chips = el('div', null, 'chips');
-    for (const text of [item.quality, item.repost_of ? 'repost' : 'first source', ...item.topics.map(topicTitle)]) {
-      chips.append(el('span', text, 'chip' + (item.quality !== 'accepted' && text === item.quality ? ' warn' : '')));
-    }
-    $('detail').append(chips, el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join('\n'), 'detail-meta'));
+    chips.append(el('span', item.quality, 'chip' + (item.quality !== 'accepted' ? ' warn' : '')), el('span', item.repost_of ? 'repost' : 'first source', 'chip'));
+    $('detail').replaceChildren(el('p', 'SOURCE', 'eyebrow'), el('h3', item.title, 'detail-title'),
+      el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join(' · '), 'detail-meta'), chips);
     if (item.quality !== 'accepted') $('detail').append(el('p', 'Ingestion has not accepted this item yet; check its claims before relying on them.', 'chip warn'));
-    if (item.repost_of && items.has(item.repost_of)) $('detail').append(button('Repost of: ' + items.get(item.repost_of).title.slice(0, 60), () => selectItem(item.repost_of)));
     if (item.url) $('detail').append(external(item.url));
-    $('detail').append(el('div', 'Note: ' + item.note, 'locator'));
-    $('detail').append(el('h3', 'Claims and their passages', 'detail-section'));
-    item.claims.forEach(cid => $('detail').append(claimCard(claims.get(cid))));
+    $('detail').append(el('h3', 'Where it leads', 'detail-section'),
+      flow([[item.claims.length, 'claim'], [ideaIds.length, 'Idea'], [clusterIds.length, 'cluster'], [item.topics.length, 'topic']]),
+      ...section('Topics', item.topics.map(topicPill)), ...section('Clusters', clusterIds.map(clusterPill)),
+      ...section('People', peopleOf([id])),
+      ...section('Related sources', related.slice(0, 8).map(([i, why]) => itemPill(i, why)), related.length > 8 ? `and ${related.length - 8} more` : ''));
+    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
+    $('detail').append(el('h3', `Claims (${item.claims.length})`, 'detail-section'));
+    const list = el('div', null, 'claim-list'); item.claims.forEach(cid => list.append(claimRow(claims.get(cid)))); $('detail').append(list);
     if (!item.claims.length) $('detail').append(el('p', 'No claims were extracted.', 'quiet'));
+    $('detail').append(el('p', 'Obsidian note: ' + item.note, 'locator'));
     renderTimeline(filteredItems()); highlight();
   }
   function ideaButton(ideaId) {
     const story = stories.get(ideaId); if (!story) return el('li', ideaId);
     const li = el('li'); li.append(button(story.title, () => selectNode(story.claims[0]))); return li;
   }
+  function groupPosts(itemIds) {
+    return [...section(`Sources (${itemIds.length})`, itemIds.slice(0, 12).map(i => itemPill(i, items.get(i)?.source)),
+      itemIds.length > 12 ? `and ${itemIds.length - 12} more` : ''), ...section('People', peopleOf(itemIds))];
+  }
   function selectGroup(id) {
-    const c = clusters.get(id), t = data.topics.find(x => x.id === id); if (!c && !t) return;
+    const c = clusters.get(id), t = data.topics.find(x => x.id === id); if (!c && !t) return; show(selectGroup, id);
     state.selection = id;
     state.detailItems = [];
-    $('detail').replaceChildren(el('h3', c ? c.title : t.title, 'detail-title'));
+    $('detail').replaceChildren(el('p', c ? 'CLUSTER' : 'TOPIC', 'eyebrow'), el('h3', c ? c.title : t.title, 'detail-title'));
+    const ideaIds = c ? c.ideas : [...t.ideas, ...t.attached];
+    const postIds = c ? c.items : data.items.filter(i => i.topics.includes(id)).map(i => i.id);
     if (c) {
       const how = c.theme ? 'a theme the model gave Ideas no cluster held'
         : 'found by similarity' + (c.assigned.length ? `; the model placed ${c.assigned.length} more here` : '');
-      $('detail').append(el('p', `Cluster · ${c.ideas.length} Ideas from ${c.items.length} post${c.items.length > 1 ? 's' : ''} · ${how}`, 'detail-meta'));
-      if (c.topics.length) $('detail').append(el('p', 'In: ' + c.topics.map(topicTitle).join(', '), 'small'));
-      else if (c.items.length < 2) $('detail').append(el('p', 'One post so far: a second one can make it part of a topic.', 'chip'));
+      $('detail').append(el('p', `${plural(c.ideas.length, 'Idea')} from ${plural(c.items.length, 'post')} · ${how}`, 'detail-meta'));
+      $('detail').append(...section('In topics', c.topics.map(topicPill)));
+      if (!c.topics.length && c.items.length < 2) $('detail').append(el('p', 'One post so far: a second one can make it part of a topic.', 'chip'));
     } else {
-      $('detail').append(el('p', `Topic you accepted · ${t.ideas.length} Ideas, ${t.attached.length} joined provisionally, ${t.clusters.length} clusters`, 'detail-meta'));
+      $('detail').append(el('p', `Topic you accepted · ${plural(t.ideas.length, 'Idea')}, ${t.attached.length} joined provisionally`, 'detail-meta'),
+        ...section('Clusters', t.clusters.map(clusterPill)));
     }
-    $('detail').append(el('h3', 'Ideas', 'detail-section'));
-    const list = el('ul'); (c ? c.ideas : [...t.ideas, ...t.attached]).forEach(i => list.append(ideaButton(i))); $('detail').append(list);
+    $('detail').append(...groupPosts(postIds));
     const mine = links.filter(l => l.source === id || l.target === id);
-    if (mine.length) {
-      $('detail').append(el('h3', c ? 'Linked clusters' : 'Linked topics', 'detail-section'));
-      mine.forEach(l => { const other = l.source === id ? l.target : l.source;
-        $('detail').append(button(`${clusters.get(other)?.title || topicTitle(other)} · ${linkLabel(l)} · weight ${l.weight}`, () => selectLink(l))); });
-    }
+    $('detail').append(...section(c ? 'Linked clusters' : 'Linked topics', mine.map(l => { const other = l.source === id ? l.target : l.source;
+      return pill(clusters.get(other)?.title || topicTitle(other), () => selectLink(l), clusters.has(other) ? 'cluster' : 'topic', `${linkLabel(l)} · weight ${l.weight}`); })));
+    $('detail').append(el('h3', `Ideas (${ideaIds.length})`, 'detail-section'));
+    const list = el('ul', null, 'idea-list'); ideaIds.forEach(i => list.append(ideaButton(i))); $('detail').append(list);
     highlight();
   }
   function selectLink(l) {
+    show(selectLink, l);
     const name = id => clusters.get(id)?.title || topicTitle(id);
-    $('detail').replaceChildren(el('h3', `${name(l.source)} ↔ ${name(l.target)}`, 'detail-title'),
-      el('p', `${l.level === 'topic' ? 'Topics' : 'Clusters'} linked automatically · weight ${l.weight} · centroid similarity ${l.similarity.toFixed(2)}`, 'detail-meta'));
+    $('detail').replaceChildren(el('p', l.level === 'topic' ? 'TOPICS LINKED' : 'CLUSTERS LINKED', 'eyebrow'), el('h3', `${name(l.source)} ↔ ${name(l.target)}`, 'detail-title'),
+      el('p', `Linked automatically · weight ${l.weight} · centroid similarity ${l.similarity.toFixed(2)}`, 'detail-meta'));
+    const pillOf = id => clusters.has(id) ? clusterPill(id) : topicPill(id);
+    $('detail').append(...section('The two sides', [pillOf(l.source), pillOf(l.target)]));
     if (l.relations.length) {
       $('detail').append(el('h3', 'Relations that cross them', 'detail-section'));
       l.relations.forEach(r => { $('detail').append(el('p', `${r.said} — ${r.label} — ${r.about}`, 'small'));
@@ -409,29 +517,28 @@
     }
     if (l.shared.length) {
       $('detail').append(el('h3', 'Ideas in both', 'detail-section'));
-      const list = el('ul'); l.shared.forEach(i => list.append(ideaButton(i))); $('detail').append(list);
+      const list = el('ul', null, 'idea-list'); l.shared.forEach(i => list.append(ideaButton(i))); $('detail').append(list);
     }
     if (!l.relations.length && !l.shared.length) $('detail').append(el('p', 'Linked by similarity alone: no relation crosses them yet.', 'small quiet'));
     state.selection = l.source; highlight();
   }
   function selectPerson(id) {
-    const person = people.get(id); if (!person) return;
+    const person = people.get(id); if (!person) return; show(selectPerson, id);
     state.selection = id; state.detailItems = person.items;
-    $('detail').replaceChildren(el('h3', person.name, 'detail-title'),
-      el('p', `${person.kind === 'person' ? 'Person' : 'Organization'} · ${person.facts.length} facts about them · ${person.items.length} posts by them, ${person.about_in.length} about them`, 'detail-meta'));
-    for (const [head, list] of [['Wrote', person.items], ['Posts that tell about them', person.about_in]]) {
-      if (!list.length) continue;
-      $('detail').append(el('h3', head, 'detail-section'));
-      list.forEach(i => $('detail').append(button(items.get(i)?.title || i, () => selectItem(i))));
-    }
-    const fed = Object.entries(person.clusters);
-    if (fed.length) {
-      $('detail').append(el('h3', 'Clusters of those posts', 'detail-section'));
-      fed.forEach(([cid, n]) => $('detail').append(button(`${clusters.get(cid)?.title || cid} · ${n} Ideas`, () => selectGroup(cid))));
-    }
+    $('detail').replaceChildren(el('p', person.kind === 'person' ? 'PERSON' : 'ORGANIZATION', 'eyebrow'), el('h3', person.name, 'detail-title'),
+      el('p', `${plural(person.facts.length, 'fact')} about them · ${plural(person.items.length, 'post')} by them, ${person.about_in.length} about them`, 'detail-meta'));
+    const named = data.items.filter(i => i.mentions.some(m => m.id === id) && !person.items.includes(i.id) && !person.about_in.includes(i.id)).map(i => i.id);
+    const fed = Object.entries(person.clusters).sort((a, b) => b[1] - a[1]);
+    const topicIds = [...new Set(fed.flatMap(([cid]) => clusters.get(cid)?.topics || []))];
+    $('detail').append(...section('Wrote', person.items.map(i => itemPill(i, items.get(i)?.source))),
+      ...section('Posts that tell about them', person.about_in.map(i => itemPill(i, items.get(i)?.source))),
+      ...section('Posts that name them', named.map(i => itemPill(i, items.get(i)?.source))),
+      ...section('Topics', topicIds.map(topicPill)),
+      ...section('Clusters of those posts', fed.map(([cid, n]) => pill(clusters.get(cid)?.title || cid, () => selectGroup(cid), 'cluster', plural(n, 'Idea')))));
     if (person.facts.length) {
       $('detail').append(el('h3', 'What is said about them', 'detail-section'));
-      person.facts.forEach(c => claims.has(c) && $('detail').append(claimCard(claims.get(c))));
+      const list = el('div', null, 'claim-list');
+      person.facts.forEach(c => claims.has(c) && list.append(claimRow(claims.get(c), true))); $('detail').append(list);
     }
     highlight();
   }
@@ -440,21 +547,51 @@
     if (clusters.has(id) || data.topics.some(t => t.id === id)) return selectGroup(id);
     if (items.has(id)) return selectItem(id);
     if (!claims.has(id)) return;
+    show(selectNode, id);
     if (state.mode !== 'claims') { state.mode = 'claims'; setMode(); refresh(); }
     state.selection = id;
     state.detailItems = [claims.get(id).item];
     if (!cy.getElementById(id).length) renderGraph(filteredItems());
-    const c = claims.get(id), item = items.get(c.item);
-    $('detail').replaceChildren(el('h3', 'Claim', 'detail-title'), el('p', `${item.source} · ${date(item)}`, 'detail-meta'), claimCard(c),
-      button('Open the item', () => selectItem(c.item)));
+    const c = claims.get(id), item = items.get(c.item), story = c.idea && stories.get(c.idea);
+    const cluster = story?.cluster, topicIds = [...new Set([...(story?.topics || []), ...(clusters.get(cluster)?.topics || [])])];
+    const title = el('h3', c.statement, 'detail-title' + (c.superseded ? ' superseded' : '')); title.append(band(c));
+    $('detail').replaceChildren(el('p', 'CLAIM', 'eyebrow'), title,
+      el('p', [c.kind, c.durability, c.superseded ? 'superseded' : null, c.noise ? 'noise' : null, c.quality !== 'accepted' ? c.quality : null].filter(Boolean).join(' · '), 'detail-meta'));
+    // Where it grows from, then what it grows into.
+    $('detail').append(el('h3', 'Grows from', 'detail-section'),
+      pills([itemPill(c.item, [item.source, item.author, date(item)].filter(Boolean).join(' · '))]));
+    c.anchors.forEach(a => $('detail').append(quote(a)));
+    if (!c.anchors.length) $('detail').append(el('p', 'No passage is recorded for this claim.', 'small quiet'));
+    $('detail').append(button('Show it in the whole post', () => selectItem(c.item, id), 'text-button'));
+    $('detail').append(el('h3', 'Grows into', 'detail-section'),
+      flow([[1, 'claim'], [story ? 1 : 0, 'Idea'], [cluster ? 1 : 0, 'cluster'], [topicIds.length, 'topic']]));
+    if (story) {
+      $('detail').append(el('p', `Idea: ${story.title}`, 'idea-line'), el('p', `${story.status} · ${plural(story.claims.length, 'claim')} from ${plural(story.items.length, 'post')}`, 'small quiet'));
+      if (story.chain.length) { const chain = el('ol', null, 'chain'); story.chain.forEach(s => chain.append(el('li', s))); $('detail').append(chain); }
+    } else if (c.subject) $('detail').append(el('p', 'A fact about someone: it joins their profile, not an Idea.', 'small quiet'));
+    $('detail').append(...section('Cluster', cluster ? [clusterPill(cluster)] : []), ...section('Topics', topicIds.map(topicPill)),
+      ...section('About', c.subject && people.has(c.subject) ? [personPill(c.subject)] : []));
+    const elsewhere = story ? story.claims.filter(o => o !== id && claims.has(o)) : [];
+    if (elsewhere.length) {
+      $('detail').append(el('h3', 'The same Idea elsewhere', 'detail-section'));
+      const list = el('div', null, 'claim-list'); elsewhere.forEach(o => list.append(claimRow(claims.get(o), true))); $('detail').append(list);
+    }
+    const rel = data.edges.filter(e => e.source === id || e.target === id);
+    const short = text => text.length > 90 ? text.slice(0, 89) + '…' : text;
+    $('detail').append(...section('Relations', rel.map(e => { const out = e.source === id, other = claims.get(out ? e.target : e.source);
+      return pill(out ? `This ${e.label}: ${short(other.statement)}` : `${short(other.statement)} — ${e.label} this`,
+        () => selectEdge(e), 'relation', basisWords[e.basis]); })));
+    const compare = button(state.comparison.includes(id) ? '✓ In comparison' : 'Add to comparison', () => toggleCompare(id));
+    compare.dataset.compare = id; compare.classList.add('pill'); $('detail').append(pills([compare]));
     renderTimeline(filteredItems()); highlight();
   }
   function selectEdge(edge) {
+    show(selectEdge, edge);
     const ends = [edge.source, edge.target];
     state.detailItems = ends.map(id => claims.get(id)?.item || (items.has(id) ? id : null)).filter(Boolean);
-    $('detail').replaceChildren(el('h3', edge.label, 'detail-title'), el('p', `${edge.kind} · ${basisWords[edge.basis]}`, 'detail-meta'));
+    $('detail').replaceChildren(el('p', 'RELATION', 'eyebrow'), el('h3', edge.label, 'detail-title'), el('p', `${edge.kind} · ${basisWords[edge.basis]}`, 'detail-meta'));
     if (edge.rationale) $('detail').append(el('p', edge.rationale));
-    if (edge.context) $('detail').append(contextTable(edge.context, 'The relator\u2019s reading of this pair'));
+    if (edge.context) $('detail').append(contextTable(edge.context, 'The relator’s reading of this pair'));
     if (edge.said) $('detail').append(el('p', 'Later: ' + edge.said, 'small'), el('p', 'Earlier: ' + edge.about, 'small'));
     const pair = claims.has(edge.source) ? ends : [edge.said, edge.about].map(s => data.claims.find(c => c.statement === s && ends.includes(c.item))?.id);
     pair.filter(Boolean).forEach(id => $('detail').append(claimCard(claims.get(id))));
@@ -501,8 +638,15 @@
     }
   }
   function clearDetail() {
-    state.detailItems = [];
+    state.detailItems = []; state.view = null;
     $('detail').replaceChildren(el('p', 'Pick an item or a relation in this slice.', 'quiet'));
+  }
+  function setLang(lang) {
+    state.lang = lang;
+    try { localStorage.setItem('atlas-lang', lang); } catch (e) { /* the choice lasts for this page only */ }
+    for (const other of ['original', 'translation']) $('lang-' + other).setAttribute('aria-pressed', String(other === lang));
+    if (state.view) state.view[0](...state.view[1]);
+    renderComparison();
   }
   function setMode() {
     for (const other of ['documents', 'claims', 'topics']) $('mode-' + other).setAttribute('aria-pressed', String(other === state.mode));
@@ -526,6 +670,10 @@
   $('story-filter').addEventListener('change', e => {state.story = e.target.value; state.ego = false; refresh();});
   ['quality-filter', 'band-filter', 'date-filter', 'hide-reposts', 'review-filter'].forEach(id => $(id).addEventListener('change', refresh));
   $('show-decided').addEventListener('change', renderProposals);
+  $('lang-switch').hidden = !data.items.some(i => i.translation?.length);
+  $('lang-translation').title = `Machine translation into ${data.language}, for reading only`;
+  for (const lang of ['original', 'translation']) $('lang-' + lang).addEventListener('click', () => setLang(lang));
+  for (const lang of ['original', 'translation']) $('lang-' + lang).setAttribute('aria-pressed', String(lang === state.lang));
   $('search').addEventListener('input', refresh);
   for (const mode of ['documents', 'claims', 'topics']) $('mode-' + mode).addEventListener('click', () => {
     state.mode = mode; state.ego = false; state.selection = null; clearDetail(); setMode(); refresh();
@@ -543,5 +691,5 @@
     $('hide-reposts').checked = false; refresh();
   });
   renderProposals(); refresh();
-  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, filteredItems};
+  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems};
 })();

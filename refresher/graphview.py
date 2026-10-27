@@ -12,6 +12,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from engine import language
+from engine.extract import source_passages
 from graph.memory import MemoryStore
 from refresher import km, translate
 from refresher.vault import note_names
@@ -39,11 +41,19 @@ def _anchors(node, text: str, translation: dict | None = None) -> list[dict]:
     return out
 
 
+def _lines(text: str, translation: dict | None) -> list[dict]:
+    """The item's translated lines with their place in the original, so the page can switch the whole text."""
+    done = (translation or {}).get("passages") or {}
+    return [{"start": p["start"], "end": p["end"], "text": done[str(p["id"])]}
+            for p in source_passages(text) if str(p["id"]) in done]
+
+
 def map_data(store: MemoryStore, at: datetime) -> dict:
     """Everything the map shows, as plain JSON, scored at `at`."""
     scores = km.score_claims(store, at)
     names = note_names(store)
     items = {i.item_id: i for i in store.items()}
+    translations = getattr(store, "translations", {})
     claims = {c.claim.claim_id: c for c in store.claims() if c.item_id in items}
     ideas = {i.idea_id: i for i in store.ideas()}
     states = store.proposals
@@ -66,9 +76,13 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                            "noise": bool(s and s.noise), "superseded": node.superseded_by is not None,
                            "idea": node.idea_id, "subject": node.subject_id,
                            "quality": items[node.item_id].review_status,
-                           "anchors": _anchors(node, items[node.item_id].text,
-                                               getattr(store, "translations", {}).get(node.item_id))})
+                           "anchors": _anchors(node, items[node.item_id].text, translations.get(node.item_id))})
 
+    mentions: dict[str, set[str]] = {}  # item -> the people and organizations it names
+    for e in store.edges():
+        if e.type == "MENTIONS" and e.src in items:
+            mentions.setdefault(e.src, set()).add(e.dst)
+    named = {p.person_id: p.name for p in store.people()} | store.organizations()
     item_rows = []
     for item in sorted(items.values(), key=lambda i: (i.source.event_time, i.item_id)):
         src = item.source
@@ -81,7 +95,9 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             "time_basis": "publication" if src.published_at else "capture", "quality": item.review_status,
             "repost_of": item.duplicate_of, "note": f"items/{names.get(item.item_id, item.item_id)}",
             "claims": [c["id"] for c in mine], "stories": idea_ids,
-            "topics": sorted({t for i in idea_ids for t in topic_of_idea.get(i, [])})})
+            "topics": sorted({t for i in idea_ids for t in topic_of_idea.get(i, [])}),
+            "text": item.text, "translation": _lines(item.text, translations.get(item.item_id)),
+            "mentions": [{"id": m, "name": named.get(m, m)} for m in sorted(mentions.get(item.item_id, ()))]})
 
     story_rows = []
     for idea in sorted(ideas.values(), key=lambda i: (-len(i.members), i.idea_id)):
@@ -181,7 +197,7 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             "decisions": [{"action": d.action, "at": d.at.isoformat(), "rationale": d.rationale}
                           for d in st.decisions]})
 
-    return {"snapshot_at": at.isoformat(), "scope": "local", "served": False,
+    return {"snapshot_at": at.isoformat(), "scope": "local", "served": False, "language": language.name(),
             "counts": {"items": len(item_rows), "ideas": len(story_rows), "topics": len(topics),
                        "clusters": len(cluster_rows), "links": len(link_rows),
                        "edges": len(edges), "waiting": sum(p["status"] == "proposed" for p in proposal_rows)},
