@@ -190,3 +190,43 @@ def test_map_wiki_and_health_show_clusters_topics_and_links(tmp_path, axes):
     assert len([path for path in first if path.parent.name == "clusters"]) == 3
     health = km.render(km.run(store, AT), store)
     assert "3 clusters (1 from one source, waiting for a second)" in health
+
+
+class Namer:
+    """A cheap model that names each cluster by its first statement, and records what it was asked."""
+    provider, model_provider, model_name = "nebius", "fixture", "fixture/namer"
+
+    def __init__(self, fail=False):
+        self.asked, self.fail = [], fail
+
+    def complete_json(self, system_prompt, content):
+        from engine.llm import ModelError, ModelReply
+        self.asked.append(content)
+        if self.fail:
+            raise ModelError("Nebius returned HTTP 500.")
+        return ModelReply({"title": "Named " + content.splitlines()[0][2:]})
+
+
+def test_a_cluster_without_a_name_shows_its_central_idea_not_a_word_list(tmp_path, axes):
+    store = vault.replay(write(tmp_path, ARTICLE_A))
+    titles = {c.title for c in store.clusters()}
+    assert titles <= set(VECTORS) and "·" not in "".join(titles)
+
+
+def test_clusters_are_named_once_and_again_only_when_their_ideas_change(tmp_path, axes):
+    from refresher.consolidate import name_clusters
+    v = write(tmp_path, ARTICLE_A, ARTICLE_B)
+    namer = Namer()
+    assert name_clusters(v, vault.replay(v), namer) == 3
+    store = vault.replay(v)
+    assert {c.title for c in store.clusters()} == {"Named alfa", "Named anvil", "Named bravo"}
+    assert name_clusters(v, store, namer) == 0 and len(namer.asked) == 3
+    write(v, ARTICLE_C)  # cedar joins B's cluster: a new membership, named again
+    assert name_clusters(v, vault.replay(v), namer) == 1
+
+
+def test_a_failed_naming_call_stores_nothing(tmp_path, axes):
+    from refresher.consolidate import name_clusters
+    v = write(tmp_path, ARTICLE_A)
+    assert name_clusters(v, vault.replay(v), Namer(fail=True)) == 0
+    assert vault.load_cluster_names(v) == {}

@@ -123,6 +123,7 @@ class ClusterNode:
     ideas: set[str] = field(default_factory=set)
     sources: set[str] = field(default_factory=set)  # source keys of its visible items
     centroid: list[float] = field(default_factory=list, repr=False)
+    fingerprint: str = ""  # of its Ideas' canonical claims: a stored name applies while this matches
 
 
 @dataclass(frozen=True)

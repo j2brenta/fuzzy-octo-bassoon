@@ -98,6 +98,21 @@ def components(ids: list[str], vectors, link: float | None = None, k: int = K, j
     return sorted((sorted(g) for g in groups.values()), key=lambda g: (-len(g), g[0]))
 
 
+def central(ids: list[str], vectors, center) -> str:
+    """The id whose vector is closest to the centroid; ties go to the smaller id."""
+    sims = matrix(vectors) @ np.asarray(center, dtype=np.float64)
+    return min(zip((-sims).tolist(), ids))[1]
+
+
+def shorten(text: str, limit: int = 70) -> str:
+    """At a word boundary, with an ellipsis when cut."""
+    text = " ".join(text.split())
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip(",;:")
+    return (cut or text[:limit]) + "…"
+
+
 def title(statements: list[str], limit: int = 4) -> str:
     """The words most statements share, in their usual form: the lexical name until a model names the topic."""
     seen: Counter = Counter()

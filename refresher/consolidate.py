@@ -39,6 +39,31 @@ def model_namer(model: JsonModel) -> Callable[[list[str]], str]:
     return name
 
 
+def name_clusters(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> int:
+    """Name every cluster whose membership has no stored name, one short call each; the store takes the names.
+    A failed call stores nothing: the cluster keeps its central Idea as a title and is named next time."""
+    if model is None:
+        return 0
+    known = vault.load_cluster_names(vault_path)
+    fresh = {}
+    for c in sorted(store.clusters(), key=lambda c: c.cluster_id):
+        if c.fingerprint in known:
+            continue
+        statements = [store.idea(i).title for i in sorted(c.ideas)]
+        try:
+            title = str(model.complete_json(language.apply(NAMER_PROMPT), "\n".join(f"- {s}" for s in statements[:12]))
+                        .data.get("title") or "").strip()[:80]
+        except ModelError as error:
+            log(f"cluster {c.cluster_id}: not named ({type(error).__name__})")
+            continue
+        if title:
+            fresh[c.fingerprint] = {"title": title, "model": model.model_name, "statements": statements[:12]}
+    if fresh:
+        vault.save_cluster_names(vault_path, fresh)
+        store.use_cluster_names({**known, **{k: v["title"] for k, v in fresh.items()}})
+    return len(fresh)
+
+
 def model_confirm(model: JsonModel) -> Callable[[str, str], bool]:
     def same(a: str, b: str) -> bool:
         try:
@@ -57,6 +82,7 @@ class ConsolidateRun:
     proposed: int = 0
     waiting: int = 0
     enriched: int = 0
+    named: int = 0  # clusters given a name this run
     notes: list[str] = None
     budget: BudgetedModel | None = None
 
@@ -68,6 +94,8 @@ class ConsolidateRun:
                   f"{self.proposed} new proposals", f"{self.waiting} waiting for you"]
         if self.enriched:
             parts.append(f"{self.enriched} people looked up")
+        if self.named:
+            parts.append(f"{self.named} clusters named")
         if self.budget is not None:
             parts.append(f"{self.budget.calls} model calls, about {self.budget.spent:,} tokens")
         return "consolidate: " + ", ".join(parts) + "".join(f"; {n}" for n in self.notes or [])
@@ -114,6 +142,9 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
             if error:
                 run.notes.append(f"enrichment stopped: {error}")
         store = vault.replay(vault_path, include_unreviewed=True)
+        from refresher import translate
+        namer = translate.client_from_environment() or model  # the cheap model when there is one
+        run.named = name_clusters(vault_path, store, namer, log) if namer is not None else 0
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())
