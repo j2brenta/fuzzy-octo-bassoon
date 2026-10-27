@@ -11,9 +11,11 @@ import os
 from pathlib import Path
 import re
 from threading import Lock
+import time
 from uuid import uuid4
 
 from dotenv import load_dotenv
+from engine import logs
 from engine.artifacts import atomic_json
 from store.raw import capture_text
 
@@ -158,7 +160,10 @@ class Workspace:
         from engine.results import write_item_note
         from engine.parse.text import text_without_links
 
+        started = time.monotonic()
+
         def stage(label):
+            logger.info("submission %s · %s (%.1f s in)", job["id"][:10], label, time.monotonic() - started)
             job.update(status="processing", stage=label)
             self.save(job)
 
@@ -183,6 +188,7 @@ class Workspace:
             self.save(job)
             client = client_from_environment()
             if client is None:
+                logger.info("submission %s · AI processing is off (TRIAGE_PROVIDER)", job["id"][:10])
                 job.update(status="pending", stage="Ready for analysis", message="Original saved. AI processing is disabled in the server configuration.")
                 return
             for path in paths:
@@ -192,16 +198,23 @@ class Workspace:
                     continue
                 stage("Classifying content")
                 decision = triage_capture(path, client)
+                logger.info("submission %s · item %s triage: %s · %s · %s", job["id"][:10], path.stem[:10],
+                            "keep" if decision.labels["keep"] else "skip", decision.labels["kind"],
+                            decision.labels["durability_class"])
                 if not decision.labels["keep"]:
                     write_item_note(path)
                     continue
                 if decision.labels["keep"]:
                     stage("Extracting claims")
-                    extract_capture(path, client)
+                    extraction = extract_capture(path, client)
+                    logger.info("submission %s · item %s: %d claims", job["id"][:10], path.stem[:10], len(extraction.claims))
                     judge = judge_client_from_environment()
                     if judge:
                         stage("Reviewing source evidence")
-                        quality_capture(path, judge)
+                        review = quality_capture(path, judge).reviewed.review
+                        logger.info("submission %s · item %s quality: %s · %d/%d supported", job["id"][:10], path.stem[:10],
+                                    review["status"], sum(r["verdict"] == "supported" for r in review["claims"]),
+                                    len(review["claims"]))
                     entity_client = entity_client_from_environment()
                     if entity_client:
                         stage("Reading people and organizations")
@@ -212,6 +225,8 @@ class Workspace:
                 apply_storage_stub(packaged.path)
                 write_item_note(path)
             failed = [row for row in links if row.get("status") != "captured"]
+            logger.info("submission %s · finished in %.1f s: %d items, %d links unread", job["id"][:10],
+                        time.monotonic() - started, len(paths), len(failed))
             job.update(status="complete", stage="Processing finished", message="Some links could not be read. See their status below." if failed else "Your original and available results are saved.")
             if job["kind"] == "link" and not any(row.get("status") == "captured" for row in links):
                 job.update(status="pending", stage="Link needs attention", message="The URL is saved, but article text was not available. Paste the article text to continue.")
@@ -320,6 +335,7 @@ def main():
     parser.add_argument("--vault", type=Path, default=Path(".local-vault/jury"))
     args = parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+    logs.configure()
     workspace = Workspace(args.vault)
     for path in (workspace.vault / "submissions").glob("*.json"):
         job = read_json(path)

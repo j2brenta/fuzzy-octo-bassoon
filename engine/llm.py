@@ -5,6 +5,7 @@
 
 from dataclasses import dataclass, field
 import json
+import logging
 import os
 import re
 import socket
@@ -12,6 +13,8 @@ import time
 from typing import Callable, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+logger = logging.getLogger(__name__)
 
 
 class ModelError(RuntimeError):
@@ -111,6 +114,21 @@ class NebiusModel:
     request_transport: Callable = field(default=_nebius_request, repr=False, compare=False)
 
     def complete_json(self, system_prompt: str, content: str | list[dict]) -> ModelReply:
+        """One call, logged with its model, tokens and duration (never the prompt or the answer)."""
+        started = time.monotonic()
+        try:
+            reply = self._complete_json(system_prompt, content)
+        except ModelError as error:
+            logger.warning("%s: call failed after %.1f s (%s: %s)", self.model_name, time.monotonic() - started,
+                           type(error).__name__, str(error)[:300])
+            raise
+        u = reply.usage
+        logger.info("%s: %s in / %s out tokens, %.1f s%s", self.model_name, f"{u['input_tokens']:,}" if "input_tokens" in u
+                    else "?", f"{u['output_tokens']:,}" if "output_tokens" in u else "?", time.monotonic() - started,
+                    f" · request {reply.request_id}" if reply.request_id else "")
+        return reply
+
+    def _complete_json(self, system_prompt: str, content: str | list[dict]) -> ModelReply:
         payload = {
             "model": self.model_name,
             "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": content}],
