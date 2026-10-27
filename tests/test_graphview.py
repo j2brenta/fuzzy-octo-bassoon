@@ -29,6 +29,10 @@ def test_claims_carry_their_exact_passages():
     for c in anchored:
         for a in c["anchors"]:
             assert texts[c["item"]][a["start_char"]:a["end_char"]] == a["quote"]
+    for item in data["items"]:  # the evidence panel shows the whole post, and everyone it names
+        assert item["text"] == texts[item["id"]] and item["translation"] == []
+    named = {m["id"]: m["name"] for i in data["items"] for m in i["mentions"]}
+    assert named["person:yarin-gal"] == "Yarin Gal" and "org:metr" in named
     claim_ids, item_ids = {c["id"] for c in data["claims"]}, {i["id"] for i in data["items"]}
     assert all(e["source"] in claim_ids and e["target"] in claim_ids for e in data["edges"])
     assert all(e["source"] in item_ids and e["target"] in item_ids for e in data["item_edges"])

@@ -72,7 +72,11 @@ def test_the_map_and_the_note_show_the_translation_beside_the_original(tmp_path)
         [anchor] = claim["anchors"]
         assert anchor["quote"] == "Владельцы разместили вакансию."  # evidence stays the exact original
         assert anchor["translation"] == "The owners posted the vacancy."
+        data = graphview.map_data(store, AT)
         vault.export(store, v, AT)
+    [post] = data["items"]
+    assert post["text"] == RU and data["language"] == "English"  # the page switches the whole text, line by line
+    assert [(RU[ln["start"]:ln["end"]], ln["text"]) for ln in post["translation"]] == list(zip(RU.splitlines(), EN.splitlines()))
     note = next((v / "wiki" / "items").glob("*.md")).read_text()
     assert "## Translation (English, machine, for reading only)" in note
     assert "> The salary rose by 5%." in note and "> Зарплата выросла на 5%." in note
