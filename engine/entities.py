@@ -82,6 +82,8 @@ Return only {"entities": [{"entity_id": string, "verdict": "supported"|"needs_re
 "kind": "person"|"organization"|"concept", "evidence_passage_ids": [integers]}],
 "summary": nonblank string}. Include every supplied entity_id exactly once and no
 others. Include at most 10 major omitted people/organizations, each grounded in source passages.
+Each omitted name must occur exactly in at least one cited passage; additional cited
+passages may provide context without repeating the name.
 An omitted name must be copied exactly as it is written in a cited passage, with the same
 case ending (Russian "водителю", not "водитель"). Roles and common nouns (a driver, an
 inspector, mother) are not named entities and are never omissions.

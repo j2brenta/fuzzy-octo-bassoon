@@ -233,6 +233,28 @@ class EntityTests(unittest.TestCase):
             validate_entity_review(entity_review(entities, omitted_entities=[
                 {'name': 'Not named', 'kind': 'concept', 'evidence_passage_ids': [1, 2]}]), entities, TEXT, 'item', 'section')
 
+    def test_context_citations_do_not_relax_extracted_entity_or_alias_spans(self):
+        for row in [
+            {'name': 'Acme', 'kind': 'organization', 'evidence_passage_ids': [1, 2]},
+            {'name': 'Maya', 'kind': 'person', 'evidence_passage_ids': [1],
+             'aliases': [{'name': 'Daniel', 'evidence_passage_ids': [2, 3]}]},
+        ]:
+            with self.subTest(row=row), self.assertRaises(EntityError):
+                validate_entities({'entities': [row]}, TEXT, 'item', 'section')
+
+    def test_omitted_names_keep_the_written_case_ending_and_word_boundaries(self):
+        text = 'К Анне пришли.\nОна ответила.'
+        for name in ['Анне', 'Анна', 'Анн']:
+            data = entity_review([], omitted_entities=[
+                {'name': name, 'kind': 'person', 'evidence_passage_ids': [1, 2]}])
+            with self.subTest(name=name):
+                if name == 'Анне':
+                    self.assertEqual(validate_entity_review(data, [], text, 'item', 'section')['omitted_entities'],
+                                     data['omitted_entities'])
+                else:
+                    with self.assertRaises(EntityError):
+                        validate_entity_review(data, [], text, 'item', 'section')
+
     def test_corrupt_cached_acceptance_cannot_hide_flagged_entity(self):
         result = self.extract()
         data = entity_review(result.entities)
