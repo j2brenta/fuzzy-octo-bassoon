@@ -591,6 +591,7 @@ uv run refresher consolidate --vault VAULT            # the hourly job; --lexica
 uv run refresher serve --vault VAULT                  # the map on http://127.0.0.1:8765 with Accept / Reject
 uv run refresher proposals --vault VAULT              # the same list in the terminal, with tokens
 uv run refresher decide --vault VAULT ID accept --token TOKEN
+uv run refresher problems --vault VAULT              # warnings and errors kept in logs/problems.jsonl
 ```
 
 Each `relate` or `consolidate` run has a spending cap (`REFRESHER_RUN_TOKENS`, default

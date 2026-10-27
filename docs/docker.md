@@ -111,6 +111,19 @@ WARNING channels.telegram: item 261c73e38e · quality review: failed after 61.3 
 A step that has `started` but no outcome line was interrupted (for example by
 a restart). Filter one item with `docker compose logs telegram | grep 261c73e38e`.
 `LOG_LEVEL` in `.env` sets the detail; captured text and claims are never logged.
+
+Every warning and error, from the bot, the jury frontend and `refresher` commands,
+is also kept in the vault as JSON lines: `logs/problems.jsonl`, rotated at 5 MB
+into `.1` … `.3`, whatever the console level. Review it with:
+
+```bash
+uv run refresher problems --vault .local-vault/telegram                 # grouped by kind, then the latest 20
+uv run refresher problems --vault .local-vault/telegram --since 2026-10-27 --limit 50
+```
+
+Each line has the time, level, process (bot, frontend, cli), source module, the
+item id when the message names one, and the message. Like the console, it never
+holds captured text; a traceback is reduced to the exception type.
 Send a short text to verify an acknowledgement and a new raw record under
 `.local-vault/telegram/raw/`. This is the live integration check and requires
 your credentials. Tests and image builds do not contact Telegram or Nebius.

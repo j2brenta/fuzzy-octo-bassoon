@@ -335,7 +335,7 @@ def main():
     parser.add_argument("--vault", type=Path, default=Path(".local-vault/jury"))
     args = parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-    logs.configure()
+    logs.configure(vault=args.vault, process="frontend")
     workspace = Workspace(args.vault)
     for path in (workspace.vault / "submissions").glob("*.json"):
         job = read_json(path)

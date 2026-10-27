@@ -15,7 +15,7 @@ from engine.llm import BudgetedModel, JsonModel, ModelError
 from engine import language
 from graph import cluster, relate
 from refresher import graphview, vault
-from refresher.place import RelateRun, _quiet, relate_pending
+from refresher.place import RelateRun, _quiet, _warn, relate_pending
 
 EVERY = timedelta(hours=1)
 STAMP = Path(".cache") / "last-consolidate"
@@ -111,7 +111,7 @@ def due(vault_path: Path, at: datetime | None = None) -> bool:
 
 def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, at: datetime | None = None,
                 enrich_limit: int = ENRICH_LIMIT, log: Callable[[str], None] = _quiet,
-                warn: Callable[[str], None] = _quiet) -> ConsolidateRun:
+                warn: Callable[[str], None] = _warn) -> ConsolidateRun:
     """Without a model the job is lexical: items are related by wording (stored, so rebuilds stay fast; a later run
     with the model judges them again), topics are named by their shared words, and merges are proposed on
     similarity alone."""
@@ -162,7 +162,7 @@ def pick_people(vault_path: Path, store, limit: int) -> list:
 
 
 def enrich_people(vault_path: Path, store, chosen: list, search, model: JsonModel,
-                  log: Callable[[str], None] = _quiet, warn: Callable[[str], None] = _quiet) -> tuple[int, str | None]:
+                  log: Callable[[str], None] = _quiet, warn: Callable[[str], None] = _warn) -> tuple[int, str | None]:
     """Look each person up (engine/people.py) and store the record in people/. Returns (done, stopping error):
     a bad answer skips that person; a key, credit or network error stops the run."""
     from engine.llm import ModelOutputError

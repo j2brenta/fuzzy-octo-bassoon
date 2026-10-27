@@ -12,6 +12,7 @@
     uv run refresher serve [--vault V] [--port P]     the map on 127.0.0.1, where you decide the proposals
     uv run refresher proposals [--vault V] [--all]     what the review suggests, with the token to decide it
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
+    uv run refresher problems [--vault V] [--since DATE] [--limit N]   warnings and errors kept in logs/problems.jsonl
     uv run refresher translate [--vault V] [--force]  passages in REFRESHER_LANGUAGE for reading, stored in translations/
 
 The vault defaults to $REFRESHER_VAULT.
@@ -37,7 +38,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate"):
+                 "translate", "problems"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -55,6 +56,9 @@ def main(argv=None) -> int:
             p.add_argument("--port", type=int, default=8765)
         if name == "consolidate":
             p.add_argument("--lexical", action="store_true", help="no model or web calls: wording and similarity only")
+        if name == "problems":
+            p.add_argument("--since", help="ISO date or datetime; only problems from then on")
+            p.add_argument("--limit", type=int, default=20, help="latest problems shown in full (default 20)")
         if name == "translate":
             p.add_argument("--force", action="store_true", help="translate again even when a stored translation matches")
         if name == "proposals":
@@ -70,6 +74,10 @@ def main(argv=None) -> int:
     if not (args.vault / "processed").is_dir():
         ap.error(f"{args.vault} has no processed/ folder; run ingestion first")
     at = _at(args.at)
+    from engine import logs
+    logs.attach(args.vault, process="cli")  # warnings still print to stderr; they are also kept in the vault
+    if args.command == "problems":
+        return _problems(args.vault, args.since, args.limit)
     _language()
     _embedder(args.vault)
     if args.command == "translate":
@@ -133,6 +141,29 @@ def main(argv=None) -> int:
             args.out.write_text(text, encoding="utf-8")
         print(text, end="")
         return 0 if all(c.ok is not False for c in checks) else 1
+    return 0
+
+
+def _problems(vault_path: Path, since: str | None, limit: int) -> int:
+    """What went wrong, grouped by kind (ids and numbers stripped), then the latest problems in full."""
+    import re
+    from collections import Counter
+    from engine import logs
+    rows = logs.read_problems(vault_path)
+    if since:
+        rows = [r for r in rows if (r.get("at") or "") >= _at(since).isoformat(timespec="seconds")]
+    if not rows:
+        print(f"problems: none in {vault_path / logs.PROBLEMS}" + (f" since {since}" if since else ""))
+        return 0
+    kind = lambda r: (r.get("source"), re.sub(r"\b[0-9a-f]{10,64}\b|\d+(\.\d+)?", "#", r.get("message", ""))[:140])
+    groups = Counter(kind(r) for r in rows)
+    last = {kind(r): r.get("at") for r in rows}
+    print(f"problems: {len(rows)} from {rows[0].get('at')} to {rows[-1].get('at')}, {len(groups)} kinds\n")
+    for (source, message), n in groups.most_common():
+        print(f"{n:4} × {source}: {message}  (last {last[(source, message)]})")
+    print(f"\nlatest {min(limit, len(rows))}:")
+    for r in rows[-limit:]:
+        print(f"{r.get('at')} {r.get('level'):7} {r.get('process') or '-':8} {r.get('source')}: {r.get('message')}")
     return 0
 
 
@@ -216,7 +247,7 @@ def _relate(vault_path: Path, lexical: bool) -> int:
         from engine.llm import BudgetedModel
         model = BudgetedModel(model)  # REFRESHER_RUN_TOKENS / REFRESHER_RUN_SECONDS cap the run
         relator = relation_stage.ModelRelator(model)
-    run = place.relate_pending(vault_path, relator, log=print, warn=lambda m: print(m, file=sys.stderr))
+    run = place.relate_pending(vault_path, relator, log=print, warn=place._warn)
     if run.error:
         print(f"relate: stopped after {run.judged} items", file=sys.stderr)
         return 1
@@ -252,7 +283,7 @@ def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int
     else:
         chosen = pick_people(vault_path, store, limit)
     done, error = enrich_people(vault_path, store, chosen, search, model, log=print,
-                                warn=lambda m: print(m, file=sys.stderr))
+                                warn=place._warn)
     if error:
         print(f"enrich: stopped after {done} people", file=sys.stderr)
         return 1
@@ -274,7 +305,7 @@ def _consolidate(vault_path: Path, lexical: bool, at: datetime) -> int:
         except ModelError as error:
             sys.exit(str(error))
         search = search_from_environment()
-    run = consolidate(vault_path, model, search, at, log=print, warn=lambda m: print(m, file=sys.stderr))
+    run = consolidate(vault_path, model, search, at, log=print, warn=place._warn)
     print(run.summary())
     return 0
 

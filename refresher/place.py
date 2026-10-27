@@ -30,12 +30,17 @@ class RelateRun:
     error: str | None = None  # a key, credit, rate limit or network error stopped the run
 
 
+def _warn(message: str) -> None:
+    """Problems go to the log (and so to the vault's problem log), not only to whoever called."""
+    logger.warning(message)
+
+
 def _quiet(message: str) -> None:
     pass
 
 
 def relate_pending(vault_path: Path, relator: relate.Relator, only: Iterable[str] | None = None,
-                   log: Callable[[str], None] = _quiet, warn: Callable[[str], None] = _quiet) -> RelateRun:
+                   log: Callable[[str], None] = _quiet, warn: Callable[[str], None] = _warn) -> RelateRun:
     """Replay in event-time order and judge each item that has no current verdict file against what precedes it.
     Every item is judged, unreviewed ones too, so the files serve rebuilds with or without --include-unreviewed.
     With `only`, just those items are judged; the others are related lexically on the way, as a rebuild would.
