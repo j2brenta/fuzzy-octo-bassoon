@@ -124,6 +124,8 @@ class ClusterNode:
     sources: set[str] = field(default_factory=set)  # source keys of its visible items
     centroid: list[float] = field(default_factory=list, repr=False)
     fingerprint: str = ""  # of its Ideas' canonical claims: a stored name applies while this matches
+    items: set[str] = field(default_factory=set)  # visible items (posts) its Ideas come from
+    assigned: set[str] = field(default_factory=set)  # Ideas a model placed here, not close enough by embedding
 
 
 @dataclass(frozen=True)

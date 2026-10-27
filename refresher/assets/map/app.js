@@ -10,6 +10,7 @@
   const stories = new Map(data.stories.map(x => [x.id, x]));
   const clusters = new Map((data.clusters || []).map(x => [x.id, x]));
   const links = data.links || [];
+  const people = new Map((data.people || []).map(x => [x.id, x]));
   const kinds = {merge_ideas: 'Merge two Ideas', topic: 'New topic', merge_people: 'Same person',
     relation: 'Confirm a relation'};
   const basisWords = {auto: 'automatic', accepted: 'accepted by you', proposal: 'proposed, waiting for you'};
@@ -169,6 +170,10 @@
       {selector: 'node[kind="cluster"]', style: {'background-color': '#e3edf1', 'border-color': '#7f9eab',
         'width': 'data(size)', 'height': 'data(size)', 'shape': 'ellipse', 'font-size': 11, 'text-max-width': 150}},
       {selector: 'node[kind="topic"]', style: {'background-color': '#d8e4d2', 'border-color': '#93ad8c'}},
+      {selector: 'node[kind="person"]', style: {'shape': 'diamond', 'width': 'data(size)', 'height': 'data(size)',
+        'background-color': '#f1e6d6', 'border-color': '#b48a5a', 'font-size': 11, 'text-max-width': 140}},
+      {selector: 'edge[kind="WROTE"]', style: {'width': 'data(width)', 'line-color': '#c9a77f', 'target-arrow-color': '#c9a77f',
+        'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': .75}},
       {selector: 'node[pending=1]', style: {'border-color': '#b88959', 'background-color': '#f4eadc'}},
       {selector: 'edge', style: {'width': 1.3, 'line-color': '#9baaa1', 'target-arrow-color': '#81958a',
         'target-arrow-shape': 'triangle', 'curve-style': 'unbundled-bezier', 'control-point-distances': 120, 'control-point-weights': .5, 'arrow-scale': .75,
@@ -188,10 +193,14 @@
       {selector: 'edge.highlight', style: {'width': 3, 'line-color': '#176a61', 'target-arrow-color': '#176a61'}},
       {selector: ':selected', style: {'border-color': '#176a61', 'border-width': 3}}
     ]});
-  const topicTitle = id => data.topics.find(t => t.id === id)?.title || 'No topic yet';
+  const topicTitle = id => id?.startsWith('about:') ? 'About ' + (people.get(id.slice(6))?.name || 'someone')
+    : data.topics.find(t => t.id === id)?.title || 'No topic yet';
   const groupOf = new Map();  // node -> topic region: an item by its Ideas' topics, a claim by its own Idea's
   data.items.forEach(i => { groupOf.set(i.id, i.topics[0] || 'unassigned');
-    i.claims.forEach(c => groupOf.set(c, stories.get(claims.get(c).idea)?.topics[0] || i.topics[0] || 'unassigned')); });
+    i.claims.forEach(c => { const claim = claims.get(c);
+      // A profile fact has no Idea: it sits with the person or organization it is about.
+      groupOf.set(c, !claim.idea && claim.subject ? 'about:' + claim.subject
+        : stories.get(claim.idea)?.topics[0] || i.topics[0] || 'unassigned'); }); });
   const clusterOf = id => stories.get(claims.get(id)?.idea)?.cluster || '';  // a claim's cluster, '' for none
   const linkLabel = l => l.relations.length ? `${l.relations.length} relation${l.relations.length > 1 ? 's' : ''}`
     : l.shared.length ? `${l.shared.length} shared Ideas` : `similar ${l.similarity.toFixed(2)}`;
@@ -206,13 +215,24 @@
     } else if (state.mode === 'topics') {
       const inScope = c => state.topic === 'unassigned' ? !c.topics.length : !state.topic || c.topics.includes(state.topic);
       nodes = [...clusters.values()].filter(c => inScope(c) && c.items.some(i => allowedItems.has(i))).map(c => ({id: c.id, kind: 'cluster',
-        label: `${c.title}\n${c.ideas.length} Ideas · ${c.sources.length} source${c.sources.length > 1 ? 's' : ''}`,
+        label: `${c.title}\n${c.ideas.length} Ideas · ${c.items.length} post${c.items.length > 1 ? 's' : ''}`,
         size: 46 + 9 * Math.min(c.ideas.length, 12), topic: c.topics[0] || ''}));
       const shownTopics = new Set(nodes.map(n => n.topic).filter(Boolean));
       if (state.topic && state.topic !== 'unassigned') shownTopics.add(state.topic);
       const ids = new Set([...nodes.map(n => n.id), ...shownTopics]);
       edges = links.filter(l => ids.has(l.source) && ids.has(l.target)).map(l => ({...l, kind: 'LINK', label: linkLabel(l),
         width: Math.min(9, 1 + 2 * l.weight), evidence: Number(l.relations.length + l.shared.length > 0)}));
+      // People and organizations: what is said about them, and "wrote" edges to the clusters their posts feed.
+      for (const person of people.values()) {
+        const fed = Object.entries(person.clusters).filter(([cid]) => ids.has(cid));
+        const facts = person.facts.filter(c => allowedItems.has(claims.get(c)?.item));
+        if (!fed.length && !facts.length) continue;
+        nodes.push({id: person.id, kind: 'person', size: 40 + 3 * Math.min(facts.length, 20),
+          label: `${person.name}\n${facts.length} facts · ${person.items.length + person.about_in.length} posts`});
+        const verb = person.items.length ? 'wrote' : 'in their posts';
+        fed.forEach(([cid, n]) => edges.push({id: `wrote>${person.id}>${cid}`, source: person.id, target: cid, kind: 'WROTE',
+          label: `${verb} · ${n} Ideas`, width: Math.min(7, 1 + n / 2), basis: 'auto'}));
+      }
       return {nodes, edges, total: nodes.length, allNodes: nodes, allEdges: edges, topics: [...shownTopics].sort()};
     } else {
       nodes = data.claims.filter(c => allowedItems.has(c.item)).map(c => ({id: c.id, kind: 'claim', label: c.statement.slice(0, 110),
@@ -249,12 +269,13 @@
     // Topics hold their clusters; links join clusters (and whole topics). The layout settles from a grid.
     cy.batch(() => {cy.elements().remove(); cy.add([
       ...slice.topics.map(t => ({group: 'nodes', data: {id: t, kind: 'topic', label: topicTitle(t)}})),
-      ...slice.nodes.map((n, i) => ({group: 'nodes', data: {...n, parent: n.topic || undefined},
+      ...slice.nodes.map((n, i) => ({group: 'nodes', data: {...n, parent: n.kind === 'cluster' && n.topic ? n.topic : undefined},
         position: {x: (i % 6) * 200, y: Math.floor(i / 6) * 170}})),
       ...slice.edges.map(e => ({group: 'edges', data: {...e}}))]);});
     cy.nodes().unlock();
     cy.layout({name: 'cose', animate: false, randomize: false, nodeDimensionsIncludeLabels: true, padding: 30,
-      idealEdgeLength: e => 150 / Math.max(1, e.data('weight')), nodeRepulsion: () => 9000, numIter: 1500}).run();
+      // "wrote" edges carry no weight; a NaN length would leave every position empty.
+      idealEdgeLength: e => 150 / Math.max(1, Number(e.data('weight')) || 1), nodeRepulsion: () => 9000, numIter: 1500}).run();
     cy.nodes().lock(); cy.fit(cy.elements(), 34);
   }
   function renderGraph(visible) {
@@ -294,9 +315,10 @@
       topics: 'Clusters, topics and the links between them'}[state.mode];
     $('graph-list').replaceChildren();
     slice.allNodes.forEach(n => $('graph-list').append(button(n.label, () => selectNode(n.id))));
-    const nodeLabel = id => items.get(id)?.title || claims.get(id)?.statement || clusters.get(id)?.title || topicTitle(id);
+    const nodeLabel = id => items.get(id)?.title || claims.get(id)?.statement || clusters.get(id)?.title
+      || people.get(id)?.name || topicTitle(id);
     slice.allEdges.forEach(e => $('graph-list').append(button(`${nodeLabel(e.source)} → ${e.label} (${basisWords[e.basis]}) → ${nodeLabel(e.target)}`,
-      () => e.kind === 'LINK' ? selectLink(e) : selectEdge(e))));
+      () => e.kind === 'LINK' ? selectLink(e) : e.kind === 'WROTE' ? selectPerson(e.source) : selectEdge(e))));
     highlight();
   }
   function highlight() {
@@ -356,9 +378,11 @@
     state.detailItems = [];
     $('detail').replaceChildren(el('h3', c ? c.title : t.title, 'detail-title'));
     if (c) {
-      $('detail').append(el('p', `Cluster · ${c.ideas.length} Ideas from ${c.sources.length} source${c.sources.length > 1 ? 's' : ''} · found by similarity, recomputed with the graph`, 'detail-meta'));
+      const how = c.theme ? 'a theme the model gave Ideas no cluster held'
+        : 'found by similarity' + (c.assigned.length ? `; the model placed ${c.assigned.length} more here` : '');
+      $('detail').append(el('p', `Cluster · ${c.ideas.length} Ideas from ${c.items.length} post${c.items.length > 1 ? 's' : ''} · ${how}`, 'detail-meta'));
       if (c.topics.length) $('detail').append(el('p', 'In: ' + c.topics.map(topicTitle).join(', '), 'small'));
-      else if (c.sources.length < 2) $('detail').append(el('p', 'One source so far: a second one can make it part of a topic.', 'chip'));
+      else if (c.items.length < 2) $('detail').append(el('p', 'One post so far: a second one can make it part of a topic.', 'chip'));
     } else {
       $('detail').append(el('p', `Topic you accepted · ${t.ideas.length} Ideas, ${t.attached.length} joined provisionally, ${t.clusters.length} clusters`, 'detail-meta'));
     }
@@ -390,7 +414,29 @@
     if (!l.relations.length && !l.shared.length) $('detail').append(el('p', 'Linked by similarity alone: no relation crosses them yet.', 'small quiet'));
     state.selection = l.source; highlight();
   }
+  function selectPerson(id) {
+    const person = people.get(id); if (!person) return;
+    state.selection = id; state.detailItems = person.items;
+    $('detail').replaceChildren(el('h3', person.name, 'detail-title'),
+      el('p', `${person.kind === 'person' ? 'Person' : 'Organization'} · ${person.facts.length} facts about them · ${person.items.length} posts by them, ${person.about_in.length} about them`, 'detail-meta'));
+    for (const [head, list] of [['Wrote', person.items], ['Posts that tell about them', person.about_in]]) {
+      if (!list.length) continue;
+      $('detail').append(el('h3', head, 'detail-section'));
+      list.forEach(i => $('detail').append(button(items.get(i)?.title || i, () => selectItem(i))));
+    }
+    const fed = Object.entries(person.clusters);
+    if (fed.length) {
+      $('detail').append(el('h3', 'Clusters of those posts', 'detail-section'));
+      fed.forEach(([cid, n]) => $('detail').append(button(`${clusters.get(cid)?.title || cid} · ${n} Ideas`, () => selectGroup(cid))));
+    }
+    if (person.facts.length) {
+      $('detail').append(el('h3', 'What is said about them', 'detail-section'));
+      person.facts.forEach(c => claims.has(c) && $('detail').append(claimCard(claims.get(c))));
+    }
+    highlight();
+  }
   function selectNode(id) {
+    if (people.has(id)) return selectPerson(id);
     if (clusters.has(id) || data.topics.some(t => t.id === id)) return selectGroup(id);
     if (items.has(id)) return selectItem(id);
     if (!claims.has(id)) return;
@@ -475,7 +521,8 @@
     renderTimeline(visible); renderGraph(visible); renderComparison();
   }
   cy.on('tap', 'node', e => { if (!['region', 'cluster-region'].includes(e.target.data('kind'))) selectNode(e.target.id()); });
-  cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data()) : selectEdge(e.target.data()));
+  cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data())
+    : e.target.data('kind') === 'WROTE' ? selectPerson(e.target.data('source')) : selectEdge(e.target.data()));
   $('story-filter').addEventListener('change', e => {state.story = e.target.value; state.ego = false; refresh();});
   ['quality-filter', 'band-filter', 'date-filter', 'hide-reposts', 'review-filter'].forEach(id => $(id).addEventListener('change', refresh));
   $('show-decided').addEventListener('change', renderProposals);
@@ -496,5 +543,5 @@
     $('hide-reposts').checked = false; refresh();
   });
   renderProposals(); refresh();
-  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, filteredItems};
+  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, filteredItems};
 })();

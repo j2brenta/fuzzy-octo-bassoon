@@ -15,7 +15,7 @@ from graph.embed import STOP, stem, thresholds, words
 K = 5  # neighbours per Idea in the k-NN graph
 CLUSTER_MIN_IDEAS = 2
 TOPIC_MIN_IDEAS = 3
-TOPIC_MIN_SOURCES = 2
+TOPIC_MIN_ITEMS = 2  # posts: one long article is clusters, not a topic; one author's posts can be
 MAX_TOPICS = 3  # topics one Idea can sit in
 BLOCK = 1024  # rows per matrix product, to bound memory
 

@@ -563,22 +563,30 @@ review looks at the whole graph:
 
 The graph groups Ideas at two levels, from the same embeddings:
 
-- **Clusters** are tight groups of 2+ Ideas from any number of sources: one long
+- **Clusters** are tight groups of 2+ Ideas from any number of posts: one long
   article usually yields several. They are recomputed with the graph and never
-  need your decision; `wiki/clusters/` has a note for each.
+  need your decision. The cheap model (`NEBIUS_TRANSLATE_MODEL`) names each new
+  membership; without a name a cluster shows its most central Idea.
+- **Themes** give every other Idea a home: after clustering, the cheap model
+  places each Idea no cluster holds into the cluster it fits, or into a named
+  theme shared by at least two Ideas. Placements are stored by Idea, so only new
+  Ideas are placed later; an Idea that later joins a cluster by similarity leaves
+  its theme. The map marks what the model placed.
 - **Topics** are looser groups that never split a cluster, so clusters from two
-  articles that sit close become one topic above both. A topic needs 3+ Ideas
-  from 2+ sources and your Accept. An accepted topic takes provisionally the rest
-  of any cluster mostly inside it, and every Idea close to its centroid; an Idea
-  can sit in up to three topics. `wiki/topics/` has a note for each.
+  posts that sit close become one topic above both. A topic needs 3+ Ideas from
+  2+ posts and your Accept. An accepted topic takes provisionally the rest of any
+  cluster mostly inside it, and every Idea close to its centroid; an Idea can sit
+  in up to three topics. `wiki/topics/` has a note for each.
 - **Links** join two clusters, or two topics, automatically: relations whose
-  claims sit one in each (in practice "adds detail to", since confirmations,
-  updates and conflicts stay inside one Idea), Ideas both topics hold, and
-  centroids that are close. Each link keeps the relations behind it as evidence.
+  claims sit one in each (in practice "adds detail to"), Ideas both topics hold,
+  and centroids that are close. Each link keeps the relations behind it.
+- **People**: claims about a person or organization are their profile facts, not
+  Ideas. The map shows them in an "About …" region (Claims) and as a node linked
+  to the clusters of the posts they wrote or that tell about them (Topics).
 
-The thresholds are per embedder (`graph/embed.py`): `cluster_link` must stay above
-`topic_link`. The health report counts clusters (and those from one source still
-waiting for a second), links and Ideas in several topics.
+The thresholds are per embedder (`graph/embed.py`), measured on real posts. The
+health report counts clusters (and those from one post still waiting for a
+second), links and Ideas in several topics.
 
 Proposals are stored in `graph-reviews/proposals/`, your answers in
 `graph-reviews/decisions/` (never rewritten). Each proposal keeps a fingerprint of

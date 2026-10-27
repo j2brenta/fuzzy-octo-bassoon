@@ -141,13 +141,30 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
         members = [cid for i in sorted(c.ideas) for cid in sorted(ideas[i].members) if cid in claims]
         cluster_rows.append({"id": c.cluster_id, "title": c.title, "ideas": sorted(c.ideas),
                              "sources": sorted(c.sources), "items": sorted({claims[m].item_id for m in members}),
-                             "topics": sorted(t.topic_id for t in store.topics() if c.cluster_id in t.clusters)})
+                             "topics": sorted(t.topic_id for t in store.topics() if c.cluster_id in t.clusters),
+                             "assigned": sorted(c.assigned), "theme": not c.fingerprint})
     statement = lambda cid: claims[cid].claim.statement if cid in claims else None
     link_rows = [{"id": f"{link.level}>{link.a}>{link.b}", "level": link.level, "source": link.a, "target": link.b,
                   "weight": link.weight, "similarity": link.similarity, "shared": list(link.shared),
                   "relations": [{"source": a, "kind": kind, "target": b, "label": LABELS.get(kind, kind),
                                  "said": statement(a), "about": statement(b)} for a, kind, b in link.relations],
                   "basis": "auto"} for link in store.links()]
+
+    # People and organizations: what is said about them (their profile facts) and the clusters their posts feed.
+    people_rows = []
+    profiles = [(p.person_id, p.name, "person", p.facts, p.authored) for p in store.people()] + \
+               [(oid, name, "organization", store.org_facts().get(oid, set()), set()) for oid, name in store.organizations().items()]
+    for pid, name, kind, facts, authored in sorted(profiles, key=lambda r: r[0]):
+        facts = sorted(f for f in facts if f in claims)
+        posts = sorted(i for i in authored if i in items)
+        told = sorted({claims[f].item_id for f in facts} - set(posts))  # posts that say things about them
+        feeds: dict[str, int] = {}
+        for c in claims.values():
+            if c.item_id in posts + told and c.idea_id in cluster_of_idea:
+                feeds[cluster_of_idea[c.idea_id]] = feeds.get(cluster_of_idea[c.idea_id], 0) + 1
+        if facts or posts:
+            people_rows.append({"id": pid, "name": name, "kind": kind, "facts": facts, "items": posts,
+                                "about_in": told, "clusters": dict(sorted(feeds.items()))})
 
     all_claims = {c.claim.claim_id: c.claim.statement for c in store.claims(hidden=True)}
     people = {p.person_id: p.name for p in store.people()}
@@ -169,7 +186,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                        "clusters": len(cluster_rows), "links": len(link_rows),
                        "edges": len(edges), "waiting": sum(p["status"] == "proposed" for p in proposal_rows)},
             "limits": {"primary_nodes": 160},
-            "topics": topics, "clusters": cluster_rows, "links": link_rows, "stories": story_rows, "items": item_rows, "claims": claim_rows,
+            "topics": topics, "clusters": cluster_rows, "links": link_rows, "stories": story_rows,
+            "people": people_rows, "items": item_rows, "claims": claim_rows,
             "edges": edges, "item_edges": list(item_edges.values()), "proposals": proposal_rows}
 
 

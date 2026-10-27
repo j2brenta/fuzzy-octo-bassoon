@@ -59,8 +59,10 @@ HASHED = Thresholds(candidate=0.1, recheck=0.5, topic_link=0.3, topic_attach=0.3
 # 27 October, three articles (German vocational training, Swiss apprenticeships, hallucination detection): Ideas of
 # one article 0.30-0.69 median; at 0.7 each article splits into clusters of 2-7, at 0.6 the two neighbouring articles
 # join and the third stays apart. Cluster centroids on one subject 0.61-0.71, across subjects at most 0.43.
-QWEN3 = Thresholds(candidate=0.5, recheck=0.8, topic_link=0.6, topic_attach=0.65, idea_merge=0.95,
-                   cluster_link=0.7, topic_neighbour=0.55)
+# 28 October, the live Telegram vault (54 English Ideas from 4 Russian posts): median nearest neighbour 0.57;
+# Ideas grouped at 0.70: 8, at 0.60: 24 in 7 groups of 2-10, at 0.55: 35 in 6 groups, at 0.50 one chain of 33.
+QWEN3 = Thresholds(candidate=0.5, recheck=0.8, topic_link=0.55, topic_attach=0.6, idea_merge=0.95,
+                   cluster_link=0.6, topic_neighbour=0.55)
 
 
 def _unit(vector: list[float]) -> list[float]:
