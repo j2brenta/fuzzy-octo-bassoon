@@ -17,12 +17,12 @@ from engine.llm import JsonModel, ModelError, ModelOutputError, client_from_envi
 from engine.parse import parse_capture
 from engine.triage import TriageError, triage_capture
 
-PROMPT_VERSION = "extract-v6"
-SUPPORTED_PROMPT_VERSIONS = {"extract-v3", "extract-v4", "extract-v5", PROMPT_VERSION}
+PROMPT_VERSION = "extract-v7"
+SUPPORTED_PROMPT_VERSIONS = {"extract-v3", "extract-v4", "extract-v5", "extract-v6", PROMPT_VERSION}
 MAX_CLAIMS = 25
 MAX_EVIDENCE_PASSAGES = 10
-# v6 only widens the citation budget; validated v5 claims need no regeneration.
-REUSABLE_PROMPT_VERSIONS = {"extract-v5", PROMPT_VERSION}
+# v7 changes what is extracted from stories, so earlier claims are extracted again.
+REUSABLE_PROMPT_VERSIONS = {PROMPT_VERSION}
 MAX_COVERAGE_CLAIMS = 50
 HALF_LIVES = {"foundation": 720, "reference": 180, "news": 30, "ephemeral": 7}
 KINDS = {"fact", "announcement", "opinion", "how-to", "principle"}
@@ -43,7 +43,14 @@ confidence: a number from 0 to 1 representing confidence in faithful extraction,
 not confidence that the source is true or that the author is trustworthy.
 Each statement must stand alone: name its subject and relevant event/date. When
 the source attributes advice or an opinion to someone, keep who says it, also in
-translation: "The author advises saving early", not "Save early". Do
+translation: "The author advises saving early", not "Save early". Call the writer
+"the author", or by the name the text gives them; never "the text" or "the narrator".
+For a story, anecdote or personal narrative, extract what a reader would want to
+remember: the author's points, opinions, advice and lessons, and the facts about the
+world it reports (rules, prices, institutions, numbers). Do not extract plot events or
+what characters did ("the owners approached the author", "the managers exchanged
+glances") unless the event itself is the news. Make no claims about the text itself
+(how it opens, what it quotes, how it is structured). Do
 not rely on another extracted statement to resolve "this", "it" or "the above".
 For a correction, keep the corrected value and its replacement context together
 as one atomic update about the same event/property. Do not split off a separate

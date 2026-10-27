@@ -41,6 +41,14 @@ class JudgeTests(unittest.TestCase):
         client.model_name = 'fixture-judge'
         return client
 
+    def test_a_claim_leaning_on_this_or_these_is_flagged_not_standalone(self):
+        changed = deepcopy(self.data)
+        changed['claims'][0].update(verdict='needs_revision', issues=['not_standalone'],
+                                    reason='"This development" refers to something outside the claim.')
+        self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'needs_revision')
+        from engine.judge import SYSTEM_PROMPT
+        self.assertIn('not_standalone', SYSTEM_PROMPT)
+
     def test_acceptance_requires_claim_correctness_but_retains_coverage_notes(self):
         self.assertEqual(validate_review(self.data, self.claims, self.passages)['status'], 'accepted')
         changed = deepcopy(self.data)

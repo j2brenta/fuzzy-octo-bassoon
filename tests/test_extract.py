@@ -86,17 +86,26 @@ class ExtractionTests(unittest.TestCase):
             extract_capture(self.raw.path, FakeModel([response(bad), response(bad)]))
         self.assertNotIn('Private invented quote', str(caught.exception))
 
-    def test_compatible_v5_cache_is_reused_without_rewriting_original_metadata(self):
+    def test_stories_yield_the_authors_points_not_plot_events_or_claims_about_the_text(self):
         client = FakeModel([response()])
+        extract_capture(self.raw.path, client)
+        prompt = client.calls[0][0]
+        for rule in ('Do not extract plot events', 'never "the text" or "the narrator"',
+                     'Make no claims about the text itself'):
+            self.assertIn(rule, prompt)
+
+    def test_an_earlier_prompt_version_is_extracted_again_but_stays_readable(self):
+        # v7 changes what is extracted from stories, so a v6 record is not reused; later stages still accept it.
+        from engine.extract import SUPPORTED_PROMPT_VERSIONS
+        client = FakeModel([response(), response()])
         original = extract_capture(self.raw.path, client)
         data = json.loads(original.path.read_text())
-        data['prompt_version'] = 'extract-v5'
+        data['prompt_version'] = 'extract-v6'
         original.path.write_text(json.dumps(data))
-        before = original.path.read_bytes()
         repeated = extract_capture(self.raw.path, client)
-        self.assertTrue(repeated.reused)
-        self.assertEqual(len(client.calls), 1)
-        self.assertEqual(original.path.read_bytes(), before)
+        self.assertFalse(repeated.reused)
+        self.assertEqual(len(client.calls), 2)
+        self.assertIn('extract-v6', SUPPORTED_PROMPT_VERSIONS)
 
     def test_repeated_passages_keep_distinct_original_locations(self):
         text = '💡 Same idea.\r\n\n💡 Same idea.'
