@@ -487,3 +487,26 @@ def test_a_correction_never_supersedes_a_claim_in_its_own_item():
     store.apply(CORRECTION, TEXT["correction"], verdicts("correction", ("c16", "UPDATES", "o14"), ("cprev", "SAME", "o14")))
     supersedes = {(e.src, e.dst) for e in store.edges() if e.type == "SUPERSEDES"}
     assert ("c16", "o14") in supersedes and ("c16", "cprev") not in supersedes
+
+
+def test_a_verdict_about_an_unnamed_person_is_kept_as_a_world_claim():
+    model = FakeModel({"verdicts": [
+        {"claim": "c1", "subject": "person", "subject_name": "", "label": "UPDATES", "target": "k1", "rationale": "New time."},
+        {"claim": "c2", "label": "SAME", "target": "k1"}]})
+    relation = relate.judge(CORRECTION, TEXT["correction"], trio().candidate_pool("correction"),
+                            relate.ModelRelator(model))
+    c16 = {v.claim_id: v for v in relation.verdicts}["c16"]
+    assert c16.subject == "world" and c16.subject_name is None and c16.label == "UPDATES"
+    assert "subject unnamed" in c16.rationale
+
+
+def test_one_invalid_row_costs_that_claim_its_relation_not_the_whole_item(caplog):
+    model = FakeModel({"verdicts": [
+        {"claim": "c1", "label": "UPDATES", "target": "k1", "rationale": "New time."},
+        {"claim": "c2", "label": "MAYBE", "target": "k1"}]})
+    relation = relate.judge(CORRECTION, TEXT["correction"], trio().candidate_pool("correction"),
+                            relate.ModelRelator(model))
+    by_id = {v.claim_id: v for v in relation.verdicts}
+    assert by_id["c16"].label == "UPDATES"
+    assert by_id["cprev"].label == "NONE" and "did not validate" in by_id["cprev"].rationale
+    assert any("did not validate" in r.getMessage() for r in caplog.records)

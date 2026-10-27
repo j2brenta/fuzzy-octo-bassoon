@@ -9,6 +9,7 @@ A model's verdicts are not reproducible, so they are a vault stage, relations/<i
 which keeps rebuilds and tests offline.
 """
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -19,6 +20,8 @@ from pydantic import ValidationError
 from engine.llm import JsonModel, ModelOutputError
 from graph import embed
 from refresher.schemas import CONTEXT_FIELDS, Claim, Entity, Extraction, Relation, Source, Verdict
+
+logger = logging.getLogger(__name__)
 
 CANDIDATES = 5
 CLAIM_SIMILARITY = 0.8  # claim statement, word-set Jaccard: the lexical relator's SAME
@@ -244,13 +247,18 @@ class ModelRelator:
             keep_target = label != "NONE" or abstention is not None
             context = _context(row.get("context")) if keep_target and (abstention or label in ("UPDATES", "CONFLICTS")) \
                 else None
+            subject_name = (str(row.get("subject_name") or "").strip() or None) if subject != "world" else None
+            rationale = str(row.get("rationale") or "")
+            if subject != "world" and subject_name is None:  # about someone, but whom? keep it as a world claim
+                subject, rationale = "world", f"(subject unnamed by the model, kept as a world claim) {rationale}"
             try:
-                out[claim_id] = Verdict(claim_id=claim_id, subject=subject,
-                                        subject_name=(row.get("subject_name") or None) if subject != "world" else None,
+                out[claim_id] = Verdict(claim_id=claim_id, subject=subject, subject_name=subject_name,
                                         label=label, target_id=target_id if keep_target else None,
-                                        abstention=abstention, context=context,
-                                        rationale=str(row.get("rationale") or ""))
-            except ValidationError as error:
-                raise ModelOutputError(f"The relation model returned an invalid verdict: {error.errors()[0]['msg']}") from None
+                                        abstention=abstention, context=context, rationale=rationale)
+            except ValidationError as error:  # one bad row costs that claim's relation, not the whole item's
+                logger.warning("relation verdict for claim %s did not validate (%s); kept as no relation",
+                               claim_id[:12], error.errors()[0]["msg"])
+                out[claim_id] = Verdict(claim_id=claim_id, rationale=f"The model's verdict did not validate: "
+                                                                     f"{error.errors()[0]['msg']}")
         return [out.get(c.claim_id) or Verdict(claim_id=c.claim_id, rationale="The model gave no verdict.")
                 for c in claims]

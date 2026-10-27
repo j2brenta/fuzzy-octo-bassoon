@@ -522,7 +522,7 @@ def main() -> int:
     args = parser.parse_args()
     # Only read this project's .env; explicitly exported variables take precedence.
     load_dotenv(ENV_FILE, override=False)
-    logs.configure()
+    logs.configure(vault=args.vault, process="bot")
     owner_id = args.owner_id
     if owner_id is None:
         configured_owner = os.environ.get("TELEGRAM_OWNER_ID", "").strip()
