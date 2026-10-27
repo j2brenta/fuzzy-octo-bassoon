@@ -8,6 +8,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from engine import language
 from engine.extract import ExtractionError, PROMPT_VERSION as EXTRACT_VERSION, SYSTEM_PROMPT as EXTRACT_PROMPT, _cached_claims, claims_for_model, review_for_model, source_passages, validate_claims
 from engine.judge import JudgeError, JudgeResult, judge_capture
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
@@ -98,6 +99,7 @@ def quality_capture(raw_path: Path, client: JsonModel, *, expand_omissions: bool
         "parent_extraction_hash": _fingerprint(original),
         "parent_review_hash": _fingerprint(initial_review.review),
         "provider": client.provider, "model_provider": client.model_provider, "model_name": client.model_name,
+        "output_language": language.code(),
     }
     destination = vault / "repairs" / raw_path.name
     output = None
@@ -125,7 +127,7 @@ def quality_capture(raw_path: Path, client: JsonModel, *, expand_omissions: bool
                 payload = {**content_data}
                 if failed_output is not None:
                     payload["previous_output"] = failed_output
-                reply = client.complete_json(REPAIR_PROMPT + feedback, json.dumps(payload, ensure_ascii=False))
+                reply = client.complete_json(language.apply(REPAIR_PROMPT + feedback), json.dumps(payload, ensure_ascii=False))
                 failed_output = reply.data
                 claims = validate_claims(reply.data, text, raw["item_id"], section_id)
                 break

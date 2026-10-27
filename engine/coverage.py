@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
+from engine import language
 from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import ExtractionError, MAX_COVERAGE_CLAIMS, SYSTEM_PROMPT as EXTRACT_PROMPT, _cached_claims, claims_for_model, source_passages, validate_claims
 from engine.judge import JudgeError, JudgeResult, judge_capture
@@ -55,6 +56,7 @@ def expand_coverage(raw_path: Path, client: JsonModel, extraction_path: Path, re
         "coverage_prompt_version": PROMPT_VERSION, "claim_limit": MAX_COVERAGE_CLAIMS,
         "parent_extraction_hash": fingerprint(original), "parent_review_hash": fingerprint(reviewed.review),
         "provider": client.provider, "model_provider": client.model_provider, "model_name": client.model_name,
+        "output_language": language.code(),
     }
     output = None
     if destination.exists():
@@ -78,7 +80,7 @@ def expand_coverage(raw_path: Path, client: JsonModel, extraction_path: Path, re
         for attempt in range(2):
             try:
                 reply = None
-                reply = client.complete_json(SYSTEM_PROMPT + feedback, content)
+                reply = client.complete_json(language.apply(SYSTEM_PROMPT + feedback), content)
                 additions = validate_claims(reply.data, text, raw["item_id"], section_id)
                 if any(c["statement"].casefold() in existing_keys for c in additions):
                     raise ExtractionError("Coverage output repeats an existing claim; return new ideas only.")

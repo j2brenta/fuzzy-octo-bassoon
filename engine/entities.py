@@ -10,6 +10,7 @@ import re
 
 from dotenv import load_dotenv
 
+from engine import language
 from engine.review_policy import POLICY_VERSION, entity_status
 from engine.short_ids import restore_reply, short_ids
 from engine.artifacts import save_rejected, atomic_json, fingerprint
@@ -81,8 +82,8 @@ Return only {"entities": [{"entity_id": string, "verdict": "supported"|"needs_re
 "kind": "person"|"organization"|"concept", "evidence_passage_ids": [integers]}],
 "summary": nonblank string}. Include every supplied entity_id exactly once and no
 others. Include at most 10 major omitted people/organizations, each grounded in source passages.
-Reasons must be at most 600 characters, summary at most 1000. Use the source
-language for reasons/summary. Do not return an overall acceptance decision.
+Reasons must be at most 600 characters, summary at most 1000. Write reasons and
+summary in <<OUTPUT_LANGUAGE>>; entity names stay as the source spells them. Do not return an overall acceptance decision.
 No Markdown fences.'''
 
 
@@ -387,7 +388,8 @@ def review_entities(raw_path: Path, client: JsonModel, extracted: EntityResult) 
     identity = {"schema_version": 1, "stage": "entity_review", "item_id": raw["item_id"],
                 "source_content_hash": raw["content_hash"], "entity_extraction_hash": fingerprint(record),
                 "prompt_version": REVIEW_VERSION, "quality_policy_version": POLICY_VERSION, "provider": client.provider,
-                "model_provider": client.model_provider, "model_name": client.model_name}
+                "model_provider": client.model_provider, "model_name": client.model_name,
+                "output_language": language.code()}
     destination = raw_path.parent.parent / "entity-reviews" / raw_path.name
     if destination.exists():
         try:
@@ -414,7 +416,7 @@ def review_entities(raw_path: Path, client: JsonModel, extracted: EntityResult) 
     for attempt in range(2):
         try:
             reply = None
-            reply = restore_reply(client.complete_json(REVIEW_PROMPT + feedback, content), "entity_id", to_long)
+            reply = restore_reply(client.complete_json(language.apply(REVIEW_PROMPT + feedback), content), "entity_id", to_long)
             review = validate_entity_review(reply.data, entities, text, raw["item_id"], section)
             break
         except (EntityError, ModelOutputError) as error:
