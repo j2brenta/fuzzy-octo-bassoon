@@ -33,6 +33,11 @@ EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADIC
 LINK_RELATIONS = {"SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
 
 
+def cluster_fingerprint(ideas) -> str:
+    """Which Ideas a cluster holds, by their canonical claims: a stored name applies while this matches."""
+    return hashlib.blake2b("\n".join(sorted(i.canonical_claim_id for i in ideas)).encode(), digest_size=8).hexdigest()
+
+
 def person_id(name: str) -> str:
     folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode() or name
     return "person:" + "-".join(WORD.findall(folded.casefold()))
@@ -102,6 +107,7 @@ class MemoryStore:
         self._clusters: dict[str, ClusterNode] = {}
         self._cluster_key = None  # what the clusters were computed from; unchanged Ideas skip the work
         self._links: list[Link] = []
+        self._cluster_names: dict[str, str] = {}  # cluster fingerprint -> name a model gave it
         self._grouped = True  # clusters, topics and links match the Ideas; built on first read (_groups)
         self._vectors: dict[tuple[str, str], list[float]] = {}  # (embedder, Idea title) -> vector
         self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
@@ -468,9 +474,19 @@ class MemoryStore:
                 continue
             members = [self._ideas[i] for i in group]
             cid = "cluster:" + min(m.canonical_claim_id for m in members)[:16]
-            self._clusters[cid] = ClusterNode(cid, cluster.title([m.title for m in members]), set(group),
+            centroid = cluster.centroid([vectors[i] for i in group])
+            fingerprint = cluster_fingerprint(members)
+            # A name a model gave this exact membership, else its most central Idea, shortened.
+            name = self._cluster_names.get(fingerprint) or cluster.shorten(
+                self._ideas[cluster.central(group, [vectors[i] for i in group], centroid)].title)
+            self._clusters[cid] = ClusterNode(cid, name, set(group),
                                               set().union(*(self._idea_sources(m) for m in members)),
-                                              cluster.centroid([vectors[i] for i in group]))
+                                              centroid, fingerprint)
+
+    def use_cluster_names(self, names: dict[str, str]) -> None:
+        """Names a model gave clusters, by fingerprint; clusters are named again on the next read."""
+        self._cluster_names = dict(names)
+        self._cluster_key, self._grouped = None, False
 
     def _build_topics(self):
         """Accepted topics, found again through the claims they were proposed with. A cluster mostly inside a topic

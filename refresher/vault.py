@@ -237,8 +237,30 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
             person.enrichment_status = "enriched" if record.get("match") else "no_match"
             person.role, person.affiliation = record.get("role"), record.get("affiliation")
             person.domains = list(record.get("domains") or [])
+    store.use_cluster_names(load_cluster_names(vault))
     store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
     return store
+
+
+CLUSTER_NAMES = Path(".cache") / "cluster-names.json"
+
+
+def load_cluster_names(vault: Path) -> dict[str, str]:
+    """Cluster fingerprint -> name a model gave it (a cache: without it clusters take their central Idea)."""
+    try:
+        data = json.loads((vault / CLUSTER_NAMES).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {k: v["title"] for k, v in data.items() if isinstance(v, dict) and isinstance(v.get("title"), str)}
+
+
+def save_cluster_names(vault: Path, names: dict[str, dict]) -> None:
+    from engine.artifacts import atomic_json
+    try:
+        data = json.loads((vault / CLUSTER_NAMES).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    atomic_json(vault / CLUSTER_NAMES, {**data, **names})
 
 
 def _person_file(vault: Path, person_id: str) -> Path:
