@@ -43,6 +43,7 @@ from engine.entities import EntityError, entity_client_from_environment, extract
 from engine.package import PackageError, build_extraction
 from engine.placement import apply_storage_stub
 from engine.results import write_item_note, entity_summary
+from graph import embed
 from graph.relate import ModelRelator
 from refresher.consolidate import consolidate, due
 from refresher.place import place, reply_text
@@ -479,6 +480,8 @@ def main() -> int:
         token = getpass.getpass("Paste your bot token (hidden; not saved): ").strip()
     if not token:
         parser.exit(1, "A bot token is required.\n")
+    # Placement and the hourly review embed with Nebius when NEBIUS_EMBED_MODEL is set, as the CLI does.
+    embed.use(embed.from_environment(args.vault))
     try:
         asyncio.run(run_bot(token, args.vault, owner_id))
     except (TokenValidationError, TelegramUnauthorizedError):

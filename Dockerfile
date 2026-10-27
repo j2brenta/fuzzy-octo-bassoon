@@ -13,8 +13,9 @@ COPY channels/ channels/
 COPY engine/ engine/
 COPY graph/ graph/
 COPY store/ store/
+# uv keys its cached wheel of the project on pyproject.toml only; rebuild it so code changes are not lost.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra web --no-dev --no-editable
+    uv sync --locked --extra web --no-dev --no-editable --reinstall-package refresher
 
 FROM python:3.12-slim-bookworm AS runtime
 ENV PATH="/app/.venv/bin:$PATH" \

@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from channels.telegram import main
+from graph import embed
 
 
 class TelegramConfigTests(unittest.TestCase):
@@ -40,6 +41,17 @@ class TelegramConfigTests(unittest.TestCase):
     def test_empty_owner_keeps_capture_disabled(self):
         _, _, owner = self.run_with_config('TELEGRAM_BOT_TOKEN=fixture-token\nTELEGRAM_OWNER_ID=\n')
         self.assertIsNone(owner)
+
+    def test_embed_model_from_project_env_is_used_with_a_cache_in_the_vault(self):
+        self.run_with_config('TELEGRAM_BOT_TOKEN=fixture-token\nNEBIUS_API_KEY=fixture-key\n'
+                             'NEBIUS_EMBED_MODEL=Qwen/Qwen3-Embedding-8B\n', arguments=['--vault', 'fixture-vault'])
+        self.assertIsInstance(embed._current, embed.NebiusEmbedder)
+        self.assertEqual(embed.thresholds(), embed.QWEN3)
+        self.assertEqual(embed._current.cache, Path('fixture-vault/.cache/embeddings.jsonl'))
+
+    def test_without_embed_model_the_offline_embedder_stays(self):
+        self.run_with_config('TELEGRAM_BOT_TOKEN=fixture-token\n')
+        self.assertIsInstance(embed._current, embed.HashedEmbedder)
 
 
 if __name__ == '__main__':
