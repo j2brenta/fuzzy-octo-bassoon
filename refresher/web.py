@@ -315,6 +315,7 @@ def handler_for(workspace):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--host", default="127.0.0.1", help="bind address; the container uses 0.0.0.0 behind a loopback port")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--vault", type=Path, default=Path(".local-vault/jury"))
     args = parser.parse_args()
@@ -325,8 +326,8 @@ def main():
         if job["status"] in {"queued", "processing"}:
             job.update(status="pending", stage="Interrupted", message="Server restarted. Original retained; submit again to process.")
             workspace.save(job)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), handler_for(workspace))
-    print(f"Refresher workspace: http://127.0.0.1:{args.port}", flush=True)
+    server = ThreadingHTTPServer((args.host, args.port), handler_for(workspace))
+    print(f"Refresher workspace: http://{args.host}:{args.port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
