@@ -99,11 +99,12 @@ syntax requires it). Run commands from the repository root.
 The bot logs its startup mode after checking Telegram's webhook configuration.
 Each message then logs one line per pipeline step (capture, prepare, triage,
 claim extraction, quality review, entities, handoff, graph placement, review)
-with its outcome and duration, and one line per Nebius call with its tokens:
+with its outcome and duration, and one line per Nebius call with its tokens.
+For example (model name, counts and times are illustrative):
 
 ```text
 INFO channels.telegram: item 261c73e38e · quality review: started
-INFO engine.llm: nvidia/Nemotron-3.5-Ultra: 6,912 in / 1,204 out tokens, 14.2 s
+INFO engine.llm: <NEBIUS_JUDGE_MODEL>: 6,912 in / 1,204 out tokens, 14.2 s
 WARNING channels.telegram: item 261c73e38e · quality review: failed after 61.3 s (QualityError: …)
 ```
 
