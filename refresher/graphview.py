@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from graph.memory import MemoryStore
-from refresher import km
+from refresher import km, translate
 from refresher.vault import note_names
 
 ASSETS = Path(__file__).parent / "assets"
@@ -26,7 +26,7 @@ LABELS = {"SUPERSEDES": "supersedes", "CONTRADICTS": "contradicts", "SUPPORTS": 
 CONTEXT = 80  # characters of text shown before and after a quoted passage
 
 
-def _anchors(node, text: str) -> list[dict]:
+def _anchors(node, text: str, translation: dict | None = None) -> list[dict]:
     out = []
     for n, span in enumerate(node.claim.spans, 1):
         start, end = max(0, span.start_char), min(len(text), span.end_char)
@@ -34,7 +34,8 @@ def _anchors(node, text: str) -> list[dict]:
             continue
         out.append({"span": n, "quote": text[start:end], "start_char": start, "end_char": end,
                     "prefix": ("…" if start > CONTEXT else "") + text[max(0, start - CONTEXT):start],
-                    "suffix": text[end:end + CONTEXT] + ("…" if end + CONTEXT < len(text) else "")})
+                    "suffix": text[end:end + CONTEXT] + ("…" if end + CONTEXT < len(text) else ""),
+                    "translation": translate.passage_translation(translation, text, start, end)})
     return out
 
 
@@ -65,7 +66,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                            "noise": bool(s and s.noise), "superseded": node.superseded_by is not None,
                            "idea": node.idea_id, "subject": node.subject_id,
                            "quality": items[node.item_id].review_status,
-                           "anchors": _anchors(node, items[node.item_id].text)})
+                           "anchors": _anchors(node, items[node.item_id].text,
+                                               getattr(store, "translations", {}).get(node.item_id))})
 
     item_rows = []
     for item in sorted(items.values(), key=lambda i: (i.source.event_time, i.item_id)):

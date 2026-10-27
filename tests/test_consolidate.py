@@ -1,6 +1,7 @@
 import json
 import os
 import unittest
+from engine import language
 from datetime import timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -32,7 +33,7 @@ class FakeModel:
             self.calls["relate"] += 1
             claims = json.loads(content)["claims"]
             return ModelReply({"verdicts": [{"claim": c["id"], "label": "NONE"} for c in claims]}, "fake")
-        if system_prompt == job.NAMER_PROMPT:
+        if system_prompt == language.apply(job.NAMER_PROMPT):
             self.calls["name"] += 1
             return ModelReply({"title": f"Named topic {self.calls['name']}"}, "fake")
         self.calls["confirm"] += 1
@@ -105,10 +106,10 @@ def test_the_budget_reserves_the_worst_case_and_charges_what_was_used():
         max_tokens, timeout_seconds = 100, 10
     model = Tiny()
     budget = BudgetedModel(model, max_tokens=250, max_seconds=60)
-    budget.complete_json(job.NAMER_PROMPT, "- a")  # reserves ~78 prompt + 100 output tokens: fits in 250
+    budget.complete_json(language.apply(job.NAMER_PROMPT), "- a")  # reserves ~78 prompt + 100 output tokens: fits in 250
     assert budget.calls == 1 and 78 < budget.spent < 100  # charged the prompt and the short answer, not the reserve
     with pytest.raises(BudgetExceeded, match="Run budget reached"):
-        budget.complete_json(job.NAMER_PROMPT, "- a")  # spent + the same reservation would pass 250
+        budget.complete_json(language.apply(job.NAMER_PROMPT), "- a")  # spent + the same reservation would pass 250
     assert model.calls["name"] == 1  # the refused call was never sent
 
 
@@ -118,7 +119,7 @@ def test_the_time_budget_refuses_a_call_that_could_run_past_it():
     budget = BudgetedModel(FakeModel(), max_tokens=10**9, max_seconds=300, clock=lambda: now[0])
     now[0] = 200.0  # 200 s gone, and a call may take its 120 s timeout
     with pytest.raises(BudgetExceeded, match="time budget"):
-        budget.complete_json(job.NAMER_PROMPT, "- a")
+        budget.complete_json(language.apply(job.NAMER_PROMPT), "- a")
 
 
 def test_a_run_over_budget_falls_back_to_wording_and_says_so(tmp_path):

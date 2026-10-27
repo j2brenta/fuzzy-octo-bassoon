@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Callable
 
 from engine.llm import BudgetedModel, JsonModel, ModelError
+from engine import language
 from graph import cluster, relate
 from refresher import graphview, vault
 from refresher.place import RelateRun, _quiet, relate_pending
@@ -21,7 +22,7 @@ STAMP = Path(".cache") / "last-consolidate"
 ENRICH_LIMIT = 3  # people looked up per run: Tavily is slow and paid
 
 NAMER_PROMPT = """You name a topic in a personal knowledge base. You get statements that belong together.
-Give the subject they share in 2 to 5 words, as a note title, in the statements' language. No quotes, no period.
+Give the subject they share in 2 to 5 words, as a note title, in <<OUTPUT_LANGUAGE>>. No quotes, no period.
 Return JSON: {"title": "..."}"""
 CONFIRM_PROMPT = """Do these two statements make the same assertion, possibly worded differently? A statement that
 adds a condition, a number or a different subject is not the same. Return JSON: {"same": true} or {"same": false}"""
@@ -30,7 +31,7 @@ adds a condition, a number or a different subject is not the same. Return JSON: 
 def model_namer(model: JsonModel) -> Callable[[list[str]], str]:
     def name(statements: list[str]) -> str:
         try:
-            title = str(model.complete_json(NAMER_PROMPT, "\n".join(f"- {s}" for s in statements[:12])).data
+            title = str(model.complete_json(language.apply(NAMER_PROMPT), "\n".join(f"- {s}" for s in statements[:12])).data
                         .get("title") or "").strip()
         except ModelError:
             title = ""

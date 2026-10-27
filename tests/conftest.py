@@ -9,3 +9,9 @@ def offline_embeddings(monkeypatch):
     embed.use(embed.HashedEmbedder())
     yield
     embed.use(embed.HashedEmbedder())
+
+
+@pytest.fixture(autouse=True)
+def no_live_translation(monkeypatch):
+    """Tests never call the translation model; a test that wants a translator passes its own."""
+    monkeypatch.setattr("refresher.translate.client_from_environment", lambda env=None: None)
