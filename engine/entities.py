@@ -82,6 +82,9 @@ Return only {"entities": [{"entity_id": string, "verdict": "supported"|"needs_re
 "kind": "person"|"organization"|"concept", "evidence_passage_ids": [integers]}],
 "summary": nonblank string}. Include every supplied entity_id exactly once and no
 others. Include at most 10 major omitted people/organizations, each grounded in source passages.
+An omitted name must be copied exactly as it is written in a cited passage, with the same
+case ending (Russian "водителю", not "водитель"). Roles and common nouns (a driver, an
+inspector, mother) are not named entities and are never omissions.
 Reasons must be at most 600 characters, summary at most 1000. Write reasons and
 summary in <<OUTPUT_LANGUAGE>>; entity names stay as the source spells them. Do not return an overall acceptance decision.
 No Markdown fences.'''
@@ -117,7 +120,9 @@ def entity_client_from_environment() -> JsonModel | None:
     return client
 
 
-def _surface_mentions(name, ids, passages, item_id, section_id):
+def _surface_mentions(name, ids, passages, item_id, section_id, *, context=False):
+    """Exact mentions of the name in the cited passages: in every one, or with `context` in at least one (the
+    others then give context, as a claim's extra citations do)."""
     if not isinstance(name, str) or not name.strip() or name != name.strip() or len(name) > 200:
         raise EntityError("Entity name must be nonblank exact source text under 201 characters.")
     if (not isinstance(ids, list) or not 1 <= len(ids) <= len(passages)
@@ -131,15 +136,18 @@ def _surface_mentions(name, ids, passages, item_id, section_id):
     for pid in sorted(ids):
         passage = passages[pid]
         matches = list(pattern.finditer(passage["text"]))
-        if not matches:
+        if not matches and not context:
             raise EntityError("Entity name was not found as an exact mention in a cited passage.")
         for match in matches:
             mentions.append({"item_id": item_id, "section_id": section_id, "passage_id": pid,
                              "start_char": passage["start"] + match.start(), "end_char": passage["start"] + match.end()})
+    if not mentions:
+        raise EntityError("Entity name was not found as an exact mention in any cited passage.")
     return mentions
 
 
-def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, limit: int = MAX_ENTITIES) -> list[dict]:
+def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, limit: int = MAX_ENTITIES,
+                      context: bool = False) -> list[dict]:
     if not isinstance(data, dict) or set(data) != {"entities"}:
         raise EntityError("Entity output must contain only an entities list.")
     rows = data["entities"]
@@ -155,7 +163,7 @@ def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, l
         name, kind = row["name"], row["kind"]
         if not isinstance(kind, str) or kind not in KINDS:
             raise EntityError("Entity kind is invalid.")
-        mentions = _surface_mentions(name, row["evidence_passage_ids"], passages, item_id, section_id)
+        mentions = _surface_mentions(name, row["evidence_passage_ids"], passages, item_id, section_id, context=context)
         key = (kind, name.casefold())
         if key in seen:
             raise EntityError("The entity output repeats a kind/name pair.")
@@ -173,7 +181,8 @@ def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, l
                 raise EntityError("Entity alias name must be source text.")
             if alias["name"].casefold() in alias_keys:
                 continue  # Repeated alias/canonical labels add no new identity or evidence.
-            found = _surface_mentions(alias["name"], alias["evidence_passage_ids"], passages, item_id, section_id)
+            found = _surface_mentions(alias["name"], alias["evidence_passage_ids"], passages, item_id, section_id,
+                                      context=context)
             alias_keys.add(alias["name"].casefold())
             # A short name inside the written full name is not a separate mention.
             found = [m for m in found if not any(
@@ -368,7 +377,8 @@ def validate_entity_review(data: dict, entities: list[dict], text: str, item_id:
             raise EntityError("Entity review verdict is invalid.")
         if not isinstance(reason, str) or not reason.strip() or len(reason) > 600:
             raise EntityError("Entity review reason is invalid.")
-    validate_entities({"entities": omissions}, text, item_id, section, limit=10)
+    # An omission is advisory: it may cite a context passage beside the one that names it.
+    validate_entities({"entities": omissions}, text, item_id, section, limit=10, context=True)
     existing_keys = {(e["kind"], name.casefold()) for e in entities
                      for name in [e["name"], *e.get("aliases", [])]}
     if any((r["kind"], r["name"].casefold()) in existing_keys for r in omissions):

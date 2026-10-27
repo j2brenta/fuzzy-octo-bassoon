@@ -224,6 +224,15 @@ class EntityTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(EntityError):
                 validate_entity_review(data, entities, TEXT, 'item', 'section')
 
+    def test_an_omission_may_cite_a_context_passage_beside_the_one_that_names_it(self):
+        entities = self.extract().entities
+        data = entity_review(entities, omitted_entities=[{'name': 'AI', 'kind': 'concept', 'evidence_passage_ids': [1, 2]}])
+        [omission] = validate_entity_review(data, entities, TEXT, 'item', 'section')['omitted_entities']
+        self.assertEqual(omission['evidence_passage_ids'], [1, 2])
+        with self.assertRaises(EntityError):  # the name still has to be in one of them
+            validate_entity_review(entity_review(entities, omitted_entities=[
+                {'name': 'Not named', 'kind': 'concept', 'evidence_passage_ids': [1, 2]}]), entities, TEXT, 'item', 'section')
+
     def test_corrupt_cached_acceptance_cannot_hide_flagged_entity(self):
         result = self.extract()
         data = entity_review(result.entities)
