@@ -510,3 +510,12 @@ def test_one_invalid_row_costs_that_claim_its_relation_not_the_whole_item(caplog
     assert by_id["c16"].label == "UPDATES"
     assert by_id["cprev"].label == "NONE" and "did not validate" in by_id["cprev"].rationale
     assert any("did not validate" in r.getMessage() for r in caplog.records)
+
+
+def test_item_titles_skip_reading_headers_and_prefer_a_stated_title():
+    from graph.memory import _title
+    assert _title("Visible text (automatic OCR):\nReporting bias\n\nmore", "x") == "Reporting bias"
+    assert _title("Computer Science > Computation and Language\nTitle:Truth as a Compression Artifact\nView PDF",
+                  "x") == "Truth as a Compression Artifact"
+    assert _title("Kirill R, [7 Oct 2026 at 12:13:38]:\n# Про богатство\ntext", "x") == "Про богатство"
+    assert _title("\n\n", "fallback") == "fallback"

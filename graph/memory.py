@@ -73,12 +73,19 @@ def _shingles(text: str, n: int = 3) -> set[tuple[str, ...]]:
 _TG_HEADER = re.compile(r"^.+, \[\d{1,2} \w{3} \d{4} at [\d:]+\]:$")
 
 
+# Headers ingestion writes above text it read from a picture or PDF page: never a title.
+_READING_HEADERS = ("Visible text (automatic OCR):", "Visual description (model-generated):")
+_TITLE_FIELD = re.compile(r"^Title:\s*(.+)$")  # arXiv and similar pages state it under a breadcrumb
+
+
 def _title(text: str, fallback: str) -> str:
-    for line in text.splitlines():
-        line = line.strip().lstrip("#").strip()
-        if line and not _TG_HEADER.match(line):
-            return line[:80]
-    return fallback
+    lines = [line.strip().lstrip("#").strip() for line in text.splitlines()]
+    lines = [line for line in lines if line and not _TG_HEADER.match(line) and line not in _READING_HEADERS]
+    for line in lines[:5]:
+        stated = _TITLE_FIELD.match(line)
+        if stated:
+            return stated.group(1).strip()[:80]
+    return lines[0][:80] if lines else fallback
 
 
 class MemoryStore:

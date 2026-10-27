@@ -56,3 +56,23 @@ class TelegramConfigTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ReviewTimerTests(unittest.TestCase):
+    def test_the_review_is_pending_only_when_due_and_something_new_was_placed(self):
+        from channels.telegram import review_pending
+        from refresher.consolidate import STAMP
+        with TemporaryDirectory() as directory:
+            vault = Path(directory)
+            self.assertFalse(review_pending(vault))  # nothing processed yet
+            (vault / 'processed').mkdir()
+            post = vault / 'processed' / 'post.json'
+            post.write_text('{}')
+            self.assertTrue(review_pending(vault))  # never reviewed
+            stamp = vault / STAMP
+            stamp.parent.mkdir(parents=True, exist_ok=True)
+            stamp.write_text('2000-01-01T00:00:00+00:00')  # due: the last review is long ago
+            os.utime(post, (1, 1))  # but the post is older than that review
+            self.assertFalse(review_pending(vault))
+            os.utime(post, None)  # a post placed after it
+            self.assertTrue(review_pending(vault))
