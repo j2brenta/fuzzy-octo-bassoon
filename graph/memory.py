@@ -14,8 +14,8 @@ from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
-from graph.store import (ClaimNode, Edge, IdeaNode, ItemNode, PersonNode, Placement, ReviewReport, SourceNode,
-                         TopicNode)
+from graph.store import (ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, PersonNode, Placement,
+                         ReviewReport, SourceNode, TopicNode)
 from refresher import scoring
 from refresher.schemas import Extraction, Override, Relation, Verdict
 
@@ -29,6 +29,8 @@ WORD = relate.WORD
 DURABILITY_RANK = {d: n for n, d in enumerate(("ephemeral", "news", "reference", "foundation"))}
 RELATION_TYPES = {"DUPLICATES", "SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
 EDGE_FOR = {"SAME": "SUPPORTS", "UPDATES": "SUPERSEDES", "CONFLICTS": "CONTRADICTS", "ADDS_DETAIL": "ELABORATES"}
+# Claim relations that link clusters and topics. In practice ELABORATES: the others join their claims into one Idea.
+LINK_RELATIONS = {"SUPPORTS", "SUPERSEDES", "CONTRADICTS", "ELABORATES"}
 
 
 def person_id(name: str) -> str:
@@ -97,6 +99,11 @@ class MemoryStore:
         self._suppressed: set[frozenset] = set()  # claim pairs whose relation the user rejected
         self._topic_specs: dict[str, tuple[str, list[str]]] = {}  # topic id -> (title, claim ids)
         self._topics: dict[str, TopicNode] = {}
+        self._clusters: dict[str, ClusterNode] = {}
+        self._cluster_key = None  # what the clusters were computed from; unchanged Ideas skip the work
+        self._links: list[Link] = []
+        self._grouped = True  # clusters, topics and links match the Ideas; built on first read (_groups)
+        self._vectors: dict[tuple[str, str], list[float]] = {}  # (embedder, Idea title) -> vector
         self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
         self.proposals: dict = {}  # proposal id -> ProposalState, filled by vault.replay
         self.held_back: dict[str, str] = {}  # item id -> reason
@@ -223,7 +230,16 @@ class MemoryStore:
         self._recount_duplicates()
         self._derive()
         self._build_ideas(groups)
-        self._build_topics()
+        self._grouped = False  # placement does not read clusters, topics or links: build them when asked
+
+    def _groups(self):
+        if self._dirty:
+            self._refresh()
+        if not self._grouped:
+            self._grouped = True
+            self._build_clusters()
+            self._build_topics()
+            self._build_links()
 
     def apply_review(self, report: ReviewReport) -> None:
         """Replay a stored review: item duplicates and firmed Ideas. Unknown ids (not placed here) are skipped."""
@@ -425,9 +441,41 @@ class MemoryStore:
                 node.idea_id = idea.idea_id
                 self._relations.append(Edge(node.claim.claim_id, "PART_OF", idea.idea_id))
 
+    def _idea_vectors(self, idea_ids: list[str]) -> list[list[float]]:
+        """Vectors of the Ideas' titles, kept across refreshes so a new item embeds only its new Ideas."""
+        name = embed.current().name
+        missing = list(dict.fromkeys(t for t in (self._ideas[i].title for i in idea_ids)
+                                     if (name, t) not in self._vectors))
+        self._vectors.update({(name, t): v for t, v in zip(missing, embed.vectors(missing))})
+        return [self._vectors[(name, self._ideas[i].title)] for i in idea_ids]
+
+    def _idea_sources(self, idea: IdeaNode) -> set[str]:
+        return {self._items[self._claims[cid].item_id].source_key for cid in idea.members
+                if not self._items[self._claims[cid].item_id].hidden} - {None}
+
+    def _build_clusters(self):
+        """Tight groups of Ideas from any number of sources (cluster_link), recomputed with the Ideas and never
+        decided. Ids follow the earliest claim, so a cluster keeps its id while it grows."""
+        ideas = sorted(self._ideas)
+        key = (embed.current().name, embed.thresholds().cluster_link,
+               tuple((i, self._ideas[i].title, frozenset(self._idea_sources(self._ideas[i]))) for i in ideas))
+        if key == self._cluster_key:
+            return
+        self._cluster_key, self._clusters = key, {}
+        vectors = dict(zip(ideas, self._idea_vectors(ideas)))
+        for group in cluster.components(ideas, list(vectors.values()), link=embed.thresholds().cluster_link):
+            if len(group) < cluster.CLUSTER_MIN_IDEAS:
+                continue
+            members = [self._ideas[i] for i in group]
+            cid = "cluster:" + min(m.canonical_claim_id for m in members)[:16]
+            self._clusters[cid] = ClusterNode(cid, cluster.title([m.title for m in members]), set(group),
+                                              set().union(*(self._idea_sources(m) for m in members)),
+                                              cluster.centroid([vectors[i] for i in group]))
+
     def _build_topics(self):
-        """Accepted topics, found again through the claims they were proposed with; any other Idea close to a
-        topic's centroid joins it provisionally (cluster.attach), with no model call."""
+        """Accepted topics, found again through the claims they were proposed with. A cluster mostly inside a topic
+        brings its other Ideas, and any Idea close to a topic's centroid joins it (cluster.attach_all): both
+        provisionally, with no model call. An Idea can sit in up to cluster.MAX_TOPICS topics."""
         self._topics = {}
         for topic_id, (title, claims) in sorted(self._topic_specs.items()):
             ideas = {self._claims[cid].idea_id for cid in claims if cid in self._claims and self._claims[cid].idea_id}
@@ -435,14 +483,57 @@ class MemoryStore:
                 self._topics[topic_id] = TopicNode(topic_id, title, ideas)
         if not self._topics:
             return
-        centroids = {tid: cluster.centroid(embed.vectors([self._ideas[i].title for i in sorted(t.ideas)]))
-                     for tid, t in self._topics.items()}
-        placed = set().union(*(t.ideas for t in self._topics.values()))
-        loose = sorted(i for i in self._ideas if i not in placed)
-        for idea_id, vector in zip(loose, embed.vectors([self._ideas[i].title for i in loose])):
-            tid = cluster.attach(vector, centroids)
-            if tid is not None:
-                self._topics[tid].attached.add(idea_id)
+        for c in self._clusters.values():
+            for t in self._topics.values():
+                if 2 * len(c.ideas & t.ideas) >= len(c.ideas):
+                    t.clusters.add(c.cluster_id)
+                    t.attached |= c.ideas - t.ideas
+        centroids = {tid: cluster.centroid(self._idea_vectors(sorted(t.ideas))) for tid, t in self._topics.items()}
+        ideas = sorted(self._ideas)
+        for idea_id, vector in zip(ideas, self._idea_vectors(ideas)):
+            held = {tid for tid, t in self._topics.items() if idea_id in t.ideas or idea_id in t.attached}
+            room = cluster.MAX_TOPICS - len(held)
+            if room > 0:
+                for tid in cluster.attach_all(vector, {t: c for t, c in centroids.items() if t not in held},
+                                              limit=room):
+                    self._topics[tid].attached.add(idea_id)
+
+    def _build_links(self):
+        """Links between clusters and between topics: claim relations whose ends sit one in each (not in both),
+        Ideas they share, and centroids at topic_neighbour or closer. Recomputed with the graph."""
+        self._links = []
+        idea_of = {cid: n.idea_id for cid, n in self._claims.items() if n.idea_id}
+        crossing = [e for e in self._relations
+                    if e.type in LINK_RELATIONS and e.src in idea_of and e.dst in idea_of]
+        topic_centroids = {tid: cluster.centroid(self._idea_vectors(sorted(t.ideas | t.attached)))
+                           for tid, t in self._topics.items()}
+        levels = (("cluster", {c.cluster_id: c.ideas for c in self._clusters.values()},
+                   {c.cluster_id: c.centroid for c in self._clusters.values()}),
+                  ("topic", {t.topic_id: t.ideas | t.attached for t in self._topics.values()}, topic_centroids))
+        for level, groups, centroids in levels:
+            ids = sorted(groups)
+            member_of: dict[str, set[str]] = {}
+            for gid in ids:
+                for idea_id in groups[gid]:
+                    member_of.setdefault(idea_id, set()).add(gid)
+            relations: dict[tuple[str, str], set] = {}
+            for e in crossing:
+                a, b = idea_of[e.src], idea_of[e.dst]
+                for ga in member_of.get(a, ()):
+                    for gb in member_of.get(b, ()):
+                        if ga != gb and b not in groups[ga] and a not in groups[gb]:
+                            relations.setdefault(tuple(sorted((ga, gb))), set()).add((e.src, e.type, e.dst))
+            similar = {(ids[i], ids[j]): sim for i, j, sim in
+                       cluster.pairs_above([centroids[g] for g in ids], embed.thresholds().topic_neighbour)}
+            overlapping = {(a, b) for n, a in enumerate(ids) for b in ids[n + 1:]
+                           if groups[a] & groups[b]} if level == "topic" else set()
+            pairs = set(relations) | set(similar) | overlapping
+            for a, b in pairs:
+                sim = similar.get((a, b), embed.cosine(centroids[a], centroids[b]))
+                rel, shared = tuple(sorted(relations.get((a, b), ()))), tuple(sorted(groups[a] & groups[b]))
+                self._links.append(Link(level, a, b, round(len(rel) + len(shared) + sim, 3), round(sim, 3),
+                                        rel, shared))
+        self._links.sort(key=lambda link: (link.level, -link.weight, link.a, link.b))
 
     def _recount_duplicates(self):
         dup_claims = {e.src for e in self._relations if e.type == "DUPLICATES"}
@@ -553,7 +644,16 @@ class MemoryStore:
         return self._ideas[idea_id]
 
     def topics(self):
+        self._groups()
         return self._topics.values()
+
+    def clusters(self):
+        self._groups()
+        return self._clusters.values()
+
+    def links(self, level: str | None = None) -> list[Link]:
+        self._groups()
+        return [link for link in self._links if level is None or link.level == level]
 
     def review(self, at: datetime, namer=None, confirm=None) -> ReviewReport:
         """The hourly review. Applied without asking: item duplicates and firming up Ideas. Proposed to the user:
@@ -600,6 +700,7 @@ class MemoryStore:
         return report
 
     def _propose(self, at: datetime, namer, confirm) -> list:
+        self._groups()
         known = {pid for pid, st in self.proposals.items() if st.status != "stale"}
         pending_topic_claims = {cid for st in self.proposals.values()
                                 if st.proposal.kind == "topic" and st.status == "proposed"
@@ -613,35 +714,38 @@ class MemoryStore:
                 out.append(p)
 
         ideas = sorted(self._ideas.values(), key=lambda i: (i.valid_at, i.idea_id))
-        vectors = dict(zip((i.idea_id for i in ideas), embed.vectors([i.title for i in ideas])))
+        vectors = dict(zip((i.idea_id for i in ideas), self._idea_vectors([i.idea_id for i in ideas])))
         related = {frozenset((self._claims[e.src].idea_id, self._claims[e.dst].idea_id))
                    for e in self._relations if e.type in {"CONTRADICTS", "ELABORATES"}
                    and e.src in self._claims and e.dst in self._claims}
 
         # Ideas that say the same thing in other words: the ingest relator missed them.
-        for n, a in enumerate(ideas):
-            for b in ideas[n + 1:]:
-                if frozenset((a.idea_id, b.idea_id)) in related:
-                    continue
-                similar = embed.cosine(vectors[a.idea_id], vectors[b.idea_id])
-                if similar >= embed.thresholds().idea_merge and (confirm is None or confirm(a.title, b.title)):
-                    add("merge_ideas", {"claims": [a.canonical_claim_id, b.canonical_claim_id]},
-                        f"The two statements are close (similarity {similar:.2f}) and nothing relates them yet.")
+        for n, m, similar in cluster.pairs_above(list(vectors.values()), embed.thresholds().idea_merge):
+            a, b = ideas[n], ideas[m]
+            if frozenset((a.idea_id, b.idea_id)) not in related and (confirm is None or confirm(a.title, b.title)):
+                add("merge_ideas", {"claims": [a.canonical_claim_id, b.canonical_claim_id]},
+                    f"The two statements are close (similarity {similar:.2f}) and nothing relates them yet.")
 
-        # Topics from Ideas no topic holds yet.
+        # Topics from clusters (and single Ideas) no topic holds yet. Groups never split a cluster, so clusters from
+        # two articles that sit close become one topic above both.
         in_topics = set().union(*(t.ideas | t.attached for t in self._topics.values())) if self._topics else set()
-        loose = [i for i in ideas if i.idea_id not in in_topics]
-        for group in cluster.components([i.idea_id for i in loose], [vectors[i.idea_id] for i in loose]):
+        loose = [i.idea_id for i in ideas if i.idea_id not in in_topics]
+        cluster_of = {i: c for c in self._clusters.values() for i in c.ideas}
+        for group in cluster.components(loose, [vectors[i] for i in loose],
+                                        joined=[sorted(c.ideas) for c in self._clusters.values()]):
             members = [self._ideas[i] for i in group]
             claims = sorted(i.canonical_claim_id for i in members)
-            sources = {self._items[self._claims[cid].item_id].source_key for i in members for cid in i.members
-                       if not self._items[self._claims[cid].item_id].hidden} - {None}
+            sources = set().union(*(self._idea_sources(i) for i in members))
             if len(members) < cluster.TOPIC_MIN_IDEAS or len(sources) < cluster.TOPIC_MIN_SOURCES \
                     or pending_topic_claims & set(claims):
                 continue
-            statements = [i.title for i in members]
+            # One statement from each cluster first, so a namer that reads only the first few sees every part.
+            firsts = list(dict.fromkeys(cluster_of[i].cluster_id for i in group if i in cluster_of))
+            lead = [min(sorted(self._clusters[c].ideas & set(group))) for c in firsts]
+            statements = [self._ideas[i].title for i in lead + [i for i in group if i not in lead]]
+            parts = f" in {len(firsts)} clusters" if firsts else ""
             add("topic", {"claims": claims, "title": (namer or cluster.title)(statements)},
-                f"{len(members)} Ideas from {len(sources)} sources sit close together.")
+                f"{len(members)} Ideas{parts} from {len(sources)} sources sit close together.")
 
         # People who are probably one person: same surname, compatible first names, something in common.
         people = sorted(self._people.values(), key=lambda p: p.person_id)

@@ -1,6 +1,7 @@
 """wiki/graph/: the map, an offline page over the graph the refresher reads (Victor's News Atlas viewer, ported).
 
-Topics are regions; items sit in the topic of their Ideas. Two modes: Sources draws items with the relations their
+Topics are regions and clusters regions inside them; items sit in the topic of their Ideas. A Topics mode draws
+clusters and topics with the links between them (relations that cross, Ideas they share, close centroids). Two modes: Sources draws items with the relations their
 claims have (the correction SUPERSEDES the post it corrects), Claims draws the claims themselves. Clicking an item or
 an edge opens the exact passages behind it; two claims can be compared side by side. MENTIONS edges, FROM spans and
 hidden triage stubs are left out. Proposals from the review are listed with their state; `refresher serve` adds the
@@ -51,7 +52,9 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
     for t in sorted(store.topics(), key=lambda t: t.topic_id):
         for idea_id in sorted(t.ideas | t.attached):
             topic_of_idea.setdefault(idea_id, []).append(t.topic_id)
-        topics.append({"id": t.topic_id, "title": t.title, "ideas": sorted(t.ideas), "attached": sorted(t.attached)})
+        topics.append({"id": t.topic_id, "title": t.title, "ideas": sorted(t.ideas), "attached": sorted(t.attached),
+                       "clusters": sorted(t.clusters)})
+    cluster_of_idea = {i: c.cluster_id for c in store.clusters() for i in c.ideas}
 
     claim_rows = []
     for cid, node in sorted(claims.items(), key=lambda kv: (kv[1].item_id, kv[0])):
@@ -86,6 +89,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
         canonical = scores.get(idea.canonical_claim_id)
         chain = [n.claim.statement for n in store.chain(idea.canonical_claim_id)]
         story_rows.append({"id": idea.idea_id, "title": idea.title, "status": idea.status,
+                           "cluster": cluster_of_idea.get(idea.idea_id),
+                           "topics": topic_of_idea.get(idea.idea_id, []),
                            "band": canonical.band if canonical else "stale", "claims": members,
                            "items": sorted({claims[c].item_id for c in members}),
                            "chain": chain if len(chain) > 1 else [],
@@ -129,6 +134,19 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                               "label": LABELS["MERGE"], "rationale": st.proposal.rationale, "basis": "proposal",
                               "proposal": st.proposal.proposal_id})
 
+    cluster_rows = []
+    for c in sorted(store.clusters(), key=lambda c: (-len(c.ideas), c.cluster_id)):
+        members = [cid for i in sorted(c.ideas) for cid in sorted(ideas[i].members) if cid in claims]
+        cluster_rows.append({"id": c.cluster_id, "title": c.title, "ideas": sorted(c.ideas),
+                             "sources": sorted(c.sources), "items": sorted({claims[m].item_id for m in members}),
+                             "topics": sorted(t.topic_id for t in store.topics() if c.cluster_id in t.clusters)})
+    statement = lambda cid: claims[cid].claim.statement if cid in claims else None
+    link_rows = [{"id": f"{link.level}>{link.a}>{link.b}", "level": link.level, "source": link.a, "target": link.b,
+                  "weight": link.weight, "similarity": link.similarity, "shared": list(link.shared),
+                  "relations": [{"source": a, "kind": kind, "target": b, "label": LABELS.get(kind, kind),
+                                 "said": statement(a), "about": statement(b)} for a, kind, b in link.relations],
+                  "basis": "auto"} for link in store.links()]
+
     all_claims = {c.claim.claim_id: c.claim.statement for c in store.claims(hidden=True)}
     people = {p.person_id: p.name for p in store.people()}
     proposal_rows = []
@@ -146,9 +164,10 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
 
     return {"snapshot_at": at.isoformat(), "scope": "local", "served": False,
             "counts": {"items": len(item_rows), "ideas": len(story_rows), "topics": len(topics),
+                       "clusters": len(cluster_rows), "links": len(link_rows),
                        "edges": len(edges), "waiting": sum(p["status"] == "proposed" for p in proposal_rows)},
             "limits": {"primary_nodes": 160},
-            "topics": topics, "stories": story_rows, "items": item_rows, "claims": claim_rows,
+            "topics": topics, "clusters": cluster_rows, "links": link_rows, "stories": story_rows, "items": item_rows, "claims": claim_rows,
             "edges": edges, "item_edges": list(item_edges.values()), "proposals": proposal_rows}
 
 

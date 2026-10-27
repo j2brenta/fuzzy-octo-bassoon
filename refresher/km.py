@@ -41,6 +41,10 @@ class KnowledgeReport:
     conflicted_ideas: list[str] = field(default_factory=list)  # titles of Ideas holding a CONTRADICTS edge
     topics: int = 0
     attached: int = 0  # Ideas a topic took provisionally since it was accepted
+    clusters: int = 0
+    single_source_clusters: int = 0  # in no topic, and wait for a second source before they can become one
+    multi_topic_ideas: int = 0  # Ideas in more than one topic
+    links: Counter = field(default_factory=Counter)  # level -> count
     proposals: Counter = field(default_factory=Counter)  # status -> count
     people: int = 0
     people_pending: int = 0
@@ -83,6 +87,13 @@ def run(store: GraphStore, at: datetime) -> KnowledgeReport:
     r.conflicted_ideas = sorted(i.title for i in ideas if i.members & contradicted)
     topics = list(store.topics()) if hasattr(store, "topics") else []
     r.topics, r.attached = len(topics), sum(len(t.attached) for t in topics)
+    in_topics = Counter(i for t in topics for i in t.ideas | t.attached)
+    r.multi_topic_ideas = sum(n > 1 for n in in_topics.values())
+    clusters = list(store.clusters()) if hasattr(store, "clusters") else []
+    held = {c for t in topics for c in t.clusters}
+    r.clusters = len(clusters)
+    r.single_source_clusters = sum(len(c.sources) < 2 and c.cluster_id not in held for c in clusters)
+    r.links = Counter(link.level for link in store.links()) if hasattr(store, "links") else Counter()
     r.proposals = Counter(st.status for st in getattr(store, "proposals", {}).values())
     people = list(store.people())
     r.people, r.people_pending = len(people), sum(p.enrichment_status == "pending" for p in people)
@@ -119,6 +130,9 @@ def render(r: KnowledgeReport, store: GraphStore) -> str:
              f"{r.noise} claims collapsed as noise, {r.confirmations} confirmations.", "",
              f"{sum(r.ideas.values())} Ideas: {r.ideas['firm']} firm, {r.ideas['provisional']} provisional, "
              f"{len(r.conflicted_ideas)} with conflicts. {r.topics} topics ({r.attached} Ideas attached provisionally).",
+             "", f"{r.clusters} clusters ({r.single_source_clusters} from one source, waiting for a second). "
+             f"Links: {r.links['cluster']} between clusters, {r.links['topic']} between topics; "
+             f"{r.multi_topic_ideas} Ideas sit in more than one topic.",
              "", f"Review: {r.proposals['proposed']} proposals waiting for you, {r.proposals['stale']} stale, "
              f"{r.proposals['accepted']} accepted, {r.proposals['rejected']} rejected.", "",
              "## Freshness by durability", "", "| durability | half-life | " + " | ".join(BANDS) + " |",
