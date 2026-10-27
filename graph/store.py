@@ -110,7 +110,32 @@ class TopicNode:
     topic_id: str
     title: str
     ideas: set[str] = field(default_factory=set)  # accepted members
-    attached: set[str] = field(default_factory=set)  # provisional members, attached by similarity at ingest
+    attached: set[str] = field(default_factory=set)  # provisional members: close to its centroid, or in its clusters
+    clusters: set[str] = field(default_factory=set)  # clusters mostly inside it
+
+
+@dataclass
+class ClusterNode:
+    """A tight group of Ideas from any number of sources: one article's sub-theme, or Ideas several articles share.
+    Recomputed with the graph, never decided; a topic proposal is made of clusters."""
+    cluster_id: str
+    title: str
+    ideas: set[str] = field(default_factory=set)
+    sources: set[str] = field(default_factory=set)  # source keys of its visible items
+    centroid: list[float] = field(default_factory=list, repr=False)
+
+
+@dataclass(frozen=True)
+class Link:
+    """Two clusters, or two topics, that belong near each other: claim relations crossing them, Ideas they share,
+    and how close their centroids are. Recomputed with the graph; the relations are its evidence."""
+    level: str  # cluster | topic
+    a: str
+    b: str
+    weight: float  # relations + shared Ideas + centroid cosine
+    similarity: float
+    relations: tuple[tuple[str, str, str], ...] = ()  # (claim, type, claim) as in the graph
+    shared: tuple[str, ...] = ()  # idea ids in both (topics only; clusters do not overlap)
 
 
 PROPOSAL_KINDS = ("merge_ideas", "merge_people", "topic", "relation")
@@ -168,6 +193,10 @@ class GraphStore(Protocol):
     def idea(self, idea_id: str) -> IdeaNode: ...
     def review(self, at: datetime) -> ReviewReport: ...
     def apply_review(self, report: ReviewReport) -> None: ...
+    def clusters(self) -> Iterable[ClusterNode]: ...
+    def topics(self) -> Iterable[TopicNode]: ...
+    def links(self, level: str | None = None) -> list[Link]:
+        """Links between clusters ("cluster") or topics ("topic"), heaviest first; both levels when None."""
 
     # graph.query: what the refresher gathers from.
     def claims_for(self, terms: Iterable[str], hops: int = 2) -> list[ClaimNode]:

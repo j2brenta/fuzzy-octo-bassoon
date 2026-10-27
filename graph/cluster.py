@@ -1,36 +1,83 @@
-"""Grouping Ideas into topics, cheaply: vectors in, groups out; no model call per Idea.
+"""Grouping Ideas into clusters and topics, cheaply: vectors in, groups out; no model call per Idea.
 
-At ingest a new Idea joins a known topic when it is close to the topic's centroid (attach). The hourly review links
-each unsorted Idea to its k nearest neighbours above a threshold and takes the connected components (components);
-each big enough component becomes a topic proposal, named by one model call or by its most shared words (title).
+Two levels from one k-nearest-neighbour graph. Clusters keep its edges at the tight cluster_link: any group of 2+
+Ideas, from any number of sources, recomputed with the graph. Topics keep edges at the looser topic_link and never
+split a cluster (components with `joined`); a big enough group from 2+ sources becomes a topic proposal, named by one
+model call or by its most shared words (title). At ingest an Idea joins every accepted topic whose centroid is close
+(attach_all), up to MAX_TOPICS. Similarities are matrix products in blocks, so thousands of Ideas stay fast.
 """
 from collections import Counter
 
-from graph.embed import STOP, cosine, stem, thresholds, words
+import numpy as np
 
-K = 5  # neighbours per Idea in the review's graph
+from graph.embed import STOP, stem, thresholds, words
+
+K = 5  # neighbours per Idea in the k-NN graph
+CLUSTER_MIN_IDEAS = 2
 TOPIC_MIN_IDEAS = 3
 TOPIC_MIN_SOURCES = 2
+MAX_TOPICS = 3  # topics one Idea can sit in
+BLOCK = 1024  # rows per matrix product, to bound memory
 
 
-def centroid(vectors: list[list[float]]) -> list[float]:
-    total = [sum(xs) for xs in zip(*vectors)]
-    norm = sum(x * x for x in total) ** 0.5
-    return [x / norm for x in total] if norm else total
+def matrix(vectors) -> np.ndarray:
+    return np.asarray(vectors, dtype=np.float64).reshape(len(vectors), -1) if len(vectors) else np.zeros((0, 1))
 
 
-def attach(vector: list[float], centroids: dict[str, list[float]], threshold: float | None = None) -> str | None:
-    """The closest topic at or above the threshold (the embedder's topic_attach); ties go to the smaller id."""
+def centroid(vectors) -> list[float]:
+    total = matrix(vectors).sum(axis=0)
+    norm = float(np.linalg.norm(total))
+    return (total / norm).tolist() if norm else total.tolist()
+
+
+def attach_all(vector, centroids: dict[str, list[float]], threshold: float | None = None,
+               limit: int = MAX_TOPICS) -> list[str]:
+    """Topics at or above the threshold (the embedder's topic_attach), closest first; ties go to the smaller id."""
     threshold = thresholds().topic_attach if threshold is None else threshold
-    scored = sorted((-cosine(vector, c), tid) for tid, c in centroids.items())
-    return scored[0][1] if scored and -scored[0][0] >= threshold else None
+    if not centroids:
+        return []
+    ids = sorted(centroids)
+    sims = matrix([centroids[t] for t in ids]) @ np.asarray(vector, dtype=np.float64)
+    return [t for s, t in sorted(zip((-sims).tolist(), ids)) if -s >= threshold][:limit]
 
 
-def components(ids: list[str], vectors: list[list[float]], link: float | None = None, k: int = K) -> list[list[str]]:
+def attach(vector, centroids: dict[str, list[float]], threshold: float | None = None) -> str | None:
+    """The closest topic at or above the threshold; ties go to the smaller id."""
+    best = attach_all(vector, centroids, threshold, limit=1)
+    return best[0] if best else None
+
+
+def nearest(vectors, k: int = K) -> list[tuple[int, int, float]]:
+    """(i, j, cosine) for each row's k nearest other rows; ties go to the smaller j."""
+    m = matrix(vectors)
+    out = []
+    for start in range(0, len(m), BLOCK):
+        sims = m[start:start + BLOCK] @ m.T
+        for row, i in enumerate(range(start, min(start + BLOCK, len(m)))):
+            sims[row, i] = -np.inf
+            order = np.argsort(-sims[row], kind="stable")[:k]
+            out += [(i, int(j), float(sims[row, j])) for j in order if j != i and np.isfinite(sims[row, j])]
+    return out
+
+
+def pairs_above(vectors, threshold: float) -> list[tuple[int, int, float]]:
+    """(i, j, cosine) with i < j for every pair at or above the threshold."""
+    m = matrix(vectors)
+    out = []
+    for start in range(0, len(m), BLOCK):
+        sims = m[start:start + BLOCK] @ m.T
+        rows, cols = np.nonzero(sims >= threshold)
+        out += [(start + int(r), int(c), float(sims[r, c])) for r, c in zip(rows, cols) if start + r < c]
+    return sorted(out)
+
+
+def components(ids: list[str], vectors, link: float | None = None, k: int = K, joined=(),
+               near: list[tuple[int, int, float]] | None = None) -> list[list[str]]:
     """Connected components of the k-nearest-neighbour graph, keeping edges at or above `link` (the embedder's
-    topic_link)."""
+    topic_link). Ids in one `joined` group always end up together; `near` reuses a nearest() result."""
     link = thresholds().topic_link if link is None else link
     parent = list(range(len(ids)))
+    index = {idea_id: n for n, idea_id in enumerate(ids)}
 
     def find(i):
         while parent[i] != i:
@@ -38,11 +85,13 @@ def components(ids: list[str], vectors: list[list[float]], link: float | None = 
             i = parent[i]
         return i
 
-    for i, v in enumerate(vectors):
-        near = sorted(((cosine(v, w), j) for j, w in enumerate(vectors) if j != i), reverse=True)[:k]
-        for sim, j in near:
-            if sim >= link:
-                parent[find(i)] = find(j)
+    for i, j, sim in nearest(vectors, k) if near is None else near:
+        if sim >= link:
+            parent[find(i)] = find(j)
+    for group in joined:
+        members = [index[g] for g in group if g in index]
+        for other in members[1:]:
+            parent[find(other)] = find(members[0])
     groups: dict[int, list[str]] = {}
     for i, idea_id in enumerate(ids):
         groups.setdefault(find(i), []).append(idea_id)

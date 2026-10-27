@@ -282,11 +282,16 @@ def _write_note(path: Path, meta: dict, body: str, written: set[Path]) -> None:
 
 
 def note_names(store: GraphStore) -> dict[str, str]:
-    """Stable, readable, unique note names for items, Ideas, people and sources, used as wikilink targets.
-    An Idea's title can change as members join, so its note is named after its id."""
+    """Stable, readable, unique note names for items, Ideas, clusters, topics, people and sources, used as wikilink
+    targets. An Idea's or a cluster's title can change as members join, so its note is named after its id; an
+    accepted topic keeps its title."""
     names = {}
     for idea in store.ideas():
         names[idea.idea_id] = idea.idea_id.replace(":", "-")
+    for c in store.clusters():
+        names[c.cluster_id] = c.cluster_id.replace(":", "-")
+    for t in store.topics():
+        names[t.topic_id] = _safe(f"{t.title} (topic)")
     for item in store.items():
         names[item.item_id] = _safe(f"{item.source.event_time:%Y-%m-%d} {item.title[:60]} {item.item_id[:6]}")
     for p in store.people():
@@ -356,6 +361,9 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     def where(node):
         return "a held-back item" if node.item_id in hidden_items else link(node.item_id)
 
+    cluster_of = {i: c.cluster_id for c in store.clusters() for i in c.ideas}
+    topics = sorted(store.topics(), key=lambda t: t.topic_id)
+
     for idea in sorted(store.ideas(), key=lambda i: i.idea_id):
         members = sorted((all_claims[cid] for cid in idea.members),
                          key=lambda c: (c.clock_start, c.claim.claim_id))
@@ -383,9 +391,51 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                       for e in conflicts]
         if sources:
             lines += ["", "## Sources", "", ", ".join(link(k) for k in sources)]
+        groups = [link(cluster_of[idea.idea_id])] if idea.idea_id in cluster_of else []
+        groups += [link(t.topic_id) for t in topics if idea.idea_id in t.ideas | t.attached]
+        if groups:
+            lines += ["", "## In", "", ", ".join(groups)]
         meta = {"type": "idea", "idea_id": idea.idea_id, "status": idea.status, "durability": idea.durability,
                 "canonical_claim_id": idea.canonical_claim_id, "members": len(members)}
         _write_note(wiki / "ideas" / f"{names[idea.idea_id]}.md", meta, "\n".join(lines), written)
+
+    def linked(gid, level):
+        out = []
+        for lk in store.links(level):
+            if gid not in (lk.a, lk.b):
+                continue
+            why = [f"{len(lk.relations)} relations" if lk.relations else "",
+                   f"{len(lk.shared)} shared Ideas" if lk.shared else "", f"similarity {lk.similarity:.2f}"]
+            out.append(f"- {link(lk.b if lk.a == gid else lk.a)} · weight {lk.weight:.2f} · "
+                       + ", ".join(w for w in why if w))
+            out += [f"    - {all_claims[a].claim.statement} {kind.lower()} {all_claims[b].claim.statement}"
+                    for a, kind, b in lk.relations if a in all_claims and b in all_claims]
+        return out
+
+    for c in sorted(store.clusters(), key=lambda c: c.cluster_id):
+        lines = [f"# {c.title}", "", f"Cluster of {len(c.ideas)} Ideas from {len(c.sources)} sources, found by "
+                 "similarity and recomputed with the graph.", "", "## Ideas", ""]
+        lines += [f"- {link(i)} {store.idea(i).title}" for i in sorted(c.ideas)]
+        lines += ["", "## Sources", "", ", ".join(link(k) for k in sorted(c.sources))] if c.sources else []
+        holders = [link(t.topic_id) for t in topics if c.cluster_id in t.clusters]
+        lines += ["", "## In topics", "", ", ".join(holders)] if holders else []
+        near = linked(c.cluster_id, "cluster")
+        lines += ["", "## Linked clusters", "", *near] if near else []
+        _write_note(wiki / "clusters" / f"{names[c.cluster_id]}.md", {"type": "cluster", "cluster_id": c.cluster_id,
+                    "ideas": len(c.ideas)}, "\n".join(lines), written)
+
+    for t in topics:
+        lines = [f"# {t.title}", "", f"Topic you accepted: {len(t.ideas)} Ideas, {len(t.attached)} more joined "
+                 f"provisionally, {len(t.clusters)} clusters.", ""]
+        lines += ["## Clusters", "", *[f"- {link(c)}" for c in sorted(t.clusters)], ""] if t.clusters else []
+        lines += ["## Ideas", "", *[f"- {link(i)} {store.idea(i).title}" for i in sorted(t.ideas)]]
+        if t.attached:
+            lines += ["", "## Joined provisionally", "",
+                      *[f"- {link(i)} {store.idea(i).title}" for i in sorted(t.attached)]]
+        near = linked(t.topic_id, "topic")
+        lines += ["", "## Linked topics", "", *near] if near else []
+        _write_note(wiki / "topics" / f"{names[t.topic_id]}.md", {"type": "topic", "topic_id": t.topic_id,
+                    "ideas": len(t.ideas), "attached": len(t.attached)}, "\n".join(lines), written)
 
     for p in sorted(store.people(), key=lambda p: p.person_id):
         lines = [f"# {p.name}", ""]
@@ -418,7 +468,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                     "channel": s.channel}, "\n".join(lines), written)
 
     # Remove generated notes that no longer exist in the store, unless the user wrote in them.
-    for folder in ("items", "ideas", "people", "sources"):
+    for folder in ("items", "ideas", "clusters", "topics", "people", "sources"):
         for path in (wiki / folder).glob("*.md") if (wiki / folder).exists() else []:
             if path not in written and not path.read_text(encoding="utf-8").split(MARK, 1)[-1].strip():
                 path.unlink()
@@ -428,6 +478,8 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     health.write_text(km.render(report, store), encoding="utf-8")
     index = ["# Knowledge base", "", f"Built {at:%Y-%m-%d %H:%M %Z}. See [[health]].", ""]
     for head, keys in (("Items", [i.item_id for i in sorted(store.items(), key=lambda i: i.source.event_time, reverse=True)]),
+                       ("Topics", [t.topic_id for t in topics]),
+                       ("Clusters", [c.cluster_id for c in sorted(store.clusters(), key=lambda c: (-len(c.ideas), c.cluster_id))]),
                        ("Ideas", [i.idea_id for i in sorted(store.ideas(), key=lambda i: (-len(i.members), i.idea_id))]),
                        ("People", sorted((p.person_id for p in store.people()), key=lambda k: names[k])),
                        ("Sources", sorted((s.key for s in store.sources()), key=lambda k: names[k]))):

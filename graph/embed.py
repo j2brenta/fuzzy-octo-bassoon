@@ -44,12 +44,19 @@ class Thresholds:
     topic_link: float  # edge between two unsorted Ideas when clustering topics
     topic_attach: float  # a new Idea joins an accepted topic at this cosine to its centroid
     idea_merge: float  # two Ideas this close are proposed for a merge (the model confirms when there is one)
+    cluster_link: float  # edge between two Ideas in a cluster: tighter than topic_link, so topics hold whole clusters
+    topic_neighbour: float  # two clusters (or topics) whose centroids are this close are linked without a relation
 
 
-HASHED = Thresholds(candidate=0.1, recheck=0.5, topic_link=0.3, topic_attach=0.35, idea_merge=0.75)
+HASHED = Thresholds(candidate=0.1, recheck=0.5, topic_link=0.3, topic_attach=0.35, idea_merge=0.75,
+                    cluster_link=0.4, topic_neighbour=0.12)
 # Measured on Qwen/Qwen3-Embedding-8B, 26 October: unrelated statements 0.30-0.46, same topic 0.73-0.93, a paraphrase
 # 0.98, but two different assertions on one topic 0.91 and 14:00 against 16:00 0.99, so merges need the model's check.
-QWEN3 = Thresholds(candidate=0.5, recheck=0.8, topic_link=0.6, topic_attach=0.65, idea_merge=0.95)
+# 27 October, three articles (German vocational training, Swiss apprenticeships, hallucination detection): Ideas of
+# one article 0.30-0.69 median; at 0.7 each article splits into clusters of 2-7, at 0.6 the two neighbouring articles
+# join and the third stays apart. Cluster centroids on one subject 0.61-0.71, across subjects at most 0.43.
+QWEN3 = Thresholds(candidate=0.5, recheck=0.8, topic_link=0.6, topic_attach=0.65, idea_merge=0.95,
+                   cluster_link=0.7, topic_neighbour=0.55)
 
 
 def _unit(vector: list[float]) -> list[float]:
