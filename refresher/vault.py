@@ -238,6 +238,7 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
             person.role, person.affiliation = record.get("role"), record.get("affiliation")
             person.domains = list(record.get("domains") or [])
     store.use_cluster_names(load_cluster_names(vault))
+    store.use_themes(load_themes(vault))
     store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
     return store
 
@@ -252,6 +253,23 @@ def load_cluster_names(vault: Path) -> dict[str, str]:
     except (OSError, ValueError):
         return {}
     return {k: v["title"] for k, v in data.items() if isinstance(v, dict) and isinstance(v.get("title"), str)}
+
+
+CLUSTER_THEMES = Path(".cache") / "cluster-themes.json"
+
+
+def load_themes(vault: Path) -> dict[str, dict]:
+    """Canonical claim id -> where a model placed that Idea: {"cluster": id or None, "theme": name}."""
+    try:
+        data = json.loads((vault / CLUSTER_THEMES).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in data.items() if isinstance(v, dict)}
+
+
+def save_themes(vault: Path, placements: dict[str, dict]) -> None:
+    from engine.artifacts import atomic_json
+    atomic_json(vault / CLUSTER_THEMES, {**load_themes(vault), **placements})
 
 
 def save_cluster_names(vault: Path, names: dict[str, dict]) -> None:

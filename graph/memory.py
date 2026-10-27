@@ -108,6 +108,7 @@ class MemoryStore:
         self._cluster_key = None  # what the clusters were computed from; unchanged Ideas skip the work
         self._links: list[Link] = []
         self._cluster_names: dict[str, str] = {}  # cluster fingerprint -> name a model gave it
+        self._themes: dict[str, dict] = {}  # canonical claim id -> where a model placed that Idea (use_themes)
         self._grouped = True  # clusters, topics and links match the Ideas; built on first read (_groups)
         self._vectors: dict[tuple[str, str], list[float]] = {}  # (embedder, Idea title) -> vector
         self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
@@ -455,13 +456,17 @@ class MemoryStore:
         self._vectors.update({(name, t): v for t, v in zip(missing, embed.vectors(missing))})
         return [self._vectors[(name, self._ideas[i].title)] for i in idea_ids]
 
+    def _idea_items(self, idea: IdeaNode) -> set[str]:
+        return {self._claims[cid].item_id for cid in idea.members if not self._items[self._claims[cid].item_id].hidden}
+
     def _idea_sources(self, idea: IdeaNode) -> set[str]:
         return {self._items[self._claims[cid].item_id].source_key for cid in idea.members
                 if not self._items[self._claims[cid].item_id].hidden} - {None}
 
     def _build_clusters(self):
         """Tight groups of Ideas from any number of sources (cluster_link), recomputed with the Ideas and never
-        decided. Ids follow the earliest claim, so a cluster keeps its id while it grows."""
+        decided. Ids follow the earliest claim, so a cluster keeps its id while it grows. Ideas no cluster holds then
+        go where a model placed them (use_themes): into a cluster, or into a named theme of their own."""
         ideas = sorted(self._ideas)
         key = (embed.current().name, embed.thresholds().cluster_link,
                tuple((i, self._ideas[i].title, frozenset(self._idea_sources(self._ideas[i]))) for i in ideas))
@@ -481,7 +486,37 @@ class MemoryStore:
                 self._ideas[cluster.central(group, [vectors[i] for i in group], centroid)].title)
             self._clusters[cid] = ClusterNode(cid, name, set(group),
                                               set().union(*(self._idea_sources(m) for m in members)),
-                                              centroid, fingerprint)
+                                              centroid, fingerprint,
+                                              set().union(*(self._idea_items(m) for m in members)))
+        # The model's placements, by canonical claim; embedding wins: an Idea a cluster took is not placed again.
+        by_claim = {self._ideas[i].canonical_claim_id: i for i in ideas}
+        clustered = {i for c in self._clusters.values() for i in c.ideas}
+        themes: dict[str, list[str]] = {}
+        for claim_id, placed in sorted(self._themes.items()):
+            idea_id = by_claim.get(claim_id)
+            if idea_id is None or idea_id in clustered:
+                continue
+            target = self._clusters.get(placed.get("cluster") or "")
+            if target is not None:
+                idea = self._ideas[idea_id]
+                target.ideas.add(idea_id)
+                target.assigned.add(idea_id)
+                target.items |= self._idea_items(idea)
+                target.sources |= self._idea_sources(idea)
+            elif placed.get("theme"):
+                themes.setdefault(placed["theme"], []).append(idea_id)
+        for name, group in sorted(themes.items()):
+            members = [self._ideas[i] for i in group]
+            cid = "cluster:theme-" + hashlib.blake2b(name.casefold().encode(), digest_size=6).hexdigest()
+            self._clusters[cid] = ClusterNode(cid, name, set(group),
+                                              set().union(*(self._idea_sources(m) for m in members)),
+                                              cluster.centroid([vectors[i] for i in group]), "",
+                                              set().union(*(self._idea_items(m) for m in members)), set(group))
+
+    def use_themes(self, placements: dict[str, dict]) -> None:
+        """Where a model placed Ideas no cluster holds: canonical claim id -> {"cluster": id or None, "theme": name}."""
+        self._themes = dict(placements)
+        self._cluster_key, self._grouped = None, False
 
     def use_cluster_names(self, names: dict[str, str]) -> None:
         """Names a model gave clusters, by fingerprint; clusters are named again on the next read."""
@@ -751,8 +786,8 @@ class MemoryStore:
                                         joined=[sorted(c.ideas) for c in self._clusters.values()]):
             members = [self._ideas[i] for i in group]
             claims = sorted(i.canonical_claim_id for i in members)
-            sources = set().union(*(self._idea_sources(i) for i in members))
-            if len(members) < cluster.TOPIC_MIN_IDEAS or len(sources) < cluster.TOPIC_MIN_SOURCES \
+            posts = set().union(*(self._idea_items(i) for i in members))
+            if len(members) < cluster.TOPIC_MIN_IDEAS or len(posts) < cluster.TOPIC_MIN_ITEMS \
                     or pending_topic_claims & set(claims):
                 continue
             # One statement from each cluster first, so a namer that reads only the first few sees every part.
@@ -761,7 +796,7 @@ class MemoryStore:
             statements = [self._ideas[i].title for i in lead + [i for i in group if i not in lead]]
             parts = f" in {len(firsts)} clusters" if firsts else ""
             add("topic", {"claims": claims, "title": (namer or cluster.title)(statements)},
-                f"{len(members)} Ideas{parts} from {len(sources)} sources sit close together.")
+                f"{len(members)} Ideas{parts} from {len(posts)} posts sit close together.")
 
         # People who are probably one person: same surname, compatible first names, something in common.
         people = sorted(self._people.values(), key=lambda p: p.person_id)

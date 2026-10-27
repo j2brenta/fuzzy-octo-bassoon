@@ -27,6 +27,7 @@ VECTORS = {
     "anvil": unit((2, 1)), "aspen": unit((2, 1), (6, 0.6)), "atlas": unit((2, 1), (7, 0.6)),
     "bravo": unit((0, 1), (1, 1.2)), "basil": unit((0, 1), (1, 1.2), (5, 0.6)),
     "cedar": unit((0, 1), (1, 1.2), (8, 0.6)),
+    "zebra": unit((3, 1)), "quokka": unit((9, 1)), "axolotl": unit((10, 1)),  # close to nothing
 }
 ARTICLE_A = item("article-a", 10, [("a1", "alfa"), ("a2", "amber"), ("a3", "anvil"), ("a4", "aspen"), ("a5", "atlas")])
 ARTICLE_B = item("article-b", 12, [("b1", "bravo"), ("b2", "basil")], author="Bo Chen")
@@ -36,7 +37,9 @@ ARTICLE_C = item("article-c", 14, [("c1", "cedar")], author="Cy Ito")
 class Axes:
     """An embedder that returns the vectors above and records what it was asked to embed."""
     name = "axes"
-    thresholds = embed.QWEN3
+    # The geometry above is laid out around these, so retuning an embedder's thresholds never moves the tests.
+    thresholds = embed.Thresholds(candidate=0.5, recheck=0.8, topic_link=0.6, topic_attach=0.65, idea_merge=0.95,
+                                  cluster_link=0.7, topic_neighbour=0.55)
 
     def __init__(self):
         self.asked: list[str] = []
@@ -63,7 +66,7 @@ def test_one_article_splits_into_clusters_and_proposes_no_topic(tmp_path, axes):
     assert sorted(sorted(c.ideas) for c in store.clusters()) == sorted(
         [sorted(ideas_of(store, "a1", "a2")), sorted(ideas_of(store, "a3", "a4", "a5"))])
     assert all(c.sources == {"source:telegram:article-a"} for c in store.clusters())
-    assert "topic" not in by_kind(review(v))  # one source: clusters, not a topic
+    assert "topic" not in by_kind(review(v))  # one post: clusters, not a topic
 
 
 def test_clusters_from_two_articles_form_one_topic_above_both(tmp_path, axes):
@@ -73,7 +76,7 @@ def test_clusters_from_two_articles_form_one_topic_above_both(tmp_path, axes):
     seen = []
     [topic] = by_kind(review(v, namer=lambda statements: seen.append(statements) or "Training"))["topic"]
     assert topic.payload == {"claims": ["a1", "a2", "b1", "b2"], "title": "Training"}
-    assert "in 2 clusters from 2 sources" in topic.rationale
+    assert "in 2 clusters from 2 posts" in topic.rationale
     # The namer reads one statement from each cluster first.
     assert {seen[0][0], seen[0][1]} in ({"alfa", "bravo"}, {"alfa", "basil"}, {"amber", "bravo"}, {"amber", "basil"})
 
@@ -134,7 +137,7 @@ def test_links_carry_crossing_relations_and_close_centroids(tmp_path, axes):
     assert across.relations == (("b1", "ELABORATES", "a3"),)
     assert across.weight >= 1
     near = links[frozenset((cluster_of[b1], cluster_of[a1]))]  # no relation, centroids at 0.61
-    assert near.relations == () and near.similarity >= embed.QWEN3.topic_neighbour
+    assert near.relations == () and near.similarity >= Axes.thresholds.topic_neighbour
     assert frozenset((cluster_of[a1], cluster_of[a3])) not in links  # nothing in common
 
 
@@ -189,7 +192,7 @@ def test_map_wiki_and_health_show_clusters_topics_and_links(tmp_path, axes):
     assert "## In" in idea_note and "(topic)]]" in idea_note
     assert len([path for path in first if path.parent.name == "clusters"]) == 3
     health = km.render(km.run(store, AT), store)
-    assert "3 clusters (1 from one source, waiting for a second)" in health
+    assert "3 clusters (1 from one post, waiting for a second)" in health
 
 
 class Namer:
@@ -230,3 +233,56 @@ def test_a_failed_naming_call_stores_nothing(tmp_path, axes):
     v = write(tmp_path, ARTICLE_A)
     assert name_clusters(v, vault.replay(v), Namer(fail=True)) == 0
     assert vault.load_cluster_names(v) == {}
+
+
+class Placer:
+    """A cheap model that puts "zebra" into the first group and everything else into one new theme."""
+    provider, model_provider, model_name = "nebius", "fixture", "fixture/placer"
+
+    def __init__(self, fail=False):
+        self.calls, self.fail = [], fail
+
+    def complete_json(self, system_prompt, content):
+        from engine.llm import ModelError, ModelReply
+        data = __import__("json").loads(content)
+        self.calls.append(data)
+        if self.fail:
+            raise ModelError("Nebius returned HTTP 500.")
+        return ModelReply({"placements": [
+            {"statement": s["id"], "group": "g1"} if s["text"] == "zebra" else {"statement": s["id"], "theme": "Odd words"}
+            for s in data["statements"]]})
+
+
+LONERS = item("article-z", 18, [("z1", "zebra"), ("z2", "quokka"), ("z3", "axolotl")], author="Zed Ray")
+
+
+def test_ideas_no_cluster_holds_get_a_cluster_or_a_theme_once(tmp_path, axes):
+    from refresher.consolidate import assign_themes
+    v = write(tmp_path, ARTICLE_A, LONERS)
+    store = vault.replay(v)
+    placer = Placer()
+    assert assign_themes(v, store, placer) == 3
+    [first] = [g for g in placer.calls[0]["groups"] if g["id"] == "g1"]
+    store = vault.replay(v)
+    by_title = {c.title: c for c in store.clusters()}
+    took = next(c for c in store.clusters() if c.title == first["name"])
+    assert ideas_of(store, "z1") <= took.assigned <= took.ideas
+    theme = by_title["Odd words"]
+    assert theme.ideas == theme.assigned == ideas_of(store, "z2", "z3") and theme.fingerprint == ""
+    assert assign_themes(v, store, placer) == 0 and len(placer.calls) == 1  # stored: nothing new to place
+    held = {i for c in store.clusters() for i in c.ideas}
+    assert {i.idea_id for i in store.ideas()} <= held  # every Idea has a home
+
+
+def test_a_failed_placement_places_nothing(tmp_path, axes):
+    from refresher.consolidate import assign_themes
+    v = write(tmp_path, ARTICLE_A, LONERS)
+    assert assign_themes(v, vault.replay(v), Placer(fail=True)) == 0 and vault.load_themes(v) == {}
+
+
+def test_the_map_lists_people_with_their_facts_and_the_clusters_their_posts_feed(tmp_path, axes):
+    from refresher import graphview
+    v = write(tmp_path, ARTICLE_A, ARTICLE_B)
+    data = graphview.map_data(vault.replay(v), AT)
+    bo = next(p for p in data["people"] if p["name"] == "Bo Chen")
+    assert bo["items"] == ["article-b"] and sum(bo["clusters"].values()) == 2

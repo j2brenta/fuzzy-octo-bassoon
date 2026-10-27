@@ -68,3 +68,15 @@ def test_cli_writes_a_page_that_opens_from_disk(tmp_path):
     assert json.loads((out / "graph.json").read_text())["snapshot_at"].startswith("2026-10-20")
     for name in ("app.js", "style.css", "cytoscape.min.js", "CYTOSCAPE-LICENSE.txt"):
         assert (out / name).exists()
+
+
+def test_the_map_script_parses():
+    """A syntax error in app.js leaves the whole page blank; check it whenever Node is available."""
+    import subprocess
+    import pytest
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    script = Path(__file__).parents[1] / "refresher" / "assets" / "map" / "app.js"
+    result = subprocess.run([node, "--check", str(script)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr

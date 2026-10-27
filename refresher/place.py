@@ -127,8 +127,9 @@ def _place(vault_path, item_id, relator, at):
     at = at or datetime.now(timezone.utc)
     store = vault.replay(vault_path, include_unreviewed=True)
     if translator is not None:
-        from refresher.consolidate import name_clusters
+        from refresher.consolidate import assign_themes, name_clusters
         name_clusters(vault_path, store, translator, log=logger.info)
+        assign_themes(vault_path, store, translator, log=logger.info)
     vault.export(store, vault_path, at)
     graphview.write(store, vault_path, at)
     placement = store.placement(item_id)

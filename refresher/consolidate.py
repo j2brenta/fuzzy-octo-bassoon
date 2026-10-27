@@ -7,6 +7,7 @@ Everything runs under the vault lock, so a placement or an accept from the page 
 interleaving. What the review proposes waits for the user (refresher serve); what it decides alone is applied.
 """
 from dataclasses import dataclass
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -39,6 +40,75 @@ def model_namer(model: JsonModel) -> Callable[[list[str]], str]:
     return name
 
 
+THEME_PROMPT = """You sort statements from a personal knowledge base into themes. You get existing groups (id,
+name, one example statement) and statements that belong to none yet. Put each statement into the existing group it
+fits, or give it a new theme: 2 to 5 words in <<OUTPUT_LANGUAGE>> naming a broad subject, not a single event or detail.
+A new theme must hold at least two statements, and use at most <<MAX_THEMES>> new themes: a statement that shares a
+subject with no other goes into the closest existing group. Prefer an existing group whenever it roughly fits.
+Return JSON: {"placements": [{"statement": "s1", "group": "g2"}, {"statement": "s2", "theme": "Personal savings"}]}
+with every statement exactly once and either a group or a theme."""
+THEME_BATCH = 60  # statements per call
+
+
+def assign_themes(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> int:
+    """Give every Idea no cluster holds a home: a cluster, or a theme of its own, by one short call per batch.
+    Placements are stored by canonical claim, so only new Ideas are placed later; a failed call places nothing."""
+    if model is None:
+        return 0
+    held = {i for c in store.clusters() for i in c.ideas}
+    loose = sorted((i for i in store.ideas() if i.idea_id not in held), key=lambda i: i.idea_id)
+    if not loose:
+        return 0
+    groups = [(c.cluster_id, c.title, store.idea(min(c.ideas)).title) for c in sorted(store.clusters(), key=lambda c: c.cluster_id)]
+    placed: dict[str, dict] = {}
+    for start in range(0, len(loose), THEME_BATCH):
+        batch = loose[start:start + THEME_BATCH]
+        new_themes = sorted({p["theme"] for p in placed.values() if p.get("cluster") is None})
+        offered = groups + [(None, t, "") for t in new_themes]
+        content = json.dumps({"groups": [{"id": f"g{n}", "name": name, "example": example}
+                                         for n, (_, name, example) in enumerate(offered, 1)],
+                              "statements": [{"id": f"s{n}", "text": i.title} for n, i in enumerate(batch, 1)]},
+                             ensure_ascii=False)
+        prompt = language.apply(THEME_PROMPT).replace("<<MAX_THEMES>>", str(max(1, len(batch) // 4)))
+        try:
+            rows = model.complete_json(prompt, content).data.get("placements")
+        except ModelError as error:
+            log(f"themes: not placed ({type(error).__name__})")
+            continue
+        for row in rows if isinstance(rows, list) else []:
+            if not isinstance(row, dict) or not str(row.get("statement", "")).startswith("s"):
+                continue
+            try:
+                idea = batch[int(row["statement"][1:]) - 1]
+            except (ValueError, IndexError):
+                continue
+            group = row.get("group")
+            if isinstance(group, str) and group.startswith("g") and group[1:].isdigit() and 0 < int(group[1:]) <= len(offered):
+                cluster_id, name, _ = offered[int(group[1:]) - 1]
+            elif isinstance(row.get("theme"), str) and row["theme"].strip():
+                cluster_id, name = None, row["theme"].strip()[:80]
+            else:
+                continue
+            placed[idea.canonical_claim_id] = {"cluster": cluster_id, "theme": name, "model": model.model_name}
+    # A new theme the model used for one statement only is no grouping: that Idea goes to the nearest cluster.
+    clusters = {c.cluster_id: c for c in store.clusters()}
+    by_claim = {i.canonical_claim_id: i for i in loose}
+    sizes: dict[str, int] = {}
+    for p in placed.values():
+        if p["cluster"] is None:
+            sizes[p["theme"]] = sizes.get(p["theme"], 0) + 1
+    for claim_id, p in placed.items():
+        if p["cluster"] is None and sizes[p["theme"]] == 1 and clusters:
+            [vector] = store._idea_vectors([by_claim[claim_id].idea_id])
+            [nearest] = cluster.attach_all(vector, {cid: c.centroid for cid, c in clusters.items()}, threshold=-1.0,
+                                           limit=1)
+            p.update(cluster=nearest, theme=clusters[nearest].title, nearest=True)
+    if placed:
+        vault.save_themes(vault_path, placed)
+        store.use_themes(vault.load_themes(vault_path))
+    return len(placed)
+
+
 def name_clusters(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> int:
     """Name every cluster whose membership has no stored name, one short call each; the store takes the names.
     A failed call stores nothing: the cluster keeps its central Idea as a title and is named next time."""
@@ -47,7 +117,7 @@ def name_clusters(vault_path: Path, store, model: JsonModel | None, log: Callabl
     known = vault.load_cluster_names(vault_path)
     fresh = {}
     for c in sorted(store.clusters(), key=lambda c: c.cluster_id):
-        if c.fingerprint in known:
+        if not c.fingerprint or c.fingerprint in known:  # a theme came with its name
             continue
         statements = [store.idea(i).title for i in sorted(c.ideas)]
         try:
@@ -83,6 +153,7 @@ class ConsolidateRun:
     waiting: int = 0
     enriched: int = 0
     named: int = 0  # clusters given a name this run
+    placed: int = 0  # Ideas a model gave a cluster or theme this run
     notes: list[str] = None
     budget: BudgetedModel | None = None
 
@@ -96,6 +167,8 @@ class ConsolidateRun:
             parts.append(f"{self.enriched} people looked up")
         if self.named:
             parts.append(f"{self.named} clusters named")
+        if self.placed:
+            parts.append(f"{self.placed} Ideas placed in themes")
         if self.budget is not None:
             parts.append(f"{self.budget.calls} model calls, about {self.budget.spent:,} tokens")
         return "consolidate: " + ", ".join(parts) + "".join(f"; {n}" for n in self.notes or [])
@@ -143,8 +216,9 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
                 run.notes.append(f"enrichment stopped: {error}")
         store = vault.replay(vault_path, include_unreviewed=True)
         from refresher import translate
-        namer = translate.client_from_environment() or model  # the cheap model when there is one
+        namer = translate.client_from_environment()  # the cheap model only; without it clusters keep their central Idea
         run.named = name_clusters(vault_path, store, namer, log) if namer is not None else 0
+        run.placed = assign_themes(vault_path, store, namer, log) if namer is not None else 0
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())
