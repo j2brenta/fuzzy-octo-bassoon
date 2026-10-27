@@ -38,7 +38,12 @@
     if (anchor.prefix) box.append(el('span', anchor.prefix, 'context'));
     box.append(el('mark', anchor.quote));
     if (anchor.suffix) box.append(el('span', anchor.suffix, 'context'));
-    box.append(el('div', `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char})`, 'locator'));
+    if (anchor.translation) {
+      const t = el('p', null, 'translation');
+      t.append(el('span', 'Machine translation, for reading only: ', 'locator'), el('span', anchor.translation));
+      box.append(t);
+    }
+    box.append(el('div', `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char}) of the original`, 'locator'));
     return box;
   }
   function band(claim) { return el('span', `${claim.band} ${claim.freshness}`, 'band ' + claim.band); }

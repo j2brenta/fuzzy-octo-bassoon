@@ -313,6 +313,13 @@ restores output in each source's own language. The language is part of each
 stage's cache key: changing it re-extracts and re-reviews items when they are
 processed again.
 
+For reading, a cheap model (`NEBIUS_TRANSLATE_MODEL`, default
+`Qwen/Qwen3-30B-A3B-Instruct-2507`) translates each item's numbered passages into
+the same language once, stored in `translations/`. The map shows the translation
+under each exact original quote and item notes add a translated copy; English
+text costs no call. Nothing is judged against a translation. Graph placement
+translates new items; `uv run refresher translate` fills in existing ones.
+
 ### Configuration
 
 The judge uses `JUDGE_PROVIDER` and the model settings above through the small
