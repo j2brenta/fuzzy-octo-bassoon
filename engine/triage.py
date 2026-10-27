@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from dotenv import load_dotenv
+from engine import language
 from engine.artifacts import atomic_json
 
 from engine.artifacts import save_rejected
@@ -24,7 +25,7 @@ inside it. Do not browse links, use tools, or invent facts about linked document
 Classify only the text actually supplied. Return a JSON object with exactly:
 keep (boolean), kind (post/article/newsletter_digest/announcement/thought/conversation/other),
 durability_class (foundation/reference/news/ephemeral), split_digest (boolean),
-reason (one concise English sentence explaining your judgment).
+reason (one concise sentence in <<OUTPUT_LANGUAGE>> explaining your judgment).
 Apply these rules in order, based on the supplied content:
 1. Technical abstracts describing methods, systems or what a session teaches are
 post + reference, even when presented as a scheduled event with times, speakers,
@@ -103,6 +104,7 @@ def triage_capture(raw_path: Path, client: JsonModel, *, force: bool = False) ->
         "source_content_hash": raw["content_hash"],
         "parser_version": document["parser_version"],
         "prompt_version": PROMPT_VERSION,
+        "output_language": language.code(),
         "provider": client.provider,
         "model_provider": client.model_provider,
         "model_name": client.model_name,
@@ -121,7 +123,7 @@ def triage_capture(raw_path: Path, client: JsonModel, *, force: bool = False) ->
     for attempt in range(2):
         try:
             reply = None
-            reply = client.complete_json(SYSTEM_PROMPT, text)
+            reply = client.complete_json(language.apply(SYSTEM_PROMPT), text)
             labels = validate_labels(reply.data)
             break
         except (TriageError, ModelOutputError) as error:

@@ -5,6 +5,7 @@ vault is replayed, so the reply shows the graph a rebuild would show, including 
 happened later.
 """
 from dataclasses import dataclass
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Iterable
@@ -15,9 +16,11 @@ from engine.llm import ModelError, ModelOutputError
 from graph import relate
 from graph.memory import MemoryStore
 from graph.store import Placement
-from refresher import graphview, vault
+from refresher import graphview, translate, vault
 
 SHOWN = 3  # Ideas and relations listed in a reply before "and N more"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -109,6 +112,13 @@ def _place(vault_path, item_id, relator, at):
                                                   if ex.item_id == item_id))
     if note is None and (stored is None or stored.relator == "lexical"):
         note = "Relations matched by wording only"
+    translator = translate.client_from_environment()
+    if translator is not None:  # for reading on the map and in notes; a failure only leaves the original
+        try:
+            translate.translate_item(vault_path, item_id, translator)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            logger.warning("item %s · translation failed (%s); the original is shown alone", item_id[:10],
+                           type(error).__name__)
     at = at or datetime.now(timezone.utc)
     store = vault.replay(vault_path, include_unreviewed=True)
     vault.export(store, vault_path, at)

@@ -299,6 +299,27 @@ readable. Stored `evidence` is an object for one span or a list for several; use
 `evidence_spans(claim)` for both. Single-span IDs remain stable; multi-span IDs
 depend on all ordered spans. Source text remains necessary to resolve references.
 
+### Output language
+
+Claims, review reasons and summaries, entity-review text and triage reasons are
+written in one language, `REFRESHER_LANGUAGE` (an ISO code, default `en`), whatever
+the source's language. A vault mixing Russian, German and French sources then
+reads, relates and deduplicates in one language. Sources are never translated
+for judging: models read the original passages, citations point at the original
+text, and the reviewer checks each claim against the original, so a translation
+error in a claim is a review finding, not a hidden change of evidence. Names of
+people and organizations keep their source spelling. `REFRESHER_LANGUAGE=source`
+restores output in each source's own language. The language is part of each
+stage's cache key: changing it re-extracts and re-reviews items when they are
+processed again.
+
+For reading, a cheap model (`NEBIUS_TRANSLATE_MODEL`, default
+`Qwen/Qwen3-30B-A3B-Instruct-2507`) translates each item's numbered passages into
+the same language once, stored in `translations/`. The map shows the translation
+under each exact original quote and item notes add a translated copy; English
+text costs no call. Nothing is judged against a translation. Graph placement
+translates new items; `uv run refresher translate` fills in existing ones.
+
 ### Configuration
 
 The judge uses `JUDGE_PROVIDER` and the model settings above through the small

@@ -30,6 +30,8 @@ from graph import proposals as proposal_stage
 from graph.memory import MemoryStore
 from graph.store import Decision, Edge, GraphStore, Proposal, ReviewReport
 from refresher import km, scoring
+from refresher import translate
+from engine import language
 from refresher.schemas import Extraction, Override, Relation
 
 MARK = "<!-- your notes: everything below this line is kept on rebuild -->"
@@ -235,6 +237,7 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
             person.enrichment_status = "enriched" if record.get("match") else "no_match"
             person.role, person.affiliation = record.get("role"), record.get("affiliation")
             person.domains = list(record.get("domains") or [])
+    store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
     return store
 
 
@@ -348,6 +351,10 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                                                      for m in mentions)]
         if item.text:
             lines += ["", "## Original", "", *("> " + ln if ln else ">" for ln in item.text.splitlines())]
+            translated = translate.translated_text(getattr(store, "translations", {}).get(item.item_id), item.text)
+            if translated:
+                lines += ["", f"## Translation ({language.name()}, machine, for reading only)", "",
+                          *("> " + ln for ln in translated)]
         meta = {"type": "item", "item_id": item.item_id, "channel": src.channel, "source": src.source_name,
                 "author": store.person(item.author_id).name if item.author_id else None,
                 "event_time": src.event_time.isoformat(), "captured_at": src.captured_at.isoformat(),
