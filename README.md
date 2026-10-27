@@ -531,12 +531,33 @@ review looks at the whole graph:
 2. Applied without asking: item duplicates, and Ideas confirmed by two independent
    authors become firm.
 3. Proposed to you: topics (groups of 3+ Ideas from 2+ sources that sit close
-   together, named by the model), merging two Ideas that say the same thing in
+   together, made of whole clusters, named by the model), merging two Ideas that say the same thing in
    other words, merging two people (same surname, compatible first names,
    something in common), and confirming a relation that replaces or contradicts a
    reference or foundation claim (it is live already; rejecting removes it).
 4. The three most involved people not yet looked up are enriched, and `wiki/` and
    the map are rebuilt.
+
+### Clusters, topics and links
+
+The graph groups Ideas at two levels, from the same embeddings:
+
+- **Clusters** are tight groups of 2+ Ideas from any number of sources: one long
+  article usually yields several. They are recomputed with the graph and never
+  need your decision; `wiki/clusters/` has a note for each.
+- **Topics** are looser groups that never split a cluster, so clusters from two
+  articles that sit close become one topic above both. A topic needs 3+ Ideas
+  from 2+ sources and your Accept. An accepted topic takes provisionally the rest
+  of any cluster mostly inside it, and every Idea close to its centroid; an Idea
+  can sit in up to three topics. `wiki/topics/` has a note for each.
+- **Links** join two clusters, or two topics, automatically: relations whose
+  claims sit one in each (in practice "adds detail to", since confirmations,
+  updates and conflicts stay inside one Idea), Ideas both topics hold, and
+  centroids that are close. Each link keeps the relations behind it as evidence.
+
+The thresholds are per embedder (`graph/embed.py`): `cluster_link` must stay above
+`topic_link`. The health report counts clusters (and those from one source still
+waiting for a second), links and Ideas in several topics.
 
 Proposals are stored in `graph-reviews/proposals/`, your answers in
 `graph-reviews/decisions/` (never rewritten). Each proposal keeps a fingerprint of
@@ -571,7 +592,10 @@ Open `wiki/graph/index.html` in a browser; it works from disk with no server, or
 run `refresher serve` to decide proposals on it. The map is Victor's News Atlas
 viewer from his news map branch, translated and fed from this graph: topics as
 regions, a timeline with filters, a Sources mode (items and how their claims
-relate) and a Claims mode, an evidence panel with the exact passage behind every
+relate), a Claims mode (claims inside their cluster's region inside their
+topic's), a Topics mode (clusters in their topics, with links drawn solid when
+relations or shared Ideas back them and dashed when only similarity does), an
+evidence panel with the exact passage behind every
 claim, and a side-by-side comparison. Edges are marked automatic, accepted by you
 or proposed. Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`.
 

@@ -18,7 +18,7 @@
 </header>
 <main>
   <section class="intro">
-    <div><p class="eyebrow">TOPICS → IDEAS → EVIDENCE</p><h1>See how it connects.<br><span>Check what it rests on.</span></h1></div>
+    <div><p class="eyebrow">TOPICS → CLUSTERS → IDEAS → EVIDENCE</p><h1>See how it connects.<br><span>Check what it rests on.</span></h1></div>
     <div class="intro-copy"><p>From a topic to an Idea, from a relation to the exact passage.<br>A repeated claim is not an independent confirmation.</p><div id="stats" class="stats"></div></div>
   </section>
   <section class="proposal-section" aria-label="Proposals">
@@ -40,11 +40,11 @@
       <p class="small quiet">Publication date when known; otherwise the capture date is shown.</p>
     </aside>
     <section class="map-column" aria-label="Interactive map">
-      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Sources</button><button id="mode-claims" aria-pressed="false">Claims</button></div><select id="review-filter" aria-label="Relation state"><option value="">All relations</option><option value="auto">Automatic</option><option value="accepted">Accepted by you</option><option value="proposal">Proposed</option></select></div>
+      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Sources</button><button id="mode-claims" aria-pressed="false">Claims</button><button id="mode-topics" aria-pressed="false">Topics</button></div><select id="review-filter" aria-label="Relation state"><option value="">All relations</option><option value="auto">Automatic</option><option value="accepted">Accepted by you</option><option value="proposal">Proposed</option></select></div>
       <div class="map-title"><h2 id="map-title">Sources</h2><span id="map-count" class="small"></span></div>
       <div class="canvas-wrap"><div id="graph" aria-label="Graph; every node and relation is also listed below"></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="fit" aria-label="Fit the graph">⌖</button></div><div id="map-empty" hidden>Nothing in this slice yet.</div></div>
-      <div class="map-footer"><span><i class="line auto"></i>Automatic</span><span><i class="line reviewed"></i>Accepted by you</span><span><i class="line proposal"></i>Proposed</span></div>
-      <p class="geometry">Regions are topics; an item with several topics is shown in one of them. Position inside a region is for reading, not causality. Arrows point from the later claim to the one it relates to.</p>
+      <div class="map-footer"><span><i class="line auto"></i>Automatic</span><span><i class="line reviewed"></i>Accepted by you</span><span><i class="line proposed"></i>Proposed</span></div>
+      <p class="geometry">Regions are topics; in Claims, dashed regions inside them are clusters (close Ideas, found automatically). An item or claim with several topics is shown in one of them. Position inside a region is for reading, not causality. Arrows point from the later claim to the one it relates to. In Topics, a line between clusters or topics is solid when relations or shared Ideas back it, dashed when only similarity does; thicker is stronger.</p>
       <div class="focus-actions"><button id="ego" disabled>Neighbourhood of the selection</button><button id="clear-focus" hidden>Clear focus</button><span id="hidden-count" class="small"></span></div>
       <details class="accessible"><summary>Text list of the map's nodes and relations</summary><div id="graph-list"></div></details>
     </section>
