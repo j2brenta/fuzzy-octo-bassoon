@@ -6,13 +6,17 @@ set; its vectors are cached in <vault>/.cache/embeddings.jsonl (a cache, never t
 """
 import hashlib
 import json
+import logging
 import math
 import os
 import re
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
+
+logger = logging.getLogger(__name__)
 
 DIMENSIONS = 512
 STOP = frozenset("""a an and are as at be by for from has have in is it its of on or that the this to was were will
@@ -121,8 +125,13 @@ class NebiusEmbedder:
         todo = list(dict.fromkeys(t for t in texts if self._key(t) not in self._known))
         for start in range(0, len(todo), self.batch):
             chunk = todo[start:start + self.batch]
+            started = time.monotonic()
             data = _nebius_request(self.api_key, self.base_url, "/embeddings",
                                    {"model": self.model, "input": chunk}, 60)
+            tokens = (data.get("usage") or {}).get("total_tokens") if isinstance(data.get("usage"), dict) else None
+            logger.info("%s: embedded %d texts (%d cached), %s tokens, %.1f s", self.model, len(chunk),
+                        len(texts) - len(todo), f"{tokens:,}" if isinstance(tokens, int) else "?",
+                        time.monotonic() - started)
             rows = sorted(data.get("data") or [], key=lambda r: r.get("index", 0))
             if len(rows) != len(chunk):
                 raise ModelOutputError("The embeddings endpoint returned the wrong number of vectors.")

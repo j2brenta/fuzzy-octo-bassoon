@@ -9,6 +9,7 @@ import logging
 import os
 from pathlib import Path
 import sys
+import time
 
 from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramConflictError, TelegramUnauthorizedError
@@ -34,6 +35,7 @@ from engine.vision import ImageError
 from store.media import MediaError
 from engine.parse import parse_capture
 from engine.parse.text import text_without_links
+from engine import logs
 from engine.llm import ModelError, client_from_environment, judge_client_from_environment
 from engine.triage import TriageError, triage_capture
 from engine.extract import ExtractionError, extract_capture
@@ -50,6 +52,31 @@ from refresher.place import place, reply_text
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 logger = logging.getLogger(__name__)
+
+
+async def stage(label: str, name: str, fn, *args, describe=None, detail: bool = True, **kwargs):
+    """Run one pipeline step in a thread and log its start, outcome and duration. `describe(result)` says what it
+    decided; a failure logs its type, and its message unless `detail` is False (capture and parsing errors can
+    quote the message), then propagates to the caller's handling."""
+    logger.info("%s · %s: started", label, name)
+    started = time.monotonic()
+    try:
+        result = await asyncio.to_thread(fn, *args, **kwargs)
+    except Exception as error:
+        reason = f"{type(error).__name__}: {str(error)[:300]}" if detail else type(error).__name__
+        logger.warning("%s · %s: failed after %.1f s (%s)", label, name, time.monotonic() - started, reason)
+        raise
+    logger.info("%s · %s: %s (%.1f s)", label, name, describe(result) if describe else "done",
+                time.monotonic() - started)
+    return result
+
+
+def item_label(item_id: str) -> str:
+    return f"item {item_id[:10]}"
+
+
+def cached(result) -> str:
+    return " (cached)" if getattr(result, "reused", False) else ""
 
 
 def user_hint(user: User) -> dict[str, str]:
@@ -165,6 +192,10 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if message.from_user.id != owner_id:
         await message.answer("This bot accepts notes only from its configured owner.")
         return
+    kind = ("forwarded " if message.forward_origin is not None else "") + (
+        "PDF" if pdf_attachment(message) is not None else "picture" if image_attachment(message) is not None
+        else "text" if message.text is not None else "unsupported message")
+    logger.info("message %s · received: %s, %d characters", message.message_id, kind, len(message.text or ""))
     if pdf_attachment(message) is not None:
         await handle_pdf(message, vault_path)
         return
@@ -177,7 +208,8 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if message.forward_origin is None and command == "/consolidate":
         await message.answer("Reviewing the whole graph: relations, topics, merges and people…")
         try:
-            run = await asyncio.to_thread(consolidate_now, vault_path, client_from_environment())
+            run = await stage("review", "consolidate (/consolidate)", consolidate_now, vault_path,
+                              client_from_environment(), describe=lambda r: r.summary())
         except (ModelError, OSError, ValueError) as error:
             logger.error("Consolidation failed (%s).", type(error).__name__)
             await message.answer(f"Review failed ({type(error).__name__}); the graph is unchanged.")
@@ -188,7 +220,8 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         await message.answer("Only /start, /help and /consolidate are available. Topic refreshers are not implemented yet.")
         return
     try:
-        result = await asyncio.to_thread(capture_message, message, vault_path)
+        result = await stage(f"message {message.message_id}", "capture", capture_message, message, vault_path,
+                             detail=False, describe=lambda r: f"{'already captured' if r.duplicate else 'captured'} as {r.item_id[:10]}")
     except (OSError, ValueError) as error:
         # Log the category only: exception details can contain message content.
         category = type(error).__name__
@@ -201,7 +234,8 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     status = "Already captured" if result.duplicate else "Captured"
     await message.answer(f"{status}.\nItem: {result.item_id}\nText and source metadata saved; AI processing comes later.")
     try:
-        prepared = await asyncio.to_thread(parse_capture, result.path)
+        prepared = await stage(item_label(result.item_id), "prepare", parse_capture, result.path, detail=False,
+                               describe=lambda p: f"{p.section_count} sections, {p.link_count} links{cached(p)}")
     except (OSError, ValueError) as error:
         category = type(error).__name__
         logger.error("Telegram text preparation failed (%s).", category)
@@ -224,7 +258,10 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
     if document["links"] and setting == "on":
         await message.answer("Reading linked articles/PDFs; your original message remains saved.")
         try:
-            rows = await asyncio.to_thread(fetch_linked_articles, result.path)
+            rows = await stage(item_label(result.item_id), "linked articles", fetch_linked_articles, result.path,
+                               detail=False, describe=lambda found: ", ".join(
+                                   f"{r.get('kind', 'article')} {r['status']}" + (f" as {r['item_id'][:10]}" if r.get("item_id") else "")
+                                   for r in found) or "none")
         except (OSError, ValueError):
             await message.answer("Original saved; article processing could not finish. Retry this message later.")
         for row in rows:
@@ -241,6 +278,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
             await message.answer("Processing the message text separately from its linked articles.")
         await process_capture(message, result)
     elif not rows and document["links"]:
+        logger.info("%s · text: only links, no claims extracted from the message itself", item_label(result.item_id))
         await message.answer("URL saved. Article reading is off or unfinished; no article claims were extracted.")
     for row in rows:
         if row["status"] == "captured":
@@ -258,7 +296,8 @@ async def handle_pdf(message: Message, vault_path: Path) -> None:
     try:
         receipt = await capture_pdf(message, vault_path, message_fields(message))
         await message.answer("PDF saved. Extracting pages; scanned pages use Nebius vision. Your original is retained.")
-        result = await asyncio.to_thread(interpret_pdf, receipt)
+        result = await stage(f"message {message.message_id}", "PDF reading", interpret_pdf, receipt,
+                             describe=lambda r: f"saved as {r.item_id[:10]}")
     except (PdfError, MediaError, ModelError) as error:
         await message.answer(str(error) + (" PDF retained; resend it to retry." if receipt else ""))
         return
@@ -277,7 +316,8 @@ async def handle_picture(message: Message, vault_path: Path) -> None:
     try:
         receipt = await capture_picture(message, vault_path, message_fields(message))
         await message.answer("Picture saved. Reading text and visual content with Nebius; your original is retained.")
-        result = await asyncio.to_thread(interpret_picture, receipt)
+        result = await stage(f"message {message.message_id}", "picture reading", interpret_picture, receipt,
+                             describe=lambda r: f"saved as {r.item_id[:10]}")
     except (ImageError, MediaError, ModelError) as error:
         await message.answer(str(error) + (" Picture retained; resend it to retry." if receipt else ""))
         return
@@ -305,11 +345,14 @@ async def process_capture(message: Message, result: CaptureResult) -> None:
 
 async def _process_capture(message: Message, result: CaptureResult) -> None:
     """Run the same reviewed text pipeline for a message or a downloaded article."""
+    label = item_label(result.item_id)
     try:
         client = client_from_environment()
         if client is None:
+            logger.info("%s · AI processing is off (TRIAGE_PROVIDER); stopping after capture", label)
             return
-        decision = await asyncio.to_thread(triage_capture, result.path, client)
+        decision = await stage(label, "triage", triage_capture, result.path, client, describe=lambda d: (
+            f"{'keep' if d.labels['keep'] else 'skip'} · {d.labels['kind']} · {d.labels['durability_class']}{cached(d)}"))
     except (ModelError, TriageError) as error:
         await message.answer(f"Original saved and prepared; AI triage is pending. {error}")
         return
@@ -329,7 +372,8 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
         await message.answer("Claim extraction skipped by triage. Your original remains saved.")
         return
     try:
-        extraction = await asyncio.to_thread(extract_capture, result.path, client)
+        extraction = await stage(label, "claim extraction", extract_capture, result.path, client,
+                                 describe=lambda x: f"{len(x.claims)} claims{cached(x)}")
     except (ModelError, ExtractionError) as error:
         await message.answer(f"Your original and triage are saved; claim extraction is pending. {error}")
         return
@@ -351,8 +395,14 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
     try:
         judge_client = judge_client_from_environment()
         if judge_client is None:
+            logger.info("%s · quality review is off (JUDGE_PROVIDER); the item stays unreviewed", label)
             return
-        quality = await asyncio.to_thread(quality_capture, result.path, judge_client)
+        quality = await stage(label, "quality review", quality_capture, result.path, judge_client, describe=lambda q: (
+            f"{q.reviewed.review['status']} · "
+            f"{sum(r['verdict'] == 'supported' for r in q.reviewed.review['claims'])}/{len(q.reviewed.review['claims'])} supported · "
+            f"{len(q.reviewed.review['omitted_concepts'])} coverage notes"
+            + "".join(f" · {flag}" for flag, on in (("corrected", q.corrected), ("expanded", q.expanded),
+                                                     ("citations repaired", q.citations_repaired)) if on)))
         reviewed = quality.reviewed
     except (ModelError, JudgeError, ExtractionError, QualityError) as error:
         await message.answer(f"Claims saved; automated quality review is pending. {error}")
@@ -376,9 +426,12 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
     try:
         entity_client = entity_client_from_environment()
         if entity_client is None:
+            logger.info("%s · entity extraction is off (ENTITY_EXTRACTION); the handoff waits for it", label)
             return
-        entity_result = await asyncio.to_thread(extract_entities, result.path, entity_client)
-        entity_review = await asyncio.to_thread(review_entities, result.path, entity_client, entity_result)
+        entity_result = await stage(label, "entities", extract_entities, result.path, entity_client,
+                                    describe=lambda e: f"{len(e.entities)} entities{cached(e)}")
+        entity_review = await stage(label, "entity review", review_entities, result.path, entity_client, entity_result,
+                                    describe=lambda r: f"{r.review.get('status', 'reviewed')}{cached(r)}")
     except (ModelError, EntityError) as error:
         await message.answer(f"Claims saved; entity extraction or review is pending. {error}")
         return
@@ -391,15 +444,20 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
     )
 
     try:
-        packaged = await asyncio.to_thread(build_extraction, result.path, claims_from=quality.extraction_path.parent.name)
-        await asyncio.to_thread(apply_storage_stub, packaged.path)  # validates the record, keeps a receipt
+        packaged = await stage(label, "handoff", build_extraction, result.path,
+                               claims_from=quality.extraction_path.parent.name, describe=lambda k: (
+                                   f"{len(k.record['claims'])} claims, {len(k.record['entities'])} entities{cached(k)}"))
+        await stage(label, "storage receipt", apply_storage_stub, packaged.path)  # validates the record, keeps a receipt
     except (PackageError, ExtractionError, EntityError, JudgeError, TriageError, OSError, ValueError):
         await message.answer("Claims and entities saved; the combined extraction handoff remains pending.")
         return
     saved = f"Combined extraction saved: {len(packaged.record['claims'])} claims and {len(packaged.record['entities'])} entities."
     try:
-        placed, store, note = await asyncio.to_thread(
-            place, packaged.path.parent.parent, packaged.path.stem, graph_relator(client))
+        placed, store, note = await stage(
+            label, "graph placement", place, packaged.path.parent.parent, packaged.path.stem, graph_relator(client),
+            describe=lambda r: f"{r[0].status} · {r[0].claims} claims · {len(r[0].relations)} relations · "
+                               f"{len(set(r[0].ideas))} Ideas" + (f" · repost of {r[0].duplicate_of[:10]}" if r[0].duplicate_of else "")
+                               + (f" · {r[2]}" if r[2] else ""))
     except (OSError, ValueError) as error:
         logger.error("Graph placement failed (%s).", type(error).__name__)
         await message.answer(f"{saved}\nGraph placement failed; the next rebuild places it.")
@@ -412,7 +470,8 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
         # The hourly review rides on captures, after the reply: the user is not kept waiting, and the bot
         # handles one message at a time, so the next capture simply starts when it is done.
         try:
-            await asyncio.to_thread(consolidate_now, vault_path, client)
+            await stage("review", "hourly consolidate", consolidate_now, vault_path, client,
+                        describe=lambda r: r.summary())
         except (ModelError, OSError, ValueError) as error:
             logger.error("Hourly consolidation failed (%s).", type(error).__name__)
 
@@ -463,6 +522,7 @@ def main() -> int:
     args = parser.parse_args()
     # Only read this project's .env; explicitly exported variables take precedence.
     load_dotenv(ENV_FILE, override=False)
+    logs.configure()
     owner_id = args.owner_id
     if owner_id is None:
         configured_owner = os.environ.get("TELEGRAM_OWNER_ID", "").strip()

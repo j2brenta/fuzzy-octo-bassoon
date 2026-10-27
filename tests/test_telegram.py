@@ -194,6 +194,27 @@ class TelegramHandlerTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("private details", answer.await_args_list[1].args[0])
         self.assertTrue(list((self.vault / "raw").glob("*.json")))
 
+    async def test_each_step_is_logged_with_its_outcome_and_never_the_text(self):
+        with self.assertLogs("channels.telegram", level="INFO") as logged:
+            await self.reply(message(text="A confidential note"), 100)
+        lines = "\n".join(logged.output)
+        self.assertIn("message 10 · received: text, 19 characters", lines)
+        self.assertRegex(lines, r"message 10 · capture: captured as [0-9a-f]{10} \(\d+\.\d s\)")
+        self.assertIn("prepare: 1 sections, 0 links", lines)
+        self.assertIn("AI processing is off", lines)
+        self.assertNotIn("confidential", lines)
+
+    async def test_a_failed_step_logs_only_its_category_when_details_can_quote_the_message(self):
+        with (
+            patch("channels.telegram.parse_capture", side_effect=ValueError("private details")),
+            self.assertLogs("channels.telegram", level="WARNING") as logged,
+        ):
+            await self.reply(message(), 100)
+        lines = "\n".join(logged.output)
+        self.assertIn("prepare: failed after", lines)
+        self.assertIn("(ValueError)", lines)
+        self.assertNotIn("private details", lines)
+
     async def test_whitespace_note_gets_a_capture_error_instead_of_crashing(self):
         with self.assertLogs("channels.telegram", level="ERROR"):
             answer = await self.reply(message(text="   "), 100)

@@ -97,6 +97,19 @@ syntax requires it). Run commands from the repository root.
    ```
 
 The bot logs its startup mode after checking Telegram's webhook configuration.
+Each message then logs one line per pipeline step (capture, prepare, triage,
+claim extraction, quality review, entities, handoff, graph placement, review)
+with its outcome and duration, and one line per Nebius call with its tokens:
+
+```text
+INFO channels.telegram: item 261c73e38e · quality review: started
+INFO engine.llm: nvidia/Nemotron-3.5-Ultra: 6,912 in / 1,204 out tokens, 14.2 s
+WARNING channels.telegram: item 261c73e38e · quality review: failed after 61.3 s (QualityError: …)
+```
+
+A step that has `started` but no outcome line was interrupted (for example by
+a restart). Filter one item with `docker compose logs telegram | grep 261c73e38e`.
+`LOG_LEVEL` in `.env` sets the detail; captured text and claims are never logged.
 Send a short text to verify an acknowledgement and a new raw record under
 `.local-vault/telegram/raw/`. This is the live integration check and requires
 your credentials. Tests and image builds do not contact Telegram or Nebius.
