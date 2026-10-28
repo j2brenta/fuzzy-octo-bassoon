@@ -53,6 +53,26 @@ def _publication_date(content: bytes) -> str | None:
     return None
 
 
+def citation_authors(content: bytes) -> list[str]:
+    """Authors from citation_author tags (arXiv, journals), written "Last, First", as "First Last". Trafilatura
+    splits on the comma and joins with "; ", which turns one author into two."""
+    try:
+        tree = html.fromstring(content)
+    except (ValueError, etree.LxmlError):
+        return []
+    names = []
+    for value in tree.xpath('//meta[@name="citation_author"]/@content'):
+        last, _, first = value.strip().partition(",")
+        name = f"{first.strip()} {last.strip()}".strip() if first.strip() else last.strip()
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
+def _first(names: list[str]) -> str | None:
+    return names[0] if names else None  # an item has one author: the first one listed
+
+
 def parse_article(content: bytes, url: str) -> Article:
     try:
         document = bare_extraction(content, url=url, with_metadata=True,
@@ -60,7 +80,7 @@ def parse_article(content: bytes, url: str) -> Article:
                                    favor_precision=True, date_extraction_params={"extensive_search": False})
         if document is None or not isinstance(document.text, str) or len(document.text.strip()) < 100:
             raise WebError("Could not extract a substantive article; paste the text if the page requires login or JavaScript.")
-        return Article(document.text.strip(), document.title or None, document.author or None,
+        return Article(document.text.strip(), document.title or None, _first(citation_authors(content)) or document.author or None,
                        document.sitename or None, _publication_date(content))
     except WebError:
         raise

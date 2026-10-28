@@ -26,6 +26,7 @@ class ItemNode:
     durability: str | None = None  # triage class for the whole item
     duplicate_of: str | None = None  # earliest item it reposts
     review_status: str = "accepted"  # ingestion quality_status; other values only with include_unreviewed
+    linked_from: str | None = None  # the item whose link this page was captured from
     hidden: bool = False  # a triage-skipped stub: listed nowhere, kept only as a target for SUPERSEDES
 
 
@@ -73,6 +74,34 @@ class PersonNode:
     role: dict | None = None  # {"value", "url"} from enrichment, like affiliation and each domain
     affiliation: dict | None = None
     domains: list[dict] = field(default_factory=list)
+
+
+@dataclass
+class OrgNode:
+    org_id: str
+    name: str
+    types: dict[str, int] = field(default_factory=dict)  # org type -> how many items call it that
+    mentioned_in: set[str] = field(default_factory=set)  # item ids
+    facts: set[str] = field(default_factory=set)  # claim ids about it: its profile
+
+    @property
+    def type(self) -> str:
+        """The type most items give it; "other" when none says."""
+        return min(self.types, key=lambda t: (-self.types[t], t)) if self.types else "other"
+
+
+@dataclass(frozen=True)
+class Affiliation:
+    """A person's tie to an organization: stated in an item, or found by web enrichment (item_id None, with url)."""
+    person_id: str
+    org_id: str
+    relation: str  # works_at | leads | founded | studied_at | member_of | published_at | affiliated
+    item_id: str | None = None
+    url: str | None = None
+
+
+AFFILIATION_WORDS = {"works_at": "works at", "leads": "leads", "founded": "founded", "studied_at": "studied at",
+                     "member_of": "member of", "published_at": "published at", "affiliated": "affiliated with"}
 
 
 @dataclass
@@ -189,6 +218,9 @@ class GraphStore(Protocol):
     def items(self) -> Iterable[ItemNode]: ...
     def claims(self) -> Iterable[ClaimNode]: ...
     def people(self) -> Iterable[PersonNode]: ...
+    def organizations(self) -> Iterable[OrgNode]: ...
+    def affiliations(self) -> list[Affiliation]:
+        """Person-to-organization ties, stated in items or found by enrichment."""
     def sources(self) -> Iterable[SourceNode]: ...
     def edges(self) -> Iterable[Edge]: ...
     def trust(self, person_id: str) -> float: ...

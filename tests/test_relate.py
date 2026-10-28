@@ -203,6 +203,12 @@ def test_person_facts_join_profiles_and_create_no_ideas():
     assert any(e.type == "ABOUT" and e.src == "ada1" for e in store.edges())
 
 
+def test_cyrillic_names_keep_their_own_person_ids():
+    # They used to fold to "person:", which merged every such name into one profile.
+    assert person_id("Дед Мороз") == "person:дед-мороз" and person_id("Кости Крестникова") == "person:кости-крестникова"
+    assert person_id("José García") == "person:jose-garcia"
+
+
 def test_lexical_subject_routes_a_claim_that_opens_with_a_person():
     bio = item("bio", 10, [("ada1", "Ada Lovelace wrote the first published program.")],
                entities=[("Ada Lovelace", "person")])

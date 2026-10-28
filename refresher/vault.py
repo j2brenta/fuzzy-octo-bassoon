@@ -8,10 +8,11 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
                                 (reviews/ is ingestion's extraction reviews)
     graph-reviews/proposals/<id>.json   what the review suggests and the user decides (graph/proposals.py)
     graph-reviews/decisions/<time>-<id>.json   the user's answers, append-only; the latest per proposal counts
-    people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`
+    people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`;
+                                a match's affiliation becomes a tie to that organization
     overrides.yaml              the user's word: durability, trust, votes
     submissions/<id>.json, uploads/<sha256>   web captures and their originals (refresher/web.py)
-    wiki/items|ideas|clusters|topics|dossiers|people|sources/  generated notes; text below MARK and user_*
+    wiki/items|ideas|clusters|topics|dossiers|people|organizations|sources/  generated notes; text below MARK and user_*
                                 frontmatter are kept (a dossier ranks a topic: refresher/dossier.py)
     wiki/health.md, index.md, log.md
 """
@@ -30,7 +31,7 @@ from pydantic import ValidationError
 
 from graph import proposals as proposal_stage
 from graph.memory import MemoryStore
-from graph.store import Decision, Edge, GraphStore, Proposal, ReviewReport
+from graph.store import AFFILIATION_WORDS, Affiliation, Decision, Edge, GraphStore, Proposal, ReviewReport
 from refresher import dossier, km, scoring
 from refresher import translate
 from engine import language
@@ -233,12 +234,15 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     for o in merged_overrides(vault) if overrides is None else overrides:
         store.apply_override(o)
     people = {p.person_id: p for p in store.people()}
-    for record in load_enrichments(vault):
-        person = people.get(record["person_id"])
-        if person is not None:
+    # A record for a merged-away person serves the person they merged into, unless that one has its own.
+    for record in sorted(load_enrichments(vault), key=lambda r: r["person_id"] not in people):
+        person = people.get(store.canonical_person(record["person_id"]))
+        if person is not None and person.enrichment_status == "pending":
             person.enrichment_status = "enriched" if record.get("match") else "no_match"
             person.role, person.affiliation = record.get("role"), record.get("affiliation")
             person.domains = list(record.get("domains") or [])
+            if record.get("match"):
+                store.add_enrichment(person.person_id, record.get("affiliation"))
     store.use_cluster_names(load_cluster_names(vault))
     store.use_themes(load_themes(vault))
     store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
@@ -341,6 +345,9 @@ def note_names(store: GraphStore) -> dict[str, str]:
         names[item.item_id] = _safe(f"{item.source.event_time:%Y-%m-%d} {item.title[:60]} {item.item_id[:6]}")
     for p in store.people():
         names[p.person_id] = _safe(p.name)
+    taken = set(names.values())
+    for o in store.organizations():
+        names[o.org_id] = _safe(o.name if _safe(o.name) not in taken else f"{o.name} (organization)")
     for s in store.sources():
         names[s.key] = _safe(s.name)
     return names
@@ -352,6 +359,9 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     wiki.mkdir(parents=True, exist_ok=True)
     names = note_names(store)
     link = lambda key: f"[[{names[key]}]]" if key in names else f"`{key[:12]}`"
+
+    def tie_basis(a: Affiliation) -> str:  # where a tie comes from: the post that states it, or the web page
+        return f"stated in {link(a.item_id)}" if a.item_id else f"from the web: {a.url}" if a.url else "from the web"
     scores = km.score_claims(store, at)
     rel: dict[str, list[tuple[str, str, str]]] = {}  # node -> (label, other node, rationale), both directions
     for e in store.edges():
@@ -389,8 +399,11 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                 lines.append(f"    - {label} a claim in {link(claim_item.get(other, other))}: {why}")
         mentions = sorted({e.dst for e in store.edges() if e.src == item.item_id and e.type == "MENTIONS"})
         if mentions:
-            lines += ["", "## Mentions", "", ", ".join(link(m) if m in names else store.organizations().get(m, m)
-                                                     for m in mentions)]
+            lines += ["", "## Mentions", ""]
+            for head, prefix in (("People", "person:"), ("Organizations", "org:")):
+                named = [link(m) for m in mentions if m.startswith(prefix)]
+                if named:
+                    lines.append(f"- {head}: " + ", ".join(named))
         if item.text:
             lines += ["", "## Original", "", *("> " + ln if ln else ">" for ln in item.text.splitlines())]
             translated = translate.translated_text(getattr(store, "translations", {}).get(item.item_id), item.text)
@@ -510,6 +523,10 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                         and (c.item_id in p.authored or c.claim.claim_id in p.facts)})
         if ideas:
             lines += ["", "## Ideas", ""] + [f"- {link(i)}" for i in ideas]
+        ties = [a for a in store.affiliations() if a.person_id == p.person_id]
+        if ties:
+            lines += ["", "## Organizations", ""] + [f"- {AFFILIATION_WORDS[a.relation]} {link(a.org_id)} ({tie_basis(a)})"
+                                                     for a in ties]
         for head, ids in (("Wrote", p.authored), ("Mentioned in", p.mentioned_in)):
             if ids:
                 lines += ["", f"## {head}", ""] + [f"- {link(i)}" for i in sorted(ids, key=lambda i: names[i])]
@@ -518,6 +535,22 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                 "user_trust": None}
         _write_note(wiki / "people" / f"{names[p.person_id]}.md", meta, "\n".join(lines), written)
 
+    for o in sorted(store.organizations(), key=lambda o: o.org_id):
+        lines = [f"# {o.name}", "", f"Type: {o.type.replace('_', ' ')}"]
+        ties = [a for a in store.affiliations() if a.org_id == o.org_id]
+        if ties:
+            lines += ["", "## People", ""] + [f"- {link(a.person_id)} {AFFILIATION_WORDS[a.relation]} it ({tie_basis(a)})"
+                                              for a in ties]
+        facts = sorted((all_claims[cid] for cid in o.facts if cid in all_claims),
+                       key=lambda c: (c.clock_start, c.claim.claim_id))
+        if facts:
+            lines += ["", "## Profile", ""] + [f"- {c.claim.statement} ({where(c)})" for c in facts]
+        if o.mentioned_in:
+            lines += ["", "## Mentioned in", ""] + [f"- {link(i)}" for i in sorted(o.mentioned_in, key=lambda i: names.get(i, i))]
+        _write_note(wiki / "organizations" / f"{names[o.org_id]}.md",
+                    {"type": "organization", "org_id": o.org_id, "name": o.name, "org_type": o.type},
+                    "\n".join(lines), written)
+
     for s in sorted(store.sources(), key=lambda s: s.key):
         lines = [f"# {s.name}", "", f"Channel: {s.channel}", "", "## Items", ""]
         lines += [f"- {link(i)}" for i in sorted(s.items, key=lambda i: names[i])]
@@ -525,7 +558,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                     "channel": s.channel}, "\n".join(lines), written)
 
     # Remove generated notes that no longer exist in the store, unless the user wrote in them.
-    for folder in ("items", "ideas", "clusters", "topics", "dossiers", "people", "sources"):
+    for folder in ("items", "ideas", "clusters", "topics", "dossiers", "people", "organizations", "sources"):
         for path in (wiki / folder).glob("*.md") if (wiki / folder).exists() else []:
             if path not in written and not path.read_text(encoding="utf-8").split(MARK, 1)[-1].strip():
                 path.unlink()
@@ -541,6 +574,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                        ("Clusters", [c.cluster_id for c in sorted(store.clusters(), key=lambda c: (-len(c.ideas), c.cluster_id))]),
                        ("Ideas", [i.idea_id for i in sorted(store.ideas(), key=lambda i: (-len(i.members), i.idea_id))]),
                        ("People", sorted((p.person_id for p in store.people()), key=lambda k: names[k])),
+                       ("Organizations", sorted((o.org_id for o in store.organizations()), key=lambda k: names[k])),
                        ("Sources", sorted((s.key for s in store.sources()), key=lambda k: names[k]))):
         index += [f"## {head}", ""] + [f"- {link(k)}" for k in keys] + [""]
     (wiki / "index.md").write_text("\n".join(index), encoding="utf-8")

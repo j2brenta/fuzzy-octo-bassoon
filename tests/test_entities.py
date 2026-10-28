@@ -136,16 +136,22 @@ class EntityTests(unittest.TestCase):
         self.assertEqual(first.entities, second.entities)
         self.assertEqual(len(client.calls), 1)
 
-    def test_compatible_entity_cache_preserves_existing_names_without_new_calls(self):
+    def test_entity_cache_is_reused_without_new_calls(self):
         client = FakeModel([ModelReply({'entities': ROWS})])
         original = self.extract(client)
-        data = json.loads(original.path.read_text())
-        data['prompt_version'] = 'entities-v4'
-        original.path.write_text(json.dumps(data))
         before = original.path.read_bytes()
         self.assertTrue(self.extract(client).reused)
         self.assertEqual(len(client.calls), 1)
         self.assertEqual(original.path.read_bytes(), before)
+
+    def test_a_record_from_before_organization_types_is_extracted_again(self):
+        original = self.extract()
+        data = json.loads(original.path.read_text())
+        data['prompt_version'] = 'entities-v6'
+        original.path.write_text(json.dumps(data))
+        client = FakeModel([ModelReply({'entities': ROWS})])
+        self.assertFalse(self.extract(client).reused)
+        self.assertEqual(len(client.calls), 1)
 
     def test_corrupt_cached_mention_is_rebuilt(self):
         result = self.extract()

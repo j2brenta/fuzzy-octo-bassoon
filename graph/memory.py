@@ -13,9 +13,10 @@ from datetime import datetime
 from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
+from graph.names import same_person as _same_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
-from graph.store import (ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, PersonNode, Placement,
-                         ReviewReport, SourceNode, TopicNode)
+from graph.store import (Affiliation, ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode,
+                         Placement, ReviewReport, SourceNode, TopicNode)
 from refresher import scoring
 from refresher.schemas import Extraction, Override, Relation, Verdict
 
@@ -39,21 +40,15 @@ def cluster_fingerprint(ideas) -> str:
 
 
 def person_id(name: str) -> str:
-    folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode() or name
-    return "person:" + "-".join(WORD.findall(folded.casefold()))
+    # Accents fold to ASCII; a name with no Latin letters (Cyrillic) keeps its own words, else all such names share "person:".
+    folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return "person:" + "-".join(WORD.findall(folded.casefold()) or WORD.findall(name.casefold()))
 
 
-def _same_person(a: str, b: str) -> bool:
-    """"Y. Gal" and "Yarin Gal": same last name, and first names equal or one an initial of the other."""
-    wa, wb = _words(a), _words(b)
-    if len(wa) < 2 or len(wb) < 2 or wa == wb or wa[-1] != wb[-1]:
-        return False
-    fa, fb = wa[0], wb[0]
-    return fa == fb or (min(len(fa), len(fb)) == 1 and fa[0] == fb[0])
-
-
-def _affiliation(p: PersonNode) -> str | None:
-    return p.affiliation["value"].casefold() if p.affiliation else None
+def _name_rank(p: PersonNode):
+    """Which name a merge keeps, last: more words, then no stray punctuation ("Krestnikov; Konstantin"), then the
+    longer (a full first name over a short form), then the id."""
+    return (len(_words(p.name)), -len(re.findall(r"[^\w\s.'-]", p.name)), len(p.name), p.person_id)
 
 
 def org_id(name: str) -> str:
@@ -99,8 +94,8 @@ class MemoryStore:
         self._ideas: dict[str, IdeaNode] = {}
         self._people: dict[str, PersonNode] = {}
         self._sources: dict[str, SourceNode] = {}
-        self._orgs: dict[str, str] = {}
-        self._org_facts: dict[str, set[str]] = {}
+        self._orgs: dict[str, OrgNode] = {}
+        self._affiliations: list[Affiliation] = []  # stated in items; enrichment ones are added after replay
         self._entities: dict[str, frozenset[str]] = {}  # item id -> casefolded entity names, for candidates
         self._verdicts: dict[str, Verdict] = {}  # claim id -> verdict
         self._edges: list[Edge] = []  # what an item brings: source, author, mentions, reposts, spans
@@ -145,7 +140,7 @@ class MemoryStore:
         item = ItemNode(ex.item_id, src, _title(text, src.source_name or ex.item_id), text,
                         durability=ex.triage.durability_class if ex.triage else None,
                         review_status="skipped" if skipped else "accepted" if ex.quality_gate_passed else ex.quality_status,
-                        hidden=skipped)
+                        hidden=skipped, linked_from=(ex.parent or {}).get("item_id"))
         self._items[ex.item_id] = item
         self._placed_hash ^= _id_hash(ex.item_id)
         self._entities[ex.item_id] = frozenset(e.name.casefold() for e in ex.entities)
@@ -168,17 +163,26 @@ class MemoryStore:
                 author.authored.add(ex.item_id)
                 item.author_id = author.person_id
                 new_edges.append(Edge(ex.item_id, "AUTHORED_BY", author.person_id))
+            ids = {}  # entity id -> person or org id, for the affiliations
             for ent in ex.entities:
                 if ent.kind == "person":
-                    pid = person_id(ent.name)
+                    # The nominative form, so "Кости Крестникова" here and "Костя Крестников" elsewhere are one id.
+                    name = ent.base_name or ent.name
+                    pid = ids[ent.entity_id] = person_id(name)
                     if pid == item.author_id:
                         continue
-                    self._person(ent.name).mentioned_in.add(ex.item_id)
+                    self._person(name).mentioned_in.add(ex.item_id)
                     new_edges.append(Edge(ex.item_id, "MENTIONS", pid))
                 elif ent.kind == "organization":
-                    oid = org_id(ent.name)
-                    self._orgs.setdefault(oid, ent.name)
-                    new_edges.append(Edge(ex.item_id, "MENTIONS", oid))
+                    org = self._org(ent.base_name or ent.name)
+                    ids[ent.entity_id] = org.org_id
+                    org.mentioned_in.add(ex.item_id)
+                    if ent.org_type:
+                        org.types[ent.org_type] = org.types.get(ent.org_type, 0) + 1
+                    new_edges.append(Edge(ex.item_id, "MENTIONS", org.org_id))
+            for tie in ex.affiliations:
+                if tie.person in ids and tie.organization in ids:
+                    self._affiliations.append(Affiliation(ids[tie.person], ids[tie.organization], tie.relation, ex.item_id))
 
         # Repost check on the whole item, ordered by event time, not arrival order.
         shingles = self._shingle_cache[ex.item_id] = _shingles(text)
@@ -292,6 +296,9 @@ class MemoryStore:
         person.authored |= gone.authored
         person.mentioned_in |= gone.mentioned_in
         del self._people[absorbed]
+        self._affiliations = list(dict.fromkeys(
+            Affiliation(kept, a.org_id, a.relation, a.item_id, a.url) if a.person_id == absorbed else a
+            for a in self._affiliations))
         for item in self._items.values():
             if item.author_id == absorbed:
                 item.author_id = kept
@@ -333,9 +340,8 @@ class MemoryStore:
     def _resolve(self) -> dict[str, list[str]]:
         """Turn all verdicts into relation edges, profile facts and Idea groups (root claim id -> members)."""
         self._relations = []
-        self._org_facts = {}
-        for person in self._people.values():
-            person.facts = set()
+        for profile in [*self._people.values(), *self._orgs.values()]:
+            profile.facts = set()
         world: list[ClaimNode] = []
         for node in sorted(self._claims.values(), key=self._order):
             verdict = self._verdicts.get(node.claim.claim_id)
@@ -352,8 +358,7 @@ class MemoryStore:
             else:
                 node.subject_id = org_id(verdict.subject_name)
                 if not hidden:
-                    self._orgs.setdefault(node.subject_id, verdict.subject_name)
-                    self._org_facts.setdefault(node.subject_id, set()).add(node.claim.claim_id)
+                    self._org(verdict.subject_name).facts.add(node.claim.claim_id)
             if not hidden:
                 self._relations.append(Edge(node.claim.claim_id, "ABOUT", node.subject_id))
 
@@ -634,6 +639,30 @@ class MemoryStore:
         pid = self._aliases.get(person_id(name), person_id(name))
         return self._people.setdefault(pid, PersonNode(pid, name))
 
+    def _posts_of(self, p: PersonNode) -> set[str]:
+        """Items they wrote, are named in, or that state facts about them."""
+        return p.authored | p.mentioned_in | {self._claims[c].item_id for c in p.facts if c in self._claims}
+
+    def canonical_person(self, pid: str) -> str:
+        """The person id a merged-away id now stands for."""
+        return self._aliases.get(pid, pid)
+
+    def _links_to(self, posts: set[str], pages: set[str]) -> bool:
+        """Whether one of the pages was captured from a link in one of the posts."""
+        return any(self._items[i].linked_from in posts for i in pages if i in self._items)
+
+    def _org(self, name: str) -> OrgNode:
+        return self._orgs.setdefault(org_id(name), OrgNode(org_id(name), name))
+
+    def add_enrichment(self, person_id: str, affiliation: dict | None) -> None:
+        """Tie a person to the organization web enrichment found for them ({"value", "url"}), creating it when no
+        item names it. Called by vault.replay after the enrichment records are read."""
+        if person_id not in self._people or not affiliation or not _words(affiliation.get("value", "")):
+            return
+        tie = Affiliation(person_id, self._org(affiliation["value"]).org_id, "affiliated", url=affiliation.get("url"))
+        if tie not in self._affiliations:
+            self._affiliations.append(tie)
+
     def apply_override(self, override: Override) -> None:
         o = override
         if o.target == "person":
@@ -670,7 +699,13 @@ class MemoryStore:
         return self._sources.values()
 
     def organizations(self):
-        return dict(self._orgs)
+        return self._orgs.values()
+
+    def organization(self, oid: str) -> OrgNode:
+        return self._orgs[oid]
+
+    def affiliations(self) -> list[Affiliation]:
+        return sorted(self._affiliations, key=lambda a: (a.person_id, a.org_id, a.relation, a.item_id or "", a.url or ""))
 
     def edges(self):
         return self._edges + self._relations
@@ -687,7 +722,7 @@ class MemoryStore:
                       key=lambda v: v.claim_id)
 
     def org_facts(self) -> dict[str, set[str]]:
-        return {oid: set(ids) for oid, ids in self._org_facts.items()}
+        return {oid: set(o.facts) for oid, o in self._orgs.items() if o.facts}
 
     def item(self, item_id: str) -> ItemNode:
         return self._items[item_id]
@@ -805,15 +840,28 @@ class MemoryStore:
             add("topic", {"claims": claims, "title": (namer or cluster.title)(statements)},
                 f"{len(members)} Ideas{parts} from {len(posts)} posts sit close together.")
 
-        # People who are probably one person: same surname, compatible first names, something in common.
+        # People who are probably one person: same surname (in either script), compatible first names, and
+        # something in common: a post, linked posts (a page and the post that shared it), or an organization.
         people = sorted(self._people.values(), key=lambda p: p.person_id)
+        orgs_of: dict[str, set[str]] = {}
+        for tie in self._affiliations:
+            orgs_of.setdefault(tie.person_id, set()).add(tie.org_id)
         for n, a in enumerate(people):
             for b in people[n + 1:]:
-                if _same_person(a.name, b.name) and ((a.authored | a.mentioned_in) & (b.authored | b.mentioned_in)
-                                                     or _affiliation(a) and _affiliation(a) == _affiliation(b)):
-                    absorbed, kept = sorted((a, b), key=lambda p: (len(p.name), p.person_id))
-                    add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
-                        f"{absorbed.name} and {kept.name} share a surname and appear together.")
+                if not _same_person(a.name, b.name):
+                    continue
+                posts_a, posts_b = self._posts_of(a), self._posts_of(b)
+                if posts_a & posts_b:
+                    why = "appear together"
+                elif self._links_to(posts_a, posts_b) or self._links_to(posts_b, posts_a):
+                    why = "appear in a post and the page it links to"
+                elif orgs_of.get(a.person_id, set()) & orgs_of.get(b.person_id, set()):  # enrichment ties too
+                    why = "share an organization"
+                else:
+                    continue
+                absorbed, kept = sorted((a, b), key=_name_rank)
+                add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
+                    f"{absorbed.name} and {kept.name} share a surname and {why}.")
 
         # Replacing or contradicting a durable claim is live already; the user confirms or rejects it.
         for e in sorted(self._relations, key=lambda e: (e.src, e.dst)):
