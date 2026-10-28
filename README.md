@@ -629,6 +629,25 @@ evidence panel with the exact passage behind every
 claim, and a side-by-side comparison. Edges are marked automatic, accepted by you
 or proposed. Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`.
 
+### Topic dossiers
+
+A dossier is what you know about one subject, ranked (`refresher/dossier.py`). Every
+rebuild writes one per topic to `wiki/dossiers/`; the app shows the same for any topic,
+cluster or phrase. Each Idea gets an importance, kept with its parts so the note can say
+why it ranks there:
+
+    importance = fresh · (0.35 support + 0.25 trust + 0.25 central + 0.15 firm) + your votes
+
+`support` is how many independent sources say it, `trust` what the store learned of their
+authors, `central` how close it sits to the subject, `firm` whether the review firmed it,
+`fresh` the half-life score of its newest current claim. The top five (and anything at 0.6
+or more) are core; then supporting, fading, replaced and noise (reposts, expired
+ephemeral claims). An Idea that changed shows what it said before; the dossier lists the
+changes, the conflicts, and a reading order: the sources that cover the most important
+Ideas, weighted by their authors' trust, originals before reposts, the newest word on
+each change always included. A phrase gathers the Ideas close to it by embedding, whole
+clusters when their centre is close, plus those holding all its words.
+
 ## Validation
 
 ```bash
