@@ -42,6 +42,7 @@ LINK_WORDS = {"disputes": "disputes", "retells": "retells", "based_on": "based o
               "updates": "updates", "builds_on": "builds on", "cites": "cites", "same_author": "same author",
               "shares": "shares an Idea"}
 NAME_PREFIX = 6  # letters of a surname that must match, across scripts and case endings
+SHARES_MAX = 12  # "shares an Idea" links kept per source, the strongest: on a dense corpus every pair shares one
 _FIGURE = re.compile(r"\d")
 _CYRILLIC = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
                      ["a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "i", "k", "l", "m", "n", "o", "p", "r", "s",
@@ -104,24 +105,26 @@ def trust(store, items: dict, at: datetime, idea_ids, title: str) -> dict:
     return out
 
 
-def near_pairs(vectors: dict, holders: dict, threshold: float, block: int = 512) -> dict[tuple[str, str], float]:
-    """Idea pairs held by different sources at least this close, both orders, with their cosine. In blocks of rows,
-    so 5,000 Ideas never hold a 5,000 x 5,000 matrix."""
+def near_pairs(vectors: dict, holders: dict | None, threshold: float, block: int = 512) -> dict[tuple[str, str], float]:
+    """Idea pairs at least this close, both orders, with their cosine; with `holders`, only pairs held by different
+    sources. In blocks of rows, so 5,000 Ideas never hold a 5,000 x 5,000 matrix."""
     ids = sorted(vectors)
     if len(ids) < 2:
         return {}
     m = np.array([vectors[i] for i in ids], dtype=np.float32)
     m /= np.linalg.norm(m, axis=1, keepdims=True) + 1e-12
+    # An Idea only one source holds gets that source's number; a pair of two such Ideas of one source is no pair.
+    holders = holders or {}
+    number = {i: n for n, i in enumerate(sorted({next(iter(h)) for h in holders.values() if len(h) == 1}))}
+    alone = np.array([number[next(iter(holders[i]))] if len(holders.get(i, ())) == 1 else -1 for i in ids])
     out = {}
     for start in range(0, len(ids), block):
         sims = m[start:start + block] @ m.T
-        for a, b in np.argwhere(sims >= threshold):
-            row = start + a
-            if b <= row:
-                continue
-            x, y = ids[row], ids[b]
-            if holders[x] != holders[y] or len(holders[x]) > 1:
-                out[(x, y)] = out[(y, x)] = float(sims[a, b])
+        rows, cols = np.nonzero(sims >= threshold)
+        rows_abs = rows + start
+        keep = (cols > rows_abs) & ((alone[rows_abs] != alone[cols]) | (alone[rows_abs] == -1))
+        for a, b, cos in zip(rows_abs[keep].tolist(), cols[keep].tolist(), sims[rows[keep], cols[keep]].tolist()):
+            out[(ids[a], ids[b])] = out[(ids[b], ids[a])] = cos
     return out
 
 
@@ -259,12 +262,21 @@ def links(store, items: dict, claims: list, ideas_of: dict, cluster_of: dict, ne
         for a in hold:
             for b in hold - {a}:
                 shared[(a, b)].add(x)
-    for x, y in near:
-        for a in holders[x]:
-            for b in holders[y] - {a}:
-                shared[(a, b)].add(x)
+    for x, y in near:  # both orders are in `near`: one pass over each pair, both sources credited
+        if x < y:
+            for a in holders[x]:
+                for b in holders[y]:
+                    if a != b:
+                        shared[(a, b)].add(x)
+                        shared[(b, a)].add(y)
+    strongest: dict[str, set[str]] = defaultdict(set)  # each source's SHARES_MAX partners sharing the most Ideas
+    partners: dict[str, list[tuple[int, str]]] = defaultdict(list)
     for (a, b), xs in shared.items():
-        if a < b or (b, a) not in shared:
+        partners[a].append((len(xs), b))
+    for a, rows in partners.items():
+        strongest[a] = {b for _, b in sorted(rows, key=lambda r: (-r[0], r[1]))[:SHARES_MAX]}
+    for (a, b), xs in shared.items():
+        if (a < b or (b, a) not in shared) and (b in strongest[a] or a in strongest[b]):
             best = max(xs, key=lambda x: (len(holders[x]), x))
             add(a, b, "shares", sorted(xs), f"shares “{idea_title(best)}”")
     for i, item in items.items():
@@ -288,14 +300,24 @@ def links(store, items: dict, claims: list, ideas_of: dict, cluster_of: dict, ne
     for e in store.edges():
         if e.type == "MENTIONS" and e.dst in people:
             mentioned[e.src] |= _surnames(people[e.dst].name)
+    surnames = {pid: _surnames(p.name) for pid, p in people.items()}
+    written: dict[str, set[str]] = defaultdict(set)  # surname -> items its bearer wrote
+    for j, other in items.items():
+        for name in surnames.get(other.author_id, ()):
+            written[name].add(j)
+    captured_from: dict[str, set[str]] = defaultdict(set)
+    for j, other in items.items():
+        if other.linked_from:
+            captured_from[other.linked_from].add(j)
     for i, item in items.items():
         targets = {urls[u] for u in map(_url, extras.get(i, {}).get("links", [])) if u in urls}
-        for j, other in items.items():
+        for j in sorted(targets | captured_from[i] | {j for name in mentioned[i] for j in written[name]}):
+            other = items[j]
             if j == i:
                 continue
             linked = j in targets or other.linked_from == i  # i carries a link to j, or j was captured from i's
             author = people.get(other.author_id) if other.author_id else None
-            named = bool(author and _surnames(author.name) & mentioned[i])
+            named = bool(author and surnames[author.person_id] & mentioned[i])
             if not (linked or named):
                 continue
             common = (shared.get((i, j), set()) | shared.get((j, i), set()))

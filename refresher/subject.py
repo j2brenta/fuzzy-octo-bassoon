@@ -30,6 +30,8 @@ import re
 from collections import defaultdict
 from datetime import datetime
 
+import numpy as np
+
 from graph import cluster as grouping
 from graph import embed
 from graph.memory import MemoryStore
@@ -81,7 +83,8 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
             ideas_of[c.item_id].add(c.idea_id)
     idea_ids = sorted({i for held in ideas_of.values() for i in held})
     vectors = dict(zip(idea_ids, embed.vectors([store.idea(i).title for i in idea_ids]))) if idea_ids else {}
-    relevance = {i: max(0.0, min(1.0, embed.cosine(vectors[i], center))) if center else 0.0 for i in idea_ids}
+    dots = (np.array([vectors[i] for i in idea_ids]) @ np.array(center)).tolist() if idea_ids and center else []
+    relevance = {i: max(0.0, min(1.0, dot)) for i, dot in zip(idea_ids, dots)} if dots else {i: 0.0 for i in idea_ids}  # unit vectors
     floor = max(FLOOR[family], max(relevance.values(), default=0.0) - SPAN[family])
     weight = {i: r for i, r in relevance.items() if r >= floor}
 
@@ -103,13 +106,18 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
             members[cluster_of[i]].add(i)
     cluster_rel = {cid: sum(weight.get(i, 0.0) for i in held) / len(held) for cid, held in members.items()}
 
+    # Every Idea pair at least this close, once, in blocks (refresher/navigator.py): edges, stance and links read it.
+    holders: dict[str, set[str]] = defaultdict(set)
+    for item_id, held in ideas_of.items():
+        for i in held:
+            holders[i].add(item_id)
+    every = navigator.near_pairs(vectors, None, min(near_dup, navigator.NEAR_DUPLICATE[family]))
+
     # Idea pairs shared between clusters: near-duplicates among the in-scope Ideas, and claim relations.
     pairs: dict[tuple[str, str], set[tuple[str, str]]] = defaultdict(set)
-    scoped = sorted(weight)
-    for n, a in enumerate(scoped):
-        for b in scoped[n + 1:]:
-            if cluster_of[a] != cluster_of[b] and embed.cosine(vectors[a], vectors[b]) >= near_dup:
-                pairs[tuple(sorted((cluster_of[a], cluster_of[b])))].add(tuple(sorted((a, b))))
+    for (a, b), cos in every.items():
+        if a < b and cos >= near_dup and a in weight and b in weight and cluster_of[a] != cluster_of[b]:
+            pairs[tuple(sorted((cluster_of[a], cluster_of[b])))].add((a, b))
     idea_of_claim = {c.claim.claim_id: c.idea_id for c in claims if c.idea_id}
     for e in store.edges():
         a, b = idea_of_claim.get(e.src), idea_of_claim.get(e.dst)
@@ -125,11 +133,7 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
     # in every cluster a source has Ideas in, one home among them, and typed links between sources.
     reposts = {i for i, item in items.items() if item.duplicate_of in items}
     when = {i: items[i].source.event_time for i in items}
-    holders: dict[str, set[str]] = defaultdict(set)
-    for item_id, held in ideas_of.items():
-        for i in held:
-            holders[i].add(item_id)
-    close = navigator.near_pairs(vectors, holders, min(near_dup, navigator.NEAR_DUPLICATE[family]))
+    close = {(a, b): cos for (a, b), cos in every.items() if holders[a] != holders[b] or len(holders[a]) > 1}  # across sources
     same = {p for p, cos in close.items() if cos >= navigator.NEAR_DUPLICATE[family]}
     shared_pairs = {p for p, cos in close.items() if cos >= near_dup}
     deep = navigator.depth(store, items, ideas_of, claims, reposts)
