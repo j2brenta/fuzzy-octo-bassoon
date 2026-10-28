@@ -543,9 +543,11 @@ uv run refresher enrich --vault VAULT --person "Yarin Gal"
 
 ### The hourly review and your decisions
 
-Placement files each item at once. Once an hour (after a capture, when the last
-run is more than an hour old), or when you send `/consolidate` to the bot, the
-review looks at the whole graph:
+Placement files each item at once: its Ideas, clusters and provisional topic
+places show on the map straight away. Once an hour, when something was placed
+since the last run (the `review` container checks every 10 minutes, the bot after a
+capture), or when you send `/consolidate` to the bot, the review looks at the whole
+graph:
 
 1. Items whose stored verdicts missed a closer claim that arrived later are judged
    again, so an original captured after its correction still gets superseded.
@@ -596,6 +598,7 @@ review. An accepted topic takes close new Ideas provisionally as they arrive.
 
 ```bash
 uv run refresher consolidate --vault VAULT            # the hourly job; --lexical for no model or web calls
+uv run refresher consolidate --vault VAULT --if-due   # only when due and something is new; --every 600 keeps checking
 uv run refresher serve --vault VAULT                  # the app on http://127.0.0.1:8080: the map with Accept / Reject
 uv run refresher proposals --vault VAULT              # the same list in the terminal, with tokens
 uv run refresher decide --vault VAULT ID accept --token TOKEN

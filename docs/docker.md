@@ -5,7 +5,8 @@
 | Code | Runtime role | Compose service |
 | --- | --- | --- |
 | `channels/telegram.py` | One long-polling Telegram bot; invokes parsing, article fetching, triage, extraction and review in the same process | `telegram` (default) |
-| `refresher/app.py`, `refresher/web.py`, `refresher/static/`, `refresher/assets/map/` | The one browser app: capture with background ingestion and native PDF text reading, the Atlas, proposals | `frontend` (default) |
+| `refresher/app.py`, `refresher/web.py`, `refresher/static/`, `refresher/assets/map/` | The one browser app: capture with background ingestion and native PDF text reading, the Atlas, topics and dossiers, proposals | `app` (default) |
+| `refresher/consolidate.py` | The hourly review: relate, review the whole graph, enrich people, rebuild the views | `review` (default) |
 | `channels/importer.py`, `channels/web.py`, `engine/*`, `refresher/cli.py` | Finite capture, processing, knowledge-base rebuild and evaluation commands | `cli` (`tools` profile) |
 | `refresher/viewer.py` | Interactive terminal evidence viewer using curses, jq and less | `viewer` (`tools` profile) |
 | `tests/` | Existing offline pytest and unittest suite and fixtures | `test` (`test` profile) |
@@ -20,27 +21,51 @@ database, but the application does not yet use it. Telegram uses outgoing HTTPS
 long polling and needs no published port or reverse proxy. Voice transcription
 is absent from this checkout and therefore has no container dependency.
 
-## Browser frontend
+## The app
 
-Create the host vault directory, then build and start just the frontend:
+Create the host vault directory, then build and start just the app:
 
 ```bash
 mkdir -p .local-vault/telegram
-docker compose up -d --build --wait frontend
+docker compose up -d --build --wait app
 ```
 
-Open <http://localhost:8080>. The frontend is `refresher serve`: capture at
-`/capture/`, the Atlas and proposals at `/atlas/`. It uses `.env` for model settings
+Open <http://localhost:8080>. The app is `refresher serve`: topics at `/`, a topic's
+dossier at `/topic/`, capture at `/capture/`, the Atlas and proposals at `/atlas/`. It uses `.env` for model settings
 and works on the same vault as the Telegram bot (`REFRESHER_VAULT`, `/data/telegram`
 in the container), so a web capture and a Telegram one land in one graph.
 Submissions and uploads are kept in that vault's `submissions/` and `uploads/`.
-If you publish the port on another number, pass `--allow-host localhost:<port>`.
+To publish it on another port, set `APP_PORT` (`APP_PORT=8090 docker compose up -d app`):
+the app takes changes only from its own address, and compose allows that port for it.
 `VAULT_DIR` overrides the shared host parent directory. The web PDF extra and
 static assets are installed in the application image; no Node build is needed.
 The server listens on all interfaces inside its container, while the published
 host port is restricted to localhost. This is a local demo without authentication.
 The healthcheck verifies the submissions API. Restarting or removing the
 container preserves the host vault.
+
+## The hourly review
+
+`review` runs `refresher consolidate --if-due --every 600`: every 10 minutes it
+checks whether the last review is an hour old and something was placed since, and
+if so reviews the whole graph (relations, duplicates, firm Ideas, proposals, people,
+`wiki/` and the map). It starts with a plain `docker compose up`, so the review is on
+by default whichever way captures arrive, bot or app.
+
+The bot still reviews after a capture and on its own timer. A run repeats its check
+under the vault lock, so when two runners are due at once, the one that waited sees
+the other's stamp and skips: one `consolidate:` line per run in the vault's `log.md`.
+`REFRESHER_REVIEW=off` turns the bot's own runs off; nothing sets it by default.
+
+For a scheduler (a Nebius serverless job, cron), run it once per tick instead:
+
+```bash
+refresher consolidate --vault /data/telegram --if-due   # exits at once unless a review is due
+```
+
+All runners must see the same vault on a filesystem with working POSIX locks (a
+shared filesystem, not object storage): the lock is what keeps a review and a
+placement from interleaving.
 
 ## Neo4j
 
@@ -209,7 +234,7 @@ configured UID/GID, set `VAULT_DIR` to that directory and start the bot.
   signals directly and gets 30 seconds to stop. Bot retries are bounded to
   three restarts on failure. Inspect logs for invalid credentials, webhook
   conflicts or a second polling receiver.
-- `.env` injects credentials into the frontend, bot and CLI at runtime. Keep it local
+- `.env` injects credentials into the app, the review, the bot and the CLI at runtime. Keep it local
   and restrict its permissions (`chmod 600 .env`). Environment variables remain
   visible to Docker administrators; this is a local deployment configuration.
   The current app does not implement Docker secret-file configuration.

@@ -60,8 +60,7 @@ if __name__ == '__main__':
 
 class ReviewTimerTests(unittest.TestCase):
     def test_the_review_is_pending_only_when_due_and_something_new_was_placed(self):
-        from channels.telegram import review_pending
-        from refresher.consolidate import STAMP
+        from refresher.consolidate import STAMP, pending as review_pending
         with TemporaryDirectory() as directory:
             vault = Path(directory)
             self.assertFalse(review_pending(vault))  # nothing processed yet

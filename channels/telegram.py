@@ -47,7 +47,7 @@ from engine.placement import apply_storage_stub
 from engine.results import write_item_note, entity_summary
 from graph import embed
 from graph.relate import ModelRelator
-from refresher.consolidate import STAMP, consolidate, due
+from refresher.consolidate import consolidate, due, pending, review_on
 from refresher.place import place, reply_text
 
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
@@ -466,21 +466,26 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
     tail = f"\n{waiting} proposal(s) wait for you: run `refresher serve` to review them." if waiting else ""
     await message.answer(f"{saved}\n{reply_text(placed, store, note)}{tail}")
     vault_path = packaged.path.parent.parent
-    if due(vault_path):
+    if review_on() and due(vault_path):
         # The hourly review rides on captures, after the reply: the user is not kept waiting, and the bot
         # handles one message at a time, so the next capture simply starts when it is done.
         try:
-            await stage("review", "hourly consolidate", consolidate_now, vault_path, client,
-                        describe=lambda r: r.summary())
+            await stage("review", "hourly consolidate", consolidate_now, vault_path, client, if_due=True,
+                        describe=described)
         except (ModelError, OSError, ValueError) as error:
             logger.error("Hourly consolidation failed (%s).", type(error).__name__)
 
 
-def consolidate_now(vault_path: Path, client):
-    """The hourly job with the bot's model (none when GRAPH_RELATOR=lexical) and Tavily when its key is set."""
+def consolidate_now(vault_path: Path, client, if_due: bool = False):
+    """The hourly job with the bot's model (none when GRAPH_RELATOR=lexical) and Tavily when its key is set.
+    With `if_due`, None when another runner (the review container, a scheduled job) has just done it."""
     from engine.people import search_from_environment
     model = client if client is not None and graph_relator(client) is not None else None
-    return consolidate(vault_path, model, search_from_environment() if model is not None else None)
+    return consolidate(vault_path, model, search_from_environment() if model is not None else None, if_due=if_due)
+
+
+def described(run) -> str:
+    return run.summary() if run is not None else "skipped: another runner has just reviewed"
 
 
 def review_text(run) -> str:
@@ -501,24 +506,13 @@ def graph_relator(client):
 REVIEW_CHECK_SECONDS = 600  # how often the bot looks whether the hourly review is due
 
 
-def review_pending(vault_path: Path) -> bool:
-    """The hourly review is due and a post was placed since it last ran: captures in a burst still get reviewed
-    without waiting for the next one."""
-    processed = vault_path / "processed"
-    if not processed.is_dir() or not due(vault_path):
-        return False
-    stamp = vault_path / STAMP
-    last = stamp.stat().st_mtime if stamp.exists() else 0.0
-    return any(p.stat().st_mtime > last for p in processed.glob("*.json"))
-
-
 async def review_on_a_timer(vault_path: Path, every: float = REVIEW_CHECK_SECONDS) -> None:
     while True:
         await asyncio.sleep(every)
         try:
-            if await asyncio.to_thread(review_pending, vault_path):
+            if await asyncio.to_thread(pending, vault_path):
                 await stage("review", "timed consolidate", consolidate_now, vault_path, client_from_environment(),
-                            describe=lambda r: r.summary())
+                            if_due=True, describe=described)
         except Exception:  # stage() logged it; the timer keeps going
             continue
 
@@ -536,7 +530,7 @@ async def run_bot(token: str, vault_path: Path, owner_id: int | None) -> None:
 
         mode = "capture enabled" if owner_id is not None else "setup mode: send /start to the bot"
         print(f"Telegram bot running ({mode}). Press Ctrl+C to stop.", flush=True)
-        timer = asyncio.create_task(review_on_a_timer(vault_path)) if owner_id is not None else None
+        timer = asyncio.create_task(review_on_a_timer(vault_path)) if owner_id is not None and review_on() else None
         try:
             # Process each delivery before accepting the next polling offset.
             await dispatcher.start_polling(bot, allowed_updates=["message"], handle_as_tasks=False)
