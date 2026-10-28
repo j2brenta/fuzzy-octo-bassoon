@@ -53,12 +53,20 @@ def trust_learned(confirmations: int = 0, contradictions: int = 0, up: int = 0, 
 
 
 def trust_rationale(confirmations: int = 0, contradictions: int = 0, up: int = 0, down: int = 0,
-                    pinned: float | None = None) -> str:
+                    pinned: float | None = None, disagreements: int = 0) -> str:
     """Why a person's trust is what it is, in the words a people note shows."""
     if pinned is not None:
         return f"{pinned:.2f}: set by you"
     parts = [f"{confirmations} independent confirmation{'s' * (confirmations != 1)}",
              f"{contradictions} contradiction{'s' * (contradictions != 1)}"]
+    if disagreements:
+        parts.append(f"{disagreements} unresolved disagreements (not a penalty)")
     if up or down:
         parts.append(f"{up} up, {down} down from you")
     return f"{trust_learned(confirmations, contradictions, up, down):.2f}: " + ", ".join(parts)
+
+
+def people_importance(subject_relevance: float, track_record: float, professional_relevance: float | None) -> float:
+    """v1 collection ranking; missing professional evidence is neutral, never a negative judgment."""
+    profile = 0.5 if professional_relevance is None else professional_relevance
+    return subject_relevance * (0.6 * track_record + 0.4 * profile)

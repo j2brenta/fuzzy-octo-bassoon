@@ -61,7 +61,7 @@
     }
     const why = el('details', null, 'why'), parts = el('div', null, 'parts');
     why.append(el('summary', `Why #${r.rank}`), el('p', r.why));
-    for (const [k, label] of [['support', 'independent sources'], ['trust', 'trust in the authors'], ['central', 'closeness to the subject'],
+    for (const [k, label] of [['support', 'independent sources'], ['trust', 'trust in the contributors'], ['central', 'closeness to the subject'],
       ['firm', 'firmed by the review'], ['fresh', 'freshness now']]) {
       const bar = el('span', null, 'bar'), fill = el('span'); fill.style.width = `${Math.round(100 * Math.min(1, r.parts[k]))}%`; bar.append(fill);
       parts.append(el('span', label, 'small quiet'), bar, el('span', r.parts[k].toFixed(2), 'small'));
@@ -156,8 +156,8 @@
     }
     if (near.people.length) {
       const box = el('div', null, 'pills');
-      near.people.forEach(p => { const b = button('', () => steer(() => atlas?.selectPerson(p.id)), 'pill person');
-        b.append(p.name, el('small', `trust ${p.trust.toFixed(2)} · wrote ${p.wrote} · about them ${p.about}`)); box.append(b); });
+      near.people.forEach(p => { const b = button('', () => steer(() => atlas?.selectPerson(p.id, p.score)), 'pill person');
+        b.append(p.name, el('small', `${p.importance == null && p.about ? `${p.about} sourced fact${p.about === 1 ? '' : 's'}` : `${p.importance == null ? 'unscored' : 'contribution rank #' + p.score.rank} · stated ${p.stated} · ${p.score.evidence_level} evidence`}`)); box.append(b); });
       nearby.append(el('p', 'People', 'label-row'), box);
     }
     const nearCount = near.linked.length + near.clusters.length + near.topics.length + near.people.length;

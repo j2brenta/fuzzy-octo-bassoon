@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Iterable, Protocol, runtime_checkable
 
-from refresher.schemas import Claim, Extraction, Override, Relation, Source
+from refresher.schemas import Attribution, Claim, Extraction, Override, Relation, Source
 
 EDGE_TYPES = {"AUTHORED_BY", "PUBLISHED_IN", "MENTIONS", "FROM", "DUPLICATES", "SUPPORTS",
               "SUPERSEDES", "CONTRADICTS", "ELABORATES",
@@ -41,6 +41,12 @@ class ClaimNode:
     duplicate_rank: int = 0  # 0 = first source; > 0 = a repost, counted as noise
     superseded_by: str | None = None
     votes: int = 0
+    attribution_reviewed: bool = False
+    identity_url: str | None = None
+    evidence_origin: str | None = None
+    speaker_name: str | None = None  # source-grounded dictionary form; attribution keeps the exact written name
+    speaker_id: str | None = None
+    attribution: Attribution | None = None
     idea_id: str | None = None  # world claims only
     subject_id: str | None = None  # person:… or org:… when the claim is about them; then no Idea
 
@@ -66,14 +72,17 @@ class PersonNode:
     mentioned_in: set[str] = field(default_factory=set)
     confirmations: int = 0
     contradictions: int = 0
+    disagreements: int = 0  # unresolved conflict, not evidence that either person is wrong
     up: int = 0
     down: int = 0
     trust_pinned: float | None = None
+    statements: set[str] = field(default_factory=set)  # claims attributed to this speaker
     facts: set[str] = field(default_factory=set)  # claim ids about this person: their profile
     enrichment_status: str = "pending"  # pending | enriched | no_match (the web results were about someone else)
     role: dict | None = None  # {"value", "url"} from enrichment, like affiliation and each domain
     affiliation: dict | None = None
     domains: list[dict] = field(default_factory=list)
+    identity_url: str | None = None
 
 
 @dataclass
@@ -212,7 +221,8 @@ class ReviewReport:
 
 @runtime_checkable
 class GraphStore(Protocol):
-    def apply(self, extraction: Extraction, text: str = "", relation: Relation | None = None) -> Placement:
+    def apply(self, extraction: Extraction, text: str = "", relation: Relation | None = None, *,
+              attribution_reviews: dict | None = None) -> Placement:
         """Place one item. `relation` is its stored verdicts; without them the store relates it lexically."""
     def apply_override(self, override: Override) -> None: ...
     def items(self) -> Iterable[ItemNode]: ...
@@ -224,6 +234,8 @@ class GraphStore(Protocol):
     def sources(self) -> Iterable[SourceNode]: ...
     def edges(self) -> Iterable[Edge]: ...
     def trust(self, person_id: str) -> float: ...
+    def experts(self, at: datetime, subject_id: str | None = None, *,
+                idea_ids: Iterable[str] | None = None, subject_title: str | None = None) -> list[dict]: ...
     def ideas(self) -> Iterable[IdeaNode]: ...
     def idea(self, idea_id: str) -> IdeaNode: ...
     def review(self, at: datetime) -> ReviewReport: ...

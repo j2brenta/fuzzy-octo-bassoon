@@ -17,10 +17,11 @@ from engine.extract import source_passages
 from graph.memory import MemoryStore
 from graph.store import AFFILIATION_WORDS
 from refresher import km, translate
+from refresher.people_scoring import subjects as scoring_subjects
 from refresher.vault import note_names
 
 ASSETS = Path(__file__).parent / "assets"
-MAP_ASSETS = ("index.html", "app.js", "style.css")
+MAP_ASSETS = ("index.html", "app.js", "style.css", "people.js")
 VENDOR = ("cytoscape.min.js", "CYTOSCAPE-LICENSE.txt")
 SHELL_DIR, SHELL = Path(__file__).parent / "static", ("shell.css", "nav.js")  # the bar every page shares
 CLAIM_RELATIONS = ("SUPERSEDES", "CONTRADICTS", "SUPPORTS", "ELABORATES", "DUPLICATES")
@@ -59,6 +60,9 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
     claims = {c.claim.claim_id: c for c in store.claims() if c.item_id in items}
     ideas = {i.idea_id: i for i in store.ideas()}
     states = store.proposals
+    subjects = scoring_subjects(store)
+    people_scores = {"": store.experts(at)}
+    people_scores.update({s["id"]: store.experts(at, s["id"]) for s in subjects})
 
     topic_of_idea: dict[str, list[str]] = {}
     topics = []
@@ -76,7 +80,9 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                            "kind": node.claim.kind, "durability": node.durability,
                            "band": s.band if s else "stale", "freshness": round(s.freshness, 2) if s else 0,
                            "noise": bool(s and s.noise), "superseded": node.superseded_by is not None,
-                           "idea": node.idea_id, "subject": node.subject_id,
+                           "idea": node.idea_id, "subject": node.subject_id, "speaker": node.speaker_id,
+                           "attribution": node.attribution.model_dump(mode="json") if node.attribution else None,
+                           "attribution_reviewed": node.attribution_reviewed, "evidence_origin": node.evidence_origin,
                            "quality": items[node.item_id].review_status,
                            "anchors": _anchors(node, items[node.item_id].text, translations.get(node.item_id))})
 
@@ -187,11 +193,17 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             if c.item_id in posts + told and c.idea_id in cluster_of_idea:
                 feeds[cluster_of_idea[c.idea_id]] = feeds.get(cluster_of_idea[c.idea_id], 0) + 1
         return {"id": pid, "name": name, "kind": kind, "facts": facts, "items": posts,
-                "about_in": told, "clusters": dict(sorted(feeds.items())), "ties": ties.get(pid, [])}
+                "about_in": told,
+                "statements": sorted(c.claim.claim_id for c in claims.values() if c.speaker_id == pid),
+                "identity_url": store.person(pid).identity_url if kind == "person" else None,
+                "role": store.person(pid).role if kind == "person" else None,
+                "affiliation": store.person(pid).affiliation if kind == "person" else None,
+                "enrichment_status": store.person(pid).enrichment_status if kind == "person" else None,
+                "clusters": dict(sorted(feeds.items())), "ties": ties.get(pid, [])}
 
     people_rows = [row for p in sorted(store.people(), key=lambda p: p.person_id)
                    for row in [profile(p.person_id, p.name, "person", p.facts, p.authored)]
-                   if row["facts"] or row["items"] or row["ties"]]
+                   if row["facts"] or row["items"] or row["ties"] or row["statements"] or p.mentioned_in]
     org_rows = [{**profile(o.org_id, o.name, "organization", o.facts, set()), "type": o.type,
                  "named_in": sorted(i for i in o.mentioned_in if i in items)}
                 for o in sorted(store.organizations(), key=lambda o: o.org_id)]
@@ -218,6 +230,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                        "edges": len(edges), "waiting": sum(p["status"] == "proposed" for p in proposal_rows)},
             "limits": {"primary_nodes": 160},
             "topics": topics, "clusters": cluster_rows, "links": link_rows, "stories": story_rows,
+            "people_scores": people_scores,
+            "people_subjects": [{k: v for k, v in s.items() if k != "ideas"} for s in subjects],
             "people": people_rows, "organizations": org_rows, "items": item_rows, "claims": claim_rows,
             "edges": edges, "item_edges": list(item_edges.values()), "proposals": proposal_rows}
 
