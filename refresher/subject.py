@@ -495,28 +495,3 @@ def _summary(summaries: dict, item, lines: list[str]) -> tuple[str, str, str]:
         return summaries[item.item_id]["hook"], summaries[item.item_id].get("gist", ""), "model"
     hook, gist = summarize.lead(lines, item.title)
     return hook, gist, "lead"
-
-
-def overview(store: MemoryStore) -> dict:
-    """Every source with its gist, newest first, and the topics they fall in (GET /api/sources, the reading page)."""
-    items = {i.item_id: i for i in store.items()}
-    ideas_of: dict[str, set[str]] = defaultdict(set)
-    for c in store.claims():
-        if c.idea_id and c.item_id in items:
-            ideas_of[c.item_id].add(c.idea_id)
-    topics = sorted(store.topics(), key=lambda t: t.topic_id)
-    in_topic = {t.topic_id: {i for i, held in ideas_of.items() if held & (t.ideas | t.attached)} for t in topics}
-    summaries = getattr(store, "summaries", {})
-    rows = []
-    for item_id, item in items.items():
-        lines = dossier._lines(store, item)
-        hook, gist, kind = _summary(summaries, item, lines)
-        rows.append({"id": item_id, "title": item.title, "source": item.source.source_name,
-                     "author": dossier._name(store, item.author_id), "time": item.source.event_time.isoformat(),
-                     "url": item.source.url, "minutes": max(1, round(sum(len(ln.split()) for ln in lines) / dossier.WORDS_PER_MINUTE)),
-                     "hook": hook, "gist": gist, "summary": kind, "ideas": len(ideas_of[item_id]),
-                     "repost_of": item.duplicate_of if item.duplicate_of in items else None,
-                     "topics": [t.topic_id for t in topics if item_id in in_topic[t.topic_id]]})
-    rows.sort(key=lambda r: (r["time"], r["id"]), reverse=True)
-    return {"topics": [{"id": t.topic_id, "title": t.title, "count": len(in_topic[t.topic_id])} for t in topics],
-            "sources": rows}

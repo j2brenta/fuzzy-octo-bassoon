@@ -11,6 +11,11 @@
   const params = new URLSearchParams(location.search);
   const embedded = params.has('embed');
   if (embedded) document.body.classList.add('embedded');
+  // The reading layout (/read/ = ?layout=read): the evidence on the left, the text of the source picked in the middle,
+  // the map on the right. No timeline, and no source text in the evidence: a source there is its gist, and picking
+  // it opens its text in the middle.
+  const reading = params.get('layout') === 'read' && !embedded;
+  if (reading) document.body.classList.add('read-layout');
   if (['documents', 'claims', 'topics', 'people'].includes(params.get('mode'))) state.mode = params.get('mode');
   state.only = null;  // item ids, or null for all
   const items = new Map(data.items.map(x => [x.id, x]));
@@ -72,6 +77,7 @@
     a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.referrerPolicy = 'no-referrer'; return a;
   }
   function quote(anchor) {  // the passage in the language picked above the evidence, never both at once
+    if (reading) return document.createDocumentFragment();  // the text is in the middle column, not the evidence
     const box = el('blockquote', null, 'quote');
     box.title = `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char}) of the original`;
     if (state.lang === 'translation' && anchor.translation) {
@@ -433,7 +439,11 @@
     return row;
   }
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  const itemPill = (id, sub) => pill(items.get(id)?.title || id, () => selectItem(id), 'source', sub);
+  const itemPill = (id, sub) => {  // in the reading layout with its gist as a preview
+    const node = pill(items.get(id)?.title || id, () => selectItem(id), 'source', sub), gist = reading && (items.get(id)?.gist || items.get(id)?.hook);
+    if (gist) node.append(el('span', gist, 'pill-gist'));
+    return node;
+  };
   const clusterPill = id => pill(clusters.get(id)?.title || id, () => selectGroup(id), 'cluster',
     clusters.has(id) ? plural(clusters.get(id).ideas.length, 'Idea') : null);
   const topicPill = id => pill(topicTitle(id), () => selectGroup(id), 'topic');
@@ -550,8 +560,11 @@
       el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join(' · '), 'detail-meta'), chips);
     if (item.quality !== 'accepted') $('detail').append(el('p', 'Ingestion has not accepted this item yet; check its claims before relying on them.', 'chip warn'));
     if (item.url) $('detail').append(external(item.url));
-    // The text first: it is what a source is opened for; where it leads follows.
-    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
+    // The text first: it is what a source is opened for; where it leads follows. Reading, the text is in the middle.
+    if (reading) {
+      if (item.gist || item.hook) $('detail').append(el('h3', 'Gist', 'detail-section'), el('p', item.gist || item.hook, 'gist-preview'));
+      openReader(item, focus);
+    } else $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', 'Where it leads', 'detail-section'),
       flow([[item.claims.length, 'claim'], [ideaIds.length, 'Idea'], [clusterIds.length, 'cluster'], [item.topics.length, 'topic']]),
       ...section('Topics', item.topics.map(topicPill)), ...section('Clusters', clusterIds.map(clusterPill)),
@@ -670,7 +683,7 @@
     if (items.has(id)) return selectItem(id);
     if (!claims.has(id)) return;
     show(selectNode, id);
-    if (state.mode !== 'claims') { state.mode = 'claims'; setMode(); refresh(); }
+    if (state.mode !== 'claims' && !reading) { state.mode = 'claims'; setMode(); refresh(); }  // reading, the map stays
     state.selection = id;
     state.detailItems = [claims.get(id).item];
     if (!cy.getElementById(id).length) renderGraph(filteredItems());
@@ -766,13 +779,38 @@
   }
   function clearDetail() {
     state.detailItems = []; state.view = null;
+    if (reading) {  // nothing picked: every source of the slice, newest first, its gist a preview
+      const list = filteredItems().slice().sort((a, b) => b.time.localeCompare(a.time));
+      $('detail').replaceChildren(el('p', 'SOURCES', 'eyebrow'), el('p', `${plural(list.length, 'source')} in this slice: pick one to read it`, 'detail-meta'),
+        pills(list.map(i => itemPill(i.id, [i.source, i.author, date(i)].filter(Boolean).join(' · ')))));
+      return;
+    }
     $('detail').replaceChildren(el('p', 'Pick an item or a relation in this slice.', 'quiet'));
+  }
+  // --- the reading layout's middle column: the whole text of the source picked, its claims marked ---
+  let readerItem = null, readerFocus = null;
+  function openReader(item, focus) {
+    readerItem = item; readerFocus = focus;
+    const node = cy.getElementById(item.id);  // the map is narrow here: bring the source into its middle
+    if (node.length) cy.animate({center: {eles: node}}, {duration: 250});
+    const url = new URL(location.href); url.searchParams.set('read', item.id); history.replaceState(history.state, '', url);
+    const box = $('reader'), tools = el('div', null, 'reader-tools');
+    if (item.translation.length) tools.append(button(translated(item) ? 'Translation · show the original' : 'Original · show the translation',
+      () => setLang(translated(item) ? 'original' : 'translation')));
+    if (item.url) tools.append(external(item.url));
+    const text = sourceText(item, focus); text.classList.add('open', 'reader-text');
+    box.replaceChildren(el('p', [item.source, date(item)].filter(Boolean).join(' · '), 'eyebrow'), el('h1', item.title, 'reader-title'),
+      el('p', [item.author ? 'by ' + item.author : null, plural(item.claims.length, 'claim'), item.repost_of ? 'a repost' : null].filter(Boolean).join(' · '), 'detail-meta'),
+      tools, translated(item) ? el('p', `Machine translation into ${data.language}, for reading only; claims were judged on the original.`, 'small quiet') : '', text);
+    box.scrollTop = 0;
+    const on = text.querySelector('mark.on'); if (on) requestAnimationFrame(() => on.scrollIntoView({block: 'center'}));
   }
   function setLang(lang) {
     state.lang = lang;
     try { localStorage.setItem('atlas-lang', lang); } catch (e) { /* the choice lasts for this page only */ }
     for (const other of ['original', 'translation']) $('lang-' + other).setAttribute('aria-pressed', String(other === lang));
     if (state.view) state.view[0](...state.view[1]);
+    if (reading && readerItem && state.view?.[0] !== selectItem) openReader(readerItem, readerFocus);
     renderComparison();
   }
   function setMode() {
@@ -805,6 +843,7 @@
     const scoringLabel = state.mode === 'people' ? `Scoring subject: ${data.people_subjects?.find(s => s.id === scoreSubject())?.title || 'All subjects'} · ` : '';
     $('reading-scope').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
     renderTimeline(visible); renderGraph(visible); renderComparison();
+    if (reading && !state.view) clearDetail();  // the sources of the new slice
   }
   cy.on('tap', 'node', e => { if (!['region', 'cluster-region'].includes(e.target.data('kind'))) selectNode(e.target.id()); });
   cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data())
@@ -861,6 +900,10 @@
     selectItem(params.get('item')); state.ego = true; renderGraph(filteredItems()); showDetail();
   }
   if (params.get('claim')) selectNode(params.get('claim'));
+  if (reading) {
+    $('reader').hidden = false;
+    if (items.has(params.get('read'))) selectItem(params.get('read'));
+  }
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
     spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);
