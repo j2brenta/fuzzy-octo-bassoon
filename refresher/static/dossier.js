@@ -112,32 +112,103 @@
     layouts.set(key, pos);
     return pos;
   }
-  function graph(w, h, {labels = true, focus = null} = {}) {
+  function graph(w, h, {labels = true, focus = null, open = null} = {}) {
+    // Clusters as nodes, shared Ideas as edges. `open` (a cluster drawn on its own) opens in place into its sources:
+    // the anchor at the centre, perspectives on a middle ring, noise on the outer one; filled where a source lives,
+    // hollow where it is also here. Hovering a source draws dashed lines to the other clusters it sits in. Labels
+    // sit outside every circle and never on each other (one that cannot be placed stays a tooltip), and the view
+    // box is fitted to what is drawn, so no node is cut off.
     const {nodes, edges, at} = graphNodes();
-    const root = svg('svg', {viewBox: `${-w / 2} ${-h / 2} ${w} ${h}`, role: 'img', 'aria-label': `${plural(nodes.length, 'cluster')} and the Ideas they share`});
-    if (!nodes.length) return root;
-    const pos = layout(nodes, edges, w, h), max = Math.max(...nodes.map(n => n.ideas));
+    const root = svg('svg', {role: 'img', 'aria-label': `${plural(nodes.length, 'cluster')} and the Ideas they share`});
+    if (!nodes.length) { root.setAttribute('viewBox', `${-w / 2} ${-h / 2} ${w} ${h}`); return root; }
+    const pos = new Map([...layout(nodes, edges, w, h)].map(([k, p]) => [k, {...p}])), max = Math.max(...nodes.map(n => n.ideas));
+    const big = open && at.get(open) === open && cluster(open) ? open : null, R = Math.min(w, h) * 0.34;
+    const radius = n => n.id === big ? R : (labels ? 9 : 6) + (labels ? 13 : 8) * Math.sqrt(n.ideas / max);
+    if (big) {  // make room: every other cluster moves out of the open one's way
+      const c = pos.get(big);
+      nodes.forEach((n, k) => {
+        if (n.id === big) return;
+        const p = pos.get(n.id), need = R + radius(n) + 16;
+        let dx = p.x - c.x, dy = p.y - c.y, d = Math.hypot(dx, dy);
+        if (d < 1) { const a = 2 * Math.PI * k / nodes.length; dx = Math.cos(a); dy = Math.sin(a); d = 1; }
+        if (d < need) { p.x = c.x + dx / d * need; p.y = c.y + dy / d * need; }
+      });
+    }
     const here = at.get(src(focus || nextId() || '')?.cluster);
     const after = focus ? nextAfter(focus) : planIds()[1];
     const there = after ? at.get(src(after).cluster) : null;
     const top = Math.max(1, ...edges.map(e => e.count));
+    const circles = [], wanted = [];  // obstacles, then the labels to place among them
+    const edgeLayer = svg('g'), nodeLayer = svg('g'), hoverLayer = svg('g', {class: 'g-hover'}), labelLayer = svg('g');
     for (const e of edges) {
       const p = pos.get(e.a), q = pos.get(e.b), next = here && there && here !== there && [e.a, e.b].includes(here) && [e.a, e.b].includes(there);
       const line = svg('line', {x1: p.x, y1: p.y, x2: q.x, y2: q.y, class: 'g-edge' + (next ? ' next' : ''), 'stroke-width': (1 + 3 * e.count / top).toFixed(1)});
-      const t = svg('title'); t.textContent = `${plural(e.count, 'shared Idea')}, most of all: ${s.ideas[e.label]?.title || ''}`; line.append(t); root.append(line);
+      const t = svg('title'); t.textContent = `${plural(e.count, 'shared Idea')}, most of all: ${s.ideas[e.label]?.title || ''}`; line.append(t); edgeLayer.append(line);
     }
     for (const n of nodes) {
-      const p = pos.get(n.id), r = (labels ? 9 : 6) + (labels ? 13 : 8) * Math.sqrt(n.ideas / max);
+      const p = pos.get(n.id), r = radius(n);
       const members = n.members.flatMap(m => Object.values(s.sources).filter(x => x.cluster === m && x.role !== 'noise'));
       const done = members.length && members.every(x => s.marks[x.id]);
-      const g = svg('g', {class: `g-node ${n.band}${done ? ' done' : ''}${n.id === here ? ' here' : ''}`, tabindex: labels ? 0 : -1, role: 'button'});
+      const g = svg('g', {class: `g-node ${n.band}${done ? ' done' : ''}${n.id === here ? ' here' : ''}${n.id === big ? ' open' : ''}`, tabindex: labels ? 0 : -1, role: 'button'});
       const t = svg('title'); t.textContent = `${n.title} · ${n.band} · ${plural(n.ideas, 'Idea')}`;
-      g.append(t, svg('circle', {cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: r.toFixed(1)}));  // far clusters are named on hover only
-      if (labels && n.band !== 'far') { const label = svg('text', {x: p.x.toFixed(1), y: (p.y + r + 10).toFixed(1), 'text-anchor': 'middle'}); label.textContent = short(n.title, 20); g.append(label); }
+      g.append(t, svg('circle', {cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: r.toFixed(1)}));
+      circles.push({x: p.x, y: p.y, r, big: n.id === big});  // the open cluster is in the way of every label but its sources'
+      if (labels && (n.band !== 'far' || n.id === big)) wanted.push({text: short(n.title, n.id === big ? 24 : 20), x: p.x, anchor: 'middle', cls: n.id === big ? 'open-label' : '', must: true,
+        inside: n.id === big, ys: n.id === big ? [p.y - r + 24, p.y - r + 34] : [p.y + r + 11, p.y - r - 5, p.y + r + 22]});
+      // a cluster is named below or above its circle; the open one at the top inside its own
       const go = () => { if (current) closeReading(); if (n.id !== 'other') showBlock(n.id); else { shown.add('far'); renderFar(); $('far').scrollIntoView({behavior: smooth()}); } };
       g.addEventListener('click', go); g.addEventListener('keydown', e => e.key === 'Enter' && go());
-      root.append(g);
+      nodeLayer.append(g);
     }
+    if (big) {
+      const c = pos.get(big), rows = cluster(big).placements;
+      const ring = (list, frac, r0) => list.map((row, k) => {
+        // spread round the circle but for a gap at the top, which stays free for its name
+        const gap = 1.22, a = -Math.PI / 2 + gap / 2 + (2 * Math.PI - gap) * (k + 0.5) / list.length;
+        return {row, x: c.x + Math.cos(a) * R * frac, y: c.y + Math.sin(a) * R * frac, a, r: r0};
+      });
+      const anchor = rows.filter(r => r.role === 'anchor').map(row => ({row, x: c.x, y: c.y, a: Math.PI / 2, r: 7, centre: true}));
+      const placed = [...anchor, ...ring(rows.filter(r => r.role === 'perspective'), 0.52, 5), ...ring(rows.filter(r => r.role === 'noise'), 0.84, 3)];
+      for (const q of placed) {
+        const id = q.row.source, x = src(id), g = svg('g', {class: `g-src ${q.row.role} ${q.row.home ? 'home' : 'also'}`, tabindex: 0, role: 'button'});
+        const t = svg('title'); t.textContent = `${x.title} · ${q.row.role}${q.row.home ? '' : ` · also here, home: ${clusterName(x.cluster)}`}`;
+        g.append(t, svg('circle', {cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: q.r}));
+        circles.push({x: q.x, y: q.y, r: q.r});
+        if (labels && q.row.role !== 'noise') {
+          const cos = Math.cos(q.a), side = q.centre ? 'middle' : cos > 0.25 ? 'start' : cos < -0.25 ? 'end' : 'middle';
+          const lx = q.centre ? q.x : q.x + cos * (q.r + 4), ly = q.centre ? q.y + q.r + 11 : q.y + Math.sin(q.a) * (q.r + 4) + (side === 'middle' ? (Math.sin(q.a) > 0 ? 9 : -2) : 3);
+          wanted.push({text: short(x.title, 22), x: lx, anchor: side, cls: 'src-label', ys: [ly, ly + 11, ly - 11, ly + 22]});
+        }
+        const others = () => x.places.filter(p => p.cluster !== big && at.has(p.cluster) && pos.has(at.get(p.cluster)));
+        g.addEventListener('mouseenter', () => hoverLayer.replaceChildren(...others().map(p => { const o = pos.get(at.get(p.cluster));
+          return svg('line', {x1: q.x, y1: q.y, x2: o.x, y2: o.y, class: `g-place ${p.home ? 'home' : 'also'}`}); })));
+        g.addEventListener('mouseleave', () => hoverLayer.replaceChildren());
+        const go = () => openSource(id, false, big);
+        g.addEventListener('click', go); g.addEventListener('keydown', e => e.key === 'Enter' && go());
+        nodeLayer.append(g);
+      }
+    }
+    root.append(edgeLayer, nodeLayer, hoverLayer, labelLayer);
+    // Labels are placed once the graph is on the page, where their real size is known: each tries its place, then a
+    // step down or up; one that still touches a circle or another label is left out (its node keeps the tooltip).
+    // Cluster names go first. Then the view box is fitted to everything drawn, so no node or label is cut off.
+    root.settle = () => {
+      const taken = [];
+      const hits = (b, inside) => taken.some(o => b.x < o.x + o.width && o.x < b.x + b.width && b.y < o.y + o.height && o.y < b.y + b.height) ||
+        circles.some(c => !(c.big && inside) && (Math.max(b.x, Math.min(c.x, b.x + b.width)) - c.x) ** 2 + (Math.max(b.y, Math.min(c.y, b.y + b.height)) - c.y) ** 2 < c.r * c.r);
+      for (const lb of wanted.sort((a, b) => (b.must ? 1 : 0) - (a.must ? 1 : 0))) {
+        const text = svg('text', {x: lb.x.toFixed(1), 'text-anchor': lb.anchor, class: lb.cls}); text.textContent = lb.text;
+        labelLayer.append(text);
+        const spot = lb.ys.find(y => { text.setAttribute('y', y.toFixed(1)); return !hits(text.getBBox(), lb.inside || lb.cls === 'src-label'); });
+        if (spot === undefined) { text.remove(); continue; }
+        taken.push(text.getBBox());
+      }
+      const b = [edgeLayer, nodeLayer, labelLayer].map(g => g.getBBox()).filter(x => x.width || x.height);
+      const x0 = Math.min(...b.map(x => x.x)), y0 = Math.min(...b.map(x => x.y)), x1 = Math.max(...b.map(x => x.x + x.width)), y1 = Math.max(...b.map(x => x.y + x.height));
+      const pad = 6, bw = Math.max(w * 0.6, x1 - x0 + 2 * pad), bh = Math.max(h * 0.6, y1 - y0 + 2 * pad), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      if (Number.isFinite(cx)) root.setAttribute('viewBox', `${(cx - bw / 2).toFixed(1)} ${(cy - bh / 2).toFixed(1)} ${bw.toFixed(1)} ${bh.toFixed(1)}`);
+    };
+    root.setAttribute('viewBox', `${-w / 2} ${-h / 2} ${w} ${h}`);
     return root;
   }
 
@@ -171,6 +242,10 @@
     [x.source, x.author, day(x.time), `${x.minutes} min`].filter(Boolean).forEach(t => m.append(el('span', t)));
     return m;
   }
+  function signals(x) {  // depth as a bar and trust as a word: two signals, never merged
+    const box = el('span', null, 'sig'); box.append(depthBar(x.depth, x.depth_inputs), el('span', x.trust, 'trust ' + x.trust)); return box;
+  }
+  const placementOf = (clusterId, id) => cluster(clusterId)?.placements.find(r => r.source === id);
   function card(id) {  // the one expanded card: the next source in the plan
     const x = src(id), c = el('article', null, 'card'); c.dataset.source = id;
     const h = el('h3'); h.append(button(x.title, () => openSource(id), 'title-btn'));
@@ -185,22 +260,29 @@
       if (fresh.length > 2) p.append(` and ${fresh.length - 2} more`);
       c.append(p);
     }
+    c.querySelector('.meta').append(signals(x));
     const foot = el('div', null, 'card-foot');
     foot.append(button('Read ▸', () => openSource(id), 'primary'), button('Skim', () => setState(id, 'skimmed')), el('span', gainText(id), 'gain'));
     c.append(foot);
     return c;
   }
-  function row(id, number, role) {
-    const x = src(id), st = stateOf(id), r = el('div', null, `row s-${st}`); r.dataset.source = id;
+  function row(id, number, role, place = null) {  // place: its placement in the block it is listed in
+    const x = src(id), st = stateOf(id), also = place && !place.home, r = el('div', null, `row s-${st}${also ? ' also-here' : ''}`); r.dataset.source = id;
+    const open = () => openSource(id, false, place?.cluster);
     const head = el('div', null, 'row-head');
     const chev = button('▸', () => { const open = r.classList.toggle('open'); chev.textContent = open ? '▾' : '▸'; chev.setAttribute('aria-expanded', String(open)); }, 'chev');
     chev.setAttribute('aria-expanded', 'false'); chev.setAttribute('aria-label', 'Show the gist');
-    head.append(el('span', null, `dot s-${st}`), el('span', number ? `#${number}` : '', 'n'), button(x.title, () => openSource(id), 'title-btn'),
-      el('span', role || x.role, 'role ' + x.role), el('span', gainText(id), 'gain'), chev);
+    const name = el('span', null, 'row-title'); name.append(button(x.title, open, 'title-btn'));
+    if (also) name.append(el('span', `home: ${clusterName(x.cluster)}`, 'home-tag'));
+    const shownRole = place ? place.role : x.role, label = el('span', null, 'role ' + shownRole);
+    if (place) label.append(el('i', null, `mark ${place.home ? 'home' : 'also'} ${shownRole}`));
+    label.append(role || shownRole);
+    head.append(el('span', null, `dot s-${st}`), el('span', number ? `#${number}` : '', 'n'), name,
+      shownRole === 'noise' ? el('span', null, 'sig') : signals(x), label, el('span', gainText(id), 'gain'), chev);
     const body = el('div', null, 'row-body');
     body.append(meta(x), el('p', x.gist || x.hook, 'gist-text'));
     if (x.repost_of) body.append(el('p', `A repost of ${short(src(x.repost_of)?.title || 'another source', 60)}.`, 'small quiet'));
-    const acts = el('div', null, 'card-foot'); acts.append(button('Read ▸', () => openSource(id)));
+    const acts = el('div', null, 'card-foot'); acts.append(button('Read ▸', open));
     acts.append(st === 'unread' ? button('Skim', () => setState(id, 'skimmed')) : button('Unmark', () => setState(id, 'unread')));
     body.append(acts);
     r.append(head, body);
@@ -214,10 +296,12 @@
       const head = el('header'), h = el('h2'), toggle = button(c.title, () => { open ? openBlocks.delete(c.id) : openBlocks.add(c.id); renderBlocks(); if (!open) setWhere({cluster: c.id, source: null, idea: null}); }, 'block-toggle');
       toggle.setAttribute('aria-expanded', String(open)); h.append(toggle);
       const facts = el('p', null, 'block-facts');
-      facts.append(el('span', c.band, 'band ' + c.band), el('span', `${plural(1 + c.perspectives.length + c.noise.length, 'source')} · ${plural(c.ideas, 'Idea')}`));
+      facts.append(el('span', c.band, 'band ' + c.band), el('span', `${plural(c.placements.length, 'source')} · ${plural(c.ideas, 'Idea')}`));
+      if (c.also_here.length) facts.append(el('span', `${c.also_here.length} also here from other clusters`));
       if (c.band === 'adjacent' && c.shares_with_main) facts.append(el('span', `shares ${plural(c.shares_with_main, 'Idea')} with main`));
       head.append(h, facts); sec.append(head);
-      const piece = id => id === next ? card(id) : row(id, number.get(id));
+      // The one expanded card sits in the next source's home; anywhere else it sits it is a row, marked also here.
+      const piece = id => { const place = placementOf(c.id, id); return id === next && place?.home ? card(id) : row(id, number.get(id), null, place); };
       if (c.anchor) sec.append(piece(c.anchor));
       if (open) {
         c.perspectives.forEach(id => sec.append(piece(id)));
@@ -225,7 +309,7 @@
           const key = 'noise:' + c.id;
           sec.append(button(`${plural(c.noise.length, 'noise source')} · ${shown.has(key) ? 'hide' : 'show'}`,
             () => { shown.has(key) ? shown.delete(key) : shown.add(key); renderBlocks(); }, 'link-btn more-line'));
-          if (shown.has(key)) c.noise.forEach(id => sec.append(row(id)));
+          if (shown.has(key)) c.noise.forEach(id => sec.append(row(id, null, null, placementOf(c.id, id))));
         }
       } else if (c.perspectives.length || c.noise.length) {
         sec.append(button(`${[c.perspectives.length && plural(c.perspectives.length, 'perspective'), c.noise.length && plural(c.noise.length, 'noise source')].filter(Boolean).join(' · ')} · open`,
@@ -258,9 +342,13 @@
   }
   function renderMap() {
     renderHead(); renderPlan(); renderBlocks(); renderFar();
-    $('graph').replaceChildren(graph(280, 220));
+    drawGraph();
     const main = s.clusters.find(c => c.band === 'main');
     $('graph-caption').textContent = main ? `${main.title} at the centre. Solid is main, tinted adjacent, an outline far; a line is a shared Idea.` : '';
+  }
+  function drawGraph() {  // the map's graph, the cluster you are in opened into its sources
+    const g = graph(300, 250, {open: where.cluster || s.clusters.find(c => c.band === 'main')?.id});
+    $('graph').replaceChildren(g); g.settle();
   }
   function showBlock(id) {
     openBlocks.add(id); renderBlocks(); setWhere({cluster: id, source: null, idea: null});
@@ -390,7 +478,11 @@
   // --- the depth rail: All > subject > cluster > source > Idea, with counts and position (GET /api/path) ---
   let where = {cluster: null, source: null, idea: null};
   const paths = new Map();
-  function setWhere(change) { where = {...where, ...change}; renderPath(); }
+  function setWhere(change) {
+    const moved = 'cluster' in change && change.cluster !== where.cluster;
+    where = {...where, ...change}; renderPath();
+    if (moved && !current && !$('map-body').hidden) drawGraph();
+  }
   function pathKey() { const q = new URLSearchParams(subjectQuery); for (const [k, v] of Object.entries(where)) if (v) q.set(k, v); return q.toString(); }
   async function renderPath() {
     const key = pathKey();
@@ -565,7 +657,7 @@
       if (!number.has(id)) b.classList.add('detour');
       li.append(b); return li;
     }));
-    $('mini').replaceChildren(graph(200, 150, {labels: false, focus: current}));
+    const mini = graph(200, 150, {labels: false, focus: current}); $('mini').replaceChildren(mini); mini.settle();
     $('strip').replaceChildren(...list.map(id => {
       const b = button('', () => openSource(id), 'strip-dot' + (id === current ? ' here' : ''));
       b.append(el('span', null, `dot s-${stateOf(id)}`)); if (id === current) b.append(el('span', `#${number.get(id) || '·'} ${short(src(id).title, 36)}`));
