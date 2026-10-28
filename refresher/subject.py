@@ -26,6 +26,7 @@ own Ideas put it:
 Pure functions over the replayed store: subject() is fixed for a vault state and cached by the app; plan() and
 context() take what you read.
 """
+import re
 from collections import defaultdict
 from datetime import datetime
 
@@ -33,7 +34,7 @@ from graph import cluster as grouping
 from graph import embed
 from graph.memory import MemoryStore
 from graph.store import AFFILIATION_WORDS
-from refresher import dossier, scoring, summarize
+from refresher import dossier, navigator, summarize
 
 FLOOR = {"qwen": 0.35, "hashed": 0.08}  # cosine under which an Idea is always out of scope, per embedder
 SPAN = {"qwen": 0.2, "hashed": 0.3}  # and the floor is at most this far under the most relevant Idea
@@ -120,52 +121,46 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
         label = max(shared, key=lambda i: (relevance[i], i))
         edges.append({"a": a, "b": b, "count": len(found), "label": label})
 
-    def trust(item_id: str) -> float:
-        author = items[item_id].author_id
-        return store.trust(author) if author else scoring.TRUST_PRIOR
-
-    standalone = {i: sum(weight.get(x, 0.0) for x in ideas_of[i]) for i in items}
-    sources_in: dict[str, set[str]] = defaultdict(set)
+    # The Thread Navigator's signals (refresher/navigator.py): depth, trust from the people scoring, stance, a role
+    # in every cluster a source has Ideas in, one home among them, and typed links between sources.
+    reposts = {i for i, item in items.items() if item.duplicate_of in items}
+    when = {i: items[i].source.event_time for i in items}
+    holders: dict[str, set[str]] = defaultdict(set)
     for item_id, held in ideas_of.items():
         for i in held:
-            sources_in[cluster_of[i]].add(item_id)
-    home = {}
-    for item_id in items:
-        held: dict[str, float] = defaultdict(float)
-        for i in ideas_of[item_id]:
-            alone = 0.5 if sources_in[cluster_of[i]] == {item_id} else 1.0
-            held[cluster_of[i]] += alone + 0.001 * weight.get(i, 0.0)  # how many Ideas; ties by relevance here
-        home[item_id] = max(held, key=lambda c: (held[c], cluster_rel[c], c)) if held else None
-    reposts = {i for i, item in items.items() if item.duplicate_of in items}
-    for i in reposts:  # a repost lives with its original
-        home[i] = home[items[i].duplicate_of] or home[i]
-    when = {i: items[i].source.event_time for i in items}
+            holders[i].add(item_id)
+    close = navigator.near_pairs(vectors, holders, min(near_dup, navigator.NEAR_DUPLICATE[family]))
+    same = {p for p, cos in close.items() if cos >= navigator.NEAR_DUPLICATE[family]}
+    shared_pairs = {p for p, cos in close.items() if cos >= near_dup}
+    deep = navigator.depth(store, items, ideas_of, claims, reposts)
+    trusted = navigator.trust(store, items, at, sorted(weight) or scope.ideas, scope.title)
+    stance = navigator.stances(store, items, claims, ideas_of, same, when)
+    first_passage = {}
+    for c in claims:
+        if c.idea_id:
+            for span in c.claim.spans:
+                key = (c.item_id, c.idea_id)
+                if key not in first_passage or span.start_char < first_passage[key][0]:
+                    first_passage[key] = [span.start_char, span.end_char]
+    placed, home = navigator.placements(cluster_of, ideas_of, weight, relevance, stance, deep, trusted, when, reposts,
+                                        {i: items[i].duplicate_of for i in reposts}, first_passage)
+    role = {i: next(r["role"] for r in placed[home[i]] if r["source"] == i) if home.get(i) else "noise" for i in items}
+    home = {i: home.get(i) for i in items}
     homed = {cid for cid in home.values() if cid}
     mass = {cid: sum(weight.get(i, 0.0) for i in members[cid]) for cid in members}
     main = max((cid for cid in homed if mass[cid] > 0), key=lambda cid: (mass[cid], cluster_rel[cid], cid), default=None)
     with_main = {e["b"] if e["a"] == main else e["a"]: e for e in edges if main in (e["a"], e["b"])}
     band = {cid: "main" if cid == main else "adjacent" if cluster_rel[cid] > 0 and (cid in with_main
             or cluster_rel[cid] >= ADJACENT) else "far" for cid in members}
-    role, anchor = {}, {}
-    for cid in members:
-        own = [i for i in items if home[i] == cid]
-        if not own:
-            continue
-        first = max(own, key=lambda i: (i not in reposts, standalone[i], trust(i), when[i], i))
-        anchor[cid] = first
-        for i in own:
-            if i == first:
-                role[i] = "anchor"
-            elif i in reposts:
-                role[i] = "noise"  # a repost adds nothing its original did not
-            else:
-                role[i] = "perspective" if (ideas_of[i] - ideas_of[first]) & set(weight) else "noise"
-    for i in items:
-        role.setdefault(i, "noise")
-    if not weight:  # nothing in scope: every source is far noise
-        role = {i: "noise" for i in items}
+    standalone = {i: sum(weight.get(x, 0.0) for x in ideas_of[i]) for i in items}
 
     summaries = getattr(store, "summaries", {})
+    topic_ideas = {t.topic_id: t.ideas | t.attached for t in store.topics()}
+    terms = sorted(set(re.findall(r"[^\W\d_]{3,}", scope.title.casefold()))) if scope.kind == "query" else []
+    statements: dict[str, list[str]] = defaultdict(list)
+    for c in claims:
+        statements[c.item_id].append(c.claim.statement)
+    words_of = lambda i: set(re.findall(r"[^\W\d_]+", " ".join([items[i].text, *statements[i]]).casefold()))
     sources = {}
     for item_id, item in items.items():
         lines = dossier._lines(store, item)
@@ -180,7 +175,17 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
             "hook": hook, "gist": gist, "summary": kind, "cluster": home[item_id], "role": role[item_id],
             "repost_of": item.duplicate_of if item.duplicate_of in items else None,
             "ideas": sorted(ideas_of[item_id] & set(weight), key=lambda i: -relevance[i]),
-            "other_ideas": len(ideas_of[item_id] - set(weight)), "trust": round(trust(item_id), 3)}
+            "other_ideas": len(ideas_of[item_id] - set(weight)),
+            "depth": deep[item_id]["depth"], "depth_inputs": deep[item_id]["inputs"], **trusted[item_id],
+            "trust_rank": navigator.TRUST_RANK[trusted[item_id]["trust"]],
+            "type": getattr(store, "extras", {}).get(item_id, {}).get("kind") or item.source.channel,
+            "places": sorted(({"cluster": r["cluster"], "role": r["role"], "home": r["home"]}
+                              for rows in placed.values() for r in rows if r["source"] == item_id),
+                             key=lambda p: (not p["home"], navigator.ROLE_RANK[p["role"]], p["cluster"])),
+            "all_ideas": sorted(ideas_of[item_id], key=lambda i: (first_passage.get((item_id, i), [1e9])[0], i)),
+            "topics": sorted((t for t in topic_ideas if topic_ideas[t] & ideas_of[item_id]),
+                             key=lambda t: (-len(topic_ideas[t] & ideas_of[item_id]), t)),
+            "matched_terms": [t for t in terms if any(_stem(t) in w for w in words_of(item_id))]}
 
     # Sources that share an Idea (the same one, or a near-duplicate), with the shared Idea most relevant here.
     twins: dict[str, set[str]] = defaultdict(set)
@@ -210,22 +215,32 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
     titled = {cid: clusters[cid].title if cid in clusters else store.idea(next(iter(members[cid]))).title for cid in members}
     cluster_rows = []
     for cid in order:
-        own = sorted((i for i in items if home[i] == cid), key=lambda i: (-standalone[i], i))
-        if not own:
+        rows = placed.get(cid, [])
+        if not rows:
             continue
+        by_role = lambda name: [r["source"] for r in rows if r["role"] == name]
         cluster_rows.append({
             "id": cid, "title": titled[cid], "band": band[cid], "relevance": round(cluster_rel[cid], 3),
-            "ideas": len(members[cid]), "in_scope": len(members[cid] & set(weight)), "anchor": anchor.get(cid),
-            "perspectives": [i for i in own if role[i] == "perspective"], "noise": [i for i in own if role[i] == "noise"],
-            "shares_with_main": with_main[cid]["count"] if cid in with_main else 0})
+            "ideas": len(members[cid]), "in_scope": len(members[cid] & set(weight)),
+            "anchor": next(iter(by_role("anchor")), None), "perspectives": by_role("perspective"), "noise": by_role("noise"),
+            "also_here": [r["source"] for r in rows if not r["home"]],
+            "placements": rows, "shares_with_main": with_main[cid]["count"] if cid in with_main else 0})
     shown = {c["id"] for c in cluster_rows}
+    title_of = lambda i: store.idea(i).title
     return {"scope": {"kind": scope.kind, "id": scope.key, "title": scope.title}, "at": at.isoformat(),
             "floor": floor, "clusters": cluster_rows,
             "edges": [e for e in edges if e["a"] in shown and e["b"] in shown],
+            "links": navigator.links(store, items, claims, ideas_of, cluster_of, shared_pairs, when, title_of),
             "sources": sources, "no_ideas": sorted(i for i in items if not ideas_of[i]),
             "ideas": {i: {"title": store.idea(i).title, "relevance": round(relevance[i], 3), "cluster": cluster_of[i],
                           "in_scope": i in weight} for i in idea_ids},
-            "weights": {i: round(w, 4) for i, w in weight.items()}}
+            "weights": {i: round(w, 4) for i, w in weight.items()},
+            "topics": [{"id": t.topic_id, "title": t.title} for t in sorted(store.topics(), key=lambda t: t.topic_id)]}
+
+
+def _stem(word: str) -> str:
+    """Enough of a query word to find its inflections ("hallucination" in "hallucinations")."""
+    return word[:max(4, len(word) - 3)]
 
 
 def plan(s: dict, marks: dict[str, str]) -> dict:
@@ -244,7 +259,8 @@ def plan(s: dict, marks: dict[str, str]) -> dict:
     order, share, seen, reached = [], {}, dict(cov), now
     while left:
         gains = {i: sum(weight[x] * (1 - seen.get(x, 0.0)) for x in s["sources"][i]["ideas"]) for i in left}
-        best = max(gains, key=lambda i: (gains[i], s["sources"][i]["trust"], s["sources"][i]["time"], i))
+        best = max(gains, key=lambda i: (gains[i], s["sources"][i]["trust_rank"], s["sources"][i]["depth"],
+                                         s["sources"][i]["time"], i))
         if gains[best] <= 1e-9:
             break
         order.append(best)
@@ -323,5 +339,150 @@ def context(store: MemoryStore, s: dict, item_id: str, marks: dict[str, str]) ->
     orgs.sort(key=lambda o: (-o["elsewhere"], o["name"]))
     connected = [{"source": x["source"], "idea": x["idea"], "idea_title": s["ideas"][x["idea"]]["title"], "count": x["count"],
                   "same_cluster": s["sources"][x["source"]]["cluster"] == src["cluster"]} for x in src["shares"]]
+    placed = {r["cluster"]: r for c in s["clusters"] for r in c["placements"] if r["source"] == item_id}
+    for i in ideas:
+        here = placed.get(i["cluster"])
+        i.update(role=here["role"] if here else None, stance=here["stance"] if here else None)
+    links, retold = _links(s, item_id)
     return {**doc, "gist": src["gist"], "hook": src["hook"], "summary": src["summary"], "cluster": src["cluster"],
-            "role": src["role"], "ideas": ideas, "people": people, "orgs": orgs, "connected": connected}
+            "role": src["role"], "ideas": ideas, "people": people, "orgs": orgs, "connected": connected,
+            "placements": list(placed.values()), "links": links, "retold_by": retold}
+
+
+def _links(s: dict, item_id: str) -> tuple[list[dict], list[str]]:
+    """This source's typed links, seen from here: each other source once, with the type, a reason from the data,
+    which way it points and whether it goes deeper. Retellings of this source fold into retold_by, and a retelling
+    of another linked source folds into that source's link."""
+    src = s["sources"][item_id]
+    original = lambda i: s["sources"][i]["repost_of"] or i
+    retold = sorted(i for i, x in s["sources"].items() if x["repost_of"] == item_id)
+    out: dict[str, dict] = {}
+    for link in s["links"]:
+        if item_id not in (link["from"], link["to"]):
+            continue
+        other = link["to"] if link["from"] == item_id else link["from"]
+        if other in retold:
+            continue
+        shown = original(other) if original(other) != item_id and link["type"] != "retells" else other
+        row = {"source": shown, "type": link["type"], "word": link["word"], "label": link["label"],
+               "direction": "earlier" if link["from"] == item_id else "later", "also": link["also"],
+               "deeper": s["sources"][shown]["depth"] > src["depth"] or s["sources"][shown]["trust_rank"] > src["trust_rank"],
+               "retold": sorted(i for i, x in s["sources"].items() if x["repost_of"] == shown and i != item_id)}
+        best = out.get(shown)
+        if best is None or navigator.LINK_TYPES.index(row["type"]) < navigator.LINK_TYPES.index(best["type"]):
+            out[shown] = row
+    rows = sorted(out.values(), key=lambda r: (navigator.LINK_TYPES.index(r["type"]), r["direction"], r["source"]))
+    return rows, retold
+
+
+GROUPS = ("cluster_home", "cluster_all", "role", "trust", "type", "topic")
+ROLES = ("anchor", "perspective", "noise")
+
+
+def results(s: dict, p: dict, group_by: str = "cluster_home", topic: str | None = None,
+            only_matches: bool = True) -> dict:
+    """Every source of the subject as one list, sliced by group_by (GET /api/subject/results). A source matches when it
+    holds an Idea in scope. Rows sort by role, then their place in coverage order (the plan first), then trust, depth
+    and freshness. Grouped by "cluster_all", a source is a row in every cluster it has Ideas in."""
+    if group_by not in GROUPS:
+        raise ValueError(f"group_by is one of {', '.join(GROUPS)}")
+    sources = s["sources"]
+    if topic and topic not in {t["id"] for t in s["topics"]}:
+        raise KeyError(topic)
+    picked = [i for i in sources if not topic or topic in sources[i]["topics"]]
+    match = {i: bool(sources[i]["ideas"]) for i in picked}
+    if only_matches:
+        picked = [i for i in picked if match[i]]
+    plan_at = {x["source"]: n for n, x in enumerate(p["plan"])}
+    coverage_at = {i: n for n, i in enumerate(sorted(sources, key=lambda i: (-p["share"].get(i, 0.0), i)))}
+    titles = {c["id"]: c["title"] for c in s["clusters"]}
+    cluster_order = {c["id"]: n for n, c in enumerate(s["clusters"])}
+    topic_titles = {t["id"]: t["title"] for t in s["topics"]}
+    placement = {(r["source"], c["id"]): r for c in s["clusters"] for r in c["placements"]}
+
+    def rows_of(i: str) -> list[tuple[str, str, dict | None]]:
+        """(group key, group title, the placement it stands for) for each row this source makes."""
+        x = sources[i]
+        home = (x["cluster"], titles.get(x["cluster"], "No Ideas extracted")) if x["cluster"] else ("none", "No Ideas extracted")
+        if group_by == "cluster_all":
+            return [(pl["cluster"], titles.get(pl["cluster"], pl["cluster"]), placement.get((i, pl["cluster"])))
+                    for pl in x["places"]] or [(home[0], home[1], None)]
+        here = placement.get((i, x["cluster"])) if x["cluster"] else None
+        key = {"cluster_home": home,
+               "role": (x["role"], x["role"]), "trust": (x["trust"], x["trust"]), "type": (x["type"], x["type"]),
+               "topic": (x["topics"][0], topic_titles[x["topics"][0]]) if x["topics"] else ("none", "In no topic")}[group_by]
+        return [(key[0], key[1], here)]
+
+    rows = []
+    for i in picked:
+        x = sources[i]
+        for key, title, pl in rows_of(i):
+            role = pl["role"] if pl else x["role"]
+            rows.append({"source": i, "group": key, "group_title": title, "match": match[i], "role": role,
+                         "placement": {k: pl[k] for k in ("cluster", "role", "stance", "home", "new_idea_count", "passage")} if pl else None,
+                         "depth": x["depth"], "depth_inputs": x["depth_inputs"], "trust": x["trust"], "type": x["type"],
+                         "matched_terms": x["matched_terms"], "matched_ideas": len(x["ideas"]), "places": x["places"],
+                         "plan": plan_at[i] + 1 if i in plan_at else None})
+    group_rank = {"cluster_home": lambda k: cluster_order.get(k, 999), "cluster_all": lambda k: cluster_order.get(k, 999),
+                  "role": ROLES.index, "trust": lambda k: -navigator.TRUST_RANK[k], "type": lambda k: 0,
+                  "topic": lambda k: 999 if k == "none" else 0}[group_by]
+    size: dict[str, int] = defaultdict(int)
+    for r in rows:
+        size[r["group"]] += 1
+    rows.sort(key=lambda r: (group_rank(r["group"]), -size[r["group"]] if group_by in ("type", "topic") else 0, r["group"],
+                             not r["match"], ROLES.index(r["role"]), plan_at.get(r["source"], len(plan_at)),
+                             coverage_at[r["source"]], -sources[r["source"]]["trust_rank"],
+                             -sources[r["source"]]["depth"], -datetime.fromisoformat(sources[r["source"]]["time"]).timestamp(),
+                             r["source"]))
+    slices = []
+    for r in rows:
+        if not slices or slices[-1]["group"] != r["group"]:
+            slices.append({"group": r["group"], "title": r["group_title"], "count": 0, "roles": {k: 0 for k in ROLES}})
+        slices[-1]["count"] += 1
+        slices[-1]["roles"][r["role"]] += 1
+    head = {"matching": sum(match.values()), "total": len(match), "rows": len(rows),
+            "sources": len({r["source"] for r in rows}), "subject": s["scope"]["title"], "kind": s["scope"]["kind"]}
+    if group_by == "cluster_all":
+        head["placements"] = len(rows)
+    return {"header": head, "group_by": group_by, "topic": topic, "only_matches": only_matches,
+            "clusters": [{"id": c["id"], "title": c["title"], "band": c["band"]} for c in s["clusters"]],
+            "slices": slices, "rows": rows}
+
+
+def path(s: dict, cluster: str | None = None, source: str | None = None, idea: str | None = None) -> list[dict]:
+    """The depth rail: All > subject > cluster > source > Idea, each level with its count and its position among its
+    siblings ("3 of 8"). A source without a cluster is placed in its home; an Idea in the source's text order."""
+    topics = s["topics"]
+    scope = s["scope"]
+    levels = [{"level": "all", "id": None, "name": "All topics", "count": len(topics), "noun": "topic",
+               "position": None, "of": None}]
+    at = next((n for n, t in enumerate(topics) if t["id"] == scope["id"]), None)
+    matching = sum(bool(x["ideas"]) for x in s["sources"].values())
+    levels.append({"level": "subject", "id": scope["id"], "name": scope["title"], "kind": scope["kind"],
+                   "count": matching, "noun": "source", "position": at + 1 if at is not None else None,
+                   "of": len(topics) if at is not None else None})
+    if source and source not in s["sources"]:
+        raise KeyError(source)
+    cluster = cluster or (s["sources"][source]["cluster"] if source else None)
+    clusters = s["clusters"]
+    c = next((c for c in clusters if c["id"] == cluster), None)
+    if cluster and c is None:
+        raise KeyError(cluster)
+    if c:
+        levels.append({"level": "cluster", "id": c["id"], "name": c["title"], "band": c["band"],
+                       "count": len(c["placements"]), "noun": "source", "position": clusters.index(c) + 1, "of": len(clusters)})
+    if source:
+        x = s["sources"][source]
+        siblings = [r["source"] for r in c["placements"]] if c else list(s["sources"])
+        here = next((r for r in c["placements"] if r["source"] == source), None) if c else None
+        ideas = (sorted(here["ideas"], key=x["all_ideas"].index) if here else x["all_ideas"])
+        levels.append({"level": "source", "id": source, "name": x["title"], "count": len(ideas), "noun": "Idea",
+                       "role": here["role"] if here else x["role"], "home": here["home"] if here else None,
+                       "position": siblings.index(source) + 1 if source in siblings else None, "of": len(siblings)})
+        if idea:
+            if idea not in x["all_ideas"]:
+                raise KeyError(idea)
+            order = ideas if idea in ideas else x["all_ideas"]
+            levels.append({"level": "idea", "id": idea, "name": s["ideas"][idea]["title"], "count": None, "noun": None,
+                           "position": order.index(idea) + 1, "of": len(order)})
+    return levels

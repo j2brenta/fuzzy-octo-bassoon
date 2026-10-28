@@ -313,6 +313,22 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 if s is None:
                     return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
                 return self._json(HTTPStatus.OK, {**s, **subject.plan(s, state.marks())})
+            if path in ("/api/subject/results", "/api/path"):
+                s = state.subject(args.get("id") or None, args.get("q") or None)
+                if s is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
+                try:
+                    if path == "/api/path":
+                        levels = subject.path(s, args.get("cluster") or None, args.get("source") or None,
+                                              args.get("idea") or None)
+                        return self._json(HTTPStatus.OK, {"levels": levels})
+                    return self._json(HTTPStatus.OK, subject.results(
+                        s, subject.plan(s, state.marks()), args.get("group_by") or "cluster_home",
+                        args.get("scope") or None, args.get("only_matches", "1") not in ("0", "false")))
+                except ValueError as error:
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
+                except KeyError:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "No such cluster, source, Idea or topic here."})
             if (match := SOURCE.match(path)) and match[2] == "context":
                 result = state.context(args.get("id") or None, args.get("q") or None, match[1])
                 return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
