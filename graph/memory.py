@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
-from graph.names import same_person as _same_person
+from graph.names import display_name, same_person as _same_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
 from graph.store import (Affiliation, ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode,
                          Placement, ReviewReport, SourceNode, TopicNode)
@@ -40,6 +40,8 @@ def cluster_fingerprint(ideas) -> str:
 
 
 def person_id(name: str) -> str:
+    # "Last; First" is the same person as "First Last".
+    name = display_name(name)
     # Accents fold to ASCII; a name with no Latin letters (Cyrillic) keeps its own words, else all such names share "person:".
     folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     return "person:" + "-".join(WORD.findall(folded.casefold()) or WORD.findall(name.casefold()))
@@ -637,7 +639,7 @@ class MemoryStore:
 
     def _person(self, name: str) -> PersonNode:
         pid = self._aliases.get(person_id(name), person_id(name))
-        return self._people.setdefault(pid, PersonNode(pid, name))
+        return self._people.setdefault(pid, PersonNode(pid, display_name(name)))
 
     def _posts_of(self, p: PersonNode) -> set[str]:
         """Items they wrote, are named in, or that state facts about them."""

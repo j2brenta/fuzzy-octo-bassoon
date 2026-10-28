@@ -9,7 +9,8 @@ from engine.entities import (EntityError, extract_entities, review_entities, sup
 from engine.llm import ModelReply
 from engine.parse.article import citation_authors
 from graph.memory import MemoryStore
-from graph.names import same_person
+from graph.memory import person_id
+from graph.names import display_name, same_person
 from refresher.graphview import map_data
 from refresher.schemas import Extraction
 from store.raw import capture_text
@@ -156,3 +157,14 @@ def test_the_graph_lists_organizations_apart_from_people():
     post_row = next(i for i in data["items"] if i["id"] == "post")
     assert {m["id"]: m["kind"] for m in post_row["mentions"]} == {"org:neurips": "organization",
                                                                   "person:костя-крестников": "person"}
+
+
+@pytest.mark.parametrize("cited, shown", [
+    ("Krestnikov; Konstantin", "Konstantin Krestnikov"), ("van der Berg, Jan", "Jan van der Berg"), ("Gal, Y.", "Y. Gal"),
+    ("Ada Lovelace; Alan Turing", "Ada Lovelace; Alan Turing"), ("Ivan Petrov, CEO", "Ivan Petrov, CEO"),
+    ("мама, папа", "мама, папа"),
+])
+def test_cited_names_read_first_name_first_and_share_an_id(cited, shown):
+    assert display_name(cited) == shown
+    if shown != cited:
+        assert person_id(cited) == person_id(shown)

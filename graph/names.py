@@ -1,6 +1,13 @@
 """Whether two written names can be one person: across Cyrillic and Latin script, Russian short forms, initials,
 and "Last First" order. Only proposes; the user decides a merge (graph.memory review)."""
+import re
+
 from graph.relate import words
+
+# "Krestnikov; Konstantin", "van der Berg, Jan", "Gal, Y.": one surname (with lowercase particles), then one or two
+# given names. Citation metadata and trafilatura write a name this way; people read "First Last".
+_NAME_WORD = r"[^\W\d_][\w.'’-]*"
+_CITED = re.compile(rf"^((?:{_NAME_WORD}\s+)*{_NAME_WORD})\s*[;,]\s*({_NAME_WORD}(?:\s+{_NAME_WORD})?)$")
 
 _LATIN = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
                   ["a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t",
@@ -23,6 +30,19 @@ SHORT_FORMS = {
     "серёжа": ("сергей",), "сережа": ("сергей",), "света": ("светлана",), "стас": ("станислав",),
     "таня": ("татьяна",), "толя": ("анатолий",), "федя": ("фёдор", "федор"), "юля": ("юлия",), "юра": ("юрий",),
 }
+
+
+def display_name(name: str) -> str:
+    """A person's name as people write it: "Last; First" and "Last, First" become "First Last"; anything else is
+    kept, trimmed. Two names in a list ("Ada Lovelace; Alan Turing") are not one cited name and stay as they are."""
+    cited = _CITED.match(name.strip())
+    if not cited:
+        return name.strip()
+    *particles, surname = cited.group(1).split()
+    given = cited.group(2).split()
+    if not surname[0].isupper() or not all(w[0].isupper() for w in given) or not all(w.islower() for w in particles):
+        return name.strip()
+    return f"{cited.group(2)} {cited.group(1)}"
 
 
 def latin(word: str) -> str:
