@@ -74,3 +74,17 @@
   .views button { flex: 1; text-align: center; }
   .c-title { min-width: 180px; }
 }
+
+/* --- the depth rail: where you are, under the app bar in every view --- */
+.depth-rail { padding: 8px var(--rm-gutter); border-bottom: 1px solid var(--r-line); background: var(--r-paper); }
+.depth-rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; font-size: 13px; }
+.depth-rail li { display: flex; align-items: center; min-width: 0; }
+.depth-rail li + li::before { content: "›"; color: var(--r-muted); margin: 0 6px 0 2px; }
+.depth-rail .lv { all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; padding: 3px 8px; border-radius: 6px; min-width: 0; }
+.depth-rail .lv:hover { background: var(--r-soft); }
+.depth-rail .lv:focus-visible { outline: 2px solid var(--r-brand); }
+.depth-rail .lv[aria-current] { background: var(--r-ink); color: var(--r-paper); }
+.depth-rail .lv[aria-current] small { color: #d8d4c8; }
+.depth-rail .lv-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34ch; font-weight: 600; }
+.depth-rail small { font-size: 11px; color: var(--r-muted); white-space: nowrap; }
+@media (max-width: 767px) { .depth-rail .lv-name { max-width: 22ch; } .depth-rail small { display: none; } .depth-rail .lv[aria-current] small { display: inline; } }

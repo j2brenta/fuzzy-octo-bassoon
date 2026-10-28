@@ -11,6 +11,8 @@
 <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
 <div class="notice" id="notice" role="status">Gathering what you know…</div>
+<!-- The depth rail: where you are, All > subject > cluster > source > Idea, each with its count and position -->
+<nav class="depth-rail" id="path" aria-label="Where you are" hidden><ol id="path-list"></ol></nav>
 
 <!-- Map mode: header, orientation (cluster graph beside the reading plan), cluster blocks -->
 <div id="map" hidden>

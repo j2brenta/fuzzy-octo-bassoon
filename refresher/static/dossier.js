@@ -211,7 +211,7 @@
     const box = $('blocks'); box.replaceChildren();
     blocks.forEach((c, k) => {
       const open = openBlocks.has(c.id), sec = el('section', null, `block ${c.band}${open ? ' open' : ''}`); sec.id = 'block-' + c.id;
-      const head = el('header'), h = el('h2'), toggle = button(c.title, () => { open ? openBlocks.delete(c.id) : openBlocks.add(c.id); renderBlocks(); }, 'block-toggle');
+      const head = el('header'), h = el('h2'), toggle = button(c.title, () => { open ? openBlocks.delete(c.id) : openBlocks.add(c.id); renderBlocks(); if (!open) setWhere({cluster: c.id, source: null, idea: null}); }, 'block-toggle');
       toggle.setAttribute('aria-expanded', String(open)); h.append(toggle);
       const facts = el('p', null, 'block-facts');
       facts.append(el('span', c.band, 'band ' + c.band), el('span', `${plural(1 + c.perspectives.length + c.noise.length, 'source')} · ${plural(c.ideas, 'Idea')}`));
@@ -263,7 +263,7 @@
     $('graph-caption').textContent = main ? `${main.title} at the centre. Solid is main, tinted adjacent, an outline far; a line is a shared Idea.` : '';
   }
   function showBlock(id) {
-    openBlocks.add(id); renderBlocks();
+    openBlocks.add(id); renderBlocks(); setWhere({cluster: id, source: null, idea: null});
     const b = $('block-' + id); if (b) { b.scrollIntoView({behavior: smooth(), block: 'start'}); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
   }
 
@@ -364,15 +364,16 @@
   function setView(view) {
     const url = new URL(location.href);
     if (view === 'list') url.searchParams.set('view', 'list'); else url.searchParams.delete('view');
-    url.searchParams.delete('read'); url.hash = '';
+    url.searchParams.delete('read'); url.searchParams.delete('in'); url.hash = '';
     history.pushState({}, '', url); route();
   }
   function focusPlacement(clusterId, source) {  // a mark in a cluster column: the map, that cluster open, that source picked
     selected = source; setView('map');
     const c = cluster(clusterId); if (!c) return;
-    if (c.noise.includes(source)) shown.add('noise:' + clusterId);
+    if (source && c.noise.includes(source)) shown.add('noise:' + clusterId);
     requestAnimationFrame(() => {  // after the map restored its scroll position
-      showBlock(clusterId);
+      showBlock(clusterId); setWhere({cluster: clusterId, source, idea: null});
+      if (!source) return;
       const row = $('block-' + clusterId)?.querySelector(`[data-source="${CSS.escape(source)}"]`);
       if (!row) return;
       document.querySelectorAll('.picked').forEach(n => n.classList.remove('picked'));
@@ -386,11 +387,45 @@
   $('view-map').addEventListener('click', () => setView('map'));
   $('view-list').addEventListener('click', () => setView('list'));
 
+  // --- the depth rail: All > subject > cluster > source > Idea, with counts and position (GET /api/path) ---
+  let where = {cluster: null, source: null, idea: null};
+  const paths = new Map();
+  function setWhere(change) { where = {...where, ...change}; renderPath(); }
+  function pathKey() { const q = new URLSearchParams(subjectQuery); for (const [k, v] of Object.entries(where)) if (v) q.set(k, v); return q.toString(); }
+  async function renderPath() {
+    const key = pathKey();
+    if (!paths.has(key)) {
+      const r = await fetch('/api/path?' + key), body = await r.json().catch(() => ({}));
+      if (!r.ok) return;
+      paths.set(key, body.levels);
+    }
+    if (key !== pathKey()) return;  // the selection moved on while this loaded
+    const levels = paths.get(key), last = levels.length - 1;
+    $('path-list').replaceChildren(...levels.map((lv, n) => {
+      const li = el('li', null, 'lv-' + lv.level), name = lv.level === 'subject' && lv.kind === 'query' ? `“${lv.name}”`
+        : lv.level === 'idea' ? `Idea §${lv.position}` : lv.level === 'all' ? lv.name : short(lv.name, 44);
+      const facts = [lv.position && lv.level !== 'idea' ? `${lv.position} of ${lv.of}` : lv.level === 'idea' ? `of ${lv.of}` : null,
+        lv.count != null && lv.noun ? plural(lv.count, lv.noun) : null].filter(Boolean).join(' · ');
+      const go = {all: () => { location.href = '/'; }, subject: () => { selected = null; setView('map'); requestAnimationFrame(() => window.scrollTo({top: 0})); },
+        cluster: () => focusPlacement(lv.id, null), source: () => openSource(lv.id, false, where.cluster),
+        idea: () => showIdea(lv.id)}[lv.level];
+      const b = button('', go, 'lv'); b.title = lv.name;
+      b.append(el('span', name, 'lv-name')); if (facts) b.append(el('small', facts));
+      if (n === last) b.setAttribute('aria-current', 'location');
+      li.append(b); return li;
+    }));
+    $('path').hidden = false;
+  }
+  function showIdea(ideaId) {  // the passage behind an Idea of the source being read
+    const m = [...document.querySelectorAll('#r-text mark.idea-mark')].find(n => n.dataset.ideas.split(' ').includes(ideaId));
+    if (m) { m.scrollIntoView({block: 'center', behavior: smooth()}); m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); }
+  }
+
   // --- reading mode ---
   function extendTrail() {  // the path you walk: what you read, then the plan; detours sit after the source they left
     for (const id of planIds()) if (!trail.includes(id)) trail.push(id);
   }
-  function openSource(id, detour = false) {
+  function openSource(id, detour = false, inCluster = null) {  // inCluster: the cluster it was opened from
     if (!s.sources[id]) return;
     selected = id;
     if (!current) mapScroll = window.scrollY;
@@ -401,11 +436,12 @@
     }
     extendTrail();
     const url = new URL(location.href); url.searchParams.set('read', id); url.hash = '';
+    if (inCluster && inCluster !== src(id).cluster) url.searchParams.set('in', inCluster); else url.searchParams.delete('in');
     if (current) history.replaceState({read: id}, '', url); else history.pushState({read: id}, '', url);
     showReading(id);
   }
   function closeReading() {
-    const url = new URL(location.href); url.searchParams.delete('read');
+    const url = new URL(location.href); url.searchParams.delete('read'); url.searchParams.delete('in');
     history.pushState({}, '', url); route();
   }
   function route() {
@@ -422,7 +458,7 @@
     $('list').hidden = !list; $('map-body').hidden = list;
     $('view-map').setAttribute('aria-pressed', String(!list)); $('view-list').setAttribute('aria-pressed', String(list));
     renderHead();
-    if (list) renderList(); else renderMap();
+    if (list) { renderList(); setWhere({cluster: null, source: selected, idea: null}); } else { renderMap(); setWhere({source: null, idea: null}); }
     requestAnimationFrame(() => window.scrollTo({top: mapScroll}));
   }
   async function showReading(id) {
@@ -435,6 +471,8 @@
     $('r-gist').open = !s.marks[id];
     $('r-text').replaceChildren(el('p', 'Opening the text…', 'quiet')); $('ctx-body').replaceChildren(); $('r-tools').replaceChildren();
     renderRail(); renderBar(); window.scrollTo({top: 0});
+    const from = new URLSearchParams(location.search).get('in');
+    setWhere({cluster: from && cluster(from) ? from : x.cluster, source: id, idea: null});
     try {
       await loadContext(id);
       if (current !== id) return;
@@ -480,7 +518,7 @@
       const ids = [...new Set(hits.map(x => x.idea))];
       const m = el('mark', null, 'idea-mark' + (ids.some(i => ideaOf.get(i).new && ideaOf.get(i).in_scope) ? ' new' : ''));
       write(m, str); m.dataset.ideas = ids.join(' '); m.tabIndex = 0; m.setAttribute('role', 'button');
-      const open = e => popover(m, ids.map(i => ideaOf.get(i)), e);
+      const open = e => { popover(m, ids.map(i => ideaOf.get(i)), e); setWhere({idea: ids[0]}); };
       m.addEventListener('click', open); m.addEventListener('keydown', e => e.key === 'Enter' && open(e));
       box.append(m);
     };
@@ -615,10 +653,7 @@
     for (const [label, list] of [['New to you', scoped.filter(i => i.new)], ['Already covered', scoped.filter(i => !i.new)], ['Outside this subject', ctx.ideas.filter(i => !i.in_scope)]]) {
       if (!list.length) continue;
       ideas.append(el('p', label, 'ctx-label'));
-      for (const i of list) ideas.append(button(i.title, () => {
-        const m = [...document.querySelectorAll('#r-text mark.idea-mark')].find(n => n.dataset.ideas.split(' ').includes(i.id));
-        if (m) { m.scrollIntoView({block: 'center', behavior: smooth()}); m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); }
-      }, 'ctx-idea'));
+      for (const i of list) ideas.append(button(i.title, () => { showIdea(i.id); setWhere({idea: i.id}); }, 'ctx-idea'));
     }
     body.append(section('ideas', 'Ideas in this source', ctx.ideas.length, scoped.filter(i => i.new).map(i => i.title), ideas));
     body.append(link('Check in Atlas ↗', '/atlas/?item=' + encodeURIComponent(ctx.id), 'atlas-link'));
