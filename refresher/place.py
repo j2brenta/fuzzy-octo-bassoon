@@ -159,7 +159,7 @@ def reply_text(placement: Placement, store: MemoryStore, note: str | None = None
     def name(node_id: str) -> str:
         if node_id.startswith("person:"):
             return store.person(node_id).name
-        return store.organizations().get(node_id, node_id)
+        return store.organization(node_id).name if node_id.startswith("org:") else node_id
 
     lines = []
     if p.status != "placed":

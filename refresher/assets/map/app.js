@@ -18,7 +18,8 @@
   const stories = new Map(data.stories.map(x => [x.id, x]));
   const clusters = new Map((data.clusters || []).map(x => [x.id, x]));
   const links = data.links || [];
-  const people = new Map((data.people || []).map(x => [x.id, x]));
+  // Profiles: people and organizations, told apart by kind; an organization also has a type.
+  const people = new Map([...(data.people || []), ...(data.organizations || [])].map(x => [x.id, x]));
   const kinds = {merge_ideas: 'Merge two Ideas', topic: 'New topic', merge_people: 'Same person',
     relation: 'Confirm a relation'};
   const basisWords = {auto: 'automatic', accepted: 'accepted by you', proposal: 'proposed, waiting for you'};
@@ -365,14 +366,21 @@
     clusters.has(id) ? plural(clusters.get(id).ideas.length, 'Idea') : null);
   const topicPill = id => pill(topicTitle(id), () => selectGroup(id), 'topic');
   const personPill = (id, sub) => pill(people.get(id)?.name || id, () => selectPerson(id), 'person', sub);
-  function peopleOf(itemIds) {  // person -> what they are to these posts: wrote, named, or told about
+  const orgType = o => o.type ? o.type.replace('_', ' ') : 'organization';
+  function peopleOf(itemIds, kind = 'person') {  // person (or organization) -> what they are to these posts: wrote, named, or told about
     const roles = new Map(), names = new Map(), add = (id, role) => roles.set(id, new Set([...(roles.get(id) || []), role]));
-    for (const p of people.values()) itemIds.forEach(i => { if (p.items.includes(i)) add(p.id, 'wrote');
+    for (const p of people.values()) if (p.kind === kind) itemIds.forEach(i => { if (p.items.includes(i)) add(p.id, 'wrote');
       if (p.about_in.includes(i)) add(p.id, 'told about'); });
-    itemIds.forEach(i => (items.get(i)?.mentions || []).forEach(m => { names.set(m.id, m.name); add(m.id, 'named'); }));
+    itemIds.forEach(i => (items.get(i)?.mentions || []).filter(m => (m.kind || 'person') === kind)
+      .forEach(m => { names.set(m.id, m.name); add(m.id, 'named'); }));
     // Someone only named, with nothing said about them, has no profile to open.
-    return [...roles].sort((a, b) => people.has(b[0]) - people.has(a[0])).map(([id, r]) => people.has(id) ? personPill(id, [...r].join(', '))
+    return [...roles].sort((a, b) => people.has(b[0]) - people.has(a[0])).map(([id, r]) => people.has(id)
+      ? personPill(id, [kind === 'organization' ? orgType(people.get(id)) : null, ...r].filter(Boolean).join(', '))
       : pill(names.get(id), () => {}, 'person bare', 'named, no profile'));
+  }
+  function tiePills(profile) {  // a person's organizations, or an organization's people, with how they are tied
+    return (profile.ties || []).map(t => pill(people.get(t.id)?.name || t.id, () => selectPerson(t.id), 'person',
+      [profile.kind === 'person' ? t.label : t.label + ' it', t.item ? null : 'from the web'].filter(Boolean).join(' · ')));
   }
   function clustersOf(item) { return [...new Set(item.stories.map(s => stories.get(s)?.cluster).filter(Boolean))]; }
   function relatedSources(item) {  // other posts, with the strongest reason they are close to this one
@@ -470,12 +478,13 @@
       el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join(' · '), 'detail-meta'), chips);
     if (item.quality !== 'accepted') $('detail').append(el('p', 'Ingestion has not accepted this item yet; check its claims before relying on them.', 'chip warn'));
     if (item.url) $('detail').append(external(item.url));
+    // The text first: it is what a source is opened for; where it leads follows.
+    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', 'Where it leads', 'detail-section'),
       flow([[item.claims.length, 'claim'], [ideaIds.length, 'Idea'], [clusterIds.length, 'cluster'], [item.topics.length, 'topic']]),
       ...section('Topics', item.topics.map(topicPill)), ...section('Clusters', clusterIds.map(clusterPill)),
-      ...section('People', peopleOf([id])),
+      ...section('People', peopleOf([id])), ...section('Organizations', peopleOf([id], 'organization')),
       ...section('Related sources', related.slice(0, 8).map(([i, why]) => itemPill(i, why)), related.length > 8 ? `and ${related.length - 8} more` : ''));
-    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', `Claims (${item.claims.length})`, 'detail-section'));
     const list = el('div', null, 'claim-list'); item.claims.forEach(cid => list.append(claimRow(claims.get(cid)))); $('detail').append(list);
     if (!item.claims.length) $('detail').append(el('p', 'No claims were extracted.', 'quiet'));
@@ -488,7 +497,8 @@
   }
   function groupPosts(itemIds) {
     return [...section(`Sources (${itemIds.length})`, itemIds.slice(0, 12).map(i => itemPill(i, items.get(i)?.source)),
-      itemIds.length > 12 ? `and ${itemIds.length - 12} more` : ''), ...section('People', peopleOf(itemIds))];
+      itemIds.length > 12 ? `and ${itemIds.length - 12} more` : ''), ...section('People', peopleOf(itemIds)),
+      ...section('Organizations', peopleOf(itemIds, 'organization'))];
   }
   function selectGroup(id) {
     const c = clusters.get(id), t = data.topics.find(x => x.id === id); if (!c && !t) return; show(selectGroup, id);
@@ -543,12 +553,14 @@
   function selectPerson(id) {
     const person = people.get(id); if (!person) return; show(selectPerson, id);
     state.selection = id; state.detailItems = person.items;
-    $('detail').replaceChildren(el('p', person.kind === 'person' ? 'PERSON' : 'ORGANIZATION', 'eyebrow'), el('h3', person.name, 'detail-title'),
+    $('detail').replaceChildren(el('p', person.kind === 'person' ? 'PERSON' : 'ORGANIZATION · ' + orgType(person).toUpperCase(), 'eyebrow'),
+      el('h3', person.name, 'detail-title'),
       el('p', `${plural(person.facts.length, 'fact')} about them · ${plural(person.items.length, 'post')} by them, ${person.about_in.length} about them`, 'detail-meta'));
     const named = data.items.filter(i => i.mentions.some(m => m.id === id) && !person.items.includes(i.id) && !person.about_in.includes(i.id)).map(i => i.id);
     const fed = Object.entries(person.clusters).sort((a, b) => b[1] - a[1]);
     const topicIds = [...new Set(fed.flatMap(([cid]) => clusters.get(cid)?.topics || []))];
-    $('detail').append(...section('Wrote', person.items.map(i => itemPill(i, items.get(i)?.source))),
+    $('detail').append(...section(person.kind === 'person' ? 'Organizations' : 'People', tiePills(person)),
+      ...section('Wrote', person.items.map(i => itemPill(i, items.get(i)?.source))),
       ...section('Posts that tell about them', person.about_in.map(i => itemPill(i, items.get(i)?.source))),
       ...section('Posts that name them', named.map(i => itemPill(i, items.get(i)?.source))),
       ...section('Topics', topicIds.map(topicPill)),
@@ -722,8 +734,11 @@
   function scope(itemIds) {
     state.only = itemIds ? new Set(itemIds) : null; state.selection = null; state.ego = false; clearDetail(); refresh();
   }
+  function showDetail() {  // a pick made from outside (the dossier): its evidence from the top, even when it sits below the map
+    $('detail').scrollTop = 0; document.querySelector('.evidence-column').scrollIntoView({block: 'start'});
+  }
   setMode(); renderProposals(); refresh();
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
-    spotlight, scope, onselect: null};
+    spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);
 })();

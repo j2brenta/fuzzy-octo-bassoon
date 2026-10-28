@@ -93,6 +93,17 @@ class Entity(_Handoff):
     name: str
     kind: Literal["person", "organization", "concept"]
     identity_status: str | None = None
+    base_name: str | None = None  # the name in the nominative ("Кости Крестникова" -> "Костя Крестников")
+    org_type: str | None = None  # an organization's kind, one of engine.entities.ORG_TYPES
+    aliases: list[str] = []
+
+
+class EntityTie(_Handoff):
+    """A tie the source states between a person and an organization, by their entity ids."""
+    affiliation_id: str
+    person: str
+    organization: str
+    relation: str  # one of engine.entities.AFFILIATIONS
 
 
 class Source(_Handoff):
@@ -138,6 +149,8 @@ class Extraction(_Handoff):
     links: list[dict] = []
     claims: list[Claim] = []
     entities: list[Entity] = []
+    affiliations: list[EntityTie] = []
+    parent: dict | None = None  # the item whose link this page was captured from: {"item_id", "url", ...}
     triage: Triage | None = None
     quality_status: str
     quality_gate_passed: bool

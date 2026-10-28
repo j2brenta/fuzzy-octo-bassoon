@@ -242,12 +242,17 @@ def enrich_people(vault_path: Path, store, chosen: list, search, model: JsonMode
     from engine.llm import ModelOutputError
     from engine.people import SearchError, enrich
     claims = {c.claim.claim_id: c for c in store.claims()}
-    orgs = store.organizations()
+    orgs = {o.org_id: o.name for o in store.organizations()}
+    ties = {}  # person -> the organizations items say they belong to
+    for a in store.affiliations():
+        if a.item_id:
+            ties.setdefault(a.person_id, []).append(orgs[a.org_id])
     done = 0
     for p in chosen:
         facts = [claims[cid].claim.statement for cid in sorted(p.facts) if cid in claims]
         titles = [store.item(i).title for i in sorted(p.authored | p.mentioned_in)]
-        affiliation = next((name for name in orgs.values() for f in facts if name.casefold() in f.casefold()), None)
+        affiliation = next(iter(ties.get(p.person_id, [])), None) or \
+            next((name for name in orgs.values() for f in facts if name.casefold() in f.casefold()), None)
         context = facts + [f"Wrote: {store.item(i).title}" for i in sorted(p.authored)] + \
                   [f"Mentioned in: {store.item(i).title}" for i in sorted(p.mentioned_in)]
         try:

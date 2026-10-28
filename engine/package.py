@@ -8,14 +8,16 @@ from pathlib import Path
 
 from engine.review_policy import POLICY_VERSION, compatible_stored_review
 from engine.artifacts import atomic_json, fingerprint
-from engine.entities import EntityError, SUPPORTED_ENTITY_VERSIONS, _cached_entities, validate_entity_review
+from engine.entities import (EntityError, SUPPORTED_ENTITY_VERSIONS, _cached_affiliations, _cached_entities,
+                             supported_affiliations, validate_entity_review)
 from engine.extract import ExtractionError, MAX_CLAIMS, MAX_COVERAGE_CLAIMS, SUPPORTED_PROMPT_VERSIONS, _cached_claims, source_passages
 from engine.judge import JudgeError, validate_review
 from engine.parse import parse_capture
+from engine.parse.article import citation_authors
 from store.raw import forwarder_hint
 from engine.triage import TriageError, validate_labels
 
-BUILDER_VERSION = "handoff-v2"
+BUILDER_VERSION = "handoff-v3"
 CANDIDATES = {"extractions": "reviews", "repairs": "repair-reviews", "coverage": "coverage-reviews", "evidence": "evidence-reviews"}
 
 
@@ -108,7 +110,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         raise PackageError("No matching claim extraction is available for this handoff.")
 
     entity_path = vault / "entities" / name
-    entities, entity_review = [], None
+    entities, affiliations, entity_review = [], [], None
     entity_record = None
     if entity_path.exists():
         entity_record = read(entity_path)
@@ -116,6 +118,7 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
             or entity_record.get("parser_version") != document["parser_version"]):
             raise PackageError("Entity extraction is stale or does not match this source.")
         entities = _cached_entities(entity_record.get("entities"), text, item_id, section)
+        affiliations = _cached_affiliations(entity_record.get("affiliations", []), entities, item_id)
         review_path = vault / "entity-reviews" / name
         if review_path.exists():
             review_record = read(review_path)
@@ -123,7 +126,8 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
                 stored = review_record.get("review")
                 if not isinstance(stored, dict):
                     raise PackageError("Entity review is malformed.")
-                entity_review = validate_entity_review({k: v for k, v in stored.items() if k != "status"}, entities, text, item_id, section)
+                entity_review = validate_entity_review({k: v for k, v in stored.items() if k != "status"}, entities, text,
+                                                       item_id, section, affiliations)
                 if not compatible_stored_review(stored, entity_review, review_record.get("quality_policy_version"), "entities", "omitted_entities"):
                     raise PackageError("Stored entity review status disagrees with its findings.")
 
@@ -155,7 +159,8 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
         "sections": document["sections"], "links": document["links"],
         "attachments": raw.get("attachments", []),
         "channel_metadata_ref": {"path": f"raw/{name}", "field": "channel_metadata"},
-        "claims": selected["claims"], "entities": entities, "triage": labels,
+        "claims": selected["claims"], "entities": entities,
+        "affiliations": supported_affiliations(affiliations, entity_review), "triage": labels,
         "reviews": {"claims": claim_review or {"status": "pending"}, "entities": entity_review or {"status": "pending"}},
         "quality_status": status, "quality_gate_passed": status == "accepted",
         "quality_policy_version": POLICY_VERSION,
@@ -171,6 +176,13 @@ def build_extraction(raw_path: Path, *, claims_from: str = "auto") -> PackageRes
     }
     if "parent" in document:
         core["parent"] = document["parent"]
+        snapshot = document["sections"][0]["provenance"].get("derived_from", {}).get("path", "")
+        if snapshot.startswith("web-snapshots/"):
+            # Captures before citation_author parsing stored "Last; First" from trafilatura; the snapshot,
+            # already checked against its hash by the parser, gives the author as written.
+            authors = citation_authors((vault / snapshot).read_bytes())
+            if authors:
+                core["source"]["author_hint"] = {"name": authors[0]}
     if "image_source" in document:
         core["image_source"] = document["image_source"]
     if "pdf_source" in document:

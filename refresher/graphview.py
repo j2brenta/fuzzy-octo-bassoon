@@ -15,6 +15,7 @@ from pathlib import Path
 from engine import language
 from engine.extract import source_passages
 from graph.memory import MemoryStore
+from graph.store import AFFILIATION_WORDS
 from refresher import km, translate
 from refresher.vault import note_names
 
@@ -83,7 +84,7 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
     for e in store.edges():
         if e.type == "MENTIONS" and e.src in items:
             mentions.setdefault(e.src, set()).add(e.dst)
-    named = {p.person_id: p.name for p in store.people()} | store.organizations()
+    named = {p.person_id: p.name for p in store.people()} | {o.org_id: o.name for o in store.organizations()}
     item_rows = []
     for item in sorted(items.values(), key=lambda i: (i.source.event_time, i.item_id)):
         src = item.source
@@ -98,7 +99,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             "claims": [c["id"] for c in mine], "stories": idea_ids,
             "topics": sorted({t for i in idea_ids for t in topic_of_idea.get(i, [])}),
             "text": item.text, "translation": _lines(item.text, translations.get(item.item_id)),
-            "mentions": [{"id": m, "name": named.get(m, m)} for m in sorted(mentions.get(item.item_id, ()))]})
+            "mentions": [{"id": m, "name": named.get(m, m), "kind": "organization" if m.startswith("org:") else "person"}
+                         for m in sorted(mentions.get(item.item_id, ()))]})
 
     story_rows = []
     for idea in sorted(ideas.values(), key=lambda i: (-len(i.members), i.idea_id)):
@@ -167,11 +169,16 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                                  "said": statement(a), "about": statement(b)} for a, kind, b in link.relations],
                   "basis": "auto"} for link in store.links()]
 
-    # People and organizations: what is said about them (their profile facts) and the clusters their posts feed.
-    people_rows = []
-    profiles = [(p.person_id, p.name, "person", p.facts, p.authored) for p in store.people()] + \
-               [(oid, name, "organization", store.org_facts().get(oid, set()), set()) for oid, name in store.organizations().items()]
-    for pid, name, kind, facts, authored in sorted(profiles, key=lambda r: r[0]):
+    # People and organizations: what is said about them (their profile facts), the clusters their posts feed, and
+    # the ties between them (stated in a post, or found by enrichment).
+    ties: dict[str, list[dict]] = {}
+    for a in store.affiliations():
+        if a.item_id is None or a.item_id in items:
+            tie = {"relation": a.relation, "label": AFFILIATION_WORDS[a.relation], "item": a.item_id, "url": a.url}
+            ties.setdefault(a.person_id, []).append({"id": a.org_id, **tie})
+            ties.setdefault(a.org_id, []).append({"id": a.person_id, **tie})
+
+    def profile(pid, name, kind, facts, authored):
         facts = sorted(f for f in facts if f in claims)
         posts = sorted(i for i in authored if i in items)
         told = sorted({claims[f].item_id for f in facts} - set(posts))  # posts that say things about them
@@ -179,9 +186,16 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
         for c in claims.values():
             if c.item_id in posts + told and c.idea_id in cluster_of_idea:
                 feeds[cluster_of_idea[c.idea_id]] = feeds.get(cluster_of_idea[c.idea_id], 0) + 1
-        if facts or posts:
-            people_rows.append({"id": pid, "name": name, "kind": kind, "facts": facts, "items": posts,
-                                "about_in": told, "clusters": dict(sorted(feeds.items()))})
+        return {"id": pid, "name": name, "kind": kind, "facts": facts, "items": posts,
+                "about_in": told, "clusters": dict(sorted(feeds.items())), "ties": ties.get(pid, [])}
+
+    people_rows = [row for p in sorted(store.people(), key=lambda p: p.person_id)
+                   for row in [profile(p.person_id, p.name, "person", p.facts, p.authored)]
+                   if row["facts"] or row["items"] or row["ties"]]
+    org_rows = [{**profile(o.org_id, o.name, "organization", o.facts, set()), "type": o.type,
+                 "named_in": sorted(i for i in o.mentioned_in if i in items)}
+                for o in sorted(store.organizations(), key=lambda o: o.org_id)]
+    org_rows = [row for row in org_rows if row["facts"] or row["named_in"] or row["ties"]]
 
     all_claims = {c.claim.claim_id: c.claim.statement for c in store.claims(hidden=True)}
     people = {p.person_id: p.name for p in store.people()}
@@ -204,7 +218,7 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
                        "edges": len(edges), "waiting": sum(p["status"] == "proposed" for p in proposal_rows)},
             "limits": {"primary_nodes": 160},
             "topics": topics, "clusters": cluster_rows, "links": link_rows, "stories": story_rows,
-            "people": people_rows, "items": item_rows, "claims": claim_rows,
+            "people": people_rows, "organizations": org_rows, "items": item_rows, "claims": claim_rows,
             "edges": edges, "item_edges": list(item_edges.values()), "proposals": proposal_rows}
 
 
