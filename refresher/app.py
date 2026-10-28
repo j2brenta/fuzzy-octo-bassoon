@@ -44,6 +44,7 @@ FILES = {
     "/topic/": (STATIC / "dossier.html", HTML),
     "/static/brief.css": (STATIC / "brief.css", CSS),
     "/static/reading.css": (STATIC / "reading.css", CSS),
+    "/static/navigator.css": (STATIC / "navigator.css", CSS),
     "/static/topics.js": (STATIC / "topics.js", JS),
     "/static/dossier.js": (STATIC / "dossier.js", JS),
     "/static/cytoscape.min.js": (graphview.ASSETS / "cytoscape.min.js", JS),

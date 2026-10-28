@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>Refresher — Topic</title>
-<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css">
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css"><link rel="stylesheet" href="/static/navigator.css">
 <script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script></head>
 <body>
 <a class="skip" href="#blocks">Skip to the clusters</a>
@@ -26,13 +26,28 @@
       <form class="search small" action="/topic/" method="get" role="search"><input name="q" type="search" placeholder="Another subject…" required maxlength="200" aria-label="Another subject"><button type="submit">Open</button></form>
       <a href="#ideas" class="quiet-link" id="ideas-link">All Ideas</a>
     </div>
+    <div class="views" role="group" aria-label="View"><button type="button" id="view-map" aria-pressed="true">Map</button><button type="button" id="view-list" aria-pressed="false">All results</button></div>
   </header>
+  <!-- All results: every source found, one table, grouped; a column per cluster says where each source sits -->
+  <section class="list-view" id="list" hidden aria-label="All results">
+    <p class="list-head" id="list-head"></p>
+    <div class="list-controls">
+      <label>Group by <select id="group-by"></select></label>
+      <label>Topic <select id="scope"><option value="">All topics</option></select></label>
+      <label>Show <select id="only"><option value="1">Matches only</option><option value="0">All, matches first</option></select></label>
+    </div>
+    <div class="slices" id="slices" aria-label="How the results split"></div>
+    <div class="table-wrap"><table class="results" id="results"></table></div>
+    <p class="list-legend small quiet">A filled mark is where a source lives (its home), a hollow one another cluster it also has Ideas in; the bigger the mark, the stronger its role there: anchor, perspective, noise.</p>
+  </section>
+  <div id="map-body">
   <section class="orient" aria-label="Orientation">
     <figure class="graph-box"><div id="graph"></div><figcaption id="graph-caption"></figcaption></figure>
     <div class="plan-box"><h2>Reading plan</h2><ol class="plan" id="plan"></ol><p class="plan-note" id="plan-note"></p></div>
   </section>
   <main id="blocks" tabindex="-1"></main>
   <section class="far" id="far" aria-label="Sources far from the subject"></section>
+  </div>
 </div>
 
 <!-- Reading mode: plan rail, text, context panel -->

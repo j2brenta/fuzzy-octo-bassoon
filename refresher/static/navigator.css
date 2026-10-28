@@ -1,0 +1,76 @@
+/* The Thread Navigator on the topic page (/topic/): the All results view, depth bars, trust words, placement marks,
+   the depth rail and the thread strand. Built on the shell's tokens and reading.css. */
+:root {
+  --tn-home: var(--r-brand);
+  --tn-row: #f8f4ea;
+  --tn-selected: #fdf3cf;
+}
+
+/* --- the view switch under the header --- */
+.views { grid-column: 1 / -1; display: inline-flex; justify-self: start; border: 1px solid var(--r-line); border-radius: 22px; overflow: hidden; }
+.views button { all: unset; cursor: pointer; padding: 6px 16px; font-size: 13px; color: var(--r-muted); }
+.views button[aria-pressed="true"] { background: var(--r-ink); color: var(--r-paper); }
+.views button:focus-visible { outline: 2px solid var(--r-brand); outline-offset: -2px; }
+
+/* --- all results --- */
+.list-view { padding: 6px var(--rm-gutter) 30px; display: grid; gap: 12px; min-width: 0; border-top: 1px solid var(--r-line); }
+.list-head { font-size: 16px; margin-top: 10px; }
+.list-controls { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--r-muted); }
+.list-controls select { margin-left: 6px; font: inherit; color: var(--r-ink); background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 6px; padding: 4px 6px; max-width: 220px; }
+.slices { display: flex; gap: 2px; height: 30px; border-radius: 8px; overflow: hidden; min-width: 0; }
+.slice { all: unset; cursor: pointer; min-width: 22px; display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 0 8px;
+  background: var(--r-soft); color: var(--r-brand-dark); font-size: 11px; overflow: hidden; box-sizing: border-box; }
+.slice:nth-child(even) { background: #dfe5fa; }
+.slice:hover, .slice:focus-visible { background: var(--r-brand); color: white; outline: none; }
+.slice .s-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.slice .s-count { font-weight: 700; flex: none; }
+.table-wrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--r-line); border-radius: 12px; background: var(--r-paper); }
+.results { border-collapse: collapse; width: 100%; font-size: 13px; }
+.results th, .results td { padding: 6px 8px; text-align: left; vertical-align: middle; border-bottom: 1px solid #eee8db; }
+.results thead th { font: 600 11px var(--r-sans); color: var(--r-muted); text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; background: var(--r-paper); z-index: 1; vertical-align: bottom; }
+.results thead th.c-cluster { text-transform: none; letter-spacing: 0; height: 120px; padding: 6px 2px; width: 26px; }
+.results thead th.c-cluster span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; display: inline-block; max-height: 112px; overflow: hidden; text-overflow: ellipsis; }
+.results thead th.c-cluster.main span { color: var(--r-brand-dark); font-weight: 700; }
+.results tr.group th { background: var(--tn-row); font: 400 15px var(--r-serif); padding: 10px 8px 6px; scroll-margin-top: 130px; }
+.results tr.group .g-counts { font: 12px var(--r-sans); color: var(--r-muted); margin-left: 10px; }
+.results .r-row { cursor: pointer; }
+.results .r-row:hover { background: var(--r-soft); }
+.results .r-row:focus-visible { outline: 2px solid var(--r-brand); outline-offset: -2px; }
+.results .r-row.selected { background: var(--tn-selected); }
+.results .r-row.unmatched { color: var(--r-muted); }
+.results .r-row.unmatched .t { font-weight: 400; }
+.c-dot { width: 12px; }
+.c-n { width: 30px; font: 600 12px var(--r-sans); color: var(--r-brand); }
+.c-title { min-width: 220px; max-width: 420px; }
+.c-title .t { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.c-title .sub { display: block; font-size: 11px; color: var(--r-muted); }
+.c-role .also { display: block; font-size: 10px; color: var(--r-muted); }
+.c-type, .c-terms { font-size: 12px; color: var(--r-muted); white-space: nowrap; }
+.c-cluster { text-align: center !important; padding: 4px 2px !important; }
+
+/* depth: five small bars; trust: a word, never a number */
+.depth { display: inline-flex; gap: 2px; align-items: flex-end; }
+.depth i { width: 4px; height: 12px; border-radius: 1px; background: var(--r-line); }
+.depth i.on { background: var(--r-ink); }
+.trust { font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.trust.trusted { background: #e3efe1; color: #2e5b2a; }
+.trust.known { border: 1px solid var(--r-line); color: var(--r-ink); }
+.trust.unknown { color: var(--r-muted); }
+
+/* a placement mark: filled at home, hollow elsewhere, bigger for a stronger role */
+.mark { all: unset; cursor: pointer; display: inline-block; border-radius: 50%; border: 2px solid var(--tn-home); box-sizing: border-box; vertical-align: middle; }
+.mark.anchor { width: 16px; height: 16px; }
+.mark.perspective { width: 12px; height: 12px; }
+.mark.noise { width: 8px; height: 8px; border-width: 1.5px; border-color: var(--rm-quiet); }
+.mark.home { background: var(--tn-home); }
+.mark.home.noise { background: var(--rm-quiet); }
+.mark.also { background: var(--r-paper); }
+.mark.this { box-shadow: 0 0 0 3px var(--r-accent); }
+.mark:hover, .mark:focus-visible { box-shadow: 0 0 0 3px var(--r-soft), 0 0 0 4px var(--r-brand); }
+.picked { background: var(--tn-selected); }
+
+@media (max-width: 767px) {
+  .views { justify-self: stretch; }
+  .views button { flex: 1; text-align: center; }
+  .c-title { min-width: 180px; }
+}

@@ -7,6 +7,8 @@
    Reading mode (?read=<id>): the plan as a rail on the left, the text in the middle, the context (connected sources,
    people, organisations, Ideas) on the right, one section open at a time. Esc returns to the map where you were.
    Marking read or skimmed posts to /api/source/<id>/state, which returns the plan and coverage recomputed.
+   All results (?view=list&group=…&scope=…&all=1): every source the subject finds in one table, grouped by home
+   cluster, every cluster it sits in, role, trust, type or topic, with a column per cluster marking where it sits.
    Values from the vault only enter textContent. */
 'use strict';
 (() => {
@@ -59,7 +61,7 @@
       headers: {'Content-Type': 'application/json', 'X-Refresher': '1'}, body: JSON.stringify({state, ...subjectQuery})});
     const body = await r.json().catch(() => ({}));
     if (!r.ok) { $('cover-text').textContent = body.error || `Could not save (${r.status})`; return; }
-    Object.assign(s, body);
+    Object.assign(s, body); results.clear();  // plan numbers and order changed
     if (current) { extendTrail(); renderRail(); renderBar(); refreshContext(); } else renderMap();
   }
 
@@ -265,12 +267,132 @@
     const b = $('block-' + id); if (b) { b.scrollIntoView({behavior: smooth(), block: 'start'}); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
   }
 
+  // --- all results: every source found in one table, grouped (GET /api/subject/results) ---
+  const GROUPS = [['cluster_home', 'Cluster, home only'], ['cluster_all', 'Cluster, every place'], ['role', 'Role'],
+    ['trust', 'Trust'], ['type', 'Type'], ['topic', 'Topic']];
+  const results = new Map();
+  let selected = null;
+  function listState() {
+    const u = new URLSearchParams(location.search);
+    return {group: GROUPS.some(g => g[0] === u.get('group')) ? u.get('group') : 'cluster_home', scope: u.get('scope') || '', all: u.get('all') === '1'};
+  }
+  function setList(change) {  // the grouping, topic and filter live in the URL, so a reload keeps them
+    const url = new URL(location.href);
+    for (const [k, v] of Object.entries(change)) { if (v) url.searchParams.set(k, v); else url.searchParams.delete(k); }
+    history.replaceState(history.state, '', url); renderList();
+  }
+  async function loadResults(st) {
+    const key = JSON.stringify(st);
+    if (!results.has(key)) {
+      const q = new URLSearchParams({...subjectQuery, group_by: st.group, only_matches: st.all ? '0' : '1'});
+      if (st.scope) q.set('scope', st.scope);
+      const r = await fetch('/api/subject/results?' + q), body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+      results.set(key, body);
+    }
+    return results.get(key);
+  }
+  const roleCounts = roles => ['anchor', 'perspective', 'noise'].filter(k => roles[k]).map(k => plural(roles[k], k)).join(' · ');
+  function depthBar(depth, inputs) {
+    const box = el('span', null, 'depth'); box.setAttribute('role', 'img');
+    const why = inputs ? `${inputs.words.toLocaleString('en')} words · ${plural(inputs.ideas, 'Idea')} · ${inputs.specific} specific` : '';
+    box.setAttribute('aria-label', `depth ${depth} of 5${why ? ': ' + why : ''}`); box.title = why;
+    for (let i = 1; i <= 5; i++) box.append(el('i', null, i <= depth ? 'on' : ''));
+    return box;
+  }
+  function placeMark(source, c, p, current) {  // filled at home, hollow elsewhere; its size says the role there
+    const b = button('', () => focusPlacement(c.id, source), `mark ${p.home ? 'home' : 'also'} ${p.role}${current ? ' this' : ''}`);
+    b.setAttribute('aria-label', `${c.title}: ${p.role}, ${p.home ? 'its home' : 'also here'}. Show it on the map`); b.title = `${c.title} · ${p.role}${p.home ? ' · home' : ' · also here'}`;
+    return b;
+  }
+  function resultRow(row, r) {
+    const x = src(row.source), number = numbered().get(row.source);
+    const tr = el('tr', null, `r-row${row.match ? '' : ' unmatched'}${row.source === selected ? ' selected' : ''}`);
+    tr.dataset.source = row.source; tr.tabIndex = 0;
+    const open = () => { selected = row.source; openSource(row.source); };
+    tr.addEventListener('click', e => { if (!e.target.closest('.mark')) open(); });
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === tr) open(); });
+    const cell = (child, cls) => { const td = el('td', null, cls); if (child != null) td.append(child); return td; };
+    const title = el('td', null, 'c-title');
+    title.append(el('span', x.title, 't'), el('span', [x.source, x.author, day(x.time)].filter(Boolean).join(' · '), 'sub'));
+    const role = el('td', null, 'c-role'); role.append(el('span', row.role, 'role ' + row.role));
+    if (row.placement && !row.placement.home) role.append(el('span', 'also here', 'also'));
+    const terms = row.matched_terms.length ? row.matched_terms.join(', ') : row.matched_ideas ? plural(row.matched_ideas, 'Idea') : '—';
+    tr.append(cell(el('span', null, `dot s-${stateOf(row.source)}`), 'c-dot'), cell(number ? `#${number}` : '', 'c-n'), title, role,
+      cell(depthBar(row.depth, row.depth_inputs), 'c-depth'), cell(el('span', row.trust, 'trust ' + row.trust), 'c-trust'),
+      cell(row.type, 'c-type'), cell(terms, 'c-terms'));
+    for (const c of r.clusters) {
+      const p = row.places.find(q => q.cluster === c.id), td = el('td', null, 'c-cluster');
+      if (p) td.append(placeMark(row.source, c, p, r.group_by === 'cluster_all' && row.group === c.id));
+      tr.append(td);
+    }
+    return tr;
+  }
+  async function renderList() {
+    const st = listState();
+    $('group-by').value = st.group; $('scope').value = st.scope; $('only').value = st.all ? '0' : '1';
+    let r;
+    try { r = await loadResults(st); } catch (error) { $('list-head').textContent = error.message; return; }
+    if (JSON.stringify(listState()) !== JSON.stringify(st)) return;  // another choice was made while this loaded
+    const h = r.header, subj = h.kind === 'query' ? `“${h.subject}”` : h.subject;
+    const head = $('list-head'); head.replaceChildren(el('strong', `${h.matching} of ${plural(h.total, 'source')}`), ` match ${subj}`);
+    if (h.placements) head.append(` · ${plural(h.placements, 'place')} across clusters`);
+    if (st.all && h.rows > h.matching) head.append(` · ${h.total - h.matching} more below, outside the subject`);
+    const cols = 8 + r.clusters.length;
+    $('slices').replaceChildren(...r.slices.map(sl => {
+      const b = button('', () => document.querySelector(`tbody[data-group="${CSS.escape(sl.group)}"]`)?.scrollIntoView({behavior: smooth(), block: 'start'}), 'slice');
+      b.style.flex = String(sl.count); b.title = `${sl.title} · ${sl.count} · ${roleCounts(sl.roles)}`;
+      b.append(el('span', sl.title, 's-name'), el('span', sl.count, 's-count')); return b;
+    }));
+    const table = $('results'), thead = el('thead'), tr = el('tr');
+    for (const [label, cls] of [['', 'c-dot'], ['#', 'c-n'], ['Source', 'c-title'], ['Role', 'c-role'], ['Depth', 'c-depth'],
+      ['Trust', 'c-trust'], ['Type', 'c-type'], ['Matches', 'c-terms']]) tr.append(el('th', label, cls));
+    for (const c of r.clusters) { const th = el('th', null, `c-cluster ${c.band}`); th.title = `${c.title} · ${c.band}`; th.append(el('span', short(c.title, 24))); tr.append(th); }
+    thead.append(tr); table.replaceChildren(thead);
+    for (const sl of r.slices) {
+      const body = el('tbody'); body.dataset.group = sl.group;
+      const g = el('tr', null, 'group'), th = el('th'); th.colSpan = cols;
+      th.append(el('span', sl.title, 'g-title'), el('span', `${plural(sl.count, r.group_by === 'cluster_all' ? 'place' : 'source')} · ${roleCounts(sl.roles)}`, 'g-counts'));
+      g.append(th); body.append(g);
+      r.rows.filter(x => x.group === sl.group).forEach(x => body.append(resultRow(x, r)));
+      table.append(body);
+    }
+    if (!r.rows.length) table.append(el('caption', 'Nothing matches here. Show all sources, or another topic.', 'quiet'));
+    const pick = selected && table.querySelector(`tr[data-source="${CSS.escape(selected)}"]`);
+    if (pick) requestAnimationFrame(() => pick.scrollIntoView({block: 'center'}));
+  }
+  function setView(view) {
+    const url = new URL(location.href);
+    if (view === 'list') url.searchParams.set('view', 'list'); else url.searchParams.delete('view');
+    url.searchParams.delete('read'); url.hash = '';
+    history.pushState({}, '', url); route();
+  }
+  function focusPlacement(clusterId, source) {  // a mark in a cluster column: the map, that cluster open, that source picked
+    selected = source; setView('map');
+    const c = cluster(clusterId); if (!c) return;
+    if (c.noise.includes(source)) shown.add('noise:' + clusterId);
+    requestAnimationFrame(() => {  // after the map restored its scroll position
+      showBlock(clusterId);
+      const row = $('block-' + clusterId)?.querySelector(`[data-source="${CSS.escape(source)}"]`);
+      if (!row) return;
+      document.querySelectorAll('.picked').forEach(n => n.classList.remove('picked'));
+      row.classList.add('picked', 'flash'); row.scrollIntoView({behavior: smooth(), block: 'center'});
+    });
+  }
+  $('group-by').append(...GROUPS.map(([v, label]) => { const o = el('option', label); o.value = v; return o; }));
+  $('group-by').addEventListener('change', e => setList({group: e.target.value === 'cluster_home' ? '' : e.target.value}));
+  $('scope').addEventListener('change', e => setList({scope: e.target.value}));
+  $('only').addEventListener('change', e => setList({all: e.target.value === '0' ? '1' : ''}));
+  $('view-map').addEventListener('click', () => setView('map'));
+  $('view-list').addEventListener('click', () => setView('list'));
+
   // --- reading mode ---
   function extendTrail() {  // the path you walk: what you read, then the plan; detours sit after the source they left
     for (const id of planIds()) if (!trail.includes(id)) trail.push(id);
   }
   function openSource(id, detour = false) {
     if (!s.sources[id]) return;
+    selected = id;
     if (!current) mapScroll = window.scrollY;
     if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
     if (!trail.includes(id)) {
@@ -296,7 +418,12 @@
     current = null; $('reading').hidden = true; $('ideas-view').hidden = !ideasView; $('map').hidden = ideasView;
     toggleDrawer(false);
     if (ideasView) { renderIdeas(); return; }
-    renderMap(); requestAnimationFrame(() => window.scrollTo({top: mapScroll}));
+    const list = new URLSearchParams(location.search).get('view') === 'list';
+    $('list').hidden = !list; $('map-body').hidden = list;
+    $('view-map').setAttribute('aria-pressed', String(!list)); $('view-list').setAttribute('aria-pressed', String(list));
+    renderHead();
+    if (list) renderList(); else renderMap();
+    requestAnimationFrame(() => window.scrollTo({top: mapScroll}));
   }
   async function showReading(id) {
     current = id; $('map').hidden = true; $('ideas-view').hidden = true; $('reading').hidden = false; $('pop').hidden = true;
@@ -568,6 +695,7 @@
     $('kind').textContent = {topic: 'A topic you accepted', cluster: 'A cluster of close Ideas', query: 'What you asked about'}[s.scope.kind];
     $('title').textContent = s.scope.kind === 'query' ? `“${s.scope.title}”` : s.scope.title;
     const main = s.clusters.find(c => c.band === 'main'); if (main) openBlocks.add(main.id);
+    $('scope').append(...s.topics.map(t => { const o = el('option', short(t.title, 48)); o.value = t.id; return o; }));
     $('notice').hidden = true;
     route();
   }).catch(error => {
