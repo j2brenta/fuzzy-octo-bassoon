@@ -113,7 +113,7 @@
     actions.querySelectorAll('button').forEach(b => {b.disabled = true;});
     feedback.className = 'feedback'; feedback.textContent = 'Saving…';
     try {
-      const response = await fetch('api/proposals/' + encodeURIComponent(p.id), {method: 'POST',
+      const response = await fetch('/api/proposals/' + encodeURIComponent(p.id), {method: 'POST',
         headers: {'Content-Type': 'application/json', 'X-Refresher': '1'},
         body: JSON.stringify({action, token: p.token, rationale})});
       const body = await response.json().catch(() => ({}));
@@ -154,6 +154,9 @@
       (!query || (item.title + ' ' + item.source + ' ' + (item.author || '')).toLocaleLowerCase().includes(query))
     ).sort((a, b) => (b.time || '').localeCompare(a.time || '') || a.id.localeCompare(b.id));
   }
+  // Colours with a meaning come from the shared shell (shell.css), so the map and the other pages agree.
+  const token = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  const accepted = token('--r-accepted', '#176a61');
   const cy = cytoscape({container: $('graph'), elements: [], layout: {name: 'preset'},
     minZoom: .25, maxZoom: 2.5, wheelSensitivity: .2, boxSelectionEnabled: false,
     style: [
@@ -187,12 +190,12 @@
         'line-color': '#8fa9b4', 'opacity': .8}},
       {selector: 'edge[kind="LINK"][level="topic"]', style: {'line-color': '#6e9a64', 'line-style': 'solid'}},
       {selector: 'edge[kind="LINK"][evidence=0]', style: {'line-style': 'dashed'}},
-      {selector: 'edge[basis="accepted"]', style: {'line-color': '#176a61', 'target-arrow-color': '#176a61', 'width': 2.2}},
+      {selector: 'edge[basis="accepted"]', style: {'line-color': accepted, 'target-arrow-color': accepted, 'width': 2.2}},
       {selector: 'edge[basis="proposal"]', style: {'line-style': 'dashed', 'line-color': '#be8656', 'target-arrow-color': '#be8656'}},
       {selector: '.dim', style: {'opacity': .2}},
-      {selector: 'node.highlight', style: {'border-width': 3, 'border-color': '#176a61'}},
-      {selector: 'edge.highlight', style: {'width': 3, 'line-color': '#176a61', 'target-arrow-color': '#176a61'}},
-      {selector: ':selected', style: {'border-color': '#176a61', 'border-width': 3}}
+      {selector: 'node.highlight', style: {'border-width': 3, 'border-color': accepted}},
+      {selector: 'edge.highlight', style: {'width': 3, 'line-color': accepted, 'target-arrow-color': accepted}},
+      {selector: ':selected', style: {'border-color': accepted, 'border-width': 3}}
     ]});
   const topicTitle = id => id?.startsWith('about:') ? 'About ' + (people.get(id.slice(6))?.name || 'someone')
     : data.topics.find(t => t.id === id)?.title || 'No topic yet';

@@ -40,7 +40,8 @@ x-vault: &vault
 services:
   frontend:
     <<: [*runtime, *config]
-    command: ["python", "-m", "refresher.web", "--host", "0.0.0.0", "--port", "8080", "--vault", "/data/jury"]
+    # The one app (capture, Atlas, review) on the same vault as the bot: REFRESHER_VAULT from x-config.
+    command: ["refresher", "serve", "--host", "0.0.0.0", "--port", "8080"]
     ports:
       - "127.0.0.1:8080:8080"
     restart: "on-failure:3"

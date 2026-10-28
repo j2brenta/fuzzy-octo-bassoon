@@ -1,16 +1,17 @@
 :root {
-  --bg: #f6f0e4;
-  --paper: #fffcf5;
-  --ink: #25251f;
-  --muted: #67665e;
-  --line: #d9d3c6;
-  --green: #234cc5;
-  --green-dark: #173895;
-  --soft: #edf0fd;
-  --error: #a32c25;
-  --accent: #eed780;
-  --coral: #fa795e;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* the palette lives in shell.css, shared by every page */
+  --bg: var(--r-bg);
+  --paper: var(--r-paper);
+  --ink: var(--r-ink);
+  --muted: var(--r-muted);
+  --line: var(--r-line);
+  --green: var(--r-brand);
+  --green-dark: var(--r-brand-dark);
+  --soft: var(--r-soft);
+  --error: var(--r-error);
+  --accent: var(--r-accent);
+  --coral: var(--r-coral);
+  font-family: var(--r-sans);
   color: var(--ink);
   background: var(--bg);
   font-size: 16px;
@@ -27,26 +28,7 @@ a { color: inherit; }
 h1, h2, h3, p { margin: 0; }
 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 [hidden] { display: none !important; }
-.sidebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 30px;
-  padding: 24px max(32px, calc((100vw - 1400px) / 2));
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-}
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 30px; letter-spacing: -1.5px; font-weight: 700; }
-.brand svg { width: 35px; height: 35px; color: var(--green); }
 .brand-dot { color: var(--green); }
-.brand .brand-dot { margin-left: -9px; }
-.workspace-label, .sidebar-bottom { display: none; }
-.sidebar nav { display: flex; gap: 12px; align-items: center; }
-.nav-item { display: flex; align-items: center; gap: 9px; padding: 11px 18px; min-height: 46px; text-decoration: none; border: 1px solid transparent; border-radius: 30px; font-size: 13px; color: var(--muted); }
-.nav-item:hover { border-color: var(--line); color: var(--ink); }
-.nav-item.active { border-color: #bcb6a8; color: var(--ink); }
-.nav-item svg { width: 17px; height: 17px; }
-.nav-count { color: var(--green); font-size: 10px; min-width: 22px; text-align: center; background: var(--soft); padding: 1px 6px; border-radius: 20px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: auto; padding: 16px 0; font-size: 11px; color: var(--muted); }
 .topbar strong { font-weight: 500; color: var(--ink); }
 .slash { color: #aaa595; padding: 0 12px; }
@@ -165,11 +147,9 @@ dialog::backdrop { background: #161f4aaf; }
 .skip:focus { top: 12px; }
 @media (max-width: 1500px) {
   main, .topbar { margin-left: 40px; margin-right: 40px; }
-  .sidebar { padding-left: 40px; padding-right: 40px; }
 }
 @media (max-width: 1100px) {
   main, .topbar { margin-left: 28px; margin-right: 28px; }
-  .sidebar { padding: 21px 28px; }
   .hero-copy { padding: 28px 28px; }
   h1 { font-size: clamp(35px, 4.1vw, 46px); letter-spacing: -1.8px; }
   .page-heading { grid-template-columns: .95fr 1.15fr; }
@@ -190,20 +170,9 @@ dialog::backdrop { background: #161f4aaf; }
   .art-caption { font-size: 9px; }
   .workspace-grid { grid-template-columns: minmax(0, 1fr); }
   .library { padding: 24px; }
-  .nav-item { padding: 10px 14px; font-size: 12px; }
 }
 @media (max-width: 600px) {
   main, .topbar { margin-left: 18px; margin-right: 18px; }
-  .sidebar { padding: 18px; gap: 12px; }
-  .brand { font-size: 25px; gap: 6px; }
-  .brand svg { width: 28px; height: 28px; }
-  .sidebar nav { gap: 0; }
-  .nav-item { padding: 9px 12px; font-size: 11px; }
-  .nav-item.active { display: flex; }
-  .nav-item svg { display: none; }
-  .sidebar nav { gap: 4px; }
-  .nav-item { padding: 9px 10px; }
-  .nav-item svg { width: 15px; height: 15px; }
   .topbar { font-size: 10px; padding: 14px 0; }
   .demo-badge { font-size: 9px; letter-spacing: .7px; }
   .slash { padding: 0 6px; }

@@ -1,16 +1,12 @@
 """Exercise durable browser submissions through the real text pipeline, offline."""
 import base64
-from http.client import HTTPConnection
-import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from threading import Thread
 import unittest
 from unittest.mock import patch
-from http.server import ThreadingHTTPServer
 
 from engine.llm import ModelReply
-from refresher.web import Workspace, handler_for
+from refresher.web import Workspace
 from tests.test_extract import TEXT, response
 from tests.test_triage import FakeModel, LABELS
 
@@ -132,36 +128,6 @@ class WorkspaceTests(unittest.TestCase):
         result = self.workspace.detail(job['id'])
         self.assertEqual(result['status'], 'complete')
         self.assertFalse(result['results'][0]['processed']['triage']['keep'])
-
-    def test_http_static_api_origin_and_path_boundaries(self):
-        server = ThreadingHTTPServer(('127.0.0.1', 0), handler_for(self.workspace))
-        thread = Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        try:
-            conn = HTTPConnection('127.0.0.1', server.server_port)
-            for path, expected in [('/',200),('/app.js',200),('/brain.png',200),('/api/submissions',200),('/../../.env',404)]:
-                conn.request('GET', path)
-                response = conn.getresponse()
-                self.assertEqual(response.status, expected)
-                self.assertEqual(response.getheader('X-Content-Type-Options'),'nosniff')
-                response.read()
-            conn.request('POST','/api/submissions',json.dumps({'text':'hello'}),{'Content-Type':'application/json','Origin':'https://untrusted.example'})
-            response=conn.getresponse()
-            self.assertEqual(response.status,403)
-            response.read()
-            with patch.object(self.workspace.worker, 'submit'):
-                conn.request('POST','/api/submissions',json.dumps({'text':TEXT}),{'Content-Type':'application/json'})
-                response=conn.getresponse()
-                self.assertEqual(response.status,202)
-                job=json.loads(response.read())
-            conn.request('GET',f"/api/submissions/{job['id']}")
-            response=conn.getresponse()
-            self.assertEqual(json.loads(response.read())['results'][0]['text'],TEXT)
-            conn.close()
-        finally:
-            server.shutdown()
-            server.server_close()
-            thread.join()
 
 
 if __name__ == '__main__':

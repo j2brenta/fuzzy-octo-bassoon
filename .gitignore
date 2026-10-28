@@ -10,6 +10,8 @@ WhatsApp Image *.jpeg
 __pycache__/
 *.pyc
 .pytest_cache/
+log/
+logs/
 
 # Local vaults: captured content stays off Git. Only the seed-sample runs are shared (see .local-vault/README.md).
 .local-vault/*
