@@ -632,8 +632,8 @@ or proposed. Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`.
 ### Topic dossiers
 
 A dossier is what you know about one subject, ranked (`refresher/dossier.py`). Every
-rebuild writes one per topic to `wiki/dossiers/`; the app shows the same for any topic,
-cluster or phrase. Each Idea gets an importance, kept with its parts so the note can say
+rebuild writes one per topic to `wiki/dossiers/`; the app (`/topic/`) shows the same for
+any topic, cluster or phrase. Each Idea gets an importance, kept with its parts so the note can say
 why it ranks there:
 
     importance = fresh · (0.35 support + 0.25 trust + 0.25 central + 0.15 firm) + your votes
@@ -689,6 +689,11 @@ uv run refresher serve --vault VAULT        # or set REFRESHER_VAULT; python -m 
 
 Open **http://127.0.0.1:8080**:
 
+- `/` lists your topics and clusters; type a subject to refresh it.
+- `/topic/?id=…` or `/topic/?q=…` is its dossier (below): the brief on the left, ranked;
+  the Atlas on the right, scoped to the subject and linked both ways (an Idea you read
+  lights up on the map; what you pick on the map scrolls the brief to it and opens its
+  evidence); "Wide map" gives the map the page. `&at=2026-12-01` shows it at another moment.
 - `/capture/` adds a source and follows it through ingestion (Olga's workspace).
 - `/atlas/` is the map, with the proposals that wait for you (Victor's viewer).
 

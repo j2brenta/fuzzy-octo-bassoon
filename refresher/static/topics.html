@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<title>Refresher — Topics</title>
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css">
+<script src="/static/nav.js" defer></script><script src="/static/topics.js" defer></script></head>
+<body>
+<a class="skip" href="#main">Skip to topics</a>
+<header class="app-bar">
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Topics</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+</header>
+<main id="main" class="wrap">
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="eyebrow">Refresh a subject</p>
+    <h1 id="hero-title">What do you want<br><em>to know again?</em></h1>
+    <p>Pick a topic, or type a subject. You get what you know about it, ranked by how many independent sources say it, how far you trust them and how fresh it is; what changed; what is contested; and what to read first.</p>
+    <form class="search" action="/topic/" method="get" role="search"><label class="sr-only" for="q" hidden>Subject</label>
+      <input id="q" name="q" type="search" placeholder="A subject, e.g. hallucination" required maxlength="200" aria-label="Subject"><button type="submit">Refresh ↗</button></form>
+  </section>
+  <p id="error" class="empty" role="alert" hidden></p>
+  <section class="shelf" aria-labelledby="topics-title" id="topics-shelf" hidden>
+    <header><h2 id="topics-title">Topics you accepted</h2><span class="small quiet" id="topics-count"></span></header>
+    <div class="cards" id="topics"></div>
+  </section>
+  <section class="shelf" aria-labelledby="clusters-title" id="clusters-shelf" hidden>
+    <header><h2 id="clusters-title">Clusters</h2><span class="small quiet">Close Ideas found automatically; a topic is made of them</span></header>
+    <div class="cards" id="clusters"></div>
+  </section>
+  <div id="empty" class="empty" hidden><h2 class="serif">Nothing to refresh yet.</h2><p class="quiet">Add a source, or send one to the bot. Its Ideas gather into clusters and topics here.</p><p><a href="/capture/">Add a source ↗</a></p></div>
+</main>
+</body></html>

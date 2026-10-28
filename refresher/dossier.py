@@ -100,6 +100,15 @@ def _when(store: MemoryStore, item_id: str) -> datetime:
     return store.item(item_id).source.event_time
 
 
+def _name(store: MemoryStore, person_id: str | None) -> str | None:
+    if not person_id:
+        return None
+    try:
+        return store.person(person_id).name
+    except KeyError:
+        return person_id
+
+
 def _claim_row(store: MemoryStore, node) -> dict:
     item = store.item(node.item_id)
     return {"claim": node.claim.claim_id, "statement": node.claim.statement, "item": item.item_id,
@@ -205,10 +214,15 @@ def build(store: MemoryStore, scope: Scope, at: datetime) -> dict:
                          "wrote": len({nodes[c].item_id for c in scope_claims} & p.authored),
                          "about": len(scope_claims & p.facts)} for p in people[:8]]
     counts = {t: sum(r["tier"] == t for r in rows) for t in TIERS}
+    item_ids = sorted({i for r in rows for i in r["items"]} | {s["item"] for c in changed for s in c["steps"]})
+    sources = {i: {"title": (item := store.item(i)).title, "source": item.source.source_name,
+                   "author": _name(store, item.author_id),
+                   "time": item.source.event_time.isoformat(), "url": item.source.url, "repost_of": item.duplicate_of,
+                   "hidden": item.hidden} for i in item_ids}
     return {"scope": {"kind": scope.kind, "id": scope.key, "title": scope.title}, "at": at.isoformat(),
             "counts": {**counts, "ideas": len(rows), "items": len({i for r in rows for i in r["items"]})},
             "ideas": rows, "changed": changed, "contested": contested, "reading": reading, "also": also,
-            "nearby": nearby}
+            "nearby": nearby, "sources": sources}
 
 
 def _reading_order(store: MemoryStore, rows: list[dict], changed: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -261,7 +275,7 @@ def _reading_order(store: MemoryStore, rows: list[dict], changed: list[dict]) ->
             core = [i for i in ideas if any(r["id"] == i and r["tier"] == "core" for r in rows)]
             reasons.append(f"covers {len(core)} core Idea{'s' * (len(core) != 1)}" if core
                            else f"covers {len(ideas)} Idea{'s' * (len(ideas) != 1)}")
-            reasons[-1] += f", including #{rank[ideas[0]]} {title[ideas[0]]}"
+            reasons[-1] += f", including #{rank[ideas[0]]} {title[ideas[0]].rstrip('.')}"
         if item_id in newest:
             reasons.append("the newest word on what changed")
         if reposts[item_id]:
@@ -269,7 +283,7 @@ def _reading_order(store: MemoryStore, rows: list[dict], changed: list[dict]) ->
         if item.author_id:
             reasons.append(f"author trusted {trust(item_id):.2f}")
         return {"rank": n, "item": item_id, "title": item.title, "source": item.source.source_name,
-                "author": item.author_id, "time": item.source.event_time.isoformat(), "url": item.source.url,
+                "author": _name(store, item.author_id), "time": item.source.event_time.isoformat(), "url": item.source.url,
                 "ideas": ideas, "reason": "; ".join(reasons)}
 
     reading = [row(i, n) for n, i in enumerate(picks, 1)]
@@ -342,3 +356,25 @@ def render(d: dict, names: dict[str, str]) -> str:
             by = ", ".join(link(x["id"]) for x in r["replaced_by"])
             lines.append(f"- {r['title']} {link(r['id'])} · {r['tier']}" + (f", replaced by {by}" if by else ""))
     return "\n".join(lines)
+
+
+def catalog(store: MemoryStore, at: datetime) -> list[dict]:
+    """Every topic, then every cluster, with what its dossier holds: the index a reader picks a subject from."""
+    rows = []
+    groups = [("topic", t.topic_id, t.title) for t in sorted(store.topics(), key=lambda t: t.topic_id)]
+    groups += [("cluster", c.cluster_id, c.title)
+               for c in sorted(store.clusters(), key=lambda c: (-len(c.ideas), c.cluster_id))]
+    topics_of = defaultdict(list)
+    for t in store.topics():
+        for cid in t.clusters:
+            topics_of[cid].append(t.title)
+    for kind, key, title in groups:
+        d = build(store, resolve(store, key), at)
+        if not d["ideas"]:
+            continue
+        top = next((r for r in d["ideas"] if r["tier"] == "core"), d["ideas"][0])
+        latest = max(store.item(i).source.event_time for r in d["ideas"] for i in r["items"])
+        rows.append({"kind": kind, "id": key, "title": title, "counts": d["counts"], "top": top["title"],
+                     "changed": len(d["changed"]), "contested": len(d["contested"]), "latest": latest.isoformat(),
+                     "in_topics": sorted(topics_of.get(key, []))})
+    return rows

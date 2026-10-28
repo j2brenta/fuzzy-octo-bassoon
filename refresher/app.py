@@ -1,8 +1,10 @@
 """refresher serve: the one local app on one vault: add a source, see the Atlas, decide the review's proposals.
 
+    /           the topics: pick a subject, or type one
+    /topic/     its dossier (refresher/dossier.py): Ideas ranked, what changed, what to read first, beside the map
     /capture/   add a source and follow it through ingestion (Olga's workspace, refresher/web.py)
     /atlas/     the map and the proposals waiting for you (Victor's viewer, refresher/assets/map/)
-    /api/...    submissions and uploads, the map's data, proposals and decisions
+    /api/...    submissions and uploads, the map's data, topics and dossiers, proposals and decisions
 
 A web capture is placed in the graph like a Telegram one (refresher/place.py), so it shows on the map. Local only:
 it binds to 127.0.0.1 unless --host says otherwise, answers only to a Host it knows (localhost, 127.0.0.1, any
@@ -21,10 +23,10 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import RLock
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from graph.memory import MemoryStore
-from refresher import graphview, vault
+from refresher import dossier, graphview, vault
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -37,6 +39,11 @@ RETRY = re.compile(r"^/api/submissions/([a-f0-9]{32})/retry$")
 UPLOAD = re.compile(r"^/api/uploads/([a-f0-9]{64})$")
 HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 FILES = {
+    "/": (STATIC / "topics.html", HTML),
+    "/topic/": (STATIC / "dossier.html", HTML),
+    "/static/brief.css": (STATIC / "brief.css", CSS),
+    "/static/topics.js": (STATIC / "topics.js", JS),
+    "/static/dossier.js": (STATIC / "dossier.js", JS),
     "/capture/": (STATIC / "index.html", HTML),
     "/capture/app.css": (STATIC / "app.css", CSS),
     "/capture/app.js": (STATIC / "app.js", JS),
@@ -45,13 +52,14 @@ FILES = {
     "/atlas/style.css": (graphview.ASSETS / "map" / "style.css", CSS),
     "/atlas/cytoscape.min.js": (graphview.ASSETS / "cytoscape.min.js", JS),
 }
-for _page in ("/capture/", "/atlas/"):  # the shared shell sits beside every page, as it does in wiki/graph/
+for _page in ("/static/", "/capture/", "/atlas/"):  # the shared shell sits beside every page, as in wiki/graph/
     FILES[_page + "shell.css"] = (STATIC / "shell.css", CSS)
     FILES[_page + "nav.js"] = (STATIC / "nav.js", JS)
 BASE_CSP = "default-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; " \
-           "frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
-CSP = {"capture": BASE_CSP + "; style-src 'self'",
-       "atlas": BASE_CSP + "; style-src 'self' 'unsafe-inline'"}  # Cytoscape and the map set inline styles
+           "base-uri 'none'; form-action 'self'"
+CSP = {"page": BASE_CSP + "; style-src 'self'; frame-ancestors 'none'",
+       # Cytoscape and the map set inline styles; a dossier embeds the map from the same origin
+       "atlas": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"}
 # What vault.replay reads; a change to any of these files replays the vault again.
 WATCHED = ("processed", "relations", "graph-reviews", "people", "translations", "overrides.yaml",
            ".cache/cluster-names.json", ".cache/cluster-themes.json", "wiki/items", "wiki/people")
@@ -89,6 +97,16 @@ class State:
                 self._store.topics()  # build the groups now, while no one else reads
                 self._key, self._map = key, None
             return self._store
+
+    def catalog(self, now: datetime | None = None) -> list[dict]:
+        with self._lock:
+            return dossier.catalog(self.store(), now or datetime.now(timezone.utc))
+
+    def dossier(self, key: str | None, query: str | None, at: datetime | None = None) -> dict | None:
+        with self._lock:
+            store = self.store()
+            scope = dossier.resolve(store, key, query)
+            return dossier.build(store, scope, at or datetime.now(timezone.utc)) if scope else None
 
     def map(self, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)
@@ -146,7 +164,7 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
         def _local(self) -> bool:
             return self.headers.get("Host", "") in self._hosts()
 
-        def _send(self, status: int, body: bytes, kind: str, csp: str = CSP["capture"], headers=()):
+        def _send(self, status: int, body: bytes, kind: str, csp: str = CSP["page"], headers=()):
             self.send_response(status)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(body)))
@@ -168,11 +186,10 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
         def do_GET(self):
             if not self._local():
                 return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
-            path = urlsplit(self.path).path
-            if path == "/":
-                return self._redirect("/atlas/")
-            if path in ("/atlas", "/capture"):
-                return self._redirect(path + "/")
+            url = urlsplit(self.path)
+            path, args = url.path, {k: v[-1] for k, v in parse_qs(url.query).items()}
+            if path in ("/atlas", "/capture", "/topic"):
+                return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
             if path == "/atlas/":
                 html = graphview.page(state.map())
                 html = html.replace("connect-src 'none'", "connect-src 'self'")  # the page may post decisions back
@@ -181,6 +198,17 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.OK, state.map())
             if path == "/api/proposals":
                 return self._json(HTTPStatus.OK, state.map()["proposals"])
+            if path == "/api/topics":
+                return self._json(HTTPStatus.OK, state.catalog())
+            if path == "/api/dossier":
+                try:
+                    at = datetime.fromisoformat(args["at"]) if args.get("at") else None
+                except ValueError:
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "at must be an ISO date."})
+                result = state.dossier(args.get("topic") or None, args.get("q") or None,
+                                       at.replace(tzinfo=at.tzinfo or timezone.utc) if at else None)
+                return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
+                                  result or {"error": "Nothing in your knowledge matches that yet."})
             if path == "/api/submissions":
                 return self._json(HTTPStatus.OK, workspace.list_jobs())
             if match := SUBMISSION.match(path):
@@ -192,7 +220,7 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                   headers=[("Content-Disposition", 'attachment; filename="original-upload"')])
             if path in FILES:
                 file, kind = FILES[path]
-                return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP[path.split("/")[1]])
+                return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP["atlas" if path.startswith("/atlas/") else "page"])
             return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
 
         def do_POST(self):
