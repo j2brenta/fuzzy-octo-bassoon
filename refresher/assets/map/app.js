@@ -5,13 +5,13 @@
   const data = JSON.parse(document.getElementById('map-data').textContent);
   const $ = id => document.getElementById(id);
   const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: [],
-    lang: 'original', view: null};
+    lang: 'original', view: null, peopleSubject: ''};
   try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
   // Embedded in a dossier (/topic/): the map and the evidence only, over the dossier's sources (atlas.scope).
   const params = new URLSearchParams(location.search);
   const embedded = params.has('embed');
   if (embedded) document.body.classList.add('embedded');
-  if (['documents', 'claims', 'topics'].includes(params.get('mode'))) state.mode = params.get('mode');
+  if (['documents', 'claims', 'topics', 'people'].includes(params.get('mode'))) state.mode = params.get('mode');
   state.only = null;  // item ids, or null for all
   const items = new Map(data.items.map(x => [x.id, x]));
   const claims = new Map(data.claims.map(x => [x.id, x]));
@@ -20,6 +20,33 @@
   const links = data.links || [];
   // Profiles: people and organizations, told apart by kind; an organization also has a type.
   const people = new Map([...(data.people || []), ...(data.organizations || [])].map(x => [x.id, x]));
+  for (const subject of data.people_subjects || []) {
+    const option = el('option', `${subject.title}${subject.kind === 'cluster' ? ' (provisional cluster)' : ''}`);
+    option.value = subject.id; $('people-subject').append(option);
+  }
+  const scoreSubject = () => state.peopleSubject || (state.topic !== 'unassigned' ? state.topic : '') || '';
+  function rankedPeople(visible) {
+    const allowed = new Set(visible.map(i => i.id));
+    return (data.people_scores?.[scoreSubject()] || []).filter(r => {
+      const person = people.get(r.person_id);
+      const stated = (person?.statements || []).some(id => {
+        const claim = claims.get(id);
+        return allowed.has(claim?.item) && (!scoreSubject() || r.claim_ids.includes(id));
+      });
+      const about = (person?.facts || []).some(id => {
+        const claim = claims.get(id), item = items.get(claim?.item);
+        return allowed.has(claim?.item) && (!scoreSubject() || item?.topics.includes(scoreSubject()) ||
+          item?.stories.some(id => stories.get(id)?.cluster === scoreSubject()));
+      });
+      return stated || about;
+    });
+  }
+  function peopleSummary(person) {
+    const stated = person?.statements?.length || 0, facts = person?.facts?.length || 0;
+    return [stated ? `${stated} attributed statement${stated === 1 ? '' : 's'}` : '',
+      facts ? `${facts} sourced fact${facts === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+  }
+  const scoreText = score => score?.importance == null ? (people.get(score?.person_id)?.facts?.length ? 'Facts about them' : 'Unscored') : `Rank #${score.rank}`;
   const kinds = {merge_ideas: 'Merge two Ideas', topic: 'New topic', merge_people: 'Same person',
     relation: 'Confirm a relation'};
   const basisWords = {auto: 'automatic', accepted: 'accepted by you', proposal: 'proposed, waiting for you'};
@@ -40,6 +67,7 @@
     return (Number.isNaN(d.valueOf()) ? item.time : d.toLocaleDateString('en', {day: 'numeric', month: 'short', year: 'numeric'})) + ' · ' + item.time_basis;
   }
   function external(url) {
+    try { if (!['http:', 'https:'].includes(new URL(url).protocol)) return el('span', 'Source URL unavailable'); } catch { return el('span', 'Source URL unavailable'); }
     const a = el('a', 'Open the source ↗ (external site)');
     a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.referrerPolicy = 'no-referrer'; return a;
   }
@@ -142,7 +170,7 @@
       ...data.topics.map(t => ({...t, count: data.items.filter(i => i.topics.includes(t.id)).length, groups: t.clusters.length})),
       {id: 'unassigned', title: 'No topic yet', count: data.items.filter(i => !i.topics.length).length, groups: loose}];
     for (const topic of topics) {
-      const node = button('', () => {state.topic = topic.id; state.story = ''; $('story-filter').value = ''; state.ego = false; refresh();}, 'topic');
+      const node = button('', () => {state.topic = topic.id; state.peopleSubject = ''; state.story = ''; $('story-filter').value = ''; state.ego = false; refresh();}, 'topic');
       node.setAttribute('aria-pressed', String(state.topic === topic.id));
       const extra = (topic.groups ? ` · ${topic.groups} clusters` : '') + (topic.attached?.length ? ` · ${topic.attached.length} provisional` : '');
       node.append(el('strong', topic.title), el('span', `${topic.count} items${extra}`, 'topic-count')); $('topics').append(node);
@@ -181,8 +209,8 @@
       {selector: 'node[kind="cluster"]', style: {'background-color': token('--r-soft', '#edf0fd'), 'border-color': token('--r-graph-link', '#8b9ed9'),
         'width': 'data(size)', 'height': 'data(size)', 'shape': 'ellipse', 'font-size': 11, 'text-max-width': 150}},
       {selector: 'node[kind="topic"]', style: {'background-color': token('--r-graph-topic', '#f3e6ad'), 'border-color': token('--r-graph-topic-outline', '#c8aa45')}},
-      {selector: 'node[kind="person"]', style: {'shape': 'diamond', 'width': 'data(size)', 'height': 'data(size)',
-        'background-color': token('--r-graph-person', '#fbe2d8'), 'border-color': token('--r-graph-person-outline', '#c77560'), 'font-size': 11, 'text-max-width': 140}},
+      {selector: 'node[kind="person"]', style: {'shape': 'round-rectangle', 'width': 180, 'height': 64,
+        'background-color': token('--r-graph-person', '#fbe2d8'), 'border-color': token('--r-graph-person-outline', '#c77560'), 'font-size': 12, 'text-max-width': 166}},
       {selector: 'edge[kind="WROTE"]', style: {'width': 'data(width)', 'line-color': token('--r-graph-person-outline', '#c77560'), 'target-arrow-color': token('--r-graph-person-outline', '#c77560'),
         'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': .75}},
       {selector: 'node[pending=1]', style: {'border-color': token('--r-graph-pending-outline', '#bb8035'), 'background-color': token('--r-graph-pending', '#fff0cf')}},
@@ -204,6 +232,11 @@
       {selector: 'edge.highlight', style: {'width': 3, 'line-color': accepted, 'target-arrow-color': accepted}},
       {selector: ':selected', style: {'border-color': accepted, 'border-width': 3}}
     ]});
+  function fitGraph() {
+    cy.fit(cy.elements(), 34);
+    // A lone person should stay at normal text size rather than fill the canvas.
+    if (state.mode === 'people' && cy.zoom() > 1) {cy.zoom(1); cy.center();}
+  }
   const topicTitle = id => id?.startsWith('about:') ? 'About ' + (people.get(id.slice(6))?.name || 'someone')
     : data.topics.find(t => t.id === id)?.title || 'No topic yet';
   const groupOf = new Map();  // node -> topic region: an item by its Ideas' topics, a claim by its own Idea's
@@ -220,7 +253,28 @@
     const allowedItems = new Set(visible.map(x => x.id));
     let nodes, edges;
     const filter = $('review-filter').value;
-    if (state.mode === 'documents') {
+    if (state.mode === 'people') {
+      const rows = rankedPeople(visible).slice(0, data.limits.primary_nodes);
+      nodes = rows.map(r => {
+        const person = people.get(r.person_id);
+        return {id:r.person_id, kind:'person', label:`${person.name}\n${peopleSummary(person)}`,
+          pending:Number([...(person.statements || []), ...person.facts].every(id => claims.get(id)?.quality !== 'accepted'))};
+      });
+      edges = []; const subjectNodes = new Map();
+      const subjects = (data.people_subjects || []).filter(s => !scoreSubject() || s.id === scoreSubject());
+      for (const r of rows) {
+        if (r.importance == null) continue;
+        for (const s of subjects) {
+          const scoped = data.people_scores[s.id]?.find(x => x.person_id === r.person_id);
+          if (!scoped?.idea_count || nodes.length + subjectNodes.size >= data.limits.primary_nodes) continue;
+          subjectNodes.set(s.id, {id:s.id, kind:s.kind, size:75, label:s.title});
+          edges.push({id:`contributes>${r.person_id}>${s.id}`, source:r.person_id, target:s.id, kind:'CONTRIBUTES',
+            label:`${scoped.idea_count} Ideas`, width:1 + Math.min(scoped.idea_count, 5), basis:'auto'});
+        }
+      }
+      nodes.push(...subjectNodes.values());
+      return {nodes, edges, total:nodes.length, allNodes:nodes, allEdges:edges, topics:[]};
+    } else if (state.mode === 'documents') {
       nodes = visible.map(i => ({id: i.id, kind: 'document', label: i.title.slice(0, 110), pending: Number(i.quality !== 'accepted')}));
       edges = data.item_edges.filter(e => allowedItems.has(e.source) && allowedItems.has(e.target));
     } else if (state.mode === 'topics') {
@@ -265,6 +319,14 @@
     return {nodes, edges: edges.filter(e => shown.has(e.source) && shown.has(e.target)), total, allNodes, allEdges};
   }
   function renderTimeline(visible) {
+    $('timeline-heading').textContent = state.mode === 'people' ? 'People' : 'Timeline';
+    if (state.mode === 'people') {
+      const rows = rankedPeople(visible); $('timeline').replaceChildren(); $('list-count').textContent = `${rows.length} people`;
+      rows.forEach(r => {const person = people.get(r.person_id); const entry = button('', () => selectPerson(r.person_id), 'item-button' + (state.selection === r.person_id ? ' active' : ''));
+        entry.append(el('span', person.name, 'item-title'), el('span', `${r.importance == null ? '' : scoreText(r) + ' · '}${peopleSummary(person)}`, 'item-source')); $('timeline').append(entry);});
+      if (!rows.length) $('timeline').append(el('p', 'No attributed speakers or sourced facts about people in this view yet.', 'quiet'));
+      return;
+    }
     $('timeline').replaceChildren(); $('list-count').textContent = `${visible.length} items`;
     for (const item of visible) {
       const active = state.selection === item.id || claims.get(state.selection)?.item === item.id;
@@ -276,6 +338,11 @@
     }
     if (!visible.length) $('timeline').append(el('p', 'No items match these filters.', 'quiet'));
   }
+  function peopleLayout(count, width) {
+    const cols = Math.max(1, Math.min(count, Math.floor(width / 240)));
+    return {name:'grid', cols, rows:Math.max(1, Math.ceil(count / cols)), avoidOverlap:true,
+      avoidOverlapPadding:32, nodeDimensionsIncludeLabels:true, fit:false, animate:false, padding:30};
+  }
   function renderTopicGraph(slice) {
     // Topics hold their clusters; links join clusters (and whole topics). The layout settles from a grid.
     cy.batch(() => {cy.elements().remove(); cy.add([
@@ -284,14 +351,15 @@
         position: {x: (i % 6) * 200, y: Math.floor(i / 6) * 170}})),
       ...slice.edges.map(e => ({group: 'edges', data: {...e}}))]);});
     cy.nodes().unlock();
-    cy.layout({name: 'cose', animate: false, randomize: false, nodeDimensionsIncludeLabels: true, padding: 30,
+    cy.layout(state.mode === 'people' ? peopleLayout(slice.nodes.length, cy.width()) :
+      {name: 'cose', animate: false, randomize: false, nodeDimensionsIncludeLabels: true, padding: 30,
       // "wrote" edges carry no weight; a NaN length would leave every position empty.
       idealEdgeLength: e => 150 / Math.max(1, Number(e.data('weight')) || 1), nodeRepulsion: () => 9000, numIter: 1500}).run();
-    cy.nodes().lock(); cy.fit(cy.elements(), 34);
+    cy.nodes().lock(); fitGraph();
   }
   function renderGraph(visible) {
     const slice = graphSlice(visible);
-    if (state.mode === 'topics') renderTopicGraph(slice);
+    if (state.mode === 'topics' || state.mode === 'people') renderTopicGraph(slice);
     else {
     const shownGroups = [...new Set(slice.nodes.map(n => groupOf.get(n.id) || 'unassigned'))].sort();
     const compact = new Map(), subregions = new Map(); let groupX = 0;
@@ -317,19 +385,19 @@
         label: (clusters.get(sub.cluster)?.title || 'Cluster') + ` · ${sub.count}`}})),
       ...slice.nodes.map(n => ({group: 'nodes', data: {...n, parent: parentOf(n)}, position: compact.get(n.id)})),
       ...slice.edges.map(e => ({group: 'edges', data: {...e}}))]);});
-    cy.nodes().lock(); cy.fit(cy.elements(), 34);
+    cy.nodes().lock(); fitGraph();
     }
     $('map-empty').hidden = slice.nodes.length > 0;
     $('map-count').textContent = `${slice.nodes.length} nodes · ${slice.edges.length} relations`;
     $('hidden-count').textContent = slice.total > slice.nodes.length ? `${slice.total - slice.nodes.length} nodes hidden; narrow the filters or focus.` : 'Every node in this slice';
     $('map-title').textContent = {documents: 'Sources and how their claims relate', claims: 'Claims in their clusters and topics',
-      topics: 'Clusters, topics and the links between them'}[state.mode];
+      topics: 'Clusters, topics and the links between them', people:'People and their evidence'}[state.mode];
     $('graph-list').replaceChildren();
     slice.allNodes.forEach(n => $('graph-list').append(button(n.label, () => selectNode(n.id))));
     const nodeLabel = id => items.get(id)?.title || claims.get(id)?.statement || clusters.get(id)?.title
       || people.get(id)?.name || topicTitle(id);
     slice.allEdges.forEach(e => $('graph-list').append(button(`${nodeLabel(e.source)} → ${e.label} (${basisWords[e.basis]}) → ${nodeLabel(e.target)}`,
-      () => e.kind === 'LINK' ? selectLink(e) : e.kind === 'WROTE' ? selectPerson(e.source) : selectEdge(e))));
+      () => e.kind === 'LINK' ? selectLink(e) : ['WROTE', 'CONTRIBUTES'].includes(e.kind) ? selectPerson(e.source) : selectEdge(e))));
     highlight();
   }
   function highlight() {
@@ -550,12 +618,31 @@
     if (!l.relations.length && !l.shared.length) $('detail').append(el('p', 'Linked by similarity alone: no relation crosses them yet.', 'small quiet'));
     state.selection = l.source; highlight();
   }
-  function selectPerson(id) {
-    const person = people.get(id); if (!person) return; show(selectPerson, id);
-    state.selection = id; state.detailItems = person.items;
-    $('detail').replaceChildren(el('p', person.kind === 'person' ? 'PERSON' : 'ORGANIZATION · ' + orgType(person).toUpperCase(), 'eyebrow'),
-      el('h3', person.name, 'detail-title'),
+  function selectPerson(id, scopedScore = null) {
+    const person = people.get(id); if (!person) return; show(selectPerson, id, scopedScore);
+    state.selection = id; state.detailItems = [...person.items, ...person.about_in, ...(person.statements || []).map(c => claims.get(c)?.item)].filter(Boolean);
+    $('detail').replaceChildren(el('p', person.kind === 'person' ? 'PERSON' : 'ORGANIZATION · ' + orgType(person).toUpperCase(), 'eyebrow'), el('h3', person.name, 'detail-title'),
       el('p', `${plural(person.facts.length, 'fact')} about them · ${plural(person.items.length, 'post')} by them, ${person.about_in.length} about them`, 'detail-meta'));
+    if (person.kind === 'person') {
+      if (!person.statements?.length && person.facts.length) $('detail').append(el('p','Sourced facts about this person are saved here. No statements are attributed to them, so they receive no speaker contribution score.','small quiet'));
+      else if (!person.statements?.length) $('detail').append(el('p','Mention only: no statements are attributed to this person. They are excluded from the People graph and ranking.','small quiet'));
+      else if (person.identity_url) {const a=external(person.identity_url); a.textContent='Profile identity checked by you ↗'; $('detail').append(a);}
+      else $('detail').append(el('p','Unresolved name group: use speaker review on individual statements to separate same-name people by profile URL.','small quiet'));
+      const rank = scopedScore || data.people_scores?.[scoreSubject()]?.find(r => r.person_id === id);
+      if (rank && person.statements?.length) {
+        $('detail').append(el('h3', `Contribution: ${scoreText(rank)}`, 'detail-section'),
+          el('p', `${rank.evidence_level} evidence · ${rank.source_count} accepted source items · ${rank.idea_count} distinct Ideas`, 'detail-meta'));
+        const parts = el('div', null, 'chips');
+        for (const [label, value] of [['Subject coverage', rank.subject_relevance], ['Track record', rank.track_record], ['Professional relevance', rank.professional_relevance]]) parts.append(el('span', `${label}: ${value == null ? 'unknown (neutral)' : value.toFixed(2)}`, 'chip'));
+        $('detail').append(parts);
+        rank.rationale.forEach(reason => $('detail').append(el('p', reason, 'score-reason')));
+        if (rank.claim_ids.length) { const list = el('div', null, 'claim-list'); rank.claim_ids.forEach(c => claims.has(c) && list.append(claimRow(claims.get(c), true))); $('detail').append(el('h3', 'Accepted statements behind the score', 'detail-section'), list); }
+        for (const source of rank.profile_sources) { const a = external(source.url); a.textContent = `${source.value} ↗`; $('detail').append(a); }
+      }
+      for (const field of [person.role, person.affiliation].filter(Boolean)) {const a = external(field.url); a.textContent = `${field.value} ↗`; $('detail').append(a);}
+      const pending = (person.statements || []).filter(c => claims.get(c)?.quality !== 'accepted');
+      if (pending.length) $('detail').append(el('p', `${pending.length} attributed statements await acceptance and do not affect the score.`, 'chip warn'));
+    }
     const named = data.items.filter(i => i.mentions.some(m => m.id === id) && !person.items.includes(i.id) && !person.about_in.includes(i.id)).map(i => i.id);
     const fed = Object.entries(person.clusters).sort((a, b) => b[1] - a[1]);
     const topicIds = [...new Set(fed.flatMap(([cid]) => clusters.get(cid)?.topics || []))];
@@ -587,6 +674,11 @@
     const title = el('h3', c.statement, 'detail-title' + (c.superseded ? ' superseded' : '')); title.append(band(c));
     $('detail').replaceChildren(el('p', 'CLAIM', 'eyebrow'), title,
       el('p', [c.kind, c.durability, c.superseded ? 'superseded' : null, c.noise ? 'noise' : null, c.quality !== 'accepted' ? c.quality : null].filter(Boolean).join(' · '), 'detail-meta'));
+    if (c.speaker && people.has(c.speaker)) $('detail').append(pill(`Stated by ${people.get(c.speaker).name}`, () => selectPerson(c.speaker), 'person', c.attribution?.kind === 'quoted' ? 'Quoted speaker; distinct from the document author' : 'Source author'));
+    else $('detail').append(el('p', 'Speaker attribution unknown; this statement gives no person scoring credit.', 'small quiet'));
+    if (data.served) window.peopleReview.mount($('detail'), c);
+    $('detail').append(el('p', c.attribution_reviewed ? 'Speaker checked by you.' : 'Speaker is model-inferred and has not been checked by you.', 'small quiet'));
+    if (c.evidence_origin) {const a=external(c.evidence_origin); a.textContent='Primary evidence origin checked by you ↗'; $('detail').append(a);}
     // Where it grows from, then what it grows into.
     $('detail').append(el('h3', 'Grows from', 'detail-section'),
       pills([itemPill(c.item, [item.source, item.author, date(item)].filter(Boolean).join(' · '))]));
@@ -657,7 +749,7 @@
       if (relation) card.append(el('p', `${relation.label} · ${basisWords[relation.basis]}`, 'chip'));
       const story = c.idea && stories.get(c.idea);
       const table = el('table', null, 'context-table');
-      for (const [label, value] of [['Author', item.author || 'Unknown'], ['Source', item.source], ['Kind', c.kind],
+      for (const [label, value] of [['Writer', item.author || 'Unknown'], ['Speaker', people.get(c.speaker)?.name || 'Unknown'], ['Source', item.source], ['Kind', c.kind],
           ['Durability', c.durability], ['Freshness', `${c.band} (${c.freshness})`], ['Idea', story ? story.title : 'None'],
           ['Superseded', c.superseded ? 'Yes' : 'No'], ['Quality', c.quality]]) {
         const row = el('tr'); row.append(el('th', label), el('td', value)); table.append(row);
@@ -679,24 +771,32 @@
     renderComparison();
   }
   function setMode() {
-    for (const other of ['documents', 'claims', 'topics']) $('mode-' + other).setAttribute('aria-pressed', String(other === state.mode));
+    for (const other of ['documents', 'claims', 'topics', 'people']) $('mode-' + other).setAttribute('aria-pressed', String(other === state.mode));
   }
   function refresh() {
+    $('people-subject').hidden = state.mode !== 'people';
+    $('people-score-note').hidden = state.mode !== 'people';
+    $('people-tools').hidden = state.mode !== 'people' || !data.served;
+    $('graph-geometry').hidden = state.mode === 'people';
+    $('review-filter').hidden = state.mode === 'people';
+    $('people-subject').value = scoreSubject();
     renderTopics(); const visible = filteredItems(), allowed = new Set(visible.map(i => i.id));
     const selectedItem = claims.get(state.selection)?.item || state.selection;
-    if ((selectedItem && !allowed.has(selectedItem)) || state.detailItems.some(id => !allowed.has(id))) {
+    if ((selectedItem && !people.has(selectedItem) && !allowed.has(selectedItem)) || state.detailItems.some(id => !allowed.has(id))) {
       state.selection = null; state.ego = false; clearDetail();
     }
     state.comparison = state.comparison.filter(id => claims.has(id));
     const topic = data.topics.find(t => t.id === state.topic)?.title || (state.topic === 'unassigned' ? 'No topic yet' : 'All topics');
     const story = stories.get(state.story)?.title || 'All Ideas';
     const scope = `${topic} / ${story.slice(0, 60)} · ${visible.length} items · quality: ${$('quality-filter').value || 'any'} · freshness: ${$('band-filter').value || 'any'} · from: ${$('date-filter').value || 'any date'}`;
-    $('reading-scope').textContent = scope; $('compare-scope').textContent = 'Same slice: ' + scope;
+    const scoringLabel = state.mode === 'people' ? `Scoring subject: ${data.people_subjects?.find(s => s.id === scoreSubject())?.title || 'All subjects'} · ` : '';
+    $('reading-scope').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
     renderTimeline(visible); renderGraph(visible); renderComparison();
   }
   cy.on('tap', 'node', e => { if (!['region', 'cluster-region'].includes(e.target.data('kind'))) selectNode(e.target.id()); });
   cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data())
-    : e.target.data('kind') === 'WROTE' ? selectPerson(e.target.data('source')) : selectEdge(e.target.data()));
+    : ['WROTE', 'CONTRIBUTES'].includes(e.target.data('kind')) ? selectPerson(e.target.data('source')) : selectEdge(e.target.data()));
+  $('people-subject').addEventListener('change', e => {state.peopleSubject = e.target.value; state.topic = ''; state.story = ''; $('story-filter').value = ''; state.selection = null; clearDetail(); refresh();});
   $('story-filter').addEventListener('change', e => {state.story = e.target.value; state.ego = false; refresh();});
   ['quality-filter', 'band-filter', 'date-filter', 'hide-reposts', 'review-filter'].forEach(id => $(id).addEventListener('change', refresh));
   $('show-decided').addEventListener('change', renderProposals);
@@ -705,17 +805,17 @@
   for (const lang of ['original', 'translation']) $('lang-' + lang).addEventListener('click', () => setLang(lang));
   for (const lang of ['original', 'translation']) $('lang-' + lang).setAttribute('aria-pressed', String(lang === state.lang));
   $('search').addEventListener('input', refresh);
-  for (const mode of ['documents', 'claims', 'topics']) $('mode-' + mode).addEventListener('click', () => {
+  for (const mode of ['documents', 'claims', 'topics', 'people']) $('mode-' + mode).addEventListener('click', () => {
     state.mode = mode; state.ego = false; state.selection = null; clearDetail(); setMode(); refresh();
   });
   $('zoom-in').addEventListener('click', () => cy.zoom({level: cy.zoom() * 1.25, renderedPosition: {x: cy.width() / 2, y: cy.height() / 2}}));
   $('zoom-out').addEventListener('click', () => cy.zoom({level: cy.zoom() / 1.25, renderedPosition: {x: cy.width() / 2, y: cy.height() / 2}}));
-  $('fit').addEventListener('click', () => cy.fit(cy.elements(), 34));
+  $('fit').addEventListener('click', () => fitGraph());
   $('ego').addEventListener('click', () => {state.ego = true; renderGraph(filteredItems());});
   $('clear-focus').addEventListener('click', () => {state.ego = false; renderGraph(filteredItems());});
   $('clear-compare').addEventListener('click', () => {state.comparison = []; renderComparison();});
   $('reset').addEventListener('click', () => {
-    state.topic = ''; state.story = ''; state.ego = false; state.selection = null;
+    state.topic = ''; state.peopleSubject = ''; state.story = ''; state.ego = false; state.selection = null;
     clearDetail();
     for (const id of ['story-filter', 'quality-filter', 'band-filter', 'date-filter', 'search', 'review-filter']) $(id).value = '';
     $('hide-reposts').checked = false; refresh();
@@ -737,7 +837,9 @@
   function showDetail() {  // a pick made from outside (the dossier): its evidence from the top, even when it sits below the map
     $('detail').scrollTop = 0; document.querySelector('.evidence-column').scrollIntoView({block: 'start'});
   }
+  if (data.served) window.peopleReview.backfill($('people-tools'));
   setMode(); renderProposals(); refresh();
+  if (params.get('claim')) selectNode(params.get('claim'));
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
     spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);

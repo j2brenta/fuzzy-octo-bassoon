@@ -72,3 +72,45 @@ body.embedded .evidence-column #detail{columns:1;max-height:none}
 @media(min-width:1100px){body.embedded .workspace{grid-template-columns:minmax(0,1fr) 400px}
   body.embedded .evidence-column{border-top:0;border-left:1px solid var(--line)}body.embedded .canvas-wrap{height:calc(100vh - 150px)}
   body.embedded .evidence-column #detail{max-height:calc(100vh - 80px)}}
+
+/* Compact graph controls: the map, not an introduction, is the primary view. */
+.graph-summary { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 24px; margin:18px 0 14px; }
+.graph-summary h1 { margin:0; font:400 28px/1.2 var(--r-serif); letter-spacing:-.7px; }
+.graph-summary .stats { display:flex; flex-wrap:wrap; gap:6px 18px; color:var(--muted); }
+.graph-summary .stat { display:inline-flex; align-items:baseline; gap:5px; font-size:11px; }
+.graph-summary .stat strong { color:var(--r-brand); font:600 15px/1.5 var(--r-sans); }
+.graph-summary .stat span { font-size:11px; }
+.topic-section { display:flex; align-items:center; gap:18px; padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:var(--panel); margin-bottom:10px; }
+.topic-section .section-top { margin:0; gap:12px; flex-shrink:0; }
+.topic-section .section-top h2 { font:600 13px/1.5 var(--sans); }
+.topic-section .topics { min-width:0; padding:0; }
+.topic-section .topic { display:inline-flex; align-items:center; gap:8px; flex-shrink:0; min-width:0; min-height:38px; padding:7px 12px; }
+.topic-section .topic .topic-count { display:inline; margin:0; white-space:nowrap; font-size:10px; }
+#reading-scope { margin:8px 0; }
+.canvas-wrap { height:clamp(420px, calc(100dvh - 300px), 900px); }
+.proposal-section { padding-top:24px; }
+.score-reason { font-size:11px; color:var(--muted); line-height:1.6; margin:8px 0; }
+.evidence-column a { display:inline-block; margin:5px 8px 5px 0; font-size:11px; }
+.segmented { flex-wrap:wrap; }
+#people-subject { max-width:250px; border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--ink); }
+body.embedded .graph-summary { display:none; }
+body.embedded .workspace { display:grid; }
+@media(max-width:760px) {
+ .graph-summary h1 { font-size:24px; } .graph-summary .stats { gap:4px 12px; }
+ .topic-section { padding:8px 10px; gap:10px; flex-wrap:wrap; } .topic-section .topics { width:100%; }
+ .workspace { display:flex; flex-direction:column; } .map-column { order:-1; border-top:0; }
+ .timeline-column { border-top:1px solid var(--line); } .canvas-wrap { height:440px; }
+ body.embedded .workspace { display:grid; }
+}
+
+/* Reviewer controls share the evidence panel's typography and compact spacing. */
+.people-review { margin:12px 0; padding:12px; border:1px solid var(--line, #d8d5cd); border-radius:10px; }
+.people-review summary { cursor:pointer; font-weight:600; }
+.people-field { display:flex; flex-direction:column; gap:6px; margin:12px 0; font-size:13px; }
+.people-field:has(input[type="checkbox"]) { flex-direction:row-reverse; justify-content:flex-end; align-items:flex-start; }
+.people-field input:not([type="checkbox"]), .people-field select { width:100%; min-width:0; padding:8px; font:inherit; }
+.people-review fieldset { min-width:0; max-height:320px; overflow:auto; border:1px solid var(--line, #d8d5cd); padding:10px; }
+.people-review legend { font-size:12px; }
+.people-passage { display:flex; align-items:flex-start; gap:8px; padding:8px 0; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+.people-passage input { flex:none; margin-top:4px; }
+.people-update-list { max-height:240px; overflow:auto; }

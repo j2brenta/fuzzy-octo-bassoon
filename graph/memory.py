@@ -14,11 +14,12 @@ from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
 from graph.names import display_name, same_person as _same_person
+from graph.attribution import author_name, is_named_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
 from graph.store import (Affiliation, ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode,
                          Placement, ReviewReport, SourceNode, TopicNode)
 from refresher import scoring
-from refresher.schemas import Extraction, Override, Relation, Verdict
+from refresher.schemas import Attribution, Extraction, Override, Relation, Verdict
 
 REPOST_SIMILARITY = 0.8  # item text, word 3-gram Jaccard
 REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its match in the original
@@ -127,7 +128,8 @@ class MemoryStore:
 
     # --- writes ---
 
-    def apply(self, extraction: Extraction, text: str = "", relation: Relation | None = None) -> Placement:
+    def apply(self, extraction: Extraction, text: str = "", relation: Relation | None = None, *,
+              attribution_reviews: dict | None = None) -> Placement:
         ex, src = extraction, extraction.source
         if ex.item_id in self._items:
             return Placement(ex.item_id, "already_placed")
@@ -145,20 +147,20 @@ class MemoryStore:
                         hidden=skipped, linked_from=(ex.parent or {}).get("item_id"))
         self._items[ex.item_id] = item
         self._placed_hash ^= _id_hash(ex.item_id)
-        self._entities[ex.item_id] = frozenset(e.name.casefold() for e in ex.entities)
+        self._entities[ex.item_id] = frozenset(e.name.casefold() for e in ex.entities if e.kind != "person" or is_named_person(e.name))
         new_edges: list[Edge] = []
 
         if skipped:
             # A stub brings no source, people or mentions; the author id only decides independence.
             self.held_back[ex.item_id] = "skipped by triage"
-            item.author_id = person_id(src.author_hint.name) if src.author_hint and src.author_hint.name else None
+            item.author_id = person_id(src.author_hint.name) if author_name(src) else None
         else:
             key = f"source:{src.channel}:{src.source_name or src.source_id}"
             self._sources.setdefault(key, SourceNode(key, src.source_name or src.source_id, src.channel)).items.add(ex.item_id)
             item.source_key = key
             new_edges.append(Edge(ex.item_id, "PUBLISHED_IN", key))
 
-            if src.author_hint and src.author_hint.name:
+            if author_name(src):
                 author = self._person(src.author_hint.name)
                 if src.author_hint.handle:
                     author.handles.add(src.author_hint.handle)
@@ -167,7 +169,7 @@ class MemoryStore:
                 new_edges.append(Edge(ex.item_id, "AUTHORED_BY", author.person_id))
             ids = {}  # entity id -> person or org id, for the affiliations
             for ent in ex.entities:
-                if ent.kind == "person":
+                if ent.kind == "person" and is_named_person(ent.name) and is_named_person(ent.base_name or ent.name):
                     # The nominative form, so "Кости Крестникова" here and "Костя Крестников" elsewhere are one id.
                     name = ent.base_name or ent.name
                     pid = ids[ent.entity_id] = person_id(name)
@@ -202,10 +204,30 @@ class MemoryStore:
 
         if relation is None or not relation.matches(ex):
             relation = relate.judge(ex, text, self.candidate_pool(ex.item_id), relate.LexicalRelator())
-        self._verdicts.update({v.claim_id: v for v in relation.verdicts})
+        base_names = {e.name: e.base_name or e.name for e in ex.entities}
+        for verdict in relation.verdicts:
+            if verdict.subject == 'person' and not is_named_person(verdict.subject_name):
+                verdict = verdict.model_copy(update={'subject':'world','subject_name':None})
+            elif verdict.subject != 'world':
+                verdict = verdict.model_copy(update={'subject_name':base_names.get(verdict.subject_name, verdict.subject_name)})
+            self._verdicts[verdict.claim_id] = verdict
+        from graph.attribution import validate as validate_attribution
         for claim in ex.claims:
+            attribution = self._verdicts.get(claim.claim_id)
+            attribution = attribution.attribution if attribution else None
+            try:
+                attribution = validate_attribution(attribution, src, ex.entities, claim, text)
+            except ValueError:
+                attribution = Attribution(kind="unknown")  # invalid provenance cannot fall back to writer credit
+            review = (attribution_reviews or {}).get(claim.claim_id)
+            if review:
+                attribution = validate_attribution(review['attribution'], src, ex.entities, claim, text)
             self._claims[claim.claim_id] = ClaimNode(claim, ex.item_id, claim.durability_class,
-                                                     claim.half_life_days, src.event_time)
+                                                     claim.half_life_days, src.event_time, attribution=attribution,
+                                                     speaker_name=base_names.get(attribution.person_name, attribution.person_name) if attribution else None,
+                                                     attribution_reviewed=bool(review),
+                                                     identity_url=review['identity_url'] if review else None,
+                                                     evidence_origin=review['origin_url'] if review else None)
             new_edges += [Edge(claim.claim_id, "FROM", s.section_id) for s in claim.spans]
 
         self._edges += new_edges
@@ -293,6 +315,8 @@ class MemoryStore:
         gone, person = self._people.get(absorbed), self._people.get(kept)
         if gone is None or person is None or absorbed == kept:
             return
+        if (gone.identity_url or person.identity_url) and gone.identity_url != person.identity_url:
+            return  # Reviewed identities cannot be collapsed by name-based merges.
         self._aliases[absorbed] = kept
         person.handles |= gone.handles
         person.authored |= gone.authored
@@ -322,7 +346,7 @@ class MemoryStore:
             item = self._items[node.item_id]
             if node.item_id == item_id or item.duplicate_of or (verdict is not None and verdict.subject != "world"):
                 continue
-            author = item.source.author_hint.name if item.source.author_hint else None
+            author = author_name(item.source)
             out.append(Candidate(cid, node.claim.statement, node.item_id, item.source.event_time,
                                  item.source.source_name, author, node.idea_id, self._entities[node.item_id]))
         return out
@@ -336,7 +360,8 @@ class MemoryStore:
     def _independent(self, a: ClaimNode, b: ClaimNode) -> bool:
         """Provenance decides SUPPORTS: two known, different authors, and neither item a repost."""
         ia, ib = self._items[a.item_id], self._items[b.item_id]
-        return (ia.author_id is not None and ib.author_id is not None and ia.author_id != ib.author_id
+        pa, pb = (a.speaker_id, b.speaker_id) if a.attribution is not None or b.attribution is not None else (ia.author_id, ib.author_id)
+        return (pa is not None and pb is not None and pa != pb
                 and ia.duplicate_of is None and ib.duplicate_of is None)
 
     def _resolve(self) -> dict[str, list[str]]:
@@ -344,10 +369,17 @@ class MemoryStore:
         self._relations = []
         for profile in [*self._people.values(), *self._orgs.values()]:
             profile.facts = set()
+        for person in self._people.values():
+            person.statements = set()
         world: list[ClaimNode] = []
         for node in sorted(self._claims.values(), key=self._order):
             verdict = self._verdicts.get(node.claim.claim_id)
             hidden = self._items[node.item_id].hidden
+            node.speaker_id = None
+            if not hidden and node.attribution and node.attribution.person_name:
+                speaker = self._person(node.speaker_name or node.attribution.person_name, node.identity_url)
+                node.speaker_id = speaker.person_id
+                speaker.statements.add(node.claim.claim_id)
             if verdict is None or verdict.subject == "world":
                 node.subject_id = None
                 world.append(node)
@@ -610,34 +642,51 @@ class MemoryStore:
         """Recompute what scoring decides from the edges, so the result does not depend on arrival order.
 
         An independent confirmation (SUPPORTS) extends the earlier claim's half-life and moves its clock to the
-        later sighting; both authors gain a confirmation. CONTRADICTS counts against both authors.
+        later sighting; known speakers gain a confirmation. Unresolved disagreements do not decide who is wrong.
         """
         for node in self._claims.values():
             node.confirmations, node.superseded_by = 0, None
             node.clock_start = self._event_time(node)
         for person in self._people.values():
-            person.confirmations = person.contradictions = 0
+            person.confirmations = person.contradictions = person.disagreements = 0
         for e in self._relations:
             if e.src not in self._claims or e.dst not in self._claims:
                 continue
             later, first = self._claims[e.src], self._claims[e.dst]
-            authors = {self._items[later.item_id].author_id, self._items[first.item_id].author_id} & self._people.keys()
+            authors = {n.speaker_id if n.attribution is not None else self._items[n.item_id].author_id
+                       for n in (later, first)} & self._people.keys()
+            reviewed = all(self._items[n.item_id].review_status == "accepted" for n in (later, first))
             if e.type == "SUPPORTS":
                 first.confirmations += 1
                 first.clock_start = max(first.clock_start, e.at or self._event_time(later))
-                for pid in authors:
+                # Legacy records keep their original author-trust behavior. Attributed
+                # records use checked origins, computed by assertion group below.
+                for pid in authors if reviewed and later.attribution is None and first.attribution is None else ():
                     self._people[pid].confirmations += 1
             elif e.type == "SUPERSEDES":
                 first.superseded_by = later.claim.claim_id
-            elif e.type == "CONTRADICTS":
-                for pid in authors:
-                    self._people[pid].contradictions += 1
+            elif e.type == "CONTRADICTS" and reviewed:
+                if scoring.elapsed_days(self._event_time(first), e.at or self._event_time(later)) <= first.claim.half_life_days:
+                    for pid in authors:
+                        self._people[pid].disagreements += 1
+        from graph.corroboration import assertion_groups, checked_origins
+        accepted = {cid:n for cid,n in self._claims.items()
+                    if self._items[n.item_id].review_status == 'accepted'
+                    and not self._items[n.item_id].duplicate_of}
+        groups = assertion_groups(accepted, self._relations)
+        duplicates = {e.src for e in self._relations if e.type == 'DUPLICATES'}
+        current = {cid:n for cid,n in accepted.items() if cid not in duplicates and n.superseded_by is None}
+        for pid,origins in checked_origins(current,groups).items():
+            self._people[pid].confirmations += len(origins)
         for node in self._claims.values():
             base = (node.claim.half_life_days if node.durability == node.claim.durability_class
                     else scoring.HALF_LIFE_DAYS[node.durability])
             node.half_life_days = scoring.half_life(base, node.confirmations)
 
-    def _person(self, name: str) -> PersonNode:
+    def _person(self, name: str, identity_url: str | None = None) -> PersonNode:
+        if identity_url:
+            pid = 'person:profile-' + hashlib.sha256(identity_url.encode()).hexdigest()[:24]
+            return self._people.setdefault(pid, PersonNode(pid, display_name(name), identity_url=identity_url))
         pid = self._aliases.get(person_id(name), person_id(name))
         return self._people.setdefault(pid, PersonNode(pid, display_name(name)))
 
@@ -850,6 +899,8 @@ class MemoryStore:
             orgs_of.setdefault(tie.person_id, set()).add(tie.org_id)
         for n, a in enumerate(people):
             for b in people[n + 1:]:
+                if (a.identity_url or b.identity_url) and a.identity_url != b.identity_url:
+                    continue  # A name-based proposal cannot undo reviewed identity separation.
                 if not _same_person(a.name, b.name):
                     continue
                 posts_a, posts_b = self._posts_of(a), self._posts_of(b)
@@ -933,3 +984,9 @@ class MemoryStore:
         if p.trust_pinned is not None:
             return p.trust_pinned
         return scoring.trust_learned(p.confirmations, p.contradictions, p.up, p.down)
+
+    def experts(self, at: datetime, subject_id: str | None = None, *,
+                idea_ids: Iterable[str] | None = None, subject_title: str | None = None) -> list[dict]:
+        """Importance in this collection, scoped to an accepted topic or provisional cluster."""
+        from refresher.people_scoring import score_people
+        return score_people(self, at, subject_id, idea_ids=idea_ids, subject_title=subject_title)

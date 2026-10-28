@@ -73,5 +73,6 @@ class ReviewTimerTests(unittest.TestCase):
             stamp.write_text('2000-01-01T00:00:00+00:00')  # due: the last review is long ago
             os.utime(post, (1, 1))  # but the post is older than that review
             self.assertFalse(review_pending(vault))
-            os.utime(post, None)  # a post placed after it
+            after_review = stamp.stat().st_mtime + 1
+            os.utime(post, (after_review, after_review))  # explicitly newer, even on coarse container filesystems
             self.assertTrue(review_pending(vault))

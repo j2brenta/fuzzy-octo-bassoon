@@ -28,7 +28,7 @@ x-config: &config
     - path: .env
       required: false
   environment:
-    REFRESHER_VAULT: /data/telegram
+    REFRESHER_VAULT: ${REFRESHER_VAULT:-/data/telegram}
 
 x-vault: &vault
   type: bind

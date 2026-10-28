@@ -26,7 +26,7 @@ from threading import Lock, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
 from graph.memory import MemoryStore
-from refresher import consolidate, dossier, graphview, vault
+from refresher import consolidate, dossier, graphview, vault, people_review, people_backfill
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -48,6 +48,7 @@ FILES = {
     "/capture/app.css": (STATIC / "app.css", CSS),
     "/capture/app.js": (STATIC / "app.js", JS),
     "/capture/brain.png": (STATIC / "brain.png", "image/png"),
+    "/atlas/people.js": (graphview.ASSETS / "map" / "people.js", JS),
     "/atlas/app.js": (graphview.ASSETS / "map" / "app.js", JS),
     "/atlas/style.css": (graphview.ASSETS / "map" / "style.css", CSS),
     "/atlas/cytoscape.min.js": (graphview.ASSETS / "cytoscape.min.js", JS),
@@ -61,7 +62,7 @@ CSP = {"page": BASE_CSP + "; style-src 'self'; frame-ancestors 'none'",
        # Cytoscape and the map set inline styles; a dossier embeds the map from the same origin
        "atlas": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"}
 # What vault.replay reads; a change to any of these files replays the vault again.
-WATCHED = ("processed", "relations", "graph-reviews", "people", "translations", "overrides.yaml",
+WATCHED = ("raw", "processed", "relations", "graph-reviews", "people-reviews", "people", "translations", "overrides.yaml",
            ".cache/cluster-names.json", ".cache/cluster-themes.json", "wiki/items", "wiki/people")
 logger = logging.getLogger(__name__)
 
@@ -235,12 +236,26 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
             url = urlsplit(self.path)
             path, args = url.path, {k: v[-1] for k, v in parse_qs(url.query).items()}
+            if path == "/graph" or path.startswith("/graph/"):
+                return self._redirect("/atlas/" + path.removeprefix("/graph").lstrip("/") + (f"?{url.query}" if url.query else ""))
             if path in ("/atlas", "/capture", "/topic"):
                 return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
             if path == "/atlas/":
                 html = graphview.page(state.map())
                 html = html.replace("connect-src 'none'", "connect-src 'self'")  # the page may post decisions back
                 return self._send(HTTPStatus.OK, html.encode(), HTML, CSP["atlas"])
+            if path == "/api/people/attribution":
+                try:
+                    return self._json(HTTPStatus.OK, people_review.detail(vault_path, args.get('claim','')))
+                except KeyError:
+                    return self._json(HTTPStatus.NOT_FOUND, {'error':'Claim not found.'})
+            if path == "/api/people/backfill":
+                return self._json(HTTPStatus.OK, people_backfill.preview(vault_path))
+            if path.startswith('/api/people/backfill/'):
+                try:
+                    return self._json(HTTPStatus.OK, people_backfill.job(vault_path,path.rsplit('/',1)[-1]))
+                except KeyError:
+                    return self._json(HTTPStatus.NOT_FOUND, {'error':'Update not found.'})
             if path == "/api/data":
                 return self._json(HTTPStatus.OK, state.map())
             if path == "/api/proposals":
@@ -283,7 +298,8 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.ACCEPTED if started else HTTPStatus.CONFLICT,
                                   {**review.status(), **({} if started else {"error": "A review is already running."})})
             decide, retry = DECIDE.match(path), RETRY.match(path)
-            if not (decide or retry or path == "/api/submissions"):
+            people_change = path in {'/api/people/attribution', '/api/people/backfill'}
+            if not (decide or retry or people_change or path == "/api/submissions"):
                 return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
             if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
                 return self._json(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, {"error": "Use JSON."})
@@ -292,10 +308,33 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                     return self._json(HTTPStatus.ACCEPTED, workspace.retry(retry[1]))
                 except ValueError as error:
                     return self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
-            length = int(self.headers.get("Content-Length") or 0)
-            if not 0 < length <= (MAX_DECISION if decide else MAX_REQUEST):
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                return self._json(HTTPStatus.BAD_REQUEST, {'error':'Invalid content length.'})
+            if not 0 < length <= (MAX_DECISION if decide or people_change else MAX_REQUEST):
                 return self._json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE if length else HTTPStatus.BAD_REQUEST,
                                   {"error": "Send a JSON body; uploads go up to 20 MB."})
+            if people_change:
+                try:
+                    body = json.loads(self.rfile.read(length))
+                    if not isinstance(body,dict):
+                        raise ValueError('Send a JSON object.')
+                    if path == '/api/people/attribution':
+                        if not isinstance(body.get('claim_id'),str) or len(body['claim_id']) > 180:
+                            raise ValueError('A claim_id is required.')
+                        result = people_review.save(vault_path,body['claim_id'],body)
+                        rebuild(vault_path, state.include_unreviewed)
+                        return self._json(HTTPStatus.OK,result)
+                    return self._json(HTTPStatus.ACCEPTED,people_backfill.start(vault_path,body,workspace.worker))
+                except vault.StaleToken as error:
+                    return self._json(HTTPStatus.CONFLICT, {'error':str(error)})
+                except KeyError:
+                    return self._json(HTTPStatus.NOT_FOUND, {'error':'Claim not found.'})
+                except (ValueError,TypeError,UnicodeError) as error:
+                    return self._json(HTTPStatus.BAD_REQUEST, {'error':str(error)})
+                except OSError:
+                    return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {'error':'Could not save this change. Check server storage.'})
             if decide:
                 return self._decide(decide[1], length)
             try:
@@ -346,6 +385,7 @@ def serve(vault_path: Path, port: int = PORT, host: str = "127.0.0.1", allow_hos
             job.update(status="pending", stage="Interrupted",
                        message="Server restarted. Original retained; retry to process it.")
             workspace.save(job)
+    people_backfill.recover(vault_path)
     state = State(vault_path, include_unreviewed)
     server = ThreadingHTTPServer((host, port), handler(vault_path, workspace, state, allow_hosts))
     print(f"serve: Refresher on http://{'127.0.0.1' if host in ('0.0.0.0', '') else host}:{server.server_address[1]}/ "

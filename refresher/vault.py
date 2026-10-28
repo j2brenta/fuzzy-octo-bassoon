@@ -222,7 +222,9 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     store = MemoryStore(include_unreviewed=include_unreviewed)
     with store.deferred():  # one recomputation for the whole vault
         for ex, text in load_extractions(vault):
-            store.apply(ex, text, load_relation(vault, ex))
+            from refresher.people_review import load as load_people_reviews
+            relation = load_relation(vault, ex)
+            store.apply(ex, text, relation, attribution_reviews=load_people_reviews(vault, ex, text, relation))
     for report in load_reviews(vault):
         store.apply_review(report)
     # Every state is judged against the graph before any proposal applies, so the order of decisions never
@@ -346,7 +348,7 @@ def note_names(store: GraphStore) -> dict[str, str]:
     for item in store.items():
         names[item.item_id] = _safe(f"{item.source.event_time:%Y-%m-%d} {item.title[:60]} {item.item_id[:6]}")
     for p in store.people():
-        names[p.person_id] = _safe(p.name)
+        names[p.person_id] = _safe(p.name + (" (" + p.person_id.rsplit('-', 1)[-1] + ")" if p.identity_url else ""))
     taken = set(names.values())
     for o in store.organizations():
         names[o.org_id] = _safe(o.name if _safe(o.name) not in taken else f"{o.name} (organization)")
@@ -509,13 +511,32 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                     {"type": "dossier", "topic_id": t.topic_id, "ideas": d["counts"]["ideas"],
                      "core": d["counts"]["core"]}, dossier.render(d, names), written)
 
+    from refresher.people_scoring import subjects as people_subjects
+    subject_rows = people_subjects(store)
+    people_rankings = {None: {r["person_id"]: r for r in store.experts(at)}}
+    people_rankings.update({s["id"]: {r["person_id"]: r for r in store.experts(at, s["id"])} for s in subject_rows})
     for p in sorted(store.people(), key=lambda p: p.person_id):
         lines = [f"# {p.name}", ""]
+        if p.identity_url:
+            lines += [f"Reviewed identity: {p.identity_url}", ""]
         who = " at ".join(f"[{f['value']}]({f['url']})" for f in (p.role, p.affiliation) if f)
         if who:
             lines += [who, ""]
-        trust = scoring.trust_rationale(p.confirmations, p.contradictions, p.up, p.down, p.trust_pinned)
+        trust = scoring.trust_rationale(p.confirmations, p.contradictions, p.up, p.down, p.trust_pinned, p.disagreements)
         lines.append(f"Trust {trust} · enrichment {p.enrichment_status}")
+        overall = people_rankings[None][p.person_id]
+        lines += ["", "## Importance in this collection", "",
+                  f"Version {overall['version']}. Scores use accepted, current, nonduplicate attributed statements.",
+                  "Unknown speakers are unscored; unresolved disagreements and routine updates are not proof of error.", ""]
+        for sid, title in [(None, "All subjects")] + [(s["id"], s["title"]) for s in subject_rows]:
+            rank = people_rankings[sid][p.person_id]
+            if sid is not None and rank["importance"] is None:
+                continue
+            value = f"{rank['importance']:.2f}" if rank["importance"] is not None else "unscored"
+            lines += [f"### {title}: {value}", f"Evidence: {rank['evidence_level']}.", *[f"- {r}" for r in rank["rationale"]], ""]
+        if p.statements:
+            lines += ["## Statements", ""] + [f"- {all_claims[c].claim.statement} ({where(all_claims[c])})"
+                                               for c in sorted(p.statements) if c in all_claims]
         if p.domains:
             lines += ["", "## Works on", ""] + [f"- [{d['value']}]({d['url']})" for d in p.domains]
         facts = sorted((all_claims[cid] for cid in p.facts), key=lambda c: (c.clock_start, c.claim.claim_id))
@@ -533,6 +554,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
             if ids:
                 lines += ["", f"## {head}", ""] + [f"- {link(i)}" for i in sorted(ids, key=lambda i: names[i])]
         meta = {"type": "person", "person_id": p.person_id, "name": p.name, "handles": sorted(p.handles),
+                "importance": overall["importance"], "importance_version": overall["version"],
                 "trust": round(store.trust(p.person_id), 3), "enrichment_status": p.enrichment_status,
                 "user_trust": None}
         _write_note(wiki / "people" / f"{names[p.person_id]}.md", meta, "\n".join(lines), written)

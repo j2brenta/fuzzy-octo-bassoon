@@ -18,10 +18,10 @@ from engine.extract import source_passages
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
 
-PROMPT_VERSION = "entities-v7"
-SUPPORTED_ENTITY_VERSIONS = {"entities-v1", "entities-v2", "entities-v3", "entities-v4", "entities-v5", "entities-v6",
+PROMPT_VERSION = "entities-v8"
+SUPPORTED_ENTITY_VERSIONS = {"entities-v1", "entities-v2", "entities-v3", "entities-v4", "entities-v5", "entities-v6", "entities-v7",
                              PROMPT_VERSION}
-REVIEW_VERSION = "entity-review-v7"
+REVIEW_VERSION = "entity-review-v8"
 MAX_ENTITIES = 40
 MAX_AFFILIATIONS = 40
 # v7 adds base names, organization types and affiliations, so older records are kept but extracted again.
@@ -67,6 +67,11 @@ use the names exactly as in your lists. relation is one of: works_at, leads, fou
 member_of, published_at (their work appeared at a conference, journal or preprint server), affiliated
 (another stated tie). Never infer a tie from two names appearing near each other or from outside
 knowledge. A mentioned person is not necessarily an author.
+A surname used ONLY as an eponym in a law, theorem, principle, method or unit
+(Newton's third law, Bayes' theorem, третьего закона Ньютона) does not establish
+a person participating in or discussed by this article: omit it. Include the
+person when the article separately discusses their actions, biography or speech.
+Never infer a full identity from a namesake (Ньютона does not imply Isaac Newton).
 Return each name once per list; Python preserves repeated exact mentions in
 this article. Keep ambiguous name references separate where the source permits.
 Use aliases: [] when no alias is supported, at most 10 aliases otherwise. Canonical
@@ -88,6 +93,12 @@ Check both missed merges and unsafe merges. Same first names alone do not justif
 merging; genuinely ambiguous references must stay separate. Prefer the most complete
 name explicitly present in the source; never invent a full name. Evaluate every
 alias against article context. No cross-source identity or affiliations are inferred.
+Reject person entities supported only by eponymous laws, theorems, principles,
+methods or units, including Russian genitives (закона Ньютона, теоремы Байеса).
+The historical existence of the namesake is not evidence of a person mention in
+this context. Check all occurrences: a separate biographical/action/speech mention
+can justify retaining the person. Keep exact written names and spans; base_name may
+normalize case endings as specified below, but must not expand a name or invent identity.
 Check invented name expansions or unsupported identity assertions, organizations
 confused with products, generic words promoted to concepts, and major omissions.
 Legacy concept findings and all omissions are advisory, not blocking. Never
@@ -181,6 +192,16 @@ def _base_name_fits(name: str, base) -> bool:
         return False
     written, said = re.findall(r"\w+", name.casefold()), re.findall(r"\w+", base.casefold())
     return len(written) == len(said) and all(a[0] == b[0] for a, b in zip(written, said))
+
+
+def _eponym_only(entity, text):
+    """Recognize unambiguous adjacent eponym syntax; leave semantic cases to review."""
+    before = re.compile(r"(?:\b(?:law|theorem|principle|unit)\s+of|\b(?:закон[а-я]*|теорем[а-я]*|принцип[а-я]*|единиц[а-я]*))\s*$", re.I)
+    after = re.compile(r"^\s*(?:['’]s?\s+)?(?:(?:first|second|third|\d+(?:st|nd|rd|th))\s+)?(?:law|theorem|principle|unit)\b", re.I)
+    mentions = entity.get("mentions", [])
+    return bool(mentions) and all(
+        before.search(text[max(0, m["start_char"]-70):m["start_char"]]) or
+        after.search(text[m["end_char"]:m["end_char"]+70]) for m in mentions)
 
 
 def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, limit: int = MAX_ENTITIES,
@@ -549,6 +570,16 @@ def validate_entity_review(data: dict, entities: list[dict], text: str, item_id:
             raise EntityError("Affiliation review verdict is invalid.")
         if not isinstance(row["reason"], str) or not row["reason"].strip() or len(row["reason"]) > 600:
             raise EntityError("Affiliation review reason is invalid.")
+
+
+    rows = [dict(row) for row in rows]
+    data = {**data, "entities": rows}
+    by_id = {entity["entity_id"]: entity for entity in entities}
+    for index, row in enumerate(rows):
+        entity = by_id[row["entity_id"]]
+        if entity["kind"] == "person" and _eponym_only(entity, text):
+            row = dict(row, verdict="needs_revision", reason="Name occurs only in an eponymous law/theorem/principle/unit; no separate person mention.")
+            rows[index] = row
     # An omission is advisory: it may cite a context passage beside the one that names it.
     validate_entities({"entities": omissions}, text, item_id, section, limit=10, context=True)
     existing_keys = {(e["kind"], name.casefold()) for e in entities

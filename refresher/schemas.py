@@ -164,6 +164,21 @@ Abstention = Literal["insufficient_evidence", "not_comparable"]
 CONTEXT_FIELDS = ("subject", "version", "metric", "dataset", "unit", "conditions", "time_attribution", "unknowns")
 
 
+class Attribution(_Model):
+    kind: Literal["author", "quoted", "unknown"]
+    person_name: str | None = None
+    evidence: list[Span] = Field(default_factory=list, max_length=10)
+
+    @model_validator(mode="after")
+    def _consistent(self):
+        if self.kind == "unknown":
+            if self.person_name is not None or self.evidence:
+                raise ValueError("Unknown attribution cannot identify a person.")
+        elif not self.person_name or not self.person_name.strip() or not self.evidence:
+            raise ValueError("Named attribution requires a person and source evidence.")
+        return self
+
+
 class Verdict(_Model):
     """How one claim relates to the candidates it was shown. The label is symmetric: event time decides which
     claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES.
@@ -171,6 +186,7 @@ class Verdict(_Model):
     A relator may abstain on its best candidate instead of guessing: NONE with `abstention` and a target, recorded but
     drawn as no relation. `context` says what the pair shares and where it differs (CONTEXT_FIELDS, "" when unknown)."""
     claim_id: str
+    attribution: Attribution | None = None
     subject: Literal["person", "organization", "world"] = "world"
     subject_name: str | None = None  # the person or organization a profile fact is about
     label: RelationLabel = "NONE"

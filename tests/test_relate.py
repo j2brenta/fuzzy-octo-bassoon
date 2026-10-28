@@ -137,7 +137,7 @@ def test_model_relator_makes_one_call_with_short_ids_and_maps_them_back():
     relation, model = model_judge({"verdicts": [
         {"claim": "c1", "subject": "world", "label": "UPDATES", "target": "k1", "rationale": "new time"},
         {"claim": "c2", "subject": "world", "label": "NONE", "target": "k1", "rationale": "a reference"}]})
-    assert len(model.calls) == 1 and "previously announced" in model.calls[0]["item"]["text"]
+    assert len(model.calls) == 1 and "previously announced" in "\n".join(p["text"] for p in model.calls[0]["passages"])
     assert relation.model == "fake-super" and relation.prompt_version == relate.PROMPT_VERSION
     by_claim = {v.claim_id: v for v in relation.verdicts}
     assert (by_claim["c16"].label, by_claim["c16"].target_id) == ("UPDATES", "o14")
@@ -233,7 +233,8 @@ def test_world_labels_map_to_edges_and_ideas():
     shared = store.idea(store.claims_for(["32k"], hops=0)[0].idea_id)
     assert shared.durability == "foundation" and shared.canonical_claim_id == "b1"
     b1 = next(c for c in store.claims() if c.claim.claim_id == "b1")
-    assert b1.confirmations == 1 and store.person(person_id("Bob")).contradictions == 1
+    assert b1.confirmations == 1 and store.person(person_id("Bob")).disagreements == 1
+    assert store.person(person_id("Bob")).contradictions == 0
 
 
 # --- Phase 5: grouping and relation precision in the eval ---
@@ -462,7 +463,7 @@ def test_model_relator_keeps_abstentions_and_context():
     c16, cprev = {v.claim_id: v for v in relation.verdicts}["c16"], {v.claim_id: v for v in relation.verdicts}["cprev"]
     assert c16.label == "UPDATES" and c16.context == CONTEXT and c16.abstention is None
     assert cprev.label == "NONE" and cprev.abstention == "not_comparable" and cprev.target_id == c16.target_id
-    assert relation.prompt_version == "relate-v2"
+    assert relation.prompt_version == relate.PROMPT_VERSION
 
 
 def test_an_abstention_draws_no_relation_and_is_listed():
