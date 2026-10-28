@@ -452,7 +452,8 @@
   function setView(view) {
     const url = new URL(location.href);
     if (view === 'list') url.searchParams.set('view', 'list'); else url.searchParams.delete('view');
-    url.searchParams.delete('read'); url.searchParams.delete('in'); url.hash = '';
+    for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);
+    url.hash = '';
     history.pushState({}, '', url); route();
   }
   function focusPlacement(clusterId, source) {  // a mark in a cluster column: the map, that cluster open, that source picked
@@ -517,9 +518,16 @@
   function extendTrail() {  // the path you walk: what you read, then the plan; detours sit after the source they left
     for (const id of planIds()) if (!trail.includes(id)) trail.push(id);
   }
-  function openSource(id, detour = false, inCluster = null) {  // inCluster: the cluster it was opened from
+  // The thread: the sources you pulled one link at a time. Following a link adds a station after the one you are
+  // on (from an earlier station that starts a branch: the stations after it are let go); an earlier station takes
+  // you back along it; opening a source any other way starts a new thread. It lives in the URL (&thread=&pos=).
+  let thread = [], pos = 0;
+  function openSource(id, detour = false, inCluster = null, via = null) {  // inCluster: the cluster it was opened from
     if (!s.sources[id]) return;
     selected = id;
+    if (via === 'station') pos = thread.indexOf(id);
+    else if (via === 'link') { thread = [...(thread.length ? thread.slice(0, pos + 1) : [current].filter(Boolean)), id]; pos = thread.length - 1; }
+    else { thread = [id]; pos = 0; }
     if (!current) mapScroll = window.scrollY;
     if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
     if (!trail.includes(id)) {
@@ -529,16 +537,21 @@
     extendTrail();
     const url = new URL(location.href); url.searchParams.set('read', id); url.hash = '';
     if (inCluster && inCluster !== src(id).cluster) url.searchParams.set('in', inCluster); else url.searchParams.delete('in');
+    if (thread.length > 1) { url.searchParams.set('thread', thread.join(',')); url.searchParams.set('pos', String(pos)); }
+    else { url.searchParams.delete('thread'); url.searchParams.delete('pos'); }
     if (current) history.replaceState({read: id}, '', url); else history.pushState({read: id}, '', url);
     showReading(id);
   }
   function closeReading() {
-    const url = new URL(location.href); url.searchParams.delete('read'); url.searchParams.delete('in');
+    const url = new URL(location.href);
+    for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);
     history.pushState({}, '', url); route();
   }
   function route() {
     const read = new URLSearchParams(location.search).get('read'), ideasView = location.hash === '#ideas';
     if (read && s.sources[read]) {
+      const u = new URLSearchParams(location.search), ids = (u.get('thread') || '').split(',').filter(x => s.sources[x]), at = Number(u.get('pos'));
+      if (ids.length > 1 && ids[at] === read) { thread = ids; pos = at; } else if (thread[pos] !== read) { thread = [read]; pos = 0; }
       if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
       if (!trail.includes(read)) trail.push(read);
       showReading(read); return;
@@ -556,19 +569,22 @@
   async function showReading(id) {
     current = id; $('map').hidden = true; $('ideas-view').hidden = true; $('reading').hidden = false; $('pop').hidden = true;
     const x = src(id), number = numbered();
-    $('r-eyebrow').textContent = [number.get(id) ? `#${number.get(id)}` : null, clusterName(x.cluster), x.role].filter(Boolean).join(' · ');
+    const opened = new URLSearchParams(location.search).get('in'), there = opened && opened !== x.cluster ? placementOf(opened, id) : null;
+    $('r-eyebrow').textContent = [number.get(id) ? `#${number.get(id)}` : null, there ? `${clusterName(opened)}, also here` : clusterName(x.cluster),
+      there ? there.role : x.role].filter(Boolean).join(' · ');
     $('r-title').textContent = x.title;
     $('r-meta').textContent = [x.source, x.author, day(x.time), `${x.minutes} min`, gainText(id)].filter(Boolean).join(' · ');
     $('r-gist-text').textContent = (x.gist || x.hook) + (x.summary === 'lead' ? ' (its opening lines: no summary yet)' : '');
     $('r-gist').open = !s.marks[id];
     $('r-text').replaceChildren(el('p', 'Opening the text…', 'quiet')); $('ctx-body').replaceChildren(); $('r-tools').replaceChildren();
-    renderRail(); renderBar(); window.scrollTo({top: 0});
+    renderRail(); renderBar(); renderThread(); window.scrollTo({top: 0});
     const from = new URLSearchParams(location.search).get('in');
     setWhere({cluster: from && cluster(from) ? from : x.cluster, source: id, idea: null});
     try {
       await loadContext(id);
       if (current !== id) return;
       highlight = null; renderText(contexts.get(id)); renderContext(contexts.get(id));
+      if (from && from !== x.cluster) showPassage(contexts.get(id), from);
     } catch (error) { $('r-text').replaceChildren(el('p', error.message, 'quiet')); }
   }
   async function loadContext(id, again = false) {
@@ -609,6 +625,7 @@
       if (!hits.length) { if (cls) { const n = el('span', null, cls); write(n, str); box.append(n); } else write(box, str); return; }
       const ids = [...new Set(hits.map(x => x.idea))];
       const m = el('mark', null, 'idea-mark' + (ids.some(i => ideaOf.get(i).new && ideaOf.get(i).in_scope) ? ' new' : ''));
+      m.dataset.start = a; m.dataset.end = b;
       write(m, str); m.dataset.ideas = ids.join(' '); m.tabIndex = 0; m.setAttribute('role', 'button');
       const open = e => { popover(m, ids.map(i => ideaOf.get(i)), e); setWhere({idea: ids[0]}); };
       m.addEventListener('click', open); m.addEventListener('keydown', e => e.key === 'Enter' && open(e));
@@ -648,6 +665,32 @@
   }
   document.addEventListener('click', e => { if (!$('pop').hidden && !$('pop').contains(e.target)) $('pop').hidden = true; });
 
+  // A link's word as seen from the source being read: what this source does to the other, or the other to it.
+  const WORDS = {disputes: ['disputes', 'disputed by'], retells: ['retells', 'retold by'], based_on: ['based on', 'basis for'],
+    supports: ['supports', 'supported by'], updates: ['updates', 'updated by'], builds_on: ['builds on', 'built on by'],
+    cites: ['cites', 'cited by'], same_author: ['same author', 'same author'], shares: ['shares an Idea', 'shares an Idea']};
+  const linkWord = l => (WORDS[l.type] || [l.word, l.word])[l.direction === 'earlier' ? 0 : 1];
+  function linkBetween(a, b) { return s.links.find(l => (l.from === a && l.to === b) || (l.from === b && l.to === a)); }
+  function renderThread() {
+    const box = $('thread'); box.hidden = thread.length < 2;
+    if (thread.length < 2) { box.replaceChildren(); return; }
+    box.replaceChildren(el('span', 'Thread', 'th-label'), ...thread.flatMap((id, k) => {
+      const b = button('', () => { if (k !== pos) openSource(id, false, null, 'station'); }, 'station' + (k === pos ? ' here' : '') + (k > pos ? ' ahead' : ''));
+      b.append(el('span', k + 1, 'st-n'), el('span', short(src(id).title, 34), 'st-t')); b.title = src(id).title;
+      if (k === pos) b.setAttribute('aria-current', 'step');
+      const link = k ? linkBetween(thread[k - 1], id) : null;  // the word from the station before
+      const word = link ? (WORDS[link.type] || [link.word, link.word])[link.from === thread[k - 1] ? 0 : 1] : '→';
+      return k ? [el('span', word, 'st-link'), b] : [b];
+    }));
+  }
+  function showPassage(ctx, clusterId) {  // the passage of the first Idea that put this source in that cluster
+    const place = ctx.placements.find(p => p.cluster === clusterId);
+    if (!place?.passage) return;
+    const [start] = place.passage, marks = [...document.querySelectorAll('#r-text mark.idea-mark')];
+    const m = marks.find(n => +n.dataset.start <= start && start < +n.dataset.end) || marks.find(n => n.dataset.ideas.split(' ').some(i => place.ideas.includes(i)));
+    if (!m) return;
+    requestAnimationFrame(() => { m.scrollIntoView({block: 'center', behavior: 'auto'}); m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); });
+  }
   function renderRail() {
     const number = numbered(), list = trail.filter(id => s.sources[id]);
     $('rail-plan').replaceChildren(...list.map(id => {
@@ -703,19 +746,28 @@
   }
   function renderContext(ctx) {
     const body = $('ctx-body'); body.replaceChildren();
-    const conn = el('div');
-    for (const [label, list] of [['Same cluster', ctx.connected.filter(c => c.same_cluster)], ['Other clusters', ctx.connected.filter(c => !c.same_cluster)]]) {
-      if (!list.length) continue;
-      conn.append(el('p', label, 'ctx-label'));
-      for (const c of list) {
-        const b = button('', () => openSource(c.source, true), 'ctx-row');
-        b.append(el('span', null, `dot s-${stateOf(c.source)}`), el('span', short(src(c.source).title, 70), 't'), el('span', short(clusterName(src(c.source).cluster), 30), 'tag'),
-          el('span', `shares “${short(c.idea_title.replace(/\.$/, ''), 80)}”${c.count > 1 ? ` and ${c.count - 1} more` : ''}`, 'why'));
+    // Connected: typed links, grouped by type, each with the reason the data gives and whether it goes deeper;
+    // following one adds a station to the thread. Retellings are a count, never an option.
+    const conn = el('div'), byType = new Map();
+    for (const l of ctx.links) { const w = linkWord(l); if (!byType.has(w)) byType.set(w, []); byType.get(w).push(l); }
+    for (const [word, list] of byType) {
+      conn.append(el('p', word, 'ctx-label'));
+      for (const l of list) {
+        const b = button('', () => openSource(l.source, true, null, 'link'), 'ctx-row link-row');
+        const why = el('span', short(l.label.replace(/\.$/, ''), 120), 'why');
+        b.append(el('span', null, `dot s-${stateOf(l.source)}`), el('span', short(src(l.source).title, 70), 't'),
+          el('span', short(clusterName(src(l.source).cluster), 30), 'tag'), why);
+        if (l.deeper) b.append(el('span', 'deeper', 'deeper'));
+        if (l.retold.length) b.append(el('span', `retold by ${l.retold.length}`, 'retold'));
         conn.append(b);
       }
     }
-    if (!ctx.connected.length) conn.append(el('p', 'No other source shares an Idea with this one.', 'small quiet'));
-    body.append(section('connected', 'Connected', ctx.connected.length, ctx.connected.map(c => src(c.source).title), conn));
+    if (ctx.retold_by.length) {
+      const r = el('p', `Retold by ${ctx.retold_by.length}`, 'retold-line');
+      r.title = ctx.retold_by.map(i => src(i)?.title || i).join('\n'); conn.append(r);
+    }
+    if (!ctx.links.length) conn.append(el('p', 'Nothing links this source to another yet.', 'small quiet'));
+    body.append(section('connected', 'Connected', ctx.links.length, [...byType.keys()], conn));
 
     const ppl = el('div');
     for (const p of ctx.people) {
@@ -749,7 +801,7 @@
     }
     body.append(section('ideas', 'Ideas in this source', ctx.ideas.length, scoped.filter(i => i.new).map(i => i.title), ideas));
     body.append(link('Check in Atlas ↗', '/atlas/?item=' + encodeURIComponent(ctx.id), 'atlas-link'));
-    $('ctx-open').textContent = `${ctx.people.length} ${ctx.people.length === 1 ? 'person' : 'people'} · ${ctx.connected.length} connected`;
+    $('ctx-open').textContent = `${ctx.people.length} ${ctx.people.length === 1 ? 'person' : 'people'} · ${ctx.links.length} connected`;
   }
   function person(p) {
     const box = el('div', null, 'person');
