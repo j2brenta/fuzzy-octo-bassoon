@@ -42,6 +42,9 @@ HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/jav
 FILES = {
     "/": (STATIC / "topics.html", HTML),
     "/topic/": (STATIC / "dossier.html", HTML),
+    "/read/": (STATIC / "read.html", HTML),
+    "/static/read.js": (STATIC / "read.js", JS),
+    "/static/read.css": (STATIC / "read.css", CSS),
     "/static/brief.css": (STATIC / "brief.css", CSS),
     "/static/reading.css": (STATIC / "reading.css", CSS),
     "/static/navigator.css": (STATIC / "navigator.css", CSS),
@@ -140,6 +143,10 @@ class State:
             return None
         with self._lock:
             return subject.context(self.store(), s, item_id, self.marks())
+
+    def overview(self) -> dict:
+        with self._lock:
+            return subject.overview(self.store())
 
     def document(self, item_id: str) -> dict | None:
         with self._lock:
@@ -334,6 +341,8 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 result = state.context(args.get("id") or None, args.get("q") or None, match[1])
                 return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
                                   result or {"error": "No such source in this subject."})
+            if path == "/api/sources":
+                return self._json(HTTPStatus.OK, {**state.overview(), "marks": state.marks()})
             if path == "/api/document":
                 result = state.document(args.get("id") or "")
                 return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,

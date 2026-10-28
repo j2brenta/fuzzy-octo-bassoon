@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<title>Refresher — Read</title>
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/read.css">
+<script src="/static/nav.js" defer></script><script src="/static/read.js" defer></script></head>
+<body>
+<a class="skip" href="#sources">Skip to the sources</a>
+<header class="app-bar">
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Read</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+</header>
+<div class="notice" id="notice" role="status">Gathering your sources…</div>
+<!-- The Atlas without its timeline: the sources with their gists, the text of the one you pick, and the map beside -->
+<nav class="topic-chips" id="topics" aria-label="Topics" hidden></nav>
+<main class="desk" id="desk" hidden>
+  <aside class="col sources-col" aria-labelledby="sources-h">
+    <div class="col-head"><h2 id="sources-h">Sources</h2><span class="small quiet" id="count"></span></div>
+    <input type="search" id="find" class="find" placeholder="Find a source…" aria-label="Find a source">
+    <ol class="sources" id="sources" tabindex="-1"></ol>
+  </aside>
+  <article class="col text-col" aria-label="The source you picked">
+    <div class="doc-empty" id="doc-empty"><p>Pick a source on the left, or on the map, to read it here.</p></div>
+    <div id="doc" hidden>
+      <p class="eyebrow" id="d-eyebrow"></p>
+      <h1 id="d-title"></h1>
+      <p class="d-meta" id="d-meta"></p>
+      <div class="d-tools" id="d-tools"></div>
+      <div class="d-text" id="d-text"></div>
+    </div>
+  </article>
+  <aside class="col map-col" aria-label="Map and evidence">
+    <iframe id="atlas" src="/atlas/?embed=1" title="Map of these sources, and the evidence for what you pick on it"></iframe>
+  </aside>
+</main>
+</body></html>

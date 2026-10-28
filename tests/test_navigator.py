@@ -236,3 +236,37 @@ def test_the_app_serves_results_and_the_path(tmp_path):
         server.shutdown()
         server.server_close()
         workspace.worker.shutdown(wait=True)
+
+
+def test_the_reading_page_lists_every_source_with_its_gist_newest_first(bridged):
+    store_, _ = bridged
+    o = subject.overview(store_)
+    assert {x["id"] for x in o["sources"]} == {i.item_id for i in store_.items()}
+    assert [x["time"] for x in o["sources"]] == sorted((x["time"] for x in o["sources"]), reverse=True)
+    assert all(x["summary"] in ("model", "lead") and isinstance(x["gist"], str) for x in o["sources"])
+    assert next(x for x in o["sources"] if x["id"] == "c")["repost_of"] == "a"
+
+
+def test_the_app_serves_the_reading_page_and_its_sources(tmp_path):
+    from tests.test_app import get
+    from tests.test_proposals import topical_vault
+    from refresher import app
+    from refresher.web import Workspace
+    import json
+    import threading
+    from http.server import ThreadingHTTPServer
+    v = topical_vault(tmp_path)
+    workspace = Workspace(v, place=lambda item_id, client: {"item": item_id, "status": "placed"})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), app.handler(v, workspace, app.State(v), log=lambda m: None))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        status, page, _ = get(base + "/read/")
+        assert status == 200 and 'id="sources"' in page and "/atlas/?embed=1" in page
+        assert get(base + "/static/read.js")[0] == 200 and get(base + "/static/read.css")[0] == 200
+        body = json.loads(get(base + "/api/sources")[1])
+        assert len(body["sources"]) == 10 and body["marks"] == {} and all(x["gist"] or x["hook"] for x in body["sources"])
+    finally:
+        server.shutdown()
+        server.server_close()
+        workspace.worker.shutdown(wait=True)
