@@ -58,7 +58,10 @@ def test_both_pages_are_served_with_their_assets_and_one_shell(served):
     assert "style-src 'self'" in headers["Content-Security-Policy"] and "unsafe-inline" not in headers["Content-Security-Policy"]
     for name in ("app.js", "app.css", "brain.png", "shell.css", "nav.js"):
         assert get(f"{base}/capture/{name}")[0] == 200
-    assert '"served": true' in get(base + "/")[1]  # / leads to the Atlas
+    assert 'src="/static/topics.js"' in get(base + "/")[1]  # / is the topics
+    assert "frame-ancestors 'self'" in get(base + "/atlas/")[2]["Content-Security-Policy"]  # a dossier embeds it
+    for name in ("brief.css", "topics.js", "dossier.js", "shell.css", "nav.js"):
+        assert get(f"{base}/static/{name}")[0] == 200
     for path in ("/app.js", "/capture/../../.env", "/atlas/index.html", "/static/x"):
         with pytest.raises(HTTPError) as error:
             get(base + path)
@@ -185,6 +188,26 @@ def test_the_placer_places_with_the_vaults_own_pipeline(tmp_path):
     assert (v / "relations" / "item-gal.json").exists()
 
 
+def test_topics_and_dossiers_are_served(served):
+    v, base, _ = served
+    topic = next(p for p in json.loads(get(base + "/api/proposals")[1]) if p["kind"] == "topic")
+    assert post(base, topic["id"], {"action": "accept", "token": topic["token"]})[0] == 200
+    rows = json.loads(get(base + "/api/topics")[1])
+    accepted = next(r for r in rows if r["kind"] == "topic")
+    assert accepted["title"] == topic["title"] and accepted["counts"]["ideas"] >= 3
+    status, page, headers = get(f"{base}/topic/?id={accepted['id']}")
+    assert status == 200 and 'src="/atlas/?embed=1&amp;mode=topics"' in page and "frame-ancestors 'none'" in headers["Content-Security-Policy"]
+    d = json.loads(get(f"{base}/api/dossier?topic={accepted['id']}")[1])
+    assert d["scope"]["id"] == accepted["id"] and d["ideas"][0]["tier"] == "core" and d["sources"]
+    d = json.loads(get(f"{base}/api/dossier?q=GPU+rental+prices&at=2026-11-01")[1])
+    assert d["scope"]["kind"] == "query" and d["at"].startswith("2026-11-01")
+    for bad in ("q=medieval+falconry", "topic=topic:nope", "q=GPU&at=yesterday"):
+        with pytest.raises(HTTPError) as error:
+            get(f"{base}/api/dossier?{bad}")
+        assert error.value.code in (400, 404)
+    assert get(f"{base}/topic?id=x")[0] == 200  # redirected to /topic/ with the query kept
+
+
 def test_requests_at_the_same_moment_see_the_whole_graph(tmp_path):
     from concurrent.futures import ThreadPoolExecutor
     v = topical_vault(tmp_path)
@@ -192,6 +215,6 @@ def test_requests_at_the_same_moment_see_the_whole_graph(tmp_path):
     state = app.State(v)
     expected = len(list(vault.replay(v, include_unreviewed=True).clusters()))
     assert expected
-    with ThreadPoolExecutor(8) as pool:  # a page load asks for the map and the proposals together
-        maps = list(pool.map(lambda n: state.map(), range(16)))
+    with ThreadPoolExecutor(8) as pool:  # a page load asks for the map, the topics and a dossier together
+        maps = list(pool.map(lambda n: state.map() if n % 2 else state.catalog() and state.map(), range(16)))
     assert all(len(m["clusters"]) == expected for m in maps)

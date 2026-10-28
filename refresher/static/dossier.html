@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<title>Refresher — Dossier</title>
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css">
+<script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script></head>
+<body>
+<a class="skip" href="#brief">Skip to the brief</a>
+<header class="app-bar">
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Dossier</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+</header>
+<header class="d-head" id="head" hidden>
+  <div><p class="eyebrow" id="kind">Dossier</p><h1 id="title"></h1><p class="meta" id="meta"></p></div>
+  <form class="search" action="/topic/" method="get" role="search"><input name="q" type="search" placeholder="Another subject…" required maxlength="200" aria-label="Another subject"><button type="submit">Refresh ↗</button></form>
+  <div class="tiers"><div class="tier-bar" id="tier-bar" aria-hidden="true"></div><div class="legend" id="legend"></div></div>
+</header>
+<div class="notice" id="notice" role="status">Gathering what you know…</div>
+<div class="split" id="split" hidden>
+  <main class="brief" id="brief" tabindex="-1">
+    <nav class="toc" id="toc" aria-label="Sections of the dossier"></nav>
+    <div id="sections"></div>
+  </main>
+  <aside class="pane" id="pane" aria-label="Map of this subject">
+    <div class="pane-bar"><div><strong>The map of this subject</strong><span class="small quiet">Topics are regions, clusters dashed, people ◆. Pick anything for its evidence.</span></div>
+      <button type="button" id="wide" aria-pressed="false">⤢ Wide map</button></div>
+    <iframe id="atlas" src="/atlas/?embed=1&amp;mode=topics" title="Map of this subject: topics, clusters, people and evidence"></iframe>
+  </aside>
+</div>
+</body></html>

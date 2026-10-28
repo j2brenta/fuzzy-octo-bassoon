@@ -5,8 +5,9 @@
   const nav = document.getElementById('app-nav');
   if (!nav || !/^https?:$/.test(location.protocol)) return;
   nav.hidden = false;
+  const here = location.pathname === '/' || location.pathname.startsWith('/topic/') ? 'topics' : location.pathname.split('/')[1];
   for (const link of nav.querySelectorAll('a[data-page]')) {
-    if (location.pathname.startsWith('/' + link.dataset.page + '/')) link.setAttribute('aria-current', 'page');
+    if (link.dataset.page === here) link.setAttribute('aria-current', 'page');
   }
   const waiting = document.getElementById('nav-waiting');
   if (!waiting) return;

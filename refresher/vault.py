@@ -11,7 +11,8 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`
     overrides.yaml              the user's word: durability, trust, votes
     submissions/<id>.json, uploads/<sha256>   web captures and their originals (refresher/web.py)
-    wiki/items|ideas|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
+    wiki/items|ideas|clusters|topics|dossiers|people|sources/  generated notes; text below MARK and user_*
+                                frontmatter are kept (a dossier ranks a topic: refresher/dossier.py)
     wiki/health.md, index.md, log.md
 """
 import fcntl
@@ -30,7 +31,7 @@ from pydantic import ValidationError
 from graph import proposals as proposal_stage
 from graph.memory import MemoryStore
 from graph.store import Decision, Edge, GraphStore, Proposal, ReviewReport
-from refresher import km, scoring
+from refresher import dossier, km, scoring
 from refresher import translate
 from engine import language
 from refresher.schemas import Extraction, Override, Relation
@@ -472,9 +473,11 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
         _write_note(wiki / "clusters" / f"{names[c.cluster_id]}.md", {"type": "cluster", "cluster_id": c.cluster_id,
                     "ideas": len(c.ideas)}, "\n".join(lines), written)
 
+    dossiers = {t.topic_id: _safe(f"{t.title} (dossier)") for t in topics}
     for t in topics:
         lines = [f"# {t.title}", "", f"Topic you accepted: {len(t.ideas)} Ideas, {len(t.attached)} more joined "
-                 f"provisionally, {len(t.clusters)} clusters.", ""]
+                 f"provisionally, {len(t.clusters)} clusters. Ranked, with what to read first: "
+                 f"[[{dossiers[t.topic_id]}]].", ""]
         lines += ["## Clusters", "", *[f"- {link(c)}" for c in sorted(t.clusters)], ""] if t.clusters else []
         lines += ["## Ideas", "", *[f"- {link(i)} {store.idea(i).title}" for i in sorted(t.ideas)]]
         if t.attached:
@@ -484,6 +487,12 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
         lines += ["", "## Linked topics", "", *near] if near else []
         _write_note(wiki / "topics" / f"{names[t.topic_id]}.md", {"type": "topic", "topic_id": t.topic_id,
                     "ideas": len(t.ideas), "attached": len(t.attached)}, "\n".join(lines), written)
+
+    for t in topics:  # what you know about the topic, ranked: the same dossier as the app's topic page
+        d = dossier.build(store, dossier.resolve(store, t.topic_id), at)
+        _write_note(wiki / "dossiers" / f"{dossiers[t.topic_id]}.md",
+                    {"type": "dossier", "topic_id": t.topic_id, "ideas": d["counts"]["ideas"],
+                     "core": d["counts"]["core"]}, dossier.render(d, names), written)
 
     for p in sorted(store.people(), key=lambda p: p.person_id):
         lines = [f"# {p.name}", ""]
@@ -516,7 +525,7 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
                     "channel": s.channel}, "\n".join(lines), written)
 
     # Remove generated notes that no longer exist in the store, unless the user wrote in them.
-    for folder in ("items", "ideas", "clusters", "topics", "people", "sources"):
+    for folder in ("items", "ideas", "clusters", "topics", "dossiers", "people", "sources"):
         for path in (wiki / folder).glob("*.md") if (wiki / folder).exists() else []:
             if path not in written and not path.read_text(encoding="utf-8").split(MARK, 1)[-1].strip():
                 path.unlink()
@@ -525,8 +534,10 @@ def export(store: MemoryStore, vault: Path, at: datetime) -> list[Path]:
     health = wiki / "health.md"
     health.write_text(km.render(report, store), encoding="utf-8")
     index = ["# Knowledge base", "", f"Built {at:%Y-%m-%d %H:%M %Z}. See [[health]].", ""]
+    names.update({f"dossier:{tid}": name for tid, name in dossiers.items()})
     for head, keys in (("Items", [i.item_id for i in sorted(store.items(), key=lambda i: i.source.event_time, reverse=True)]),
                        ("Topics", [t.topic_id for t in topics]),
+                       ("Dossiers", [f"dossier:{t.topic_id}" for t in topics]),
                        ("Clusters", [c.cluster_id for c in sorted(store.clusters(), key=lambda c: (-len(c.ideas), c.cluster_id))]),
                        ("Ideas", [i.idea_id for i in sorted(store.ideas(), key=lambda i: (-len(i.members), i.idea_id))]),
                        ("People", sorted((p.person_id for p in store.people()), key=lambda k: names[k])),

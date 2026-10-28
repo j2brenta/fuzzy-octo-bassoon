@@ -7,6 +7,12 @@
   const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: [],
     lang: 'original', view: null};
   try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
+  // Embedded in a dossier (/topic/): the map and the evidence only, over the dossier's sources (atlas.scope).
+  const params = new URLSearchParams(location.search);
+  const embedded = params.has('embed');
+  if (embedded) document.body.classList.add('embedded');
+  if (['documents', 'claims', 'topics'].includes(params.get('mode'))) state.mode = params.get('mode');
+  state.only = null;  // item ids, or null for all
   const items = new Map(data.items.map(x => [x.id, x]));
   const claims = new Map(data.claims.map(x => [x.id, x]));
   const stories = new Map(data.stories.map(x => [x.id, x]));
@@ -144,7 +150,7 @@
   function itemBands(item) { return item.claims.map(id => claims.get(id).band); }
   function filteredItems() {
     const query = $('search').value.toLocaleLowerCase();
-    return data.items.filter(item =>
+    return data.items.filter(item => (!state.only || state.only.has(item.id)) &&
       (!state.topic || (state.topic === 'unassigned' ? !item.topics.length : item.topics.includes(state.topic))) &&
       (!state.story || item.stories.includes(state.story)) &&
       (!$('quality-filter').value || item.quality === $('quality-filter').value) &&
@@ -446,7 +452,12 @@
     compare.dataset.compare = claim.id; box.append(compare);
     return box;
   }
-  function show(render, ...args) { state.view = [render, args]; }
+  function show(render, ...args) {
+    state.view = [render, args];
+    const kind = {selectItem: 'item', selectGroup: 'group', selectLink: 'link', selectPerson: 'person', selectNode: 'claim',
+      selectEdge: 'edge'}[render.name];
+    if (window.atlas?.onselect) window.atlas.onselect(kind, kind === 'link' || kind === 'edge' ? args[0].source : args[0]);
+  }
   function selectItem(id, focus) {
     const item = items.get(id); if (!item) return; show(selectItem, id, focus);
     state.detailItems = [id];
@@ -484,6 +495,10 @@
     state.selection = id;
     state.detailItems = [];
     $('detail').replaceChildren(el('p', c ? 'CLUSTER' : 'TOPIC', 'eyebrow'), el('h3', c ? c.title : t.title, 'detail-title'));
+    if (data.served && !embedded) {  // the app ranks what this group holds and what to read first
+      const a = el('a', 'Open its dossier: ranked, what changed, what to read first ↗'); a.href = '/topic/?id=' + encodeURIComponent(id);
+      $('detail').append(a);
+    }
     const ideaIds = c ? c.ideas : [...t.ideas, ...t.attached];
     const postIds = c ? c.items : data.items.filter(i => i.topics.includes(id)).map(i => i.id);
     if (c) {
@@ -693,6 +708,22 @@
     for (const id of ['story-filter', 'quality-filter', 'band-filter', 'date-filter', 'search', 'review-filter']) $(id).value = '';
     $('hide-reposts').checked = false; refresh();
   });
-  renderProposals(); refresh();
-  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems};
+  // An Idea lit up without selecting it: its claims, its cluster or its sources, whichever the mode draws.
+  function spotlight(ideaIds) {
+    if (!ideaIds?.length) return highlight();
+    const ids = ideaIds.flatMap(i => { const s = stories.get(i); if (!s) return [];
+      return state.mode === 'claims' ? s.claims : state.mode === 'topics' ? [s.cluster].filter(Boolean) : s.items; });
+    const shown = cy.collection(ids.map(id => cy.getElementById(id)).filter(n => n.length));
+    cy.elements().removeClass('dim highlight');
+    if (!shown.length) return;
+    const near = shown.union(shown.ancestors());
+    cy.elements().not(near).addClass('dim'); near.addClass('highlight');
+  }
+  function scope(itemIds) {
+    state.only = itemIds ? new Set(itemIds) : null; state.selection = null; state.ego = false; clearDetail(); refresh();
+  }
+  setMode(); renderProposals(); refresh();
+  window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
+    spotlight, scope, onselect: null};
+  if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);
 })();
