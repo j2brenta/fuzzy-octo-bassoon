@@ -54,6 +54,18 @@ def test_lexical_consolidation_writes_proposals_views_and_the_stamp(tmp_path):
     assert again.proposed == 0 and again.relate.judged == 0
 
 
+def test_the_last_run_is_kept_for_the_app(tmp_path):
+    v = topical_vault(tmp_path)
+    assert job.last_run(v) is None
+    (v / job.STAMP).parent.mkdir(exist_ok=True)
+    (v / job.STAMP).write_text("2026-10-27T09:00:00+00:00")  # a run from before results were kept
+    assert job.last_run(v) == {"at": "2026-10-27T09:00:00+00:00"}
+    run = job.consolidate(v, at=AT)
+    last = job.last_run(v)
+    assert last["at"] == AT.isoformat() and last["proposed"] == 4 and last["related"] == 10
+    assert last["summary"] == run.summary() and last["took"] >= 0 and last["model_calls"] == 0
+
+
 def test_with_a_model_it_relates_names_topics_and_confirms_merges(tmp_path):
     v = topical_vault(tmp_path)
     model = FakeModel(same=False)

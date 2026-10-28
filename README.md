@@ -546,8 +546,9 @@ uv run refresher enrich --vault VAULT --person "Yarin Gal"
 Placement files each item at once: its Ideas, clusters and provisional topic
 places show on the map straight away. Once an hour, when something was placed
 since the last run (the `review` container checks every 10 minutes, the bot after a
-capture), or when you send `/consolidate` to the bot, the review looks at the whole
-graph:
+capture), when you press Consolidate in the app's top bar (its window shows what the
+last run did and when the next one is due), or when you send `/consolidate` to the bot,
+the review looks at the whole graph:
 
 1. Items whose stored verdicts missed a closer claim that arrived later are judged
    again, so an original captured after its correction still gets superseded.

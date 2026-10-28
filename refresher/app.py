@@ -22,11 +22,11 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import RLock
+from threading import Lock, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
 from graph.memory import MemoryStore
-from refresher import dossier, graphview, vault
+from refresher import consolidate, dossier, graphview, vault
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -118,6 +118,50 @@ class State:
             return self._map
 
 
+class Review:
+    """The hourly review started from the page's Consolidate button: one run at a time, in the background, so the
+    request returns at once and the page polls status(). A run started while the review container or the bot is
+    reviewing waits for the vault lock, then reviews again."""
+
+    def __init__(self, vault_path: Path, run=None):
+        self.vault = vault_path
+        self._run = run or self._consolidate
+        self._lock = Lock()
+        self._thread: Thread | None = None
+        self._started: datetime | None = None
+        self._error: str | None = None
+
+    def _consolidate(self) -> None:
+        model, search = consolidate.models_from_environment()
+        consolidate.consolidate(self.vault, model, search, log=logger.info)
+
+    def _work(self) -> None:
+        try:
+            self._run()
+        except Exception as error:  # a background thread: whatever stopped the run is shown in the panel
+            logger.error("consolidate from the app failed (%s)", type(error).__name__)
+            self._error = f"{type(error).__name__}: {str(error)[:300]}"
+
+    def running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self) -> bool:
+        """Start a run unless one is going; False when one is."""
+        with self._lock:
+            if self.running():
+                return False
+            self._started, self._error = datetime.now(timezone.utc), None
+            self._thread = Thread(target=self._work, name="consolidate", daemon=True)
+            self._thread.start()
+            return True
+
+    def status(self) -> dict:
+        last = consolidate.last_run(self.vault)
+        next_at = (datetime.fromisoformat(last["at"]) + consolidate.EVERY).isoformat() if last else None
+        return {"running": self.running(), "started_at": self._started.isoformat() if self._started else None,
+                "error": self._error, "last": last, "next_at": next_at, "pending": consolidate.pending(self.vault)}
+
+
 def rebuild(vault_path: Path, include_unreviewed: bool) -> None:
     """Refresh wiki/ after a decision, as `refresher rebuild` would."""
     at = datetime.now(timezone.utc)
@@ -149,7 +193,10 @@ def placer(vault_path: Path):
     return place_item
 
 
-def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=(), log=print):
+def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=(), log=print,
+            review: Review | None = None):
+    review = review or Review(vault_path)
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "refresher"
 
@@ -200,6 +247,8 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.OK, state.map()["proposals"])
             if path == "/api/topics":
                 return self._json(HTTPStatus.OK, state.catalog())
+            if path == "/api/consolidate":
+                return self._json(HTTPStatus.OK, review.status())
             if path == "/api/dossier":
                 try:
                     at = datetime.fromisoformat(args["at"]) if args.get("at") else None
@@ -229,6 +278,10 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                     (origin is not None and origin not in {f"http://{h}" for h in self._hosts()}):
                 return self._json(HTTPStatus.FORBIDDEN, {"error": "Changes are taken only from the app itself."})
             path = urlsplit(self.path).path
+            if path == "/api/consolidate":  # no body: the button only says "now"
+                started = review.start()
+                return self._json(HTTPStatus.ACCEPTED if started else HTTPStatus.CONFLICT,
+                                  {**review.status(), **({} if started else {"error": "A review is already running."})})
             decide, retry = DECIDE.match(path), RETRY.match(path)
             if not (decide or retry or path == "/api/submissions"):
                 return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
