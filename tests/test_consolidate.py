@@ -80,6 +80,62 @@ def test_cli_consolidate_lexical(tmp_path, capsys):
     assert "proposals: 4 waiting" in capsys.readouterr().out
 
 
+# --- several runners: the bot, the review container, a scheduled job ---
+def _place_something_new(v):
+    post = next((v / "processed").glob("*.json"))
+    later = post.stat().st_mtime + 3600
+    os.utime(post, (later, later))  # placed after the last run's stamp
+
+
+def test_if_due_runs_only_when_due_and_something_new_was_placed(tmp_path):
+    v = topical_vault(tmp_path)
+    assert job.consolidate(v, at=AT, if_due=True) is not None
+    assert job.consolidate(v, at=AT + timedelta(minutes=30), if_due=True) is None  # not due
+    assert job.consolidate(v, at=AT + timedelta(hours=2), if_due=True) is None  # due, but nothing new
+    _place_something_new(v)
+    assert job.consolidate(v, at=AT + timedelta(minutes=30), if_due=True) is None  # new, but not due
+    assert job.consolidate(v, at=AT + timedelta(hours=2), if_due=True) is not None
+
+
+def test_a_runner_that_waited_on_the_lock_does_not_review_again(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    v = topical_vault(tmp_path)
+    with ThreadPoolExecutor(2) as pool:
+        runs = list(pool.map(lambda _: job.consolidate(v, at=AT, if_due=True), range(2)))
+    assert sum(r is not None for r in runs) == 1
+    assert (v / "log.md").read_text().count("consolidate:") == 1
+
+
+def test_cli_consolidate_if_due_says_when_it_skips(tmp_path, capsys):
+    v = topical_vault(tmp_path)
+    args = ["consolidate", "--vault", str(v), "--lexical", "--if-due", "--at", AT.isoformat()]
+    assert main(args) == 0 and "4 new proposals" in capsys.readouterr().out
+    assert main(args) == 0 and "consolidate: skipped" in capsys.readouterr().out
+
+
+def test_cli_consolidate_every_keeps_checking_and_survives_a_failed_run(tmp_path, capsys):
+    class Stop(Exception):
+        pass
+    v = topical_vault(tmp_path)
+    runs = [OSError("disk full"), None, Stop()]
+    real = job.consolidate
+
+    def flaky(*args, **kwargs):
+        outcome = runs.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return real(*args, **kwargs)
+    with patch("refresher.consolidate.consolidate", side_effect=flaky), patch("time.sleep"), \
+            pytest.raises(Stop):
+        main(["consolidate", "--vault", str(v), "--lexical", "--every", "600"])
+    assert "4 new proposals" in capsys.readouterr().out and not runs
+
+
+def test_the_review_is_on_unless_turned_off():
+    assert job.review_on({}) and job.review_on({"REFRESHER_REVIEW": "on"})
+    assert not job.review_on({"REFRESHER_REVIEW": "OFF"})
+
+
 class BotConsolidateTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         patcher = patch("channels.telegram.client_from_environment", return_value=None)

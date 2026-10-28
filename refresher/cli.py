@@ -9,6 +9,7 @@
     uv run refresher graph [--vault V] [--at DATE]     write wiki/graph/index.html, an offline view with typed edges
     uv run refresher enrich [--vault V] [--limit N] [--person NAME]   look people up with Tavily, stored in people/
     uv run refresher consolidate [--vault V] [--lexical]   the hourly job: relate, review, enrich, rebuild
+    add --if-due to run it only when due and something new was placed, --every SECONDS to keep checking
     uv run refresher serve [--vault V] [--port P]     the app on http://127.0.0.1:8080: add sources, the Atlas, proposals
     uv run refresher proposals [--vault V] [--all]     what the review suggests, with the token to decide it
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
@@ -59,6 +60,10 @@ def main(argv=None) -> int:
                            help="another Host the browser uses, e.g. a published port: localhost:9000 (repeatable)")
         if name == "consolidate":
             p.add_argument("--lexical", action="store_true", help="no model or web calls: wording and similarity only")
+            p.add_argument("--if-due", action="store_true",
+                           help="only when the last run is an hour old and something was placed since (else exit 0)")
+            p.add_argument("--every", type=float, metavar="SECONDS",
+                           help="keep checking at this interval, as --if-due (the review container)")
         if name == "problems":
             p.add_argument("--since", help="ISO date or datetime; only problems from then on")
             p.add_argument("--limit", type=int, default=20, help="latest problems shown in full (default 20)")
@@ -94,7 +99,7 @@ def main(argv=None) -> int:
         serve(args.vault, args.port, args.host, args.allow_host)
         return 0
     if args.command == "consolidate":
-        return _consolidate(args.vault, args.lexical, at)
+        return _consolidate(args.vault, args.lexical, at, args.if_due, args.every)
     if args.command == "proposals":
         return _proposals(args.vault, args.all)
     if args.command == "decide":
@@ -295,8 +300,11 @@ def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int
     return 0
 
 
-def _consolidate(vault_path: Path, lexical: bool, at: datetime) -> int:
+def _consolidate(vault_path: Path, lexical: bool, at: datetime, if_due: bool = False,
+                 every: float | None = None) -> int:
     from refresher.consolidate import consolidate
+    if every is not None and every <= 0:
+        sys.exit("consolidate: --every needs a positive number of seconds")
     model = search = None
     if not lexical:
         from dotenv import load_dotenv
@@ -308,9 +316,21 @@ def _consolidate(vault_path: Path, lexical: bool, at: datetime) -> int:
         except ModelError as error:
             sys.exit(str(error))
         search = search_from_environment()
-    run = consolidate(vault_path, model, search, at, log=print, warn=place._warn)
-    print(run.summary())
-    return 0
+    if every is None:
+        run = consolidate(vault_path, model, search, at, log=print, warn=place._warn, if_due=if_due)
+        print(run.summary() if run else "consolidate: skipped, not due or nothing placed since the last run")
+        return 0
+    import time
+    from engine.llm import ModelError
+    print(f"consolidate: checking every {every:g} s whether the review is due", flush=True)
+    while True:  # a failed run is logged and the next check tries again, as the bot's timer does
+        try:
+            run = consolidate(vault_path, model, search, log=print, warn=place._warn, if_due=True)
+            if run:
+                print(run.summary(), flush=True)
+        except (ModelError, OSError, ValueError) as error:
+            place._warn(f"consolidate failed ({type(error).__name__}: {str(error)[:300]}); next check in {every:g} s")
+        time.sleep(every)
 
 if __name__ == "__main__":
     sys.exit(main())

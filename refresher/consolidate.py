@@ -2,12 +2,18 @@
 
     uv run refresher consolidate [--vault V] [--lexical]   or /consolidate in the bot; the bot also runs it after a
                                                           placement when the last run is more than an hour old
+    uv run refresher consolidate --if-due [--every 600]   only when due and something new was placed: the review
+                                                          container loops on it, a scheduled serverless job runs it once
+
+The bot, the review container and a scheduled job may all run it: with --if-due the check is repeated under the lock,
+so whoever comes second sees the first one's stamp and skips. REFRESHER_REVIEW=off turns the bot's own runs off.
 
 Everything runs under the vault lock, so a placement or an accept from the page waits for it rather than
 interleaving. What the review proposes waits for the user (refresher serve); what it decides alone is applied.
 """
 from dataclasses import dataclass
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -182,18 +188,37 @@ def due(vault_path: Path, at: datetime | None = None) -> bool:
     return (at or datetime.now(timezone.utc)) - last >= EVERY
 
 
+def pending(vault_path: Path, at: datetime | None = None) -> bool:
+    """The hourly review is due and a post was placed since it last ran: captures in a burst still get reviewed
+    without waiting for the next one."""
+    processed = vault_path / "processed"
+    if not processed.is_dir() or not due(vault_path, at):
+        return False
+    stamp = vault_path / STAMP
+    last = stamp.stat().st_mtime if stamp.exists() else 0.0
+    return any(p.stat().st_mtime > last for p in processed.glob("*.json"))
+
+
+def review_on(env=None) -> bool:
+    """The hourly review runs by default; REFRESHER_REVIEW=off is the opt-out for a runner another one covers."""
+    return (os.environ if env is None else env).get("REFRESHER_REVIEW", "on").strip().lower() != "off"
+
+
 def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, at: datetime | None = None,
                 enrich_limit: int = ENRICH_LIMIT, log: Callable[[str], None] = _quiet,
-                warn: Callable[[str], None] = _warn) -> ConsolidateRun:
+                warn: Callable[[str], None] = _warn, if_due: bool = False) -> ConsolidateRun | None:
     """Without a model the job is lexical: items are related by wording (stored, so rebuilds stay fast; a later run
     with the model judges them again), topics are named by their shared words, and merges are proposed on
-    similarity alone."""
+    similarity alone. With `if_due`, None when the review is not pending once the lock is held: another runner did
+    it while this one waited."""
     at = at or datetime.now(timezone.utc)
     run = ConsolidateRun(at, notes=[])
     if model is not None and not isinstance(model, BudgetedModel):
         model = BudgetedModel(model)  # one spending cap for the whole run: relating, naming, confirming, people
     run.budget = model
     with vault.lock(vault_path):
+        if if_due and not pending(vault_path, at):
+            return None
         if model is not None:
             run.relate = relate_pending(vault_path, relate.ModelRelator(model), log=log, warn=warn)
             if run.relate.error:
