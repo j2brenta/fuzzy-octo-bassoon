@@ -59,7 +59,20 @@ def _nebius_request(api_key: str, base_url: str, path: str, payload: dict | None
         method="POST" if payload is not None else "GET",
     )
     try:
-        with urlopen(request, timeout=timeout) as response:
+        for attempt in range(3):
+            try:
+                response = urlopen(request, timeout=timeout)
+                break
+            except HTTPError as error:
+                if error.code not in {500, 502, 503, 504, 529} or attempt == 2:
+                    raise
+                status = error.code
+                error.close()
+                delay = 2 ** attempt
+                logger.warning("Nebius returned HTTP %s; retrying in %s s (attempt %s/3)",
+                               status, delay, attempt + 2)
+                time.sleep(delay)
+        with response:
             # The socket timeout bounds each read, not the whole answer: a server that keeps sending a byte now and
             # then held one call open for almost two hours. Read in chunks against a deadline instead.
             read1 = getattr(response, "read1", None)  # what has arrived, never waiting for more
@@ -88,6 +101,8 @@ def _nebius_request(api_key: str, base_url: str, path: str, payload: dict | None
             raise ModelError("Nebius does not know this model; run python -m engine.llm models.") from None
         if status == 429:
             raise ModelError("Nebius rate limit or credit limit reached; try later.") from None
+        if 500 <= status < 600:
+            raise ModelError(f"Nebius is temporarily unavailable (HTTP {status}); try again later.") from None
         raise ModelError(f"Nebius returned HTTP {status}; check NEBIUS_BASE_URL and the model name.") from None
     except (URLError, TimeoutError, socket.timeout):
         raise ModelError("Could not reach Nebius within the request timeout.") from None

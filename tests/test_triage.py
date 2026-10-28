@@ -100,6 +100,37 @@ class NebiusTests(unittest.TestCase):
         self.assertNotIn('private', str(failure.exception))
         self.assertNotIn('fixture-secret', str(failure.exception))
 
+    def test_transient_server_errors_retry_then_succeed(self):
+        for status in [500, 502, 503, 504, 529]:
+            errors = [HTTPError('https://example.com', status, 'private', {}, io.BytesIO()) for _ in range(2)]
+            with self.subTest(status=status), patch('engine.llm.urlopen', side_effect=[
+                *errors, self.reply(json.dumps(LABELS))
+            ]) as request, patch('engine.llm.time.sleep') as sleep:
+                self.assertEqual(NebiusModel('fixture', 'm').complete_json('s', 'c').data, LABELS)
+                self.assertEqual(request.call_count, 3)
+                self.assertEqual([c.args[0] for c in sleep.call_args_list], [1, 2])
+                self.assertTrue(all(error.fp.closed for error in errors))
+
+    def test_persistent_529_stops_after_three_attempts_with_safe_message(self):
+        errors = [HTTPError('https://example.com', 529, 'private', {}, io.BytesIO(b'private')) for _ in range(3)]
+        with patch('engine.llm.urlopen', side_effect=errors) as request, patch('engine.llm.time.sleep') as sleep:
+            with self.assertRaisesRegex(ModelError, r'temporarily unavailable \(HTTP 529\)') as failure:
+                NebiusModel('fixture-secret', 'm').complete_json('s', 'c')
+        self.assertEqual(request.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertNotIn('private', str(failure.exception))
+        self.assertNotIn('fixture-secret', str(failure.exception))
+        self.assertTrue(all(error.fp.closed for error in errors))
+
+    def test_client_errors_are_not_retried(self):
+        for status in [400, 401, 403, 404, 429]:
+            error = HTTPError('https://example.com', status, 'private', {}, io.BytesIO())
+            with self.subTest(status=status), patch('engine.llm.urlopen', side_effect=error) as request, patch('engine.llm.time.sleep') as sleep:
+                with self.assertRaises(ModelError):
+                    NebiusModel('fixture', 'm').complete_json('s', 'c')
+                self.assertEqual(request.call_count, 1)
+                sleep.assert_not_called()
+
     def test_configuration_requires_explicit_enable_and_valid_provider(self):
         for factory, variable in ((client_from_environment, 'TRIAGE_PROVIDER'),
                                   (judge_client_from_environment, 'JUDGE_PROVIDER')):
