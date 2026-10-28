@@ -18,6 +18,30 @@
   --r-proposed: #c77945;
   --r-supersedes: #4c6e91;
   --r-noise: #9a968a;
+  /* Atlas shades shared by the canvas, topic chips and evidence panel. */
+  --r-graph-border: #a9b7e6;
+  --r-graph-link: #8b9ed9;
+  --r-graph-muted: #777268;
+  --r-graph-inactive: #f1ede3;
+  --r-graph-topic: #f3e6ad;
+  --r-graph-topic-border: #ddcc90;
+  --r-graph-region: #dce3fb;
+  --r-graph-topic-outline: #c8aa45;
+  --r-graph-person: #fbe2d8;
+  --r-graph-person-outline: #c77560;
+  --r-graph-pending-outline: #bb8035;
+  --r-graph-pending: #fff0cf;
+  --r-graph-edge: #a4a8b6;
+  --r-graph-arrow: #8b92ac;
+  --r-graph-noise: #b5b1a6;
+  --r-graph-topic-link: #b39a46;
+  --r-graph-chip: #c3ccee;
+  --r-graph-chip-muted: #e7e0d1;
+  --r-graph-surface: #f4eddf;
+  --r-graph-warning: #ffedcd;
+  --r-graph-warning-ink: #75440a;
+  --r-graph-stale-ink: #8e3421;
+  --r-graph-topic-soft: #faf3d5;
   --r-serif: Georgia, "Times New Roman", serif;
   --r-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
