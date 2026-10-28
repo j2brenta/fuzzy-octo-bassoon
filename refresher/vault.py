@@ -30,7 +30,7 @@ import yaml
 from pydantic import ValidationError
 
 from graph import proposals as proposal_stage
-from graph.memory import MemoryStore
+from graph.memory import MemoryStore, person_id
 from graph.store import AFFILIATION_WORDS, Affiliation, Decision, Edge, GraphStore, Proposal, ReviewReport
 from refresher import dossier, km, scoring
 from refresher import translate
@@ -236,7 +236,9 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     people = {p.person_id: p for p in store.people()}
     # A record for a merged-away person serves the person they merged into, unless that one has its own.
     for record in sorted(load_enrichments(vault), key=lambda r: r["person_id"] not in people):
-        person = people.get(store.canonical_person(record["person_id"]))
+        # A record made under an id from before name normalization ("Krestnikov; Konstantin") finds them by name.
+        person = people.get(store.canonical_person(record["person_id"])) or \
+            people.get(store.canonical_person(person_id(record.get("name") or "")))
         if person is not None and person.enrichment_status == "pending":
             person.enrichment_status = "enriched" if record.get("match") else "no_match"
             person.role, person.affiliation = record.get("role"), record.get("affiliation")
