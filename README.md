@@ -596,7 +596,7 @@ review. An accepted topic takes close new Ideas provisionally as they arrive.
 
 ```bash
 uv run refresher consolidate --vault VAULT            # the hourly job; --lexical for no model or web calls
-uv run refresher serve --vault VAULT                  # the map on http://127.0.0.1:8765 with Accept / Reject
+uv run refresher serve --vault VAULT                  # the app on http://127.0.0.1:8080: the map with Accept / Reject
 uv run refresher proposals --vault VAULT              # the same list in the terminal, with tokens
 uv run refresher decide --vault VAULT ID accept --token TOKEN
 uv run refresher problems --vault VAULT              # warnings and errors kept in logs/problems.jsonl
@@ -619,7 +619,7 @@ in the vault's `.cache/`). The thresholds are tuned for the offline embedder.
 ### The map
 
 Open `wiki/graph/index.html` in a browser; it works from disk with no server, or
-run `refresher serve` to decide proposals on it. The map is Victor's News Atlas
+run `refresher serve` and open `/atlas/` to decide proposals on it. The map is Victor's News Atlas
 viewer from his news map branch, translated and fed from this graph: topics as
 regions, a timeline with filters, a Sources mode (items and how their claims
 relate), a Claims mode (claims inside their cluster's region inside their
@@ -659,21 +659,33 @@ is not a model ranking.
 
 Apache-2.0; see [LICENSE](LICENSE).
 
-## Jury web workspace
+## The app: add sources, the Atlas, review
 
-Run the first browser frontend locally, without Telegram:
+One local app on one port and one vault, the same vault the Telegram bot writes:
 
 ```bash
-python -m pip install -e '.[web]'
-python -m refresher.web --port 8080
+uv sync --extra web
+uv run refresher serve --vault VAULT        # or set REFRESHER_VAULT; python -m refresher.web is the same app
 ```
 
-Open **http://127.0.0.1:8080**. Sources are isolated in `.local-vault/jury/`;
-`--vault PATH` selects another workspace. Existing `.env` model settings apply.
-Capture returns after durable storage; one background worker runs the existing
-triage, extraction, quality review, entity and packaging stages. Open a saved
-source to see real claims, review status, exact evidence excerpts and original
-text. A processed submission can still contain pending or rejected reviews.
+Open **http://127.0.0.1:8080**:
+
+- `/capture/` adds a source and follows it through ingestion (Olga's workspace).
+- `/atlas/` is the map, with the proposals that wait for you (Victor's viewer).
+
+Existing `.env` model settings apply. Capture returns after durable storage; one
+background worker runs the existing triage, extraction, quality review, entity and
+packaging stages, then places the item in the graph as the bot does
+(`refresher/place.py`; `GRAPH_RELATOR=lexical` relates by wording only), so it
+shows on the Atlas. Open a saved source to see real claims, review status, exact
+evidence excerpts, original text and where it landed. A processed submission can
+still contain pending or rejected reviews. Submissions and uploads are kept in the
+vault's `submissions/` and `uploads/`.
+
+The app binds to 127.0.0.1 (`--host 0.0.0.0` in the container) and answers only to
+`localhost` or `127.0.0.1` at its port; a browser that reaches it through another
+host or port needs `--allow-host HOST:PORT`. Every change is a same-origin JSON POST
+with an `X-Refresher` header.
 
 - Paste text, conversations, newsletter content or transcripts (60,000 characters).
 - Submit public article URLs using the existing bounded, public-address-only fetcher.
@@ -685,9 +697,8 @@ text. A processed submission can still contain pending or rejected reviews.
   to analyze those sources. No successful OCR or transcription is implied.
 
 No API key is sent to the browser. AI-disabled, blocked-link and interrupted/error
-states preserve originals. Refreshers, graph visualization and retrieval are not
-part of this first ingestion frontend. This server binds to loopback and is a
-single shared local demo workspace; public hosting/authentication is separate work.
+states preserve originals. This is a single shared local demo workspace; public
+hosting/authentication is separate work.
 
 ## Pictures from Telegram
 

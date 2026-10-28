@@ -7,21 +7,24 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Refresher Atlas</title>
+  <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="style.css">
+  <script defer src="nav.js"></script>
   <script defer src="cytoscape.min.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
-<header class="masthead">
-  <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><div><b>REFRESHER ATLAS</b><span class="eyebrow">Your knowledge and what it rests on</span></div></div>
+<header class="app-bar">
+  <a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Atlas</span></a>
   <div class="header-note"><span class="status-dot"></span>Snapshot <span id="snapshot-date"></span><span id="scope-badge" class="badge"></span></div>
+  <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
 <main>
   <section class="intro">
     <div><p class="eyebrow">TOPICS → CLUSTERS → IDEAS → EVIDENCE</p><h1>See how it connects.<br><span>Check what it rests on.</span></h1></div>
     <div class="intro-copy"><p>From a topic to an Idea, from a relation to the exact passage.<br>A repeated claim is not an independent confirmation.</p><div id="stats" class="stats"></div></div>
   </section>
-  <section class="proposal-section" aria-label="Proposals">
+  <section class="proposal-section" id="review" aria-label="Proposals">
     <div class="section-top"><div><p class="eyebrow">FROM THE HOURLY REVIEW</p><h2>Waiting for you</h2></div><label class="check"><input type="checkbox" id="show-decided">Show decided and stale</label></div>
     <p id="proposal-note" class="small quiet"></p>
     <div id="proposals" class="proposals"></div>

@@ -10,6 +10,7 @@ Layout (ingestion owns raw/ … processed/; this module owns wiki/, overrides.ya
     graph-reviews/decisions/<time>-<id>.json   the user's answers, append-only; the latest per proposal counts
     people/<person>.json        web enrichment with a source for every field, written by `refresher enrich`
     overrides.yaml              the user's word: durability, trust, votes
+    submissions/<id>.json, uploads/<sha256>   web captures and their originals (refresher/web.py)
     wiki/items|ideas|people|sources/  generated notes; text below MARK and user_* frontmatter are kept
     wiki/health.md, index.md, log.md
 """

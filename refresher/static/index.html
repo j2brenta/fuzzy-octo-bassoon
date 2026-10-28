@@ -1,14 +1,12 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Refresher — Your knowledge, connected</title><link rel="stylesheet" href="/app.css"><script src="/app.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Refresher — Add a source</title><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="app.css"><script src="nav.js" defer></script><script src="app.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
-<aside class="sidebar">
-<a class="brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>refresher<span class="brand-dot">.</span></a>
-<div class="workspace-label">YOUR WORKSPACE</div>
-<nav aria-label="Workspace"><a class="nav-item active" href="#capture-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>Add source</a><a class="nav-item" href="#library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Sources<span class="nav-count" id="nav-count">0</span></a></nav>
-<div class="sidebar-bottom"><div class="small-mark">R</div><div><strong>Demo workspace</strong><span>Make something worth remembering.</span></div></div>
-</aside>
+<header class="app-bar">
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Add a source</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+</header>
 <div class="shell">
 <header class="topbar"><span>Your knowledge workspace</span><span class="demo-badge"><span></span> Product preview</span></header>
 <main id="main">
@@ -22,7 +20,7 @@
   </div>
   <div class="hero-art">
 <button type="button" id="brain-motion" class="brain-scene" aria-label="Pause animated brain knowledge graph" title="Click to pause or resume animation">
-<img class="brain-image" src="/brain.png" alt="" width="1600" height="1000" decoding="async" fetchpriority="high">
+<img class="brain-image" src="brain.png" alt="" width="1600" height="1000" decoding="async" fetchpriority="high">
 <svg viewBox="0 0 640 400" fill="none" class="brain-network" aria-hidden="true">
 <g class="brain-network-drift">
 <g class="brain-connections">

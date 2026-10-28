@@ -4,8 +4,8 @@ Topics are regions and clusters regions inside them; items sit in the topic of t
 clusters and topics with the links between them (relations that cross, Ideas they share, close centroids). Two modes: Sources draws items with the relations their
 claims have (the correction SUPERSEDES the post it corrects), Claims draws the claims themselves. Clicking an item or
 an edge opens the exact passages behind it; two claims can be compared side by side. MENTIONS edges, FROM spans and
-hidden triage stubs are left out. Proposals from the review are listed with their state; `refresher serve` adds the
-buttons that decide them. The page opens from disk with the data inline and makes no network request.
+hidden triage stubs are left out. Proposals from the review are listed with their state; `refresher serve` (the app,
+at /atlas/) adds the buttons that decide them. The page opens from disk with the data inline and makes no network request.
 """
 import json
 import shutil
@@ -21,6 +21,7 @@ from refresher.vault import note_names
 ASSETS = Path(__file__).parent / "assets"
 MAP_ASSETS = ("index.html", "app.js", "style.css")
 VENDOR = ("cytoscape.min.js", "CYTOSCAPE-LICENSE.txt")
+SHELL_DIR, SHELL = Path(__file__).parent / "static", ("shell.css", "nav.js")  # the bar every page shares
 CLAIM_RELATIONS = ("SUPERSEDES", "CONTRADICTS", "SUPPORTS", "ELABORATES", "DUPLICATES")
 LABELS = {"SUPERSEDES": "supersedes", "CONTRADICTS": "contradicts", "SUPPORTS": "confirms",
           "ELABORATES": "adds detail to", "DUPLICATES": "repeats", "MERGE": "same as? (proposed)",
@@ -224,4 +225,6 @@ def write(store: MemoryStore, vault: Path, at: datetime) -> Path:
         shutil.copyfile(ASSETS / "map" / name, out / name)
     for name in VENDOR:
         shutil.copyfile(ASSETS / name, out / name)
+    for name in SHELL:
+        shutil.copyfile(SHELL_DIR / name, out / name)
     return out / "index.html"

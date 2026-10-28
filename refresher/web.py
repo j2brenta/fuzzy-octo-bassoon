@@ -1,26 +1,22 @@
-"""Local jury workspace: python -m refresher.web [--port 8080]."""
+"""The capture workspace behind /capture/ in `refresher serve` (refresher/app.py); `python -m refresher.web` is the
+same app, kept for old commands."""
 import argparse
 import base64
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import logging
 import os
 from pathlib import Path
-import re
 from threading import Lock
 import time
 from uuid import uuid4
 
-from dotenv import load_dotenv
-from engine import logs
 from engine.artifacts import atomic_json
 from store.raw import capture_text
 
 MAX_FILE = 20 * 1024 * 1024
-MAX_REQUEST = 29 * 1024 * 1024
 STATIC = Path(__file__).with_name("static")
 logger = logging.getLogger(__name__)
 
@@ -30,8 +26,10 @@ def read_json(path):
 
 
 class Workspace:
-    def __init__(self, vault):
+    def __init__(self, vault, place=None):
         self.vault = Path(vault)
+        # place(item_id, client) -> where the item went in the graph; the app passes refresher.app.placer.
+        self.place = place
         # One worker keeps the existing vault writers serialized.
         self.worker = ThreadPoolExecutor(max_workers=1)
         self.lock = Lock()
@@ -224,6 +222,10 @@ class Workspace:
                 packaged = build_extraction(path)
                 apply_storage_stub(packaged.path)
                 write_item_note(path)
+                if self.place is not None:
+                    stage("Placing it among your Ideas")
+                    job.setdefault("placed", []).append(self.place(packaged.path.stem, client))
+                    self.save(job)
             failed = [row for row in links if row.get("status") != "captured"]
             logger.info("submission %s · finished in %.1f s: %d items, %d links unread", job["id"][:10],
                         time.monotonic() - started, len(paths), len(failed))
@@ -262,96 +264,17 @@ class Workspace:
         return job
 
 
-def handler_for(workspace):
-    class Handler(BaseHTTPRequestHandler):
-        def send(self, status, body, mime="application/json"):
-            content = json.dumps(body, ensure_ascii=False).encode() if mime == "application/json" else body
-            self.send_response(status)
-            self.send_header("Content-Type", mime)
-            self.send_header("Content-Length", str(len(content)))
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
-            self.end_headers()
-            self.wfile.write(content)
-
-        def do_GET(self):
-            if self.path == "/api/submissions":
-                return self.send(200, workspace.list_jobs())
-            match = re.fullmatch(r"/api/submissions/([a-f0-9]{32})", self.path)
-            if match:
-                result = workspace.detail(match[1])
-                return self.send(200 if result else 404, result or {"error": "Submission not found."})
-            match = re.fullmatch(r"/api/uploads/([a-f0-9]{64})", self.path)
-            if match:
-                path = workspace.vault / "uploads" / match[1]
-                if path.is_file():
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/octet-stream")
-                    self.send_header("Content-Disposition", 'attachment; filename="original-upload"')
-                    self.send_header("Content-Length", str(path.stat().st_size))
-                    self.send_header("X-Content-Type-Options", "nosniff")
-                    self.end_headers()
-                    self.wfile.write(path.read_bytes())
-                    return
-            files = {"/": ("index.html", "text/html; charset=utf-8"), "/app.css": ("app.css", "text/css"), "/app.js": ("app.js", "text/javascript"), "/brain.png": ("brain.png", "image/png")}
-            if self.path in files:
-                name, mime = files[self.path]
-                return self.send(200, (STATIC / name).read_bytes(), mime)
-            self.send(404, {"error": "Not found."})
-
-        def do_POST(self):
-            # Same-origin JSON only: no cross-origin form submissions to the local app.
-            origin = self.headers.get("Origin")
-            if origin and origin != f"http://{self.headers.get('Host')}":
-                return self.send(403, {"error": "Cross-origin submissions are not allowed."})
-            retry = re.fullmatch(r"/api/submissions/([a-f0-9]{32})/retry", self.path)
-            if self.path != "/api/submissions" and not retry:
-                return self.send(404, {"error": "Not found."})
-            if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
-                return self.send(415, {"error": "Use JSON."})
-            try:
-                if retry:
-                    return self.send(202, workspace.retry(retry[1]))
-                length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= MAX_REQUEST:
-                    return self.send(413, {"error": "Upload exceeds the 20 MB limit."})
-                data = json.loads(self.rfile.read(length))
-                if not isinstance(data, dict):
-                    raise ValueError("Submission must be an object.")
-                job = workspace.submit(data)
-                self.send(202, job)
-            except (ValueError, UnicodeError) as error:
-                self.send(400, {"error": str(error)})
-            except OSError:
-                self.send(500, {"error": "Could not save this submission. Check server storage and try again."})
-    return Handler
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1", help="bind address; the container uses 0.0.0.0 behind a loopback port")
     parser.add_argument("--port", type=int, default=8080)
-    parser.add_argument("--vault", type=Path, default=Path(".local-vault/jury"))
+    parser.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
     args = parser.parse_args()
-    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-    logs.configure(vault=args.vault, process="frontend")
-    workspace = Workspace(args.vault)
-    for path in (workspace.vault / "submissions").glob("*.json"):
-        job = read_json(path)
-        if job["status"] in {"queued", "processing"}:
-            job.update(status="pending", stage="Interrupted", message="Server restarted. Original retained; submit again to process.")
-            workspace.save(job)
-    server = ThreadingHTTPServer((args.host, args.port), handler_for(workspace))
-    print(f"Refresher workspace: http://{args.host}:{args.port}", flush=True)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-        workspace.worker.shutdown(wait=True)
+    if not args.vault:
+        parser.error("pass --vault or set REFRESHER_VAULT")
+    from refresher import cli
+    return cli.main(["serve", "--vault", str(args.vault), "--host", args.host, "--port", str(args.port)])
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

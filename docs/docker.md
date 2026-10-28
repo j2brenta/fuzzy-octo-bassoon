@@ -5,7 +5,7 @@
 | Code | Runtime role | Compose service |
 | --- | --- | --- |
 | `channels/telegram.py` | One long-polling Telegram bot; invokes parsing, article fetching, triage, extraction and review in the same process | `telegram` (default) |
-| `refresher/web.py`, `refresher/static/` | Browser workspace with background ingestion and native PDF text reading | `frontend` (default) |
+| `refresher/app.py`, `refresher/web.py`, `refresher/static/`, `refresher/assets/map/` | The one browser app: capture with background ingestion and native PDF text reading, the Atlas, proposals | `frontend` (default) |
 | `channels/importer.py`, `channels/web.py`, `engine/*`, `refresher/cli.py` | Finite capture, processing, knowledge-base rebuild and evaluation commands | `cli` (`tools` profile) |
 | `refresher/viewer.py` | Interactive terminal evidence viewer using curses, jq and less | `viewer` (`tools` profile) |
 | `tests/` | Existing offline pytest and unittest suite and fixtures | `test` (`test` profile) |
@@ -25,12 +25,16 @@ is absent from this checkout and therefore has no container dependency.
 Create the host vault directory, then build and start just the frontend:
 
 ```bash
-mkdir -p .local-vault/jury
+mkdir -p .local-vault/telegram
 docker compose up -d --build --wait frontend
 ```
 
-Open <http://localhost:8080>. The frontend uses `.env` for model settings and
-stores submissions and uploads in `.local-vault/jury`, separately from Telegram.
+Open <http://localhost:8080>. The frontend is `refresher serve`: capture at
+`/capture/`, the Atlas and proposals at `/atlas/`. It uses `.env` for model settings
+and works on the same vault as the Telegram bot (`REFRESHER_VAULT`, `/data/telegram`
+in the container), so a web capture and a Telegram one land in one graph.
+Submissions and uploads are kept in that vault's `submissions/` and `uploads/`.
+If you publish the port on another number, pass `--allow-host localhost:<port>`.
 `VAULT_DIR` overrides the shared host parent directory. The web PDF extra and
 static assets are installed in the application image; no Node build is needed.
 The server listens on all interfaces inside its container, while the published

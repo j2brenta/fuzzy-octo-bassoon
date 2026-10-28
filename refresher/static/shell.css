@@ -1,0 +1,44 @@
+/* The shell every Refresher page shares: Olga's editorial palette as tokens, the graph's meanings as colours, and
+   the bar at the top. Pages map their own variables onto these, so one change here restyles all of them. */
+:root {
+  --r-bg: #f6f0e4;
+  --r-paper: #fffcf5;
+  --r-ink: #25251f;
+  --r-muted: #67665e;
+  --r-line: #d9d3c6;
+  --r-brand: #234cc5;
+  --r-brand-dark: #173895;
+  --r-soft: #edf0fd;
+  --r-accent: #eed780;
+  --r-coral: #fa795e;
+  --r-error: #a32c25;
+  /* what the graph means: accepted by you, a conflict, waiting for you, a newer claim, noise */
+  --r-accepted: #234cc5;
+  --r-conflict: #b5553c;
+  --r-proposed: #c77945;
+  --r-supersedes: #4c6e91;
+  --r-noise: #9a968a;
+  --r-serif: Georgia, "Times New Roman", serif;
+  --r-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.app-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  padding: 18px max(24px, calc((100vw - 1400px) / 2)); background: var(--r-bg); border-bottom: 1px solid var(--r-line);
+  font-family: var(--r-sans); color: var(--r-ink); }
+.app-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--r-ink); font-size: 26px;
+  letter-spacing: -1.3px; font-weight: 700; line-height: 1; }
+.app-brand svg { width: 30px; height: 30px; color: var(--r-brand); fill: none; stroke: currentColor; stroke-width: 3;
+  stroke-linecap: round; stroke-linejoin: round; }
+.app-brand .dot { color: var(--r-brand); margin-left: -8px; }
+.app-brand .page { font-family: var(--r-serif); font-weight: 400; font-size: 17px; letter-spacing: 0; color: var(--r-muted);
+  margin-left: 8px; padding-left: 12px; border-left: 1px solid var(--r-line); }
+.app-nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.app-nav a { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 16px; border: 1px solid transparent;
+  border-radius: 30px; font-size: 13px; color: var(--r-muted); text-decoration: none; }
+.app-nav a:hover { border-color: var(--r-line); color: var(--r-ink); }
+.app-nav a[aria-current="page"] { border-color: #bcb6a8; color: var(--r-ink); }
+.app-nav a:focus-visible { outline: 3px solid var(--r-brand); outline-offset: 3px; }
+.app-nav .count { color: var(--r-brand); font-size: 10px; min-width: 20px; text-align: center; background: var(--r-soft);
+  padding: 1px 6px; border-radius: 20px; }
+.app-nav .count.waiting { color: white; background: var(--r-proposed); }
+.app-nav .count:empty { display: none; }
+@media (max-width: 600px) { .app-bar { padding: 14px 16px; } .app-brand { font-size: 22px; } .app-nav a { padding: 6px 10px; } }
