@@ -302,26 +302,22 @@ def _enrich(vault_path: Path, limit: int, names: list[str], at: datetime) -> int
 
 def _consolidate(vault_path: Path, lexical: bool, at: datetime, if_due: bool = False,
                  every: float | None = None) -> int:
-    from refresher.consolidate import consolidate
+    from dotenv import load_dotenv
+    from engine.llm import ModelError
+    from refresher.consolidate import consolidate, models_from_environment
     if every is not None and every <= 0:
         sys.exit("consolidate: --every needs a positive number of seconds")
-    model = search = None
-    if not lexical:
-        from dotenv import load_dotenv
-        from engine.llm import ModelError, client_from_environment
-        from engine.people import search_from_environment
+    if not lexical:  # a lexical run needs no providers, so .env stays out of the environment
         load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
-        try:
-            model = client_from_environment()
-        except ModelError as error:
-            sys.exit(str(error))
-        search = search_from_environment()
+    try:
+        model, search = models_from_environment(lexical)
+    except ModelError as error:
+        sys.exit(str(error))
     if every is None:
         run = consolidate(vault_path, model, search, at, log=print, warn=place._warn, if_due=if_due)
         print(run.summary() if run else "consolidate: skipped, not due or nothing placed since the last run")
         return 0
     import time
-    from engine.llm import ModelError
     print(f"consolidate: checking every {every:g} s whether the review is due", flush=True)
     while True:  # a failed run is logged and the next check tries again, as the bot's timer does
         try:

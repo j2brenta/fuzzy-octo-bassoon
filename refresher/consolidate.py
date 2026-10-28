@@ -14,6 +14,7 @@ interleaving. What the review proposes waits for the user (refresher serve); wha
 from dataclasses import dataclass
 import json
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -26,6 +27,7 @@ from refresher.place import RelateRun, _quiet, _warn, relate_pending
 
 EVERY = timedelta(hours=1)
 STAMP = Path(".cache") / "last-consolidate"
+LAST_RUN = Path(".cache") / "last-consolidate.json"  # what the last run did, for the app's review panel
 ENRICH_LIMIT = 3  # people looked up per run: Tavily is slow and paid
 
 NAMER_PROMPT = """You name a topic in a personal knowledge base. You get statements that belong together.
@@ -162,6 +164,15 @@ class ConsolidateRun:
     placed: int = 0  # Ideas a model gave a cluster or theme this run
     notes: list[str] = None
     budget: BudgetedModel | None = None
+    took: float = 0.0  # seconds, waiting for the lock included
+
+    def record(self) -> dict:
+        return {"at": self.at.isoformat(), "took": round(self.took, 1), "summary": self.summary(),
+                "related": self.relate.judged if self.relate else 0, "duplicates": self.duplicates,
+                "firmed": self.firmed, "proposed": self.proposed, "waiting": self.waiting, "enriched": self.enriched,
+                "named": self.named, "placed": self.placed, "notes": list(self.notes or []),
+                "model_calls": self.budget.calls if self.budget else 0,
+                "tokens": self.budget.spent if self.budget else 0}
 
     def summary(self) -> str:
         parts = []
@@ -199,6 +210,29 @@ def pending(vault_path: Path, at: datetime | None = None) -> bool:
     return any(p.stat().st_mtime > last for p in processed.glob("*.json"))
 
 
+def last_run(vault_path: Path) -> dict | None:
+    """What the last run did (ConsolidateRun.record); only its time when it ran before runs were recorded; None
+    before the first one."""
+    try:
+        return json.loads((vault_path / LAST_RUN).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+    try:
+        return {"at": datetime.fromisoformat((vault_path / STAMP).read_text(encoding="utf-8").strip()).isoformat()}
+    except (OSError, ValueError):
+        return None
+
+
+def models_from_environment(lexical: bool = False):
+    """(model, search) for a run: the model unless `lexical` or GRAPH_RELATOR=lexical, and Tavily with the model
+    when its key is set. Raises ModelError when the model is configured badly."""
+    if lexical or os.environ.get("GRAPH_RELATOR", "model").strip().lower() == "lexical":
+        return None, None
+    from engine.llm import client_from_environment
+    from engine.people import search_from_environment
+    return client_from_environment(), search_from_environment()
+
+
 def review_on(env=None) -> bool:
     """The hourly review runs by default; REFRESHER_REVIEW=off is the opt-out for a runner another one covers."""
     return (os.environ if env is None else env).get("REFRESHER_REVIEW", "on").strip().lower() != "off"
@@ -212,6 +246,7 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
     similarity alone. With `if_due`, None when the review is not pending once the lock is held: another runner did
     it while this one waited."""
     at = at or datetime.now(timezone.utc)
+    started = time.monotonic()
     run = ConsolidateRun(at, notes=[])
     if model is not None and not isinstance(model, BudgetedModel):
         model = BudgetedModel(model)  # one spending cap for the whole run: relating, naming, confirming, people
@@ -247,6 +282,8 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())
+        run.took = time.monotonic() - started
+        vault.atomic_write(vault_path / LAST_RUN, json.dumps(run.record(), ensure_ascii=False, indent=1))
         vault.atomic_write(vault_path / STAMP, at.isoformat())
         vault.log(vault_path, at, run.summary())
     return run

@@ -218,3 +218,46 @@ def test_requests_at_the_same_moment_see_the_whole_graph(tmp_path):
     with ThreadPoolExecutor(8) as pool:  # a page load asks for the map, the topics and a dossier together
         maps = list(pool.map(lambda n: state.map() if n % 2 else state.catalog() and state.map(), range(16)))
     assert all(len(m["clusters"]) == expected for m in maps)
+
+
+def test_consolidate_runs_from_the_page_one_at_a_time_and_shows_the_last_run(tmp_path):
+    from refresher import consolidate
+    v = topical_vault(tmp_path)
+    go = threading.Event()
+
+    def run():  # lexical, so no model; held until the test lets it finish
+        go.wait(10)
+        consolidate.consolidate(v, at=AT)
+    review = app.Review(v, run=run)
+    workspace = Workspace(v, place=lambda item_id, client: {"item": item_id, "status": "placed"})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), app.handler(v, workspace, app.State(v), log=lambda m: None,
+                                                               review=review))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        before = json.loads(get(base + "/api/consolidate")[1])
+        assert before["last"] is None and not before["running"] and before["pending"]
+        status, started = send(base, "/api/consolidate", {})
+        assert status == 202 and started["running"]
+        status, again = send(base, "/api/consolidate", {})
+        assert status == 409 and again["error"] == "A review is already running."
+        go.set()
+        review._thread.join(10)
+        after = json.loads(get(base + "/api/consolidate")[1])
+        assert not after["running"] and after["error"] is None and not after["pending"]
+        assert after["last"]["proposed"] == 4 and after["last"]["at"] == AT.isoformat()
+        assert after["next_at"] == (AT + consolidate.EVERY).isoformat()
+        assert send(base, "/api/consolidate", {}, {"X-Refresher": "0"})[0] == 403  # only from the app itself
+    finally:
+        server.shutdown()
+        server.server_close()
+        workspace.worker.shutdown(wait=True)
+
+
+def test_a_failed_run_from_the_page_is_shown(tmp_path):
+    def run():
+        raise OSError("disk full")
+    review = app.Review(topical_vault(tmp_path), run=run)
+    assert review.start()
+    review._thread.join(10)
+    assert review.status()["error"] == "OSError: disk full" and not review.status()["running"]
