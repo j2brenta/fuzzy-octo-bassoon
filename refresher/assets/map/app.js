@@ -246,7 +246,8 @@
       }
       return {nodes, edges, total: nodes.length, allNodes: nodes, allEdges: edges, topics: [...shownTopics].sort()};
     } else {
-      nodes = data.claims.filter(c => allowedItems.has(c.item)).map(c => ({id: c.id, kind: 'claim', label: c.statement.slice(0, 110),
+      const held = state.drill ? new Set(clusters.get(state.drill)?.ideas || []) : null;  // a cluster's own claims, not all its posts'
+      nodes = data.claims.filter(c => allowedItems.has(c.item) && (!held || held.has(c.idea))).map(c => ({id: c.id, kind: 'claim', label: c.statement.slice(0, 110),
         pending: Number(c.quality !== 'accepted'), superseded: Number(c.superseded)}));
       const n = new Set(nodes.map(x => x.id));
       edges = data.edges.filter(e => n.has(e.source) && n.has(e.target));
@@ -512,6 +513,7 @@
     const ideaIds = c ? c.ideas : [...t.ideas, ...t.attached];
     const postIds = c ? c.items : data.items.filter(i => i.topics.includes(id)).map(i => i.id);
     if (c) {
+      $('detail').append(button(`See its ${c.ideas.length > 1 ? 'claims' : 'claim'}: the Claims view of this cluster ↓`, () => drill(id), 'chip'));
       const how = c.theme ? 'a theme the model gave Ideas no cluster held'
         : 'found by similarity' + (c.assigned.length ? `; the model placed ${c.assigned.length} more here` : '');
       $('detail').append(el('p', `${plural(c.ideas.length, 'Idea')} from ${plural(c.items.length, 'post')} · ${how}`, 'detail-meta'));
@@ -680,6 +682,14 @@
   }
   function setMode() {
     for (const other of ['documents', 'claims', 'topics']) $('mode-' + other).setAttribute('aria-pressed', String(other === state.mode));
+    // Claims is a drill-down from a cluster, not a view of everything: its button shows only while you are in it.
+    $('mode-claims').hidden = state.mode !== 'claims';
+    $('mode-claims').textContent = state.drill ? `Claims · ${(clusters.get(state.drill)?.title || '').slice(0, 40)}` : 'Claims';
+  }
+  function drill(clusterId) {  // a cluster's claims, the only way into the Claims view
+    const c = clusters.get(clusterId); if (!c) return;
+    state.drill = clusterId; state.only = new Set(c.items); state.mode = 'claims'; state.ego = false; state.selection = null;
+    clearDetail(); setMode(); refresh();
   }
   function refresh() {
     renderTopics(); const visible = filteredItems(), allowed = new Set(visible.map(i => i.id));
@@ -706,6 +716,8 @@
   for (const lang of ['original', 'translation']) $('lang-' + lang).setAttribute('aria-pressed', String(lang === state.lang));
   $('search').addEventListener('input', refresh);
   for (const mode of ['documents', 'claims', 'topics']) $('mode-' + mode).addEventListener('click', () => {
+    if (mode === state.mode) return;
+    if (state.drill) { state.drill = null; state.only = null; }  // leaving a cluster's claims: back to everything
     state.mode = mode; state.ego = false; state.selection = null; clearDetail(); setMode(); refresh();
   });
   $('zoom-in').addEventListener('click', () => cy.zoom({level: cy.zoom() * 1.25, renderedPosition: {x: cy.width() / 2, y: cy.height() / 2}}));
@@ -738,6 +750,12 @@
     $('detail').scrollTop = 0; document.querySelector('.evidence-column').scrollIntoView({block: 'start'});
   }
   setMode(); renderProposals(); refresh();
+  // Arriving from a topic's reader or Idea finder: the slice around what was picked, not the whole corpus.
+  if (params.get('idea') && stories.has(params.get('idea'))) { state.story = params.get('idea'); $('story-filter').value = state.story; refresh(); }
+  if (params.get('cluster') && clusters.has(params.get('cluster'))) drill(params.get('cluster'));
+  if (params.get('item') && items.has(params.get('item'))) {
+    selectItem(params.get('item')); state.ego = true; renderGraph(filteredItems()); showDetail();
+  }
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
     spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);

@@ -1,30 +1,62 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
-<title>Refresher — Dossier</title>
-<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css">
+<title>Refresher — Topic</title>
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css">
 <script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script></head>
 <body>
-<a class="skip" href="#brief">Skip to the brief</a>
+<a class="skip" href="#blocks">Skip to the clusters</a>
 <header class="app-bar">
-<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Dossier</span></a>
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Topic</span></a>
 <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
-<header class="d-head" id="head" hidden>
-  <div><p class="eyebrow" id="kind">Dossier</p><h1 id="title"></h1><p class="meta" id="meta"></p></div>
-  <form class="search" action="/topic/" method="get" role="search"><input name="q" type="search" placeholder="Another subject…" required maxlength="200" aria-label="Another subject"><button type="submit">Refresh ↗</button></form>
-  <div class="tiers"><div class="tier-bar" id="tier-bar" aria-hidden="true"></div><div class="legend" id="legend"></div></div>
-</header>
 <div class="notice" id="notice" role="status">Gathering what you know…</div>
-<div class="split" id="split" hidden>
-  <main class="brief" id="brief" tabindex="-1">
-    <nav class="toc" id="toc" aria-label="Sections of the dossier"></nav>
-    <div id="sections"></div>
-  </main>
-  <aside class="pane" id="pane" aria-label="Map of this subject">
-    <div class="pane-bar"><div><strong>The map of this subject</strong><span class="small quiet">Topics are regions, clusters dashed, people ◆. Pick anything for its evidence.</span></div>
-      <button type="button" id="wide" aria-pressed="false">⤢ Wide map</button></div>
-    <iframe id="atlas" src="/atlas/?embed=1&amp;mode=topics" title="Map of this subject: topics, clusters, people and evidence"></iframe>
-  </aside>
+
+<!-- Map mode: header, orientation (cluster graph beside the reading plan), cluster blocks -->
+<div id="map" hidden>
+  <header class="s-head">
+    <div class="s-title">
+      <p class="eyebrow" id="kind">Topic</p>
+      <h1 id="title"></h1>
+      <p class="counts" id="counts"></p>
+      <div class="cover"><div class="bar" aria-hidden="true"><span id="cover-bar"></span></div><p id="cover-text"></p></div>
+    </div>
+    <div class="s-actions">
+      <button type="button" class="primary big" id="start">Start reading</button>
+      <form class="search small" action="/topic/" method="get" role="search"><input name="q" type="search" placeholder="Another subject…" required maxlength="200" aria-label="Another subject"><button type="submit">Open</button></form>
+      <a href="#ideas" class="quiet-link" id="ideas-link">All Ideas</a>
+    </div>
+  </header>
+  <section class="orient" aria-label="Orientation">
+    <figure class="graph-box"><div id="graph"></div><figcaption id="graph-caption"></figcaption></figure>
+    <div class="plan-box"><h2>Reading plan</h2><ol class="plan" id="plan"></ol><p class="plan-note" id="plan-note"></p></div>
+  </section>
+  <main id="blocks" tabindex="-1"></main>
+  <section class="far" id="far" aria-label="Sources far from the subject"></section>
 </div>
+
+<!-- Reading mode: plan rail, text, context panel -->
+<div id="reading" class="reading" hidden>
+  <aside class="rail" aria-label="Reading plan">
+    <a href="#" class="back" id="back">◂ Map <kbd>Esc</kbd></a>
+    <div id="mini"></div>
+    <ol class="plan compact" id="rail-plan"></ol>
+  </aside>
+  <div class="strip" id="strip" aria-label="Reading plan"></div>
+  <article class="text-col" id="text-col">
+    <button type="button" class="ctx-open" id="ctx-open" aria-controls="ctx" aria-expanded="false"></button>
+    <p class="eyebrow" id="r-eyebrow"></p>
+    <h1 id="r-title"></h1>
+    <p class="meta" id="r-meta"></p>
+    <details class="gist" id="r-gist"><summary>Gist</summary><p id="r-gist-text"></p></details>
+    <div class="r-tools" id="r-tools"></div>
+    <div class="text" id="r-text"></div>
+    <footer class="r-bar" id="r-bar"></footer>
+  </article>
+  <aside class="ctx" id="ctx" aria-label="Context of this source"><button type="button" class="ctx-close ghost" id="ctx-close">Close</button><div id="ctx-body"></div></aside>
+  <div class="popover" id="pop" hidden role="dialog" aria-label="Idea"></div>
+</div>
+
+<!-- All Ideas, grouped by cluster -->
+<main id="ideas-view" class="brief" hidden><p><a href="#" id="ideas-back">◂ Back to the map</a></p><div id="sections"></div></main>
 </body></html>

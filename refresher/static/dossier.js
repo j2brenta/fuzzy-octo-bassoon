@@ -1,250 +1,577 @@
-/* A topic's dossier: the brief on the left, the Atlas embedded on the right and linked both ways. The Atlas is the
-   same page as /atlas/, opened with ?embed and driven through its window.atlas API (same origin). Values from the
-   dossier only enter textContent. */
+/* A subject read cluster by cluster (refresher/subject.py, GET /api/subject).
+
+   Map mode: a header with one primary action, an orientation zone (the graph of clusters beside the reading plan)
+   and one block per cluster on the subject: its anchor, its perspectives, its noise as a count. Far sources are one
+   line at the end. Only one card is expanded: the next source in the plan. Every card carries one number, "+N% of
+   the subject", its marginal share in coverage order.
+   Reading mode (?read=<id>): the plan as a rail on the left, the text in the middle, the context (connected sources,
+   people, organisations, Ideas) on the right, one section open at a time. Esc returns to the map where you were.
+   Marking read or skimmed posts to /api/source/<id>/state, which returns the plan and coverage recomputed.
+   Values from the vault only enter textContent. */
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
   const el = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = String(text); if (cls) n.className = cls; return n; };
+  const svg = (tag, attrs = {}) => { const n = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v)); return n; };
   const button = (text, action, cls) => { const b = el('button', text, cls); b.type = 'button'; b.addEventListener('click', action); return b; };
+  const link = (text, href, cls) => { const a = el('a', text, cls); a.href = href; return a; };
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const day = iso => new Date(iso).toLocaleDateString('en', {day: 'numeric', month: 'short', year: 'numeric'});
+  const short = (text, n) => text.length > n ? text.slice(0, n - 1).trimEnd() + '…' : text;
+  const pct = x => `${Math.round(100 * x)}%`;
+  const initials = name => name.split(/[\s.\-_]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
   const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-  const TIERS = {core: 'core', supporting: 'supporting', fading: 'fading', replaced: 'replaced', noise: 'noise'};
   const params = new URLSearchParams(location.search);
-  const query = new URLSearchParams();
-  if (params.get('id')) query.set('topic', params.get('id')); else query.set('q', params.get('q') || '');
-  if (params.get('at')) query.set('at', params.get('at'));
+  const subjectQuery = params.get('id') ? {id: params.get('id')} : {q: params.get('q') || ''};
+  const subjectParams = new URLSearchParams(subjectQuery).toString();
+  const GRAPH_CAP = 8;
 
-  let d = null, atlas = null, steering = false;
-  const cards = new Map(), ideaOfClaim = new Map();
+  let s = null, current = null, mapScroll = 0, trail = [], highlight = null, openCtx = 'connected';
+  const contexts = new Map(), openBlocks = new Set(), shown = new Set();
+  const src = id => s.sources[id];
+  const stateOf = id => s.marks[id] || 'unread';
+  const cluster = id => s.clusters.find(c => c.id === id);
+  const clusterName = id => cluster(id)?.title || 'other sources';
+  const onSubject = c => c.band === 'main' || c.band === 'adjacent';
 
-  // --- the brief ---
-  function section(id, n, title, intro) {
-    const s = el('section', null, 'sec'); s.id = id; s.setAttribute('aria-labelledby', id + '-h');
-    const head = el('header'), text = el('div'), h = el('h2', title); h.id = id + '-h';
-    text.append(h); if (intro) text.append(el('p', intro));
-    head.append(el('span', n, 'num'), text); s.append(head); return s;
+  // --- the plan: numbers stay put while you read; what you read is numbered first ---
+  function planIds() { return s.plan.map(x => x.source); }
+  function numbered() {  // source -> its number on the reading path: the sources you read, then the plan
+    const read = Object.keys(s.marks).filter(id => s.sources[id] && s.marks[id] !== 'unread');
+    const out = new Map(); [...read, ...planIds()].forEach(id => { if (!out.has(id)) out.set(id, out.size + 1); });
+    return out;
   }
-  function source(itemId, label) {
-    const s = d.sources[itemId] || {title: itemId};
-    const b = button(label || s.title, () => openSource(itemId), 'src');
-    b.title = [s.source, s.author, s.time && day(s.time)].filter(Boolean).join(' · ');
-    return b;
+  const nextId = () => planIds()[0] || null;
+  const share = id => s.share[id] || 0;
+  function gainText(id) {
+    const st = stateOf(id);
+    if (st !== 'unread') return st;
+    const n = share(id);
+    return n >= 0.005 ? `+${pct(n)} of the subject` : '+0%';
   }
-  function weight(importance, top) {
-    const box = el('span', null, 'weight'); box.setAttribute('aria-label', `importance ${importance.toFixed(2)}`);
-    const filled = top > 0 ? Math.max(1, Math.round(5 * importance / top)) : 0;
-    for (let i = 0; i < 5; i++) box.append(el('i', null, i < filled ? 'on' : ''));
-    return box;
+  function newIdeas(id) {  // in-scope Ideas of this source no source you read holds
+    const covered = new Set(Object.keys(s.marks).filter(o => o !== id).flatMap(o => s.sources[o]?.ideas || []));
+    return src(id).ideas.filter(i => !covered.has(i));
   }
-  function ideaCard(r, top) {
-    const card = el('article', null, `idea tier-${r.tier}`); card.id = 'idea-' + r.id; card.dataset.idea = r.id;
-    const head = el('div', null, 'idea-top'), h = el('h3');
-    h.append(button(r.title, () => steer(() => atlas?.selectNode(r.current[0] || r.claims[0]))));
-    head.append(el('span', r.rank, 'rank'), h);
-    const meta = el('div', null, 'meta');
-    meta.append(weight(r.importance, top), el('span', r.tier, 'chip' + (r.tier === 'core' ? '' : ' muted')),
-      el('span', r.status, 'chip muted'), el('span', plural(r.sources, 'source'), 'chip muted'));
-    if (r.band !== 'fresh') meta.append(el('span', r.band, 'chip new'));
-    if (r.contested) meta.append(el('span', 'contested', 'chip warn'));
-    if (r.provisional) meta.append(el('span', 'joined provisionally', 'chip muted'));
-    head.append(meta);
-    const body = el('div', null, 'body');
-    for (const steps of r.was) {
-      const was = el('p', null, 'was'); was.append('Said before: ');
-      steps.forEach((s, i) => { if (i) was.append(el('span', '→', 'arrow')); was.append(el('s', s.statement), ` (${day(s.time)})`); });
-      was.append(el('span', '→ now as above', 'arrow')); body.append(was);
-    }
-    for (const x of r.replaced_by) {
-      const p = el('p', 'Replaced by ', 'was');
-      p.append(x.in_scope ? button(x.title, () => reveal(x.id), 'src') : el('strong', x.title)); body.append(p);
-    }
-    const why = el('details', null, 'why'), parts = el('div', null, 'parts');
-    why.append(el('summary', `Why #${r.rank}`), el('p', r.why));
-    for (const [k, label] of [['support', 'independent sources'], ['trust', 'trust in the authors'], ['central', 'closeness to the subject'],
-      ['firm', 'firmed by the review'], ['fresh', 'freshness now']]) {
-      const bar = el('span', null, 'bar'), fill = el('span'); fill.style.width = `${Math.round(100 * Math.min(1, r.parts[k]))}%`; bar.append(fill);
-      parts.append(el('span', label, 'small quiet'), bar, el('span', r.parts[k].toFixed(2), 'small'));
-    }
-    if (r.parts.user) parts.append(el('span', 'your votes', 'small quiet'), el('span'), el('span', r.parts.user.toFixed(2), 'small'));
-    why.append(parts, el('p', `importance ${r.importance.toFixed(2)} = freshness × (0.35 sources + 0.25 trust + 0.25 closeness + 0.15 firm) + your votes`));
-    body.append(why);
-    const list = el('div', null, 'src-list'); r.items.slice(0, 6).forEach(i => list.append(source(i)));
-    if (r.items.length > 6) list.append(el('span', `and ${r.items.length - 6} more`, 'small quiet'));
-    body.append(list); head.append(body); card.append(head);
-    card.addEventListener('mouseenter', () => light(r.id)); card.addEventListener('mouseleave', () => light(null));
-    cards.set(r.id, card); r.claims.forEach(c => ideaOfClaim.set(c, r.id));
-    return card;
+
+  async function setState(id, state) {
+    const r = await fetch(`/api/source/${encodeURIComponent(id)}/state`, {method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Refresher': '1'}, body: JSON.stringify({state, ...subjectQuery})});
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) { $('cover-text').textContent = body.error || `Could not save (${r.status})`; return; }
+    Object.assign(s, body);
+    if (current) { extendTrail(); renderRail(); renderBar(); refreshContext(); } else renderMap();
   }
-  function render() {
-    document.title = `Refresher — ${d.scope.title}`;
-    $('kind').textContent = {topic: 'Dossier · a topic you accepted', cluster: 'Dossier · a cluster of close Ideas', query: 'Dossier · what you asked about'}[d.scope.kind];
-    $('title').textContent = d.scope.kind === 'query' ? `“${d.scope.title}”` : d.scope.title;
-    const c = d.counts;
-    $('meta').textContent = `As of ${day(d.at)} · ${plural(c.ideas, 'Idea')} from ${plural(c.items, 'source')}`;
-    $('tier-bar').replaceChildren(...Object.keys(TIERS).filter(t => c[t]).map(t => { const s = el('span', null, 't-' + t); s.style.flex = String(c[t]); return s; }));
-    $('legend').replaceChildren(...Object.keys(TIERS).map(t => { const s = el('span'); s.append(el('i', null, 't-' + t), `${c[t]} ${t}`); return s; }));
-    const top = Math.max(0, ...d.ideas.map(r => r.importance));
-    const shown = d.ideas.filter(r => ['core', 'supporting', 'fading'].includes(r.tier));
-    const hidden = d.ideas.filter(r => ['replaced', 'noise'].includes(r.tier));
-    const parts = [];
 
-    const view = section('view', '1', 'The current view', 'Ranked by how many independent sources say it, how far you trust them, how close it sits to the subject and how fresh it is.');
-    const core = el('div', null, 'ideas'); shown.filter(r => r.tier === 'core').forEach(r => core.append(ideaCard(r, top)));
-    view.append(core);
-    const rest = shown.filter(r => r.tier !== 'core');
-    if (rest.length) {
-      const more = el('details', null, 'more'); more.open = rest.length <= 8;
-      more.append(el('summary', `${plural(rest.length, 'more Idea')}: supporting and fading`));
-      const list = el('div', null, 'ideas'); rest.forEach(r => list.append(ideaCard(r, top))); more.append(list); view.append(more);
+  // --- the graph of clusters: nodes are clusters, edges shared Ideas, the main cluster pinned at the centre ---
+  function graphNodes() {
+    const live = s.clusters.filter(c => c.ideas);
+    const kept = live.slice(0, GRAPH_CAP - (live.length > GRAPH_CAP ? 1 : 0));
+    const nodes = kept.map(c => ({id: c.id, title: c.title, band: c.band, ideas: c.ideas, members: [c.id]}));
+    const rest = live.slice(kept.length);
+    if (rest.length) nodes.push({id: 'other', title: plural(rest.length, 'other cluster'), band: 'far', ideas: rest.reduce((t, c) => t + c.ideas, 0), members: rest.map(c => c.id)});
+    const at = new Map(nodes.flatMap(n => n.members.map(m => [m, n.id])));
+    const edges = new Map();
+    for (const e of s.edges) {
+      const a = at.get(e.a), b = at.get(e.b); if (!a || !b || a === b) continue;
+      const key = [a, b].sort().join('|'), old = edges.get(key);
+      if (!old) edges.set(key, {a, b, count: e.count, label: e.label}); else old.count += e.count;
     }
-    if (!shown.length) view.append(el('p', 'Nothing current here: every Idea was replaced or is noise.', 'quiet'));
-    parts.push([view, shown.length]);
-
-    const changed = section('changed', '2', 'What changed', 'Claims a newer one replaced, oldest first. The newer word ranks; the older one stays for the record.');
-    const changes = el('ol', null, 'changes');
-    for (const chain of d.changed) {
-      const li = el('li', null, 'change');
-      chain.steps.forEach((s, i) => {
-        const now = i === chain.steps.length - 1, row = el('div', null, 'step ' + (now ? 'now' : 'old')), text = el('div');
-        text.append(el('p', s.statement)); const where = el('div', null, 'where'); where.append(`${day(s.time)} · `, source(s.item));
-        text.append(where); row.append(el('span', now ? 'now' : 'was', 'label'), text); li.append(row);
-      });
-      if (chain.steps.at(-1).idea && cards.has(chain.steps.at(-1).idea)) li.append(button('Show the Idea ↑', () => reveal(chain.steps.at(-1).idea), 'src'));
-      changes.append(li);
-    }
-    changed.append(d.changed.length ? changes : el('p', 'Nothing has been replaced yet.', 'quiet'));
-    parts.push([changed, d.changed.length]);
-
-    const contested = section('contested', '3', 'Contested', 'Sources that disagree. Neither is dropped; read both.');
-    for (const pair of d.contested) {
-      const box = el('div', null, 'pair');
-      for (const [side, s] of [['a', pair.a], ['b', pair.b]]) {
-        const card = el('div', null, 'side'); card.append(el('p', s.statement));
-        const where = el('div', null, 'small quiet'); where.append(`${day(s.time)} · `, source(s.item)); card.append(where);
-        box.append(card); if (side === 'a') box.append(el('span', '⟷', 'vs'));
+    return {nodes, edges: [...edges.values()], at};
+  }
+  const layouts = new Map();
+  function layout(nodes, edges, w, h) {
+    // A small force layout: the main cluster pinned at the centre, edges as springs, every pair repelling. Seeded
+    // by position in the list, so the same subject draws the same way every time.
+    const key = `${w}x${h}`; if (layouts.has(key)) return layouts.get(key);
+    const pos = new Map(nodes.map((n, k) => {
+      const a = 2 * Math.PI * k / Math.max(1, nodes.length - 1);
+      return [n.id, n.band === 'main' ? {x: 0, y: 0} : {x: Math.cos(a) * w * 0.32, y: Math.sin(a) * h * 0.32}];
+    }));
+    for (let step = 0; step < 300; step++) {
+      const force = new Map(nodes.map(n => [n.id, {x: 0, y: 0}]));
+      for (const a of nodes) for (const b of nodes) {
+        if (a === b) continue;
+        const p = pos.get(a.id), q = pos.get(b.id), dx = p.x - q.x, dy = p.y - q.y, d2 = Math.max(60, dx * dx + dy * dy);
+        force.get(a.id).x += w * 7 * dx / d2; force.get(a.id).y += w * 7 * dy / d2;
       }
-      contested.append(box); if (pair.rationale) contested.append(el('p', pair.rationale, 'pair-why'));
+      for (const e of edges) {
+        const p = pos.get(e.a), q = pos.get(e.b), dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1, pull = (d - w / 4) * 0.05;
+        force.get(e.a).x += pull * dx / d; force.get(e.a).y += pull * dy / d; force.get(e.b).x -= pull * dx / d; force.get(e.b).y -= pull * dy / d;
+      }
+      for (const n of nodes) {
+        if (n.band === 'main') continue;
+        const p = pos.get(n.id), f = force.get(n.id);
+        p.x += Math.max(-6, Math.min(6, f.x - p.x * 0.01)); p.y += Math.max(-6, Math.min(6, f.y - p.y * 0.01));
+        const mx = w / 2 - (w > 240 ? 56 : 18), my = h / 2 - (w > 240 ? 34 : 18);  // labels stay inside the box
+        p.x = Math.max(-mx, Math.min(mx, p.x)); p.y = Math.max(-my + 8, Math.min(my, p.y));
+      }
     }
-    if (!d.contested.length) contested.append(el('p', 'No conflicts between your sources here.', 'quiet'));
-    parts.push([contested, d.contested.length]);
-
-    const read = section('read', '4', 'Read in order', 'The fewest sources that cover the most important Ideas, weighted by how far you trust their authors; originals before reposts.');
-    const list = el('ol', null, 'reading');
-    for (const r of d.reading) {
-      const li = el('li', null, 'read'), body = el('div'), h = el('h3');
-      h.append(button(r.title, () => openSource(r.item)));
-      body.append(h, el('p', [r.source, r.author, day(r.time)].filter(Boolean).join(' · '), 'where'), el('p', r.reason, 'reason'));
-      if (r.url && /^https?:/.test(r.url)) { const a = el('a', 'Open the original ↗', 'small'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; body.append(a); }
-      li.append(el('span', r.rank, 'n'), body); list.append(li);
+    layouts.set(key, pos);
+    return pos;
+  }
+  function graph(w, h, {labels = true, focus = null} = {}) {
+    const {nodes, edges, at} = graphNodes();
+    const root = svg('svg', {viewBox: `${-w / 2} ${-h / 2} ${w} ${h}`, role: 'img', 'aria-label': `${plural(nodes.length, 'cluster')} and the Ideas they share`});
+    if (!nodes.length) return root;
+    const pos = layout(nodes, edges, w, h), max = Math.max(...nodes.map(n => n.ideas));
+    const here = at.get(src(focus || nextId() || '')?.cluster);
+    const after = focus ? nextAfter(focus) : planIds()[1];
+    const there = after ? at.get(src(after).cluster) : null;
+    const top = Math.max(1, ...edges.map(e => e.count));
+    for (const e of edges) {
+      const p = pos.get(e.a), q = pos.get(e.b), next = here && there && here !== there && [e.a, e.b].includes(here) && [e.a, e.b].includes(there);
+      const line = svg('line', {x1: p.x, y1: p.y, x2: q.x, y2: q.y, class: 'g-edge' + (next ? ' next' : ''), 'stroke-width': (1 + 3 * e.count / top).toFixed(1)});
+      const t = svg('title'); t.textContent = `${plural(e.count, 'shared Idea')}, most of all: ${s.ideas[e.label]?.title || ''}`; line.append(t); root.append(line);
     }
-    read.append(d.reading.length ? list : el('p', 'No source to recommend yet.', 'quiet'));
-    if (d.also.length) {
-      const more = el('details', null, 'more'); more.append(el('summary', `Also (${d.also.length}), oldest first`));
-      const box = el('div', null, 'src-list'); d.also.forEach(r => box.append(source(r.item))); more.append(box); read.append(more);
+    for (const n of nodes) {
+      const p = pos.get(n.id), r = (labels ? 9 : 6) + (labels ? 13 : 8) * Math.sqrt(n.ideas / max);
+      const members = n.members.flatMap(m => Object.values(s.sources).filter(x => x.cluster === m && x.role !== 'noise'));
+      const done = members.length && members.every(x => s.marks[x.id]);
+      const g = svg('g', {class: `g-node ${n.band}${done ? ' done' : ''}${n.id === here ? ' here' : ''}`, tabindex: labels ? 0 : -1, role: 'button'});
+      const t = svg('title'); t.textContent = `${n.title} · ${n.band} · ${plural(n.ideas, 'Idea')}`;
+      g.append(t, svg('circle', {cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: r.toFixed(1)}));  // far clusters are named on hover only
+      if (labels && n.band !== 'far') { const label = svg('text', {x: p.x.toFixed(1), y: (p.y + r + 10).toFixed(1), 'text-anchor': 'middle'}); label.textContent = short(n.title, 20); g.append(label); }
+      const go = () => { if (current) closeReading(); if (n.id !== 'other') showBlock(n.id); else { shown.add('far'); renderFar(); $('far').scrollIntoView({behavior: smooth()}); } };
+      g.addEventListener('click', go); g.addEventListener('keydown', e => e.key === 'Enter' && go());
+      root.append(g);
     }
-    parts.push([read, d.reading.length]);
-
-    const near = d.nearby, nearby = section('nearby', '5', 'Nearby', 'Where this subject leads: linked topics and clusters, and the people in it.');
-    const groups = [['Linked', near.linked, r => r.evidence ? 'backed by relations or shared Ideas' : 'similar'],
-      ['Clusters inside', near.clusters, r => plural(r.ideas, 'Idea') + ' here'], ['In topics', near.topics, r => plural(r.ideas, 'Idea') + ' here']];
-    for (const [label, rows, sub] of groups) {
-      if (!rows.length) continue;
-      const box = el('div', null, 'pills');
-      rows.forEach(r => { const a = el('a', null, 'pill'); a.href = '/topic/?id=' + encodeURIComponent(r.id); a.append(r.title, el('small', sub(r))); box.append(a); });
-      nearby.append(el('p', label, 'label-row'), box);
-    }
-    if (near.people.length) {
-      const box = el('div', null, 'pills');
-      near.people.forEach(p => { const b = button('', () => steer(() => atlas?.selectPerson(p.id)), 'pill person');
-        b.append(p.name, el('small', `trust ${p.trust.toFixed(2)} · wrote ${p.wrote} · about them ${p.about}`)); box.append(b); });
-      nearby.append(el('p', 'People', 'label-row'), box);
-    }
-    const nearCount = near.linked.length + near.clusters.length + near.topics.length + near.people.length;
-    if (!nearCount) nearby.append(el('p', 'Nothing linked yet.', 'quiet'));
-    parts.push([nearby, nearCount]);
-
-    const noise = section('noise', '6', 'Replaced and noise', 'Kept for the record: Ideas a newer one overtook, reposts and short-lived claims that expired.');
-    if (hidden.length) {
-      const more = el('details', null, 'more'); more.id = 'noise-list';
-      more.append(el('summary', `Show ${plural(hidden.length, 'Idea')}`));
-      const box = el('div', null, 'ideas'); hidden.forEach(r => box.append(ideaCard(r, top))); more.append(box); noise.append(more);
-    } else noise.append(el('p', 'No noise here.', 'quiet'));
-    parts.push([noise, hidden.length]);
-
-    $('sections').replaceChildren(...parts.map(p => p[0]));
-    $('toc').replaceChildren(...parts.map(([s, n]) => { const a = el('a', s.querySelector('h2').textContent); a.href = '#' + s.id; a.append(el('span', n)); return a; }));
-    $('notice').hidden = true; $('head').hidden = false; $('split').hidden = false;
-    watchScroll();
+    return root;
   }
 
-  // --- the link between the brief and the map ---
-  function light(ideaId) {
-    cards.forEach((c, id) => c.classList.toggle('lit', id === ideaId));
-    if (atlas) atlas.spotlight(ideaId ? [ideaId] : []);
+  // --- map mode ---
+  function renderHead() {
+    const live = Object.values(s.sources), onSubj = s.clusters.filter(onSubject);
+    const noise = live.filter(x => x.role === 'noise').length;
+    const far = live.filter(x => x.role !== 'noise' && cluster(x.cluster)?.band === 'far').length;
+    $('counts').textContent = `${plural(live.length, 'source')} · ${plural(onSubj.length, 'cluster')} on the subject · ${far} far · ${noise} noise`;
+    $('cover-bar').style.width = pct(s.coverage);
+    const to = s.coverage >= 0.8 ? 'you have read 80% of it' : s.plan.length ? `about ${s.minutes} min to ${pct(Math.min(0.8, s.plan.at(-1).cumulative))}` : 'nothing left that adds to it';
+    $('cover-text').replaceChildren(el('strong', `Covered ${pct(s.coverage)}`), ` · ${to}`);
+    const next = nextId(), number = numbered();
+    $('start').textContent = !next ? 'Nothing left to read' : Object.keys(s.marks).some(id => s.sources[id]) ? `Continue · #${number.get(next)}` : 'Start reading';
+    $('start').disabled = !next;
   }
-  function steer(action) { steering = true; try { action(); } finally { steering = false; } }
-  function openSource(itemId) {  // a source picked in the brief: unfold the map if it is folded and show the source's text
-    if (narrow.matches && $('pane').classList.contains('closed')) $('wide').click();
-    steer(() => { atlas?.selectItem(itemId); atlas?.showDetail(); });
+  function renderPlan() {
+    const number = numbered();
+    $('plan').replaceChildren(...s.plan.map(x => {
+      const li = el('li'), b = button('', () => openSource(x.source));
+      const bar = el('span', null, 'cum'), fill = el('span'); fill.style.width = pct(x.cumulative); bar.append(fill);
+      b.append(el('span', `#${number.get(x.source)}`, 'n'), el('span', short(src(x.source).title, 64), 't'),
+        el('span', short(clusterName(src(x.source).cluster), 24), 'tag'), bar, el('span', pct(x.cumulative), 'pct'));
+      li.append(b); return li;
+    }));
+    $('plan-note').textContent = s.plan.length ? `${plural(s.plan.length, 'source')} to reach ${pct(s.plan.at(-1).cumulative)} of the subject.`
+      : 'Nothing left in the plan: everything that adds to the subject is read.';
   }
-  function reveal(ideaId) {
-    const card = cards.get(ideaId); if (!card) return;
-    const fold = card.closest('details'); if (fold) fold.open = true;
-    card.scrollIntoView({behavior: smooth(), block: 'center'});
-    card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+  function meta(x) {
+    const m = el('p', null, 'meta');
+    [x.source, x.author, day(x.time), `${x.minutes} min`].filter(Boolean).forEach(t => m.append(el('span', t)));
+    return m;
   }
-  function ideaFor(kind, id) {  // the highest-ranked Idea in the brief behind what was picked on the map
-    if (kind === 'claim') return ideaOfClaim.get(id);
-    const ranked = d.ideas;
-    if (kind === 'item') return ranked.find(r => r.items.includes(id))?.id;
-    if (kind === 'group') {
-      const cluster = atlas.data.clusters?.find(c => c.id === id), topic = atlas.data.topics.find(t => t.id === id);
-      const ids = new Set(cluster ? cluster.ideas : topic ? [...topic.ideas, ...topic.attached] : []);
-      return ranked.find(r => ids.has(r.id))?.id;
+  function card(id) {  // the one expanded card: the next source in the plan
+    const x = src(id), c = el('article', null, 'card'); c.dataset.source = id;
+    const h = el('h3'); h.append(button(x.title, () => openSource(id), 'title-btn'));
+    const gist = el('p', x.gist || x.hook, 'gist-text clamp');
+    const more = button('more', () => { gist.classList.toggle('clamp'); more.textContent = gist.classList.contains('clamp') ? 'more' : 'less'; }, 'link-btn');
+    c.append(meta(x), h, gist, more);
+    if (x.summary === 'lead') c.append(el('p', 'Its opening lines: no summary yet.', 'lead-note'));
+    const fresh = newIdeas(id);
+    if (fresh.length) {
+      const p = el('p', null, 'new-here'); p.append(el('b', 'New here: '));
+      fresh.slice(0, 2).forEach((i, n) => { if (n) p.append('; '); p.append(el('span', short(s.ideas[i].title.replace(/\.$/, ''), 90))); });
+      if (fresh.length > 2) p.append(` and ${fresh.length - 2} more`);
+      c.append(p);
     }
-    return ideaOfClaim.get(id) || ranked.find(r => r.items.includes(id))?.id;
+    const foot = el('div', null, 'card-foot');
+    foot.append(button('Read ▸', () => openSource(id), 'primary'), button('Skim', () => setState(id, 'skimmed')), el('span', gainText(id), 'gain'));
+    c.append(foot);
+    return c;
   }
-  function connect() {
-    const frame = $('atlas');
-    try { atlas = frame.contentWindow.atlas || null; } catch (e) { atlas = null; }
-    if (!atlas || !d) return;
-    atlas.scope(Object.keys(d.sources).filter(i => !d.sources[i].hidden));
-    atlas.onselect = (kind, id) => { if (steering) return; const idea = ideaFor(kind, id); if (idea) reveal(idea); };
+  function row(id, number, role) {
+    const x = src(id), st = stateOf(id), r = el('div', null, `row s-${st}`); r.dataset.source = id;
+    const head = el('div', null, 'row-head');
+    const chev = button('▸', () => { const open = r.classList.toggle('open'); chev.textContent = open ? '▾' : '▸'; chev.setAttribute('aria-expanded', String(open)); }, 'chev');
+    chev.setAttribute('aria-expanded', 'false'); chev.setAttribute('aria-label', 'Show the gist');
+    head.append(el('span', null, `dot s-${st}`), el('span', number ? `#${number}` : '', 'n'), button(x.title, () => openSource(id), 'title-btn'),
+      el('span', role || x.role, 'role ' + x.role), el('span', gainText(id), 'gain'), chev);
+    const body = el('div', null, 'row-body');
+    body.append(meta(x), el('p', x.gist || x.hook, 'gist-text'));
+    if (x.repost_of) body.append(el('p', `A repost of ${short(src(x.repost_of)?.title || 'another source', 60)}.`, 'small quiet'));
+    const acts = el('div', null, 'card-foot'); acts.append(button('Read ▸', () => openSource(id)));
+    acts.append(st === 'unread' ? button('Skim', () => setState(id, 'skimmed')) : button('Unmark', () => setState(id, 'unread')));
+    body.append(acts);
+    r.append(head, body);
+    return r;
   }
-  function watchScroll() {
-    if (!('IntersectionObserver' in window)) return;
-    // The card crossing the middle of the screen lights up on the map, unless the pointer is on another one.
-    const seen = new IntersectionObserver(entries => {
-      const hit = entries.find(e => e.isIntersecting); if (!hit || document.querySelector('.idea:hover')) return;
-      light(hit.target.dataset.idea);
-    }, {rootMargin: '-45% 0px -50% 0px'});
-    cards.forEach(c => seen.observe(c));
+  function renderBlocks() {
+    const number = numbered(), next = nextId(), blocks = s.clusters.filter(onSubject);
+    const box = $('blocks'); box.replaceChildren();
+    blocks.forEach((c, k) => {
+      const open = openBlocks.has(c.id), sec = el('section', null, `block ${c.band}${open ? ' open' : ''}`); sec.id = 'block-' + c.id;
+      const head = el('header'), h = el('h2'), toggle = button(c.title, () => { open ? openBlocks.delete(c.id) : openBlocks.add(c.id); renderBlocks(); }, 'block-toggle');
+      toggle.setAttribute('aria-expanded', String(open)); h.append(toggle);
+      const facts = el('p', null, 'block-facts');
+      facts.append(el('span', c.band, 'band ' + c.band), el('span', `${plural(1 + c.perspectives.length + c.noise.length, 'source')} · ${plural(c.ideas, 'Idea')}`));
+      if (c.band === 'adjacent' && c.shares_with_main) facts.append(el('span', `shares ${plural(c.shares_with_main, 'Idea')} with main`));
+      head.append(h, facts); sec.append(head);
+      const piece = id => id === next ? card(id) : row(id, number.get(id));
+      if (c.anchor) sec.append(piece(c.anchor));
+      if (open) {
+        c.perspectives.forEach(id => sec.append(piece(id)));
+        if (c.noise.length) {
+          const key = 'noise:' + c.id;
+          sec.append(button(`${plural(c.noise.length, 'noise source')} · ${shown.has(key) ? 'hide' : 'show'}`,
+            () => { shown.has(key) ? shown.delete(key) : shown.add(key); renderBlocks(); }, 'link-btn more-line'));
+          if (shown.has(key)) c.noise.forEach(id => sec.append(row(id)));
+        }
+      } else if (c.perspectives.length || c.noise.length) {
+        sec.append(button(`${[c.perspectives.length && plural(c.perspectives.length, 'perspective'), c.noise.length && plural(c.noise.length, 'noise source')].filter(Boolean).join(' · ')} · open`,
+          () => { openBlocks.add(c.id); renderBlocks(); }, 'link-btn more-line'));
+      }
+      box.append(sec);
+      const after = blocks[k + 1], edge = after && s.edges.find(e => [e.a, e.b].includes(c.id) && [e.a, e.b].includes(after.id));
+      if (edge) {
+        const t = el('p', null, 'transition');
+        t.append(`connects to ${after.title} through `, el('q', short(s.ideas[edge.label].title.replace(/\.$/, ''), 110)));
+        box.append(t);
+      }
+    });
+    if (!blocks.length) box.append(el('p', 'No cluster is on this subject yet.', 'quiet'));
   }
-  window.addEventListener('message', e => { if (e.origin === location.origin && e.data?.type === 'atlas-ready') connect(); });
-  $('atlas').addEventListener('load', connect);
-  // On a narrow screen the map is a band above the brief, folded until asked for; on a wide one it can take the page.
-  const narrow = matchMedia('(max-width: 1100px)');
-  function label() {
-    const open = narrow.matches ? !$('pane').classList.contains('closed') : document.body.classList.contains('wide');
-    $('wide').setAttribute('aria-pressed', String(open));
-    $('wide').textContent = narrow.matches ? (open ? 'Hide the map' : 'Show the map') : open ? '← Back to the brief' : '⤢ Wide map';
+  function renderFar() {
+    const far = Object.values(s.sources).filter(x => !(cluster(x.cluster) && onSubject(cluster(x.cluster))) && !s.no_ideas.includes(x.id));
+    const none = s.no_ideas.length, box = $('far'); box.replaceChildren();
+    if (!far.length && !none) return;
+    const number = numbered(), open = shown.has('far');
+    const line = el('p', null, 'far-line');
+    line.append([far.length && `${plural(far.length, 'source')} from other clusters near this subject`, none && `${none} with no Ideas extracted`].filter(Boolean).join(' · ') + ' · ',
+      button(open ? 'hide' : 'show', () => { open ? shown.delete('far') : shown.add('far'); renderFar(); }, 'link-btn'));
+    box.append(line);
+    if (!open) return;
+    const ranked = far.map(x => [x, x.shares.filter(y => number.has(y.source)).sort((a, b) => b.count - a.count)[0]])
+      .sort((a, b) => (b[1]?.count || 0) - (a[1]?.count || 0));
+    for (const [x, best] of ranked) box.append(row(x.id, null, best ? `shares ${plural(best.count, 'Idea')} with #${number.get(best.source)}` : clusterName(x.cluster)));
+    for (const id of s.no_ideas) box.append(row(id, null, 'no Ideas extracted'));
   }
-  if (narrow.matches) $('pane').classList.add('closed');
-  narrow.addEventListener('change', label); label();
-  $('wide').addEventListener('click', () => {
-    if (narrow.matches) $('pane').classList.toggle('closed'); else document.body.classList.toggle('wide');
-    label();
-    if (atlas) setTimeout(() => { atlas.cy.resize(); atlas.cy.fit(atlas.cy.elements(), 34); }, 50);
-  });
+  function renderMap() {
+    renderHead(); renderPlan(); renderBlocks(); renderFar();
+    $('graph').replaceChildren(graph(280, 220));
+    const main = s.clusters.find(c => c.band === 'main');
+    $('graph-caption').textContent = main ? `${main.title} at the centre. Solid is main, tinted adjacent, an outline far; a line is a shared Idea.` : '';
+  }
+  function showBlock(id) {
+    openBlocks.add(id); renderBlocks();
+    const b = $('block-' + id); if (b) { b.scrollIntoView({behavior: smooth(), block: 'start'}); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+  }
 
-  fetch('/api/dossier?' + query).then(async r => {
+  // --- reading mode ---
+  function extendTrail() {  // the path you walk: what you read, then the plan; detours sit after the source they left
+    for (const id of planIds()) if (!trail.includes(id)) trail.push(id);
+  }
+  function openSource(id, detour = false) {
+    if (!s.sources[id]) return;
+    if (!current) mapScroll = window.scrollY;
+    if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
+    if (!trail.includes(id)) {
+      const at = current ? trail.indexOf(current) : -1;
+      if (detour && at >= 0) trail.splice(at + 1, 0, id); else trail.push(id);
+    }
+    extendTrail();
+    const url = new URL(location.href); url.searchParams.set('read', id); url.hash = '';
+    if (current) history.replaceState({read: id}, '', url); else history.pushState({read: id}, '', url);
+    showReading(id);
+  }
+  function closeReading() {
+    const url = new URL(location.href); url.searchParams.delete('read');
+    history.pushState({}, '', url); route();
+  }
+  function route() {
+    const read = new URLSearchParams(location.search).get('read'), ideasView = location.hash === '#ideas';
+    if (read && s.sources[read]) {
+      if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
+      if (!trail.includes(read)) trail.push(read);
+      showReading(read); return;
+    }
+    current = null; $('reading').hidden = true; $('ideas-view').hidden = !ideasView; $('map').hidden = ideasView;
+    toggleDrawer(false);
+    if (ideasView) { renderIdeas(); return; }
+    renderMap(); requestAnimationFrame(() => window.scrollTo({top: mapScroll}));
+  }
+  async function showReading(id) {
+    current = id; $('map').hidden = true; $('ideas-view').hidden = true; $('reading').hidden = false; $('pop').hidden = true;
+    const x = src(id), number = numbered();
+    $('r-eyebrow').textContent = [number.get(id) ? `#${number.get(id)}` : null, clusterName(x.cluster), x.role].filter(Boolean).join(' · ');
+    $('r-title').textContent = x.title;
+    $('r-meta').textContent = [x.source, x.author, day(x.time), `${x.minutes} min`, gainText(id)].filter(Boolean).join(' · ');
+    $('r-gist-text').textContent = (x.gist || x.hook) + (x.summary === 'lead' ? ' (its opening lines: no summary yet)' : '');
+    $('r-gist').open = !s.marks[id];
+    $('r-text').replaceChildren(el('p', 'Opening the text…', 'quiet')); $('ctx-body').replaceChildren(); $('r-tools').replaceChildren();
+    renderRail(); renderBar(); window.scrollTo({top: 0});
+    try {
+      await loadContext(id);
+      if (current !== id) return;
+      highlight = null; renderText(contexts.get(id)); renderContext(contexts.get(id));
+    } catch (error) { $('r-text').replaceChildren(el('p', error.message, 'quiet')); }
+  }
+  async function loadContext(id, again = false) {
+    if (contexts.has(id) && !again) return;
+    const r = await fetch(`/api/source/${encodeURIComponent(id)}/context?${subjectParams}`);
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-    d = body; render(); connect();
+    contexts.set(id, body);
+  }
+  async function refreshContext() {  // what is new to you changed: the Ideas section says so
+    const id = current; contexts.clear();
+    try { await loadContext(id); if (current === id) { renderContext(contexts.get(id)); $('r-meta').textContent = [src(id).source, src(id).author, day(src(id).time), `${src(id).minutes} min`, gainText(id)].filter(Boolean).join(' · '); } } catch (e) { /* the old context stays */ }
+  }
+  let translated = true;
+  function renderText(ctx) {
+    const tools = $('r-tools'); tools.replaceChildren();
+    if (ctx.translation.length) {
+      const t = button(translated ? 'Translation · show the original' : 'Original · show the translation', () => { translated = !translated; renderText(ctx); });
+      t.setAttribute('aria-pressed', String(translated)); tools.append(t);
+    }
+    if (highlight) tools.append(button(`Marked: ${highlight} · clear`, () => { highlight = null; renderText(ctx); }));
+    if (ctx.url && /^https?:/.test(ctx.url)) { const a = link('Open the original ↗', ctx.url); a.target = '_blank'; a.rel = 'noopener noreferrer'; tools.append(a); }
+    $('r-text').replaceWith(textBox(ctx));
+  }
+  function textBox(ctx) {
+    // The whole source; each passage behind an Idea of this source gets a quiet underline that opens what else says it.
+    const box = el('div', null, 'text'); box.id = 'r-text';
+    if (!ctx.text) { box.append(el('p', 'The text of this source is not in the vault.', 'quiet')); return box; }
+    const ideaOf = new Map(ctx.ideas.map(i => [i.id, i]));
+    const spans = ctx.spans.filter(x => x.idea && ideaOf.has(x.idea));
+    const name = highlight ? new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
+    const write = (target, str) => {
+      if (!name) { target.append(document.createTextNode(str)); return; }
+      str.split(name).forEach((part, k) => target.append(k % 2 ? el('mark', part, 'name-mark') : document.createTextNode(part)));
+    };
+    const piece = (str, a, b, cls) => {
+      const hits = spans.filter(x => x.start < b && x.end > a);
+      if (!hits.length) { if (cls) { const n = el('span', null, cls); write(n, str); box.append(n); } else write(box, str); return; }
+      const ids = [...new Set(hits.map(x => x.idea))];
+      const m = el('mark', null, 'idea-mark' + (ids.some(i => ideaOf.get(i).new && ideaOf.get(i).in_scope) ? ' new' : ''));
+      write(m, str); m.dataset.ideas = ids.join(' '); m.tabIndex = 0; m.setAttribute('role', 'button');
+      const open = e => popover(m, ids.map(i => ideaOf.get(i)), e);
+      m.addEventListener('click', open); m.addEventListener('keydown', e => e.key === 'Enter' && open(e));
+      box.append(m);
+    };
+    if (translated && ctx.translation.length) {
+      let at = 0;
+      for (const line of ctx.translation) {
+        const gap = ctx.text.slice(at, line.start);
+        if (gap.trim()) piece(gap, at, line.start, 'untranslated'); else if (at) box.append('\n'.repeat(Math.max(1, (gap.match(/\n/g) || []).length)));
+        piece(line.text, line.start, line.end); at = line.end;
+      }
+      if (ctx.text.slice(at).trim()) piece(ctx.text.slice(at), at, ctx.text.length, 'untranslated');
+    } else {
+      const cuts = [...new Set([0, ctx.text.length, ...spans.flatMap(x => [x.start, x.end])])].filter(x => x >= 0 && x <= ctx.text.length).sort((a, b) => a - b);
+      for (let i = 0; i + 1 < cuts.length; i++) piece(ctx.text.slice(cuts[i], cuts[i + 1]), cuts[i], cuts[i + 1]);
+    }
+    return box;
+  }
+  function popover(anchor, list, e) {
+    e?.stopPropagation();
+    const pop = $('pop'); pop.replaceChildren();
+    for (const i of list) {
+      const box = el('div', null, 'pop-idea');
+      box.append(el('p', i.title, 'pop-title'), el('p', i.in_scope ? (i.new ? 'New to you' : 'Already covered by what you read') : 'Not part of this subject', 'small quiet'));
+      if (i.also.length) {
+        const p = el('p', 'Also in: ', 'small');
+        i.also.slice(0, 4).forEach((o, n) => { if (n) p.append(', '); p.append(button(short(src(o)?.title || o, 50), () => openSource(o, true), 'link-btn')); });
+        if (i.also.length > 4) p.append(` and ${i.also.length - 4} more`);
+        box.append(p);
+      } else box.append(el('p', 'No other source says it.', 'small quiet'));
+      pop.append(box);
+    }
+    const r = anchor.getBoundingClientRect(), host = $('reading').getBoundingClientRect();
+    pop.style.left = `${Math.max(8, Math.min(r.left - host.left, host.width - 348))}px`; pop.style.top = `${r.bottom - host.top + 6}px`;
+    pop.hidden = false;
+  }
+  document.addEventListener('click', e => { if (!$('pop').hidden && !$('pop').contains(e.target)) $('pop').hidden = true; });
+
+  function renderRail() {
+    const number = numbered(), list = trail.filter(id => s.sources[id]);
+    $('rail-plan').replaceChildren(...list.map(id => {
+      const li = el('li'), b = button('', () => openSource(id));
+      b.append(el('span', null, `dot s-${stateOf(id)}`), el('span', number.get(id) ? `#${number.get(id)}` : '·', 'n'), el('span', short(src(id).title, 46), 't'));
+      if (id === current) b.setAttribute('aria-current', 'true');
+      if (!number.has(id)) b.classList.add('detour');
+      li.append(b); return li;
+    }));
+    $('mini').replaceChildren(graph(200, 150, {labels: false, focus: current}));
+    $('strip').replaceChildren(...list.map(id => {
+      const b = button('', () => openSource(id), 'strip-dot' + (id === current ? ' here' : ''));
+      b.append(el('span', null, `dot s-${stateOf(id)}`)); if (id === current) b.append(el('span', `#${number.get(id) || '·'} ${short(src(id).title, 36)}`));
+      b.title = src(id).title; return b;
+    }));
+  }
+  function nextAfter(id) {
+    const list = trail.filter(x => s.sources[x]), at = list.indexOf(id);
+    return list.slice(at + 1).find(x => !s.marks[x]) || planIds().find(x => x !== id) || null;
+  }
+  function renderBar() {
+    const id = current, bar = $('r-bar'); bar.replaceChildren();
+    const marks = el('div', null, 'marks');
+    for (const [st, label] of [['read', '✓ Mark read'], ['skimmed', '◐ Skim']]) {
+      const b = button(label, () => setState(id, stateOf(id) === st ? 'unread' : st)); b.setAttribute('aria-pressed', String(stateOf(id) === st)); marks.append(b);
+    }
+    bar.append(marks);
+    const next = nextAfter(id);
+    if (next) {
+      const number = numbered(), b = button('', () => openSource(next), 'next'), cross = src(next).cluster !== src(id).cluster;
+      const edge = cross && s.edges.find(e => [e.a, e.b].includes(src(id).cluster) && [e.a, e.b].includes(src(next).cluster));
+      b.append(el('small', cross ? `Next cluster: ${clusterName(src(next).cluster)}` + (edge ? `, through “${short(s.ideas[edge.label].title.replace(/\.$/, ''), 60)}”` : '') : 'Next'),
+        `${number.get(next) ? '#' + number.get(next) + ' ' : ''}${short(src(next).title, 60)} ▸`);
+      bar.append(b);
+    } else bar.append(el('span', 'Nothing left in the plan.', 'small quiet'));
+    const keys = el('p', null, 'keys');
+    keys.append('Keys: ', el('kbd', 'J'), '/', el('kbd', 'K'), ' along the plan · ', el('kbd', 'R'), ' read · ', el('kbd', 'S'), ' skim · ', el('kbd', 'Esc'), ' map');
+    bar.append(keys);
+  }
+
+  // --- the context panel: one section open at a time, each item saying how it relates to this source ---
+  function section(key, title, count, chips, body) {
+    const det = el('details', null, 'ctx-sec'); det.dataset.key = key; det.open = openCtx === key;
+    const sum = el('summary'), top = el('span', null, 'chips');
+    chips.slice(0, 3).forEach(c => top.append(el('span', short(c, 24), 'chip muted')));
+    sum.append(el('b', title), el('span', count, 'count'), top);
+    det.append(sum, body);
+    det.addEventListener('toggle', () => {
+      if (!det.open) return;
+      openCtx = key; document.querySelectorAll('.ctx-sec').forEach(o => { if (o !== det) o.open = false; });
+    });
+    return det;
+  }
+  function renderContext(ctx) {
+    const body = $('ctx-body'); body.replaceChildren();
+    const conn = el('div');
+    for (const [label, list] of [['Same cluster', ctx.connected.filter(c => c.same_cluster)], ['Other clusters', ctx.connected.filter(c => !c.same_cluster)]]) {
+      if (!list.length) continue;
+      conn.append(el('p', label, 'ctx-label'));
+      for (const c of list) {
+        const b = button('', () => openSource(c.source, true), 'ctx-row');
+        b.append(el('span', null, `dot s-${stateOf(c.source)}`), el('span', short(src(c.source).title, 70), 't'), el('span', short(clusterName(src(c.source).cluster), 30), 'tag'),
+          el('span', `shares “${short(c.idea_title.replace(/\.$/, ''), 80)}”${c.count > 1 ? ` and ${c.count - 1} more` : ''}`, 'why'));
+        conn.append(b);
+      }
+    }
+    if (!ctx.connected.length) conn.append(el('p', 'No other source shares an Idea with this one.', 'small quiet'));
+    body.append(section('connected', 'Connected', ctx.connected.length, ctx.connected.map(c => src(c.source).title), conn));
+
+    const ppl = el('div');
+    for (const p of ctx.people) {
+      const b = button('', () => {
+        if (highlight !== p.name) { highlight = p.name; renderText(ctx); document.querySelector('.name-mark')?.scrollIntoView({block: 'center', behavior: smooth()}); return; }
+        if (b.nextSibling?.classList?.contains('person')) b.nextSibling.remove(); else b.after(person(p));
+      }, 'ctx-row');
+      b.append(el('span', initials(p.name), 'av'), el('span', p.name, 't'), el('span', [p.role, p.affiliation].filter(Boolean).join(', '), 'tag'),
+        el('span', `${p.relation}${p.elsewhere ? ` · in ${plural(p.elsewhere, 'other source')}` : ''}`, 'why'));
+      b.title = 'Click to mark them in the text; again for their card';
+      ppl.append(b);
+    }
+    if (!ctx.people.length) ppl.append(el('p', 'No person is named in it.', 'small quiet'));
+    body.append(section('people', 'People', ctx.people.length, ctx.people.map(p => p.name), ppl));
+
+    const org = el('div');
+    for (const o of ctx.orgs) {
+      const b = button('', () => { highlight = highlight === o.name ? null : o.name; renderText(ctx); document.querySelector('.name-mark')?.scrollIntoView({block: 'center', behavior: smooth()}); }, 'ctx-row');
+      b.append(el('span', initials(o.name), 'av org'), el('span', o.name, 't'), el('span', o.type && o.type !== 'other' ? o.type.replace('_', ' ') : '', 'tag'),
+        el('span', `${o.relation}${o.elsewhere ? ` · in ${plural(o.elsewhere, 'other source')}` : ''}`, 'why'));
+      org.append(b);
+    }
+    if (!ctx.orgs.length) org.append(el('p', 'No organisation is named in it.', 'small quiet'));
+    body.append(section('orgs', 'Organisations', ctx.orgs.length, ctx.orgs.map(o => o.name), org));
+
+    const ideas = el('div'), scoped = ctx.ideas.filter(i => i.in_scope);
+    for (const [label, list] of [['New to you', scoped.filter(i => i.new)], ['Already covered', scoped.filter(i => !i.new)], ['Outside this subject', ctx.ideas.filter(i => !i.in_scope)]]) {
+      if (!list.length) continue;
+      ideas.append(el('p', label, 'ctx-label'));
+      for (const i of list) ideas.append(button(i.title, () => {
+        const m = [...document.querySelectorAll('#r-text mark.idea-mark')].find(n => n.dataset.ideas.split(' ').includes(i.id));
+        if (m) { m.scrollIntoView({block: 'center', behavior: smooth()}); m.classList.remove('flash'); void m.offsetWidth; m.classList.add('flash'); }
+      }, 'ctx-idea'));
+    }
+    body.append(section('ideas', 'Ideas in this source', ctx.ideas.length, scoped.filter(i => i.new).map(i => i.title), ideas));
+    body.append(link('Check in Atlas ↗', '/atlas/?item=' + encodeURIComponent(ctx.id), 'atlas-link'));
+    $('ctx-open').textContent = `${ctx.people.length} ${ctx.people.length === 1 ? 'person' : 'people'} · ${ctx.connected.length} connected`;
+  }
+  function person(p) {
+    const box = el('div', null, 'person');
+    if (p.role || p.affiliation) box.append(el('p', [p.role, p.affiliation].filter(Boolean).join(', ')));
+    if (p.domains.length) box.append(el('p', 'Works on: ' + p.domains.join(' · '), 'small'));
+    p.said.forEach(t => box.append(el('p', '“' + t + '”', 'small quiet')));
+    if (!box.childElementCount) box.append(el('p', 'Nothing more is known of them yet.', 'small quiet'));
+    return box;
+  }
+  function toggleDrawer(open) { $('ctx').classList.toggle('open', open); $('ctx-open').setAttribute('aria-expanded', String(open)); }
+  $('ctx-open').addEventListener('click', () => toggleDrawer(!$('ctx').classList.contains('open')));
+  $('ctx-close').addEventListener('click', () => toggleDrawer(false));
+
+  // --- All Ideas, grouped by cluster ---
+  let dossier = null;
+  async function renderIdeas() {
+    const box = $('sections');
+    if (!dossier) {
+      box.replaceChildren(el('p', 'Gathering the Ideas…', 'quiet'));
+      const r = await fetch('/api/dossier?' + new URLSearchParams(subjectQuery.id ? {topic: subjectQuery.id} : {q: subjectQuery.q}));
+      dossier = r.ok ? await r.json().catch(() => null) : null;
+      if (!dossier) { box.replaceChildren(el('p', 'Could not gather the Ideas.', 'quiet')); return; }
+    }
+    const rows = dossier.ideas.filter(r => ['core', 'supporting', 'fading'].includes(r.tier));
+    const sameWhy = new Set(rows.map(r => r.why)).size === 1;  // a line every entry shares says nothing on each
+    const groups = new Map();
+    for (const r of rows) { const c = s.ideas[r.id]?.cluster, key = cluster(c) ? c : 'other'; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(r); }
+    const rank = key => key === 'other' ? 99 : s.clusters.indexOf(cluster(key));
+    box.replaceChildren(el('h1', `${plural(rows.length, 'Idea')} on ${s.scope.title}`, 'ideas-title'));
+    if (sameWhy && rows.length > 1) box.append(el('p', `Every one of them: ${rows[0].why}.`, 'small quiet'));
+    for (const [key, list] of [...groups].sort((a, b) => rank(a[0]) - rank(b[0]))) {
+      const sec = el('section', null, 'sec'), head = el('header'), h = el('h2', key === 'other' ? 'Other clusters' : clusterName(key));
+      head.append(h); if (cluster(key)) head.append(el('span', cluster(key).band, 'band ' + cluster(key).band)); sec.append(head);
+      const ul = el('div', null, 'ideas');
+      for (const r of list) {
+        const c = el('article', null, `idea tier-${r.tier}`), m = el('div', null, 'meta');
+        m.append(el('span', r.tier, 'chip' + (r.tier === 'core' ? '' : ' muted')), el('span', plural(r.sources, 'source'), 'chip muted'));
+        if (r.contested) m.append(el('span', 'contested', 'chip warn'));
+        c.append(el('h3', r.title), m);
+        if (!sameWhy) c.append(el('p', r.why, 'small quiet'));
+        const srcs = el('div', null, 'src-list');
+        r.items.slice(0, 4).forEach(i => { if (s.sources[i]) srcs.append(button(short(s.sources[i].title, 50), () => openSource(i), 'src')); });
+        c.append(srcs); ul.append(c);
+      }
+      sec.append(ul); box.append(sec);
+    }
+  }
+  $('ideas-back').addEventListener('click', e => { e.preventDefault(); history.pushState({}, '', location.pathname + location.search); route(); });
+  window.addEventListener('hashchange', route);
+
+  // --- keys and history ---
+  $('start').addEventListener('click', () => { const n = nextId(); if (n) openSource(n); });
+  $('back').addEventListener('click', e => { e.preventDefault(); closeReading(); });
+  window.addEventListener('popstate', route);
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !current) return;
+    const key = e.key.toLowerCase(), list = trail.filter(x => s.sources[x]), at = list.indexOf(current);
+    if (e.key === 'Escape') { if (!$('pop').hidden) $('pop').hidden = true; else if ($('ctx').classList.contains('open')) toggleDrawer(false); else closeReading(); }
+    else if (key === 'j' && list[at + 1]) openSource(list[at + 1]);
+    else if (key === 'k' && at > 0) openSource(list[at - 1]);
+    else if (key === 'r') setState(current, 'read');
+    else if (key === 's') setState(current, 'skimmed');
+  });
+
+  fetch('/api/subject?' + subjectParams).then(async r => {
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+    s = body;
+    document.title = `Refresher — ${s.scope.title}`;
+    $('kind').textContent = {topic: 'A topic you accepted', cluster: 'A cluster of close Ideas', query: 'What you asked about'}[s.scope.kind];
+    $('title').textContent = s.scope.kind === 'query' ? `“${s.scope.title}”` : s.scope.title;
+    const main = s.clusters.find(c => c.band === 'main'); if (main) openBlocks.add(main.id);
+    $('notice').hidden = true;
+    route();
   }).catch(error => {
     $('notice').textContent = '';
-    $('notice').append(el('p', error.message, 'serif'), el('p', 'Try another subject, or pick one of your topics.', 'quiet'));
-    const back = el('a', '← All topics'); back.href = '/'; $('notice').append(back);
+    $('notice').append(el('p', error.message, 'serif'), el('p', 'Try another subject, or pick one of your topics.', 'quiet'), link('← All topics', '/'));
   });
 })();

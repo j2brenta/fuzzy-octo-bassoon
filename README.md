@@ -636,7 +636,7 @@ or proposed. Cytoscape 3.33.1 (MIT) is vendored in `refresher/assets/`.
 ### Topic dossiers
 
 A dossier is what you know about one subject, ranked (`refresher/dossier.py`). Every
-rebuild writes one per topic to `wiki/dossiers/`; the app (`/topic/`) shows the same for
+rebuild writes one per topic to `wiki/dossiers/` (key sources, threads, then the Ideas); the app (`/topic/`) shows the same for
 any topic, cluster or phrase. Each Idea gets an importance, kept with its parts so the note can say
 why it ranks there:
 
@@ -651,6 +651,41 @@ changes, the conflicts, and a reading order: the sources that cover the most imp
 Ideas, weighted by their authors' trust, originals before reposts, the newest word on
 each change always included. A phrase gathers the Ideas close to it by embedding, whole
 clusters when their centre is close, plus those holding all its words.
+
+The app's topic page (`/topic/?id=…` or `?q=…`) reads a subject **cluster by cluster**
+(`refresher/subject.py`, `GET /api/subject`). Everything is scored against the subject, not inherited
+from accepted-topic membership:
+
+- **Relevance**: each Idea's cosine to the subject vector (a topic's centroid; for a phrase, its
+  embedding plus the ten nearest Ideas). Under the floor (0.35, and no more than 0.2 below the best
+  Idea: on Qwen3 unrelated text scores 0.30–0.46) an Idea is out of scope.
+- **Clusters**: main holds the most in-scope relevance; adjacent shares an Idea with main or is
+  relevant on average; the rest are far. Themes fold into the cluster they link to most.
+- **Roles**: a source lives in the cluster holding most of its Ideas (the same for every subject; a
+  cluster of only its own Ideas counts half). There it is the *anchor*, a *perspective* (adds an Idea
+  the anchor lacks) or *noise* (adds none, a repost, or no Ideas).
+- **The plan**: a greedy cover of in-scope relevance up to 80% or six sources; what you read counts
+  as covered, skimmed as half. Every source shows one number, "+N% of the subject", its share there.
+- **Edges**: Idea pairs across clusters that are close (the embedder's cluster-neighbour bar) or
+  related by a claim relation, labelled by the most relevant one.
+
+**Map mode**: one primary action (Start reading, then Continue · #k), the graph of clusters (main at
+the centre, filled by relevance, lines for shared Ideas) beside the reading plan with cumulative
+coverage, then one block per cluster on the subject: anchor, perspectives, noise as a count, and the
+shared Idea that connects it to the next block. Only one card is expanded: the next source in the plan.
+Far sources and sources without Ideas are one line at the end.
+
+**Reading mode** (`&read=<id>`): the plan as a rail with a mini graph, the text in the middle (Ideas
+underlined; a click shows where else they are said), and a context panel with connected sources,
+people, organisations and Ideas, one section open at a time, each item saying how it relates to this
+source. `J`/`K` walk the plan, `R` reads, `S` skims, `Esc` returns to the map where you were.
+Marking goes through `POST /api/source/<id>/state`, which returns the plan recomputed; the marks
+live in the vault (`reading/log.jsonl`). Below 1280 px the context panel is a drawer, below 1024 the
+rail is a strip, below 768 the panel is a bottom sheet. Hooks and gists come from `refresher summarize`.
+
+**The Atlas is for checking**: "Check in Atlas" opens `/atlas/?item=…` on the source's neighbourhood;
+the Atlas's Claims view is a drill-down from a cluster ("See its claims", or `?cluster=…`). All Ideas
+(`#ideas`) are grouped by cluster.
 
 ## Validation
 
@@ -694,10 +729,9 @@ uv run refresher serve --vault VAULT        # or set REFRESHER_VAULT; python -m 
 Open **http://127.0.0.1:8080**:
 
 - `/` lists your topics and clusters; type a subject to refresh it.
-- `/topic/?id=…` or `/topic/?q=…` is its dossier (below): the brief on the left, ranked;
-  the Atlas on the right, scoped to the subject and linked both ways (an Idea you read
-  lights up on the map; what you pick on the map scrolls the brief to it and opens its
-  evidence); "Wide map" gives the map the page. `&at=2026-12-01` shows it at another moment.
+- `/topic/?id=…` or `/topic/?q=…` is its reading map (below): the key sources to read first,
+  the rest by thread, a reader, a skim run, and graphs of the sources and the people on request.
+  `&at=2026-12-01` shows it at another moment.
 - `/capture/` adds a source and follows it through ingestion (Olga's workspace).
 - `/atlas/` is the map, with the proposals that wait for you (Victor's viewer).
 

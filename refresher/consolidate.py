@@ -22,7 +22,7 @@ from typing import Callable
 from engine.llm import BudgetedModel, JsonModel, ModelError
 from engine import language
 from graph import cluster, relate
-from refresher import graphview, vault
+from refresher import graphview, summarize, vault
 from refresher.place import RelateRun, _quiet, _warn, relate_pending
 
 EVERY = timedelta(hours=1)
@@ -142,6 +142,22 @@ def name_clusters(vault_path: Path, store, model: JsonModel | None, log: Callabl
     return len(fresh)
 
 
+def summarize_items(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> int:
+    """A hook and a gist for every visible item without a current summary (refresher/summarize.py), one call each.
+    A failed call stores nothing: the reading map shows the item's lead sentences and it is summarised next time."""
+    if model is None:
+        return 0
+    done = 0
+    for item_id in summarize.missing(vault_path, sorted(i.item_id for i in store.items()), model):
+        try:
+            summarize.summarize_item(vault_path, item_id, model)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            log(f"item {item_id[:10]}: not summarised ({type(error).__name__})")
+            continue
+        done += 1
+    return done
+
+
 def model_confirm(model: JsonModel) -> Callable[[str, str], bool]:
     def same(a: str, b: str) -> bool:
         try:
@@ -162,6 +178,7 @@ class ConsolidateRun:
     enriched: int = 0
     named: int = 0  # clusters given a name this run
     placed: int = 0  # Ideas a model gave a cluster or theme this run
+    summarized: int = 0  # items given a hook and a gist this run
     notes: list[str] = None
     budget: BudgetedModel | None = None
     took: float = 0.0  # seconds, waiting for the lock included
@@ -170,7 +187,8 @@ class ConsolidateRun:
         return {"at": self.at.isoformat(), "took": round(self.took, 1), "summary": self.summary(),
                 "related": self.relate.judged if self.relate else 0, "duplicates": self.duplicates,
                 "firmed": self.firmed, "proposed": self.proposed, "waiting": self.waiting, "enriched": self.enriched,
-                "named": self.named, "placed": self.placed, "notes": list(self.notes or []),
+                "named": self.named, "placed": self.placed, "summarized": self.summarized,
+                "notes": list(self.notes or []),
                 "model_calls": self.budget.calls if self.budget else 0,
                 "tokens": self.budget.spent if self.budget else 0}
 
@@ -186,6 +204,8 @@ class ConsolidateRun:
             parts.append(f"{self.named} clusters named")
         if self.placed:
             parts.append(f"{self.placed} Ideas placed in themes")
+        if self.summarized:
+            parts.append(f"{self.summarized} items summarised")
         if self.budget is not None:
             parts.append(f"{self.budget.calls} model calls, about {self.budget.spent:,} tokens")
         return "consolidate: " + ", ".join(parts) + "".join(f"; {n}" for n in self.notes or [])
@@ -279,6 +299,9 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
         namer = translate.client_from_environment()  # the cheap model only; without it clusters keep their central Idea
         run.named = name_clusters(vault_path, store, namer, log) if namer is not None else 0
         run.placed = assign_themes(vault_path, store, namer, log) if namer is not None else 0
+        run.summarized = summarize_items(vault_path, store, summarize.client_from_environment(), log)
+        if run.summarized:
+            store.summaries = summarize.load_all(vault_path)
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())

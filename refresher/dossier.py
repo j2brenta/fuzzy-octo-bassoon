@@ -4,6 +4,16 @@ Pure functions over the replayed store at one moment, like km.py: no model calls
 topic, a cluster or a phrase into a scope of Ideas; build() ranks them and returns plain data for the page
 (/api/dossier) and for render(), which writes the vault note wiki/dossiers/<topic>.md.
 
+The page is a reading map: documents first, Ideas as what links them. Every visible source is in it, in one of three
+rings: core holds a live Idea of the subject; adjacent does not, but is close to the subject by embedding, related to
+a core source, or sits in a cluster linked to the subject's; periphery is the rest, noise included, to see and skip.
+Within the rings, in that order, sources follow marginal coverage: each next one adds the most importance the ones
+above it did not (the greedy cover of the reading order, run to the end), so the first is where to start, a source
+adding nothing new sits low, and the first one to three are key. Each sits in the thread (cluster) that holds most of
+its importance, carries its hook and gist (refresher/summarize.py, or its lead sentences), and badges for the sources
+it updates, is outdated by or disagrees with. people ranks who is involved in the core, by the importance of what
+they wrote and what is said of them, with their organizations and the ties between them, for the people map.
+
 Each Idea gets an importance with its parts kept, so the page can say why it ranks where it does:
     importance = fresh · (0.35 support + 0.25 trust + 0.25 central + 0.15 firm) + user
 support is how many independent sources say it, trust what the store has learned of their authors, central how
@@ -17,16 +27,28 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from engine.extract import source_passages
 from graph import cluster as grouping
 from graph import embed
 from graph.memory import MemoryStore
-from refresher import km, scoring
+from graph.store import AFFILIATION_WORDS
+from refresher import km, scoring, summarize, translate
 
 WEIGHTS = {"support": 0.35, "trust": 0.25, "central": 0.25, "firm": 0.15}
 SUPPORT_FULL = 4  # independent sources at which support counts in full
 VOTE, MAX_USER = 0.1, 0.3  # each vote moves importance this much, up to this far
 CORE_TOP, CORE_MIN = 5, 0.6  # the top five, and any other at this importance, are core
 READ_FIRST = 7
+KEY_MAX, KEY_SHARE = 3, 0.5  # key documents: the first pick, and the next ones adding at least half as much
+RINGS = ("core", "adjacent", "periphery")
+ADJACENT_MIN = 0.6  # relevance (0..1) at which a source outside the subject is adjacent
+NEAR_SPAN = 0.2  # relevance rises from 0 to 1 over this much cosine, ending at the embedder's topic_link
+LINKED = 0.8  # relevance of a source whose claims relate to a core source's, or whose cluster links to the subject's
+OFF_SUBJECT = 0.25  # an Idea outside the subject weighs this much of its closeness, for the order of the outer rings
+KEY_BONUS = 1.5  # writing a key document counts this much more for a person
+WORDS_PER_MINUTE = 220
+TOP_PEOPLE = 5
+MAIN_TIES = ("leads", "founded", "works_at", "member_of", "studied_at", "affiliated", "published_at")
 QUERY_IDEAS = 40  # a phrase gathers at most this many Ideas
 TIERS = ("core", "supporting", "fading", "replaced", "noise")
 
@@ -40,6 +62,7 @@ class Scope:
     ideas: list[str]
     central: dict[str, float] = field(default_factory=dict)
     provisional: set[str] = field(default_factory=set)  # Ideas a topic took without your accepting them
+    center: list[float] = field(default_factory=list)  # the subject as a vector: rings score every source against it
 
 
 def _visible_ideas(store: MemoryStore) -> set[str]:
@@ -70,11 +93,12 @@ def resolve(store: MemoryStore, key: str | None = None, query: str | None = None
         center = grouping.centroid(embed.vectors([store.idea(i).title for i in sorted(t.ideas & visible)])) \
             if t.ideas & visible else []
         central = {**_closeness(store, ideas, center, th.topic_attach), **{i: 1.0 for i in t.ideas}}
-        return Scope("topic", key, t.title, ideas, central, set(t.attached) - t.ideas)
+        return Scope("topic", key, t.title, ideas, central, set(t.attached) - t.ideas, center)
     if key in clusters:
         c = clusters[key]
         ideas = sorted(c.ideas & visible)
-        return Scope("cluster", key, c.title, ideas, _closeness(store, ideas, c.centroid, th.cluster_link))
+        return Scope("cluster", key, c.title, ideas, _closeness(store, ideas, c.centroid, th.cluster_link), set(),
+                     list(c.centroid or []))
     if not query or not query.strip():
         return None
     candidates = sorted(visible)
@@ -93,7 +117,7 @@ def resolve(store: MemoryStore, key: str | None = None, query: str | None = None
     if not ideas:
         return None
     central = {i: max(0.0, min(1.0, close.get(i, 0.0) / th.topic_attach)) for i in ideas}
-    return Scope("query", query.strip(), query.strip(), sorted(ideas), central)
+    return Scope("query", query.strip(), query.strip(), sorted(ideas), central, set(), vectors[0])
 
 
 def _when(store: MemoryStore, item_id: str) -> datetime:
@@ -125,8 +149,9 @@ def _why(sources: int, trust: float, band: str, firm: bool, central: float, vote
     return " · ".join(parts)
 
 
-def build(store: MemoryStore, scope: Scope, at: datetime) -> dict:
-    """The dossier as plain data: Ideas ranked into tiers, what changed, what is contested, what to read first."""
+def build(store: MemoryStore, scope: Scope, at: datetime, documents: bool = True) -> dict:
+    """The dossier as plain data: Ideas ranked into tiers, what changed, what is contested, what to read first, and
+    (unless `documents` is False, as for the catalog) every source in its ring and the people."""
     scores = km.score_claims(store, at)
     nodes = {c.claim.claim_id: c for c in store.claims(hidden=True)}
     in_scope = set(scope.ideas)
@@ -208,11 +233,8 @@ def build(store: MemoryStore, scope: Scope, at: datetime) -> dict:
         r["contested"] = sum(r["id"] in (p["a"]["idea"], p["b"]["idea"]) for p in contested)
 
     reading, also = _reading_order(store, rows, changed)
-    people = store.people_for(sorted(scope_claims))
+    docs, threads = _documents(store, scope, rows, changed, contested, scores) if documents else ([], [])
     nearby = _nearby(store, scope)
-    nearby["people"] = [{"id": p.person_id, "name": p.name, "trust": round(store.trust(p.person_id), 2),
-                         "wrote": len({nodes[c].item_id for c in scope_claims} & p.authored),
-                         "about": len(scope_claims & p.facts)} for p in people[:8]]
     counts = {t: sum(r["tier"] == t for r in rows) for t in TIERS}
     item_ids = sorted({i for r in rows for i in r["items"]} | {s["item"] for c in changed for s in c["steps"]})
     sources = {i: {"title": (item := store.item(i)).title, "source": item.source.source_name,
@@ -222,6 +244,10 @@ def build(store: MemoryStore, scope: Scope, at: datetime) -> dict:
     return {"scope": {"kind": scope.kind, "id": scope.key, "title": scope.title}, "at": at.isoformat(),
             "counts": {**counts, "ideas": len(rows), "items": len({i for r in rows for i in r["items"]})},
             "ideas": rows, "changed": changed, "contested": contested, "reading": reading, "also": also,
+            "documents": docs, "threads": threads,
+            "rings": {ring: sum(d["ring"] == ring for d in docs) for ring in RINGS},
+            "people": _people(store, [d for d in docs if d["ring"] == "core"], rows, scope_claims) if documents
+            else {"people": [], "orgs": [], "edges": []},
             "nearby": nearby, "sources": sources}
 
 
@@ -291,6 +317,290 @@ def _reading_order(store: MemoryStore, rows: list[dict], changed: list[dict]) ->
     return reading, also
 
 
+def _lines(store: MemoryStore, item) -> list[str]:
+    """The item's text as the reader sees it: the translation where there is one, else the original."""
+    record = getattr(store, "translations", {}).get(item.item_id)
+    return translate.translated_text(record, item.text) or item.text.splitlines()
+
+
+def _original(store: MemoryStore, item_id: str) -> str:
+    item = store.item(item_id)
+    return item.duplicate_of if item.duplicate_of and not store.item(item.duplicate_of).hidden else item_id
+
+
+def _relevance(cos: float) -> float:
+    """A cosine to the subject as 0..1: 0 at what unrelated text scores, 1 at the embedder's topic_link."""
+    hi = embed.thresholds().topic_link
+    return max(0.0, min(1.0, (cos - (hi - NEAR_SPAN)) / NEAR_SPAN))
+
+
+def _documents(store: MemoryStore, scope: Scope, rows: list[dict], changed: list[dict], contested: list[dict],
+               scores: dict) -> tuple[list[dict], list[dict]]:
+    """Every visible source in its ring, ordered by marginal coverage ring by ring (a repost counts as its original
+    and is folded into it), with its thread, summary and badges; and the threads, best first."""
+    weight = {r["id"]: max(r["importance"], 0.0) for r in rows if r["tier"] in ("core", "supporting", "fading")}
+    rank = {r["id"]: r["rank"] for r in rows}
+    in_scope = {r["id"] for r in rows}
+    claims = [c for c in store.claims() if c.claim.claim_id in scores]
+    ideas: dict[str, set[str]] = defaultdict(set)
+    reposts: dict[str, list[str]] = defaultdict(list)
+    claims_of: dict[str, set[str]] = defaultdict(set)
+    for item in store.items():
+        first = _original(store, item.item_id)
+        ideas.setdefault(first, set())
+        if first != item.item_id and item.item_id not in reposts[first]:
+            reposts[first].append(item.item_id)
+    for c in claims:
+        first = _original(store, c.item_id)
+        claims_of[first].add(c.claim.claim_id)
+        if c.idea_id:
+            ideas[first].add(c.idea_id)
+
+    # How close each Idea outside the subject is to it, for the outer rings' relevance and order.
+    outside = sorted({i for held in ideas.values() for i in held} - in_scope)
+    close = {}
+    if scope.center and outside:
+        vectors = embed.vectors([store.idea(i).title for i in outside])
+        close = {i: _relevance(embed.cosine(v, scope.center)) for i, v in zip(outside, vectors)}
+    fresh = {}
+    for c in claims:
+        if c.idea_id and c.idea_id not in in_scope and c.superseded_by is None:
+            fresh[c.idea_id] = max(fresh.get(c.idea_id, 0.0), scores[c.claim.claim_id].freshness)
+    off = {i: OFF_SUBJECT * fresh.get(i, 0.0) * max(close.get(i, 0.0), 0.2) for i in outside}
+
+    core = {i for i, held in ideas.items() if held & set(weight)}
+    core_claims = {cid for i in core for cid in claims_of[i]}
+    item_of = {c.claim.claim_id: _original(store, c.item_id) for c in claims}
+    related = {item_of[b] for e in store.edges() if e.type in ("SUPPORTS", "CONTRADICTS", "ELABORATES", "SUPERSEDES")
+               for a, b in ((e.src, e.dst), (e.dst, e.src)) if a in core_claims and b in item_of}
+    clusters = {c.cluster_id: c for c in store.clusters()}
+    cluster_of = {i: cid for cid, c in sorted(clusters.items()) for i in c.ideas}
+    scope_clusters = {cluster_of[i] for i in weight if i in cluster_of}
+    # A cluster linked to one of the subject's (relations, shared Ideas, or centroids past topic_neighbour) is close
+    # enough by that alone: the link already passed the embedder's own cut-off.
+    linked = {b: LINKED for link in store.links("cluster") for a, b in ((link.a, link.b), (link.b, link.a))
+              if a in scope_clusters and b not in scope_clusters}
+    relevance, ring = {}, {}
+    for i, held in ideas.items():
+        if i in core:
+            relevance[i] = max(scope.central.get(x, 0.0) for x in held & set(weight))
+            ring[i] = "core"
+            continue
+        near = max((close.get(x, 0.0) for x in held), default=0.0)
+        via = max((linked.get(cluster_of.get(x), 0.0) for x in held), default=0.0)
+        relevance[i] = round(max(near, via, LINKED if i in related else 0.0), 3)
+        ring[i] = "adjacent" if relevance[i] >= ADJACENT_MIN else "periphery"
+
+    def trust(item_id: str) -> float:
+        author = store.item(item_id).author_id
+        return store.trust(author) if author else scoring.TRUST_PRIOR
+
+    def worth(idea_id: str) -> float:
+        return weight.get(idea_id, off.get(idea_id, 0.0))
+
+    order, gains, fresh_ideas, covered = [], {}, {}, set()
+    for band in RINGS:
+        left = {i for i in ideas if ring[i] == band}
+        while left:
+            gain = {i: sum(worth(x) for x in ideas[i] - covered) * trust(i) for i in left}
+            best = max(gain, key=lambda i: (gain[i], relevance[i], _when(store, i), i))
+            if gain[best] <= 0:  # the rest add nothing new: the most relevant, then the newest, first
+                for i in sorted(left, key=lambda i: (relevance[i], _when(store, i), i), reverse=True):
+                    order.append(i)
+                    gains[i], fresh_ideas[i] = 0.0, 0
+                break
+            order.append(best)
+            gains[best], fresh_ideas[best] = gain[best], len(ideas[best] - covered)
+            covered |= ideas[best]
+            left.discard(best)
+    key = set()
+    for n, i in enumerate(order[:KEY_MAX]):
+        if ring[i] == "core" and gains[i] > 0 and (n == 0 or gains[i] >= KEY_SHARE * gains[order[0]]):
+            key.add(i)
+        else:
+            break
+
+    thread_of = {}
+    for item_id in order:
+        held: dict[str, float] = defaultdict(float)
+        for i in ideas[item_id]:
+            if i in cluster_of and not (scope.kind == "cluster" and i in weight):
+                held[cluster_of[i]] += worth(i) or 0.001
+        if scope.kind == "cluster" and ideas[item_id] & set(weight):
+            thread_of[item_id] = scope.key
+        else:
+            thread_of[item_id] = max(held, key=lambda c: (held[c], c)) if held else "other"
+
+    badges: dict[str, list[dict]] = defaultdict(list)
+
+    def badge(item_id: str, kind: str, other: str, idea: str | None):
+        a, b = _original(store, item_id), _original(store, other)
+        if a != b and a in ideas and not any(x["kind"] == kind and x["item"] == b for x in badges[a]):
+            badges[a].append({"kind": kind, "item": b, "idea": idea, "in_scope": b in ideas})
+    for c in changed:
+        for old, new in zip(c["steps"], c["steps"][1:]):
+            badge(new["item"], "updates", old["item"], new["idea"])
+            badge(old["item"], "outdated_by", new["item"], new["idea"])
+    for pair in contested:
+        badge(pair["a"]["item"], "disagrees", pair["b"]["item"], pair["a"]["idea"])
+        badge(pair["b"]["item"], "disagrees", pair["a"]["item"], pair["b"]["idea"])
+
+    summaries = getattr(store, "summaries", {})
+    total = sum(weight.values()) or 1.0
+    deepest = {}
+    for item_id in order:
+        t = thread_of[item_id]
+        if ring[item_id] == "core" and (t not in deepest or sum(map(worth, ideas[item_id])) >
+                                         sum(map(worth, ideas[deepest[t]]))):
+            deepest[t] = item_id
+    documents = []
+    for n, item_id in enumerate(order, 1):
+        item = store.item(item_id)
+        lines = _lines(store, item)
+        if item_id in summaries:
+            hook, gist, kind = summaries[item_id]["hook"], summaries[item_id].get("gist", ""), "model"
+        else:
+            (hook, gist), kind = summarize.lead(lines, item.title), "lead"
+        mine = sorted(ideas[item_id] & in_scope, key=lambda i: rank[i])
+        others = sorted(ideas[item_id] - in_scope, key=lambda i: (-off.get(i, 0.0), i))
+        documents.append({
+            "id": item_id, "rank": n, "ring": ring[item_id], "relevance": round(relevance[item_id], 3),
+            "key": item_id in key, "deepest": deepest.get(thread_of[item_id]) == item_id,
+            "title": item.title, "source": item.source.source_name,
+            "author": _name(store, item.author_id), "author_id": item.author_id,
+            "time": item.source.event_time.isoformat(), "captured": item.source.captured_at.isoformat(),
+            "url": item.source.url, "minutes": max(1, round(sum(len(ln.split()) for ln in lines) / WORDS_PER_MINUTE)),
+            "hook": hook, "gist": gist, "summary": kind, "ideas": mine,
+            "other_ideas": [{"id": i, "title": store.idea(i).title} for i in others],
+            "weight": round(sum(weight.get(i, 0.0) for i in mine), 4), "gain": round(gains[item_id], 4),
+            "share": round(sum(weight.get(i, 0.0) for i in mine) / total, 3), "new_ideas": fresh_ideas[item_id],
+            "noise": not mine and not others or (bool(mine) and not any(i in weight for i in mine) and not others),
+            "thread": thread_of[item_id], "reposts": reposts.get(item_id, []), "badges": badges.get(item_id, [])})
+    threads = []
+    for tid in dict.fromkeys(thread_of[i] for i in order):
+        docs = [d for d in documents if d["thread"] == tid]
+        title = clusters[tid].title if tid in clusters else scope.title if tid == scope.key else "Other sources"
+        threads.append({"id": tid, "title": title, "documents": [d["id"] for d in docs],
+                        "ring": min((d["ring"] for d in docs), key=RINGS.index),
+                        "weight": round(sum(d["weight"] for d in docs), 4)})
+    return documents, threads
+
+
+def _people(store: MemoryStore, documents: list[dict], rows: list[dict], scope_claims: set[str]) -> dict:
+    """Who is involved in the documents, most first: the importance of what they wrote (a key document counts
+    more) and of what is said about them, by how far you trust them. With their organizations and the ties between
+    them: same document, writes about, agrees and disagrees."""
+    docs = {d["id"]: d for d in documents}
+    claims = {c.claim.claim_id: c for c in store.claims()}
+    weight = {r["id"]: max(r["importance"], 0.0) for r in rows if r["tier"] in ("core", "supporting", "fading")}
+    in_doc: dict[str, set[str]] = defaultdict(set)  # item -> the people it involves
+    rows_out = {}
+    for p in store.people():
+        wrote = sorted(i for i in p.authored if i in docs)
+        named = sorted(i for i in p.mentioned_in if i in docs and i not in wrote)
+        facts = [claims[c] for c in sorted(p.facts) if c in claims and _original(store, claims[c].item_id) in docs]
+        about = sorted({_original(store, c.item_id) for c in facts})
+        if not (wrote or named or about):
+            continue
+        for i in {*wrote, *named, *about}:
+            in_doc[i].add(p.person_id)
+        trust = store.trust(p.person_id)
+        involvement = sum(docs[i]["weight"] * (KEY_BONUS if docs[i]["key"] else 1.0) for i in wrote) \
+            + 0.5 * sum(docs[i]["weight"] for i in about) / max(1, len(about)) * min(len(facts), 3) \
+            + 0.05 * len(named)
+        key_doc = next((docs[i] for i in wrote if docs[i]["key"]), None)
+        reason = f"wrote ★ {key_doc['title']}" if key_doc else \
+            f"wrote {len(wrote)} source{'s' * (len(wrote) != 1)}" if wrote else \
+            f"{len(facts)} claim{'s' * (len(facts) != 1)} about them" if facts else \
+            f"named in {len(named)} source{'s' * (len(named) != 1)}"
+        threads: dict[str, int] = defaultdict(int)
+        for i in {*wrote, *about}:
+            threads[docs[i]["thread"]] += 1
+        found = lambda f: {"value": f["value"], "url": f.get("url")} if isinstance(f, dict) and f.get("value") else None
+        rows_out[p.person_id] = {
+            "id": p.person_id, "name": p.name, "trust": round(trust, 2), "score": round(involvement * (0.5 + trust), 4),
+            "reason": reason, "role": found(p.role), "affiliation": found(p.affiliation),
+            "domains": [d for d in map(found, p.domains) if d], "wrote": wrote, "about": about, "named": named,
+            "threads": dict(sorted(threads.items())), "ties": [], "org": None}
+    orgs = {}
+    for a in store.affiliations():
+        if a.person_id not in rows_out:
+            continue
+        person = rows_out[a.person_id]
+        if any(t["org"] == a.org_id and t["relation"] == a.relation for t in person["ties"]):
+            continue
+        person["ties"].append({"org": a.org_id, "relation": a.relation,
+                               "label": AFFILIATION_WORDS.get(a.relation, a.relation), "item": a.item_id, "url": a.url})
+        org = store.organization(a.org_id)
+        orgs.setdefault(a.org_id, {"id": a.org_id, "name": org.name, "type": org.type, "members": [], "main": []})
+        if a.person_id not in orgs[a.org_id]["members"]:
+            orgs[a.org_id]["members"].append(a.person_id)
+    for person in rows_out.values():
+        stated = lambda t: (t["item"] not in docs, MAIN_TIES.index(t["relation"]) if t["relation"] in MAIN_TIES
+                            else len(MAIN_TIES), t["org"])
+        if person["ties"]:
+            person["org"] = min(person["ties"], key=stated)["org"]
+            orgs[person["org"]]["main"].append(person["id"])
+    ranked = sorted(rows_out.values(), key=lambda r: (-r["score"], r["name"], r["id"]))
+    for n, r in enumerate(ranked):
+        r["top"] = n < TOP_PEOPLE
+
+    edges: dict[tuple, dict] = {}
+
+    def edge(a: str, b: str, kind: str, item_id: str, directed: bool = False):
+        if a == b or a not in rows_out or b not in rows_out:
+            return
+        ends = (a, b) if directed else tuple(sorted((a, b)))
+        row = edges.setdefault((*ends, kind), {"a": ends[0], "b": ends[1], "kind": kind, "documents": []})
+        if item_id not in row["documents"]:
+            row["documents"].append(item_id)
+    for item_id, involved in sorted(in_doc.items()):
+        for a in sorted(involved):
+            for b in sorted(involved):
+                if a < b:
+                    edge(a, b, "same_document", item_id)
+    for r in rows_out.values():
+        for c in (claims[c] for c in sorted(store.person(r["id"]).facts) if c in claims):
+            author = store.item(c.item_id).author_id
+            if author:
+                edge(author, r["id"], "writes_about", _original(store, c.item_id), directed=True)
+    for e in store.edges():
+        if e.type in ("CONTRADICTS", "SUPPORTS") and e.src in claims and e.dst in claims \
+                and (e.src in scope_claims or e.dst in scope_claims):
+            a, b = store.item(claims[e.src].item_id).author_id, store.item(claims[e.dst].item_id).author_id
+            if a and b:
+                kind = "disagrees" if e.type == "CONTRADICTS" else "agrees"
+                edge(a, b, kind, _original(store, claims[e.src].item_id))
+    return {"people": ranked, "orgs": sorted(orgs.values(), key=lambda o: (-len(o["members"]), o["name"], o["id"])),
+            "edges": sorted(edges.values(), key=lambda e: (e["kind"], e["a"], e["b"]))}
+
+
+def document(store: MemoryStore, item_id: str) -> dict | None:
+    """One source for the reader: its text, its translation line by line, and where each claim sits, by Idea."""
+    try:
+        item = store.item(item_id)
+    except KeyError:
+        return None
+    if item.hidden:
+        return None
+    record = getattr(store, "translations", {}).get(item_id)
+    done = (record or {}).get("passages") or {}
+    translation = [{"start": p["start"], "end": p["end"], "text": done[str(p["id"])]}
+                   for p in source_passages(item.text) if str(p["id"]) in done]
+    spans = []
+    for c in sorted(store.claims(), key=lambda c: c.claim.claim_id):
+        if c.item_id != item_id:
+            continue
+        for span in c.claim.spans:
+            start, end = max(0, span.start_char), min(len(item.text), span.end_char)
+            if start < end:
+                spans.append({"start": start, "end": end, "claim": c.claim.claim_id, "idea": c.idea_id,
+                              "subject": c.subject_id, "statement": c.claim.statement})
+    return {"id": item_id, "title": item.title, "source": item.source.source_name,
+            "author": _name(store, item.author_id), "author_id": item.author_id, "time": item.source.event_time.isoformat(), "url": item.source.url,
+            "text": item.text, "translation": translation, "spans": sorted(spans, key=lambda s: (s["start"], s["end"]))}
+
+
 def _nearby(store: MemoryStore, scope: Scope) -> dict:
     topics = {t.topic_id: t for t in store.topics()}
     clusters = {c.cluster_id: c for c in store.clusters()}
@@ -321,6 +631,33 @@ def render(d: dict, names: dict[str, str]) -> str:
     lines = [f"# {d['scope']['title']}: what you know", "",
              f"As of {day(d['at'])} · {c['ideas']} Ideas from {c['items']} sources · {c['core']} core, "
              f"{c['supporting']} supporting, {c['fading']} fading, {c['replaced']} replaced, {c['noise']} noise.", ""]
+    docs = {x["id"]: x for x in d["documents"]}
+    key = [x for x in d["documents"] if x["key"]]
+    if key:
+        lines += ["## Start here", ""]
+        lines += [f"{n}. {link(x['id'])}: {x['hook']}" for n, x in enumerate(key, 1)]
+        lines.append("")
+    threads = [(t, [docs[i] for i in t["documents"] if docs[i]["ring"] == "core" and not docs[i]["noise"]])
+               for t in d["threads"]]
+    if any(rows for _, rows in threads):
+        lines += ["## Threads", ""]
+        for t, rows in threads:
+            if rows:
+                lines += [f"### {t['title']}", ""]
+                lines += [f"- {'★ ' if x['key'] else ''}{link(x['id'])}: {x['hook']}" for x in rows]
+                lines.append("")
+    titles = {t["id"]: t["title"] for t in d["threads"]}
+    for ring, intro in (("adjacent", "Close to the subject, from another cluster"),
+                        ("periphery", "Weak overlap: perspectives for after the main part")):
+        rows = [x for x in d["documents"] if x["ring"] == ring]
+        if rows:
+            lines += [f"## {ring.capitalize()}", "", f"{intro}.", ""]
+            lines += [f"- {link(x['id'])}: {x['hook']} ({titles.get(x['thread'], 'other')}"
+                      f"{', noise' if x['noise'] else ''})" for x in rows]
+            lines.append("")
+    people = [p for p in d["people"]["people"] if p["top"]]
+    if people:
+        lines += ["People: " + ", ".join(f"{link(p['id'])} ({p['reason']})" for p in people), ""]
     shown = [r for r in d["ideas"] if r["tier"] in ("core", "supporting", "fading")]
     if shown:
         lines += ["## The current view", ""]
@@ -337,18 +674,11 @@ def render(d: dict, names: dict[str, str]) -> str:
             a, b = pair["a"], pair["b"]
             lines.append(f"- {a['statement']} ({link(a['item'])}) ⟷ {b['statement']} ({link(b['item'])})"
                          + (f": {pair['rationale']}" if pair["rationale"] else ""))
-    if d["reading"]:
-        lines += ["", "## Read in order", ""]
-        lines += [f"{r['rank']}. {link(r['item'])}: {r['reason']}" for r in d["reading"]]
-        if d["also"]:
-            lines += ["", "Also: " + ", ".join(link(r["item"]) for r in d["also"])]
     near = d["nearby"]
     parts = [("Linked", near["linked"]), ("Clusters", near["clusters"]), ("In topics", near["topics"])]
-    if any(rows for _, rows in parts) or near["people"]:
+    if any(rows for _, rows in parts):
         lines += ["", "## Nearby", ""]
         lines += [f"- {label}: " + ", ".join(link(r["id"]) for r in rows) for label, rows in parts if rows]
-        if near["people"]:
-            lines.append("- People: " + ", ".join(f"{link(p['id'])} (trust {p['trust']:.2f})" for p in near["people"]))
     hidden = [r for r in d["ideas"] if r["tier"] in ("replaced", "noise")]
     if hidden:
         lines += ["", "## Replaced and noise", ""]
@@ -369,7 +699,7 @@ def catalog(store: MemoryStore, at: datetime) -> list[dict]:
         for cid in t.clusters:
             topics_of[cid].append(t.title)
     for kind, key, title in groups:
-        d = build(store, resolve(store, key), at)
+        d = build(store, resolve(store, key), at, documents=False)
         if not d["ideas"]:
             continue
         top = next((r for r in d["ideas"] if r["tier"] == "core"), d["ideas"][0])

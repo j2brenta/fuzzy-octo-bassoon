@@ -15,6 +15,7 @@
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
     uv run refresher problems [--vault V] [--since DATE] [--limit N]   warnings and errors kept in logs/problems.jsonl
     uv run refresher translate [--vault V] [--force]  passages in REFRESHER_LANGUAGE for reading, stored in translations/
+    uv run refresher summarize [--vault V] [--force]  a hook and a gist per item for the reading map, in summaries/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -39,7 +40,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate", "problems"):
+                 "translate", "summarize", "problems"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -69,6 +70,8 @@ def main(argv=None) -> int:
             p.add_argument("--limit", type=int, default=20, help="latest problems shown in full (default 20)")
         if name == "translate":
             p.add_argument("--force", action="store_true", help="translate again even when a stored translation matches")
+        if name == "summarize":
+            p.add_argument("--force", action="store_true", help="summarise again even when a stored summary matches")
         if name == "proposals":
             p.add_argument("--all", action="store_true", help="also list decided, stale and unplaced proposals")
         if name == "decide":
@@ -90,6 +93,8 @@ def main(argv=None) -> int:
     _embedder(args.vault)
     if args.command == "translate":
         return _translate(args.vault, args.force, at)
+    if args.command == "summarize":
+        return _summarize(args.vault, args.force)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
@@ -181,6 +186,30 @@ def _language() -> None:
     configured = dotenv_values(Path(__file__).resolve().parents[1] / ".env").get("REFRESHER_LANGUAGE")
     if configured:
         os.environ.setdefault("REFRESHER_LANGUAGE", configured)
+
+
+def _summarize(vault_path: Path, force: bool) -> int:
+    from dotenv import load_dotenv
+    from engine.llm import ModelError
+    from refresher import summarize
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = summarize.client_from_environment()
+    if client is None:
+        sys.exit("summarize: needs NEBIUS_API_KEY and TRIAGE_PROVIDER=nebius.")
+    items = sorted({ex.item_id for ex, _ in vault.load_extractions(vault_path)})
+    todo = items if force else summarize.missing(vault_path, items, client)
+    done = failed = 0
+    for item_id in todo:
+        try:
+            record = summarize.summarize_item(vault_path, item_id, client, force=force)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            failed += 1
+            print(f"summarize: {item_id[:10]} failed ({type(error).__name__})", file=sys.stderr)
+            continue
+        done += 1
+        print(f"summarize: {item_id[:10]} {record['hook']}")
+    print(f"summarize: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
+    return 1 if failed else 0
 
 
 def _translate(vault_path: Path, force: bool, at: datetime) -> int:
