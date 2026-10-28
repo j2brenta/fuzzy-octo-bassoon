@@ -183,3 +183,15 @@ def test_the_placer_places_with_the_vaults_own_pipeline(tmp_path):
         result = app.placer(v)("item-gal", None)
     assert result["status"] == "placed" and result["claims"] == 1 and result["ideas"] == 1
     assert (v / "relations" / "item-gal.json").exists()
+
+
+def test_requests_at_the_same_moment_see_the_whole_graph(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    v = topical_vault(tmp_path)
+    vault.save_review(v, vault.replay(v, include_unreviewed=True).review(AT))
+    state = app.State(v)
+    expected = len(list(vault.replay(v, include_unreviewed=True).clusters()))
+    assert expected
+    with ThreadPoolExecutor(8) as pool:  # a page load asks for the map and the proposals together
+        maps = list(pool.map(lambda n: state.map(), range(16)))
+    assert all(len(m["clusters"]) == expected for m in maps)

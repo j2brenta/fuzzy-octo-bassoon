@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import Lock
+from threading import RLock
 from urllib.parse import urlsplit
 
 from graph.memory import MemoryStore
@@ -73,11 +73,12 @@ def fingerprint(root: Path) -> int:
 
 
 class State:
-    """The replayed vault and the map built from it, kept until a file replay reads changes."""
+    """The replayed vault and the map built from it, kept until a file replay reads changes. MemoryStore computes its
+    clusters and topics lazily and is not safe to read from two threads at once, so every read holds the lock."""
 
     def __init__(self, vault_path: Path, include_unreviewed: bool = True):
         self.vault, self.include_unreviewed = vault_path, include_unreviewed
-        self._lock = Lock()
+        self._lock = RLock()
         self._key = self._store = self._map = self._map_at = None
 
     def store(self) -> MemoryStore:
@@ -85,13 +86,14 @@ class State:
         with self._lock:
             if key != self._key:
                 self._store = vault.replay(self.vault, include_unreviewed=self.include_unreviewed)
+                self._store.topics()  # build the groups now, while no one else reads
                 self._key, self._map = key, None
             return self._store
 
     def map(self, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)
-        store = self.store()
         with self._lock:
+            store = self.store()
             if self._map is None or now - self._map_at > MAP_TTL:
                 self._map = {**graphview.map_data(store, now), "served": True}
                 self._map_at = now
