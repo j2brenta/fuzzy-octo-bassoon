@@ -14,12 +14,15 @@
 <!-- The depth rail: where you are, All > subject > cluster > source > Idea, each with its count and position -->
 <nav class="depth-rail" id="path" aria-label="Where you are" hidden><ol id="path-list"></ol></nav>
 
+<!-- The stage: map mode, and reading mode beside it on a wide screen (instead of it on a narrow one) -->
+<div class="stage" id="stage">
 <!-- Map mode: header, orientation (cluster graph beside the reading plan), cluster blocks -->
 <div id="map" hidden>
   <header class="s-head">
     <div class="s-title">
       <p class="eyebrow" id="kind">Topic</p>
       <h1 id="title"></h1>
+      <p class="about" id="about" hidden></p>
       <p class="counts" id="counts"></p>
       <div class="cover"><div class="bar" aria-hidden="true"><span id="cover-bar"></span></div><p id="cover-text"></p></div>
     </div>
@@ -61,7 +64,8 @@
   </aside>
   <div class="strip" id="strip" aria-label="Reading plan"></div>
   <article class="text-col" id="text-col">
-    <button type="button" class="ctx-open" id="ctx-open" aria-controls="ctx" aria-expanded="false"></button>
+    <div class="pane-tools"><button type="button" class="pane-close" id="pane-close" aria-label="Close the text">✕ Close <kbd>Esc</kbd></button>
+      <button type="button" class="ctx-open" id="ctx-open" aria-controls="ctx" aria-expanded="false"></button></div>
     <nav class="thread" id="thread" aria-label="The thread you followed" hidden></nav>
     <p class="eyebrow" id="r-eyebrow"></p>
     <h1 id="r-title"></h1>
@@ -73,6 +77,7 @@
   </article>
   <aside class="ctx" id="ctx" aria-label="Context of this source"><button type="button" class="ctx-close ghost" id="ctx-close">Close</button><div id="ctx-body"></div></aside>
   <div class="popover" id="pop" hidden role="dialog" aria-label="Idea"></div>
+</div>
 </div>
 
 <!-- All Ideas, grouped by cluster -->

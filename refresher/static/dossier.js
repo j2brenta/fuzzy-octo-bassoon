@@ -2,10 +2,12 @@
 
    Map mode: a header with one primary action, an orientation zone (the graph of clusters beside the reading plan)
    and one block per cluster on the subject: its anchor, its perspectives, its noise as a count. Far sources are one
-   line at the end. Only one card is expanded: the next source in the plan. Every card carries one number, "+N% of
-   the subject", its marginal share in coverage order.
-   Reading mode (?read=<id>): the plan as a rail on the left, the text in the middle, the context (connected sources,
-   people, organisations, Ideas) on the right, one section open at a time. Esc returns to the map where you were.
+   line at the end. Every source is one row, the next one in the plan marked; every row carries one number, "+N% of
+   the subject", its marginal share in coverage order. Under the title, what the subject is about: its most
+   central Ideas and the clusters it sits in, since a topic's name alone says little.
+   Reading mode (?read=<id>): on a wide screen the text opens in a pane beside the map or the list, which stay as
+   they were, with the context (connected sources, people, organisations, Ideas) as a drawer; on a narrower one the
+   plan becomes a rail on the left, the text takes the middle and the context the right. Esc closes it.
    Marking read or skimmed posts to /api/source/<id>/state, which returns the plan and coverage recomputed.
    All results (?view=list&group=…&scope=…&all=1): every source the subject finds in one table, grouped by home
    cluster, every cluster it sits in, role, trust, type or topic, with a column per cluster marking where it sits.
@@ -62,7 +64,7 @@
     const body = await r.json().catch(() => ({}));
     if (!r.ok) { $('cover-text').textContent = body.error || `Could not save (${r.status})`; return; }
     Object.assign(s, body); results.clear();  // plan numbers and order changed
-    if (current) { extendTrail(); renderRail(); renderBar(); refreshContext(); } else renderMap();
+    if (current) { extendTrail(); renderRail(); renderBar(); refreshContext(); if (beside()) { renderBrowse(); markNow(); } } else renderMap();
   }
 
   // --- the graph of clusters: nodes are clusters, edges shared Ideas, the main cluster pinned at the centre ---
@@ -156,7 +158,7 @@
       if (labels && (n.band !== 'far' || n.id === big)) wanted.push({text: short(n.title, n.id === big ? 24 : 20), x: p.x, anchor: 'middle', cls: n.id === big ? 'open-label' : '', must: true,
         inside: n.id === big, ys: n.id === big ? [p.y - r + 24, p.y - r + 34] : [p.y + r + 11, p.y - r - 5, p.y + r + 22]});
       // a cluster is named below or above its circle; the open one at the top inside its own
-      const go = () => { if (current) closeReading(); if (n.id !== 'other') showBlock(n.id); else { shown.add('far'); renderFar(); $('far').scrollIntoView({behavior: smooth()}); } };
+      const go = () => { if (current && !beside()) closeReading(); if (n.id !== 'other') showBlock(n.id); else { shown.add('far'); renderFar(); $('far').scrollIntoView({behavior: smooth()}); } };
       g.addEventListener('click', go); g.addEventListener('keydown', e => e.key === 'Enter' && go());
       nodeLayer.append(g);
     }
@@ -213,7 +215,23 @@
   }
 
   // --- map mode ---
+  function renderAbout() {
+    // A topic's name says little, and its centre blends the clusters it is made of: say what each part is about,
+    // the clusters on the subject with the Idea of each most relevant to it.
+    const parts = s.clusters.filter(onSubject).slice(0, 4).map(c => {
+      const best = Object.entries(s.ideas).filter(([, i]) => i.in_scope && i.cluster === c.id).sort((a, b) => b[1].relevance - a[1].relevance)[0];
+      return best ? [c, short(best[1].title.replace(/\.$/, ''), 130)] : null;
+    }).filter(Boolean);
+    const box = $('about'); box.replaceChildren(); box.hidden = !parts.length;
+    if (!parts.length) return;
+    box.append(el('span', parts.length > 1 ? `About: ${parts.length} threads` : 'About', 'about-label'));
+    for (const [c, idea] of parts) {
+      const line = el('span', null, 'about-idea' + (c.band === 'main' ? ' main' : ''));
+      line.append(el('b', c.title), ` — ${idea}`); box.append(line);
+    }
+  }
   function renderHead() {
+    renderAbout();
     const live = Object.values(s.sources), onSubj = s.clusters.filter(onSubject);
     const noise = live.filter(x => x.role === 'noise').length;
     const far = live.filter(x => x.role !== 'noise' && cluster(x.cluster)?.band === 'far').length;
@@ -246,33 +264,15 @@
     const box = el('span', null, 'sig'); box.append(depthBar(x.depth, x.depth_inputs), el('span', x.trust, 'trust ' + x.trust)); return box;
   }
   const placementOf = (clusterId, id) => cluster(clusterId)?.placements.find(r => r.source === id);
-  function card(id) {  // the one expanded card: the next source in the plan
-    const x = src(id), c = el('article', null, 'card'); c.dataset.source = id;
-    const h = el('h3'); h.append(button(x.title, () => openSource(id), 'title-btn'));
-    const gist = el('p', x.gist || x.hook, 'gist-text clamp');
-    const more = button('more', () => { gist.classList.toggle('clamp'); more.textContent = gist.classList.contains('clamp') ? 'more' : 'less'; }, 'link-btn');
-    c.append(meta(x), h, gist, more);
-    if (x.summary === 'lead') c.append(el('p', 'Its opening lines: no summary yet.', 'lead-note'));
-    const fresh = newIdeas(id);
-    if (fresh.length) {
-      const p = el('p', null, 'new-here'); p.append(el('b', 'New here: '));
-      fresh.slice(0, 2).forEach((i, n) => { if (n) p.append('; '); p.append(el('span', short(s.ideas[i].title.replace(/\.$/, ''), 90))); });
-      if (fresh.length > 2) p.append(` and ${fresh.length - 2} more`);
-      c.append(p);
-    }
-    c.querySelector('.meta').append(signals(x));
-    const foot = el('div', null, 'card-foot');
-    foot.append(button('Read ▸', () => openSource(id), 'primary'), button('Skim', () => setState(id, 'skimmed')), el('span', gainText(id), 'gain'));
-    c.append(foot);
-    return c;
-  }
-  function row(id, number, role, place = null) {  // place: its placement in the block it is listed in
-    const x = src(id), st = stateOf(id), also = place && !place.home, r = el('div', null, `row s-${st}${also ? ' also-here' : ''}`); r.dataset.source = id;
+  function row(id, number, role, place = null, next = false) {  // place: its placement in the block it is listed in
+    const x = src(id), st = stateOf(id), also = place && !place.home;
+    const r = el('div', null, `row s-${st}${also ? ' also-here' : ''}${next ? ' next' : ''}`); r.dataset.source = id;
     const open = () => openSource(id, false, place?.cluster);
     const head = el('div', null, 'row-head');
     const chev = button('▸', () => { const open = r.classList.toggle('open'); chev.textContent = open ? '▾' : '▸'; chev.setAttribute('aria-expanded', String(open)); }, 'chev');
     chev.setAttribute('aria-expanded', 'false'); chev.setAttribute('aria-label', 'Show the gist');
     const name = el('span', null, 'row-title'); name.append(button(x.title, open, 'title-btn'));
+    if (next) name.prepend(el('span', 'next to read', 'next-tag'));
     if (also) name.append(el('span', `home: ${clusterName(x.cluster)}`, 'home-tag'));
     const shownRole = place ? place.role : x.role, label = el('span', null, 'role ' + shownRole);
     if (place) label.append(el('i', null, `mark ${place.home ? 'home' : 'also'} ${shownRole}`));
@@ -300,8 +300,8 @@
       if (c.also_here.length) facts.append(el('span', `${c.also_here.length} also here from other clusters`));
       if (c.band === 'adjacent' && c.shares_with_main) facts.append(el('span', `shares ${plural(c.shares_with_main, 'Idea')} with main`));
       head.append(h, facts); sec.append(head);
-      // The one expanded card sits in the next source's home; anywhere else it sits it is a row, marked also here.
-      const piece = id => { const place = placementOf(c.id, id); return id === next && place?.home ? card(id) : row(id, number.get(id), null, place); };
+      // Every source is one row; the next one in the plan is marked where it lives.
+      const piece = id => { const place = placementOf(c.id, id); return row(id, number.get(id), null, place, id === next && !!place?.home); };
       if (c.anchor) sec.append(piece(c.anchor));
       if (open) {
         c.perspectives.forEach(id => sec.append(piece(id)));
@@ -324,6 +324,7 @@
       }
     });
     if (!blocks.length) box.append(el('p', 'No cluster is on this subject yet.', 'quiet'));
+    markNow();
   }
   function renderFar() {
     const far = Object.values(s.sources).filter(x => !(cluster(x.cluster) && onSubject(cluster(x.cluster))) && !s.no_ideas.includes(x.id));
@@ -447,12 +448,13 @@
     }
     if (!r.rows.length) table.append(el('caption', 'Nothing matches here. Show all sources, or another topic.', 'quiet'));
     const pick = selected && table.querySelector(`tr[data-source="${CSS.escape(selected)}"]`);
-    if (pick) requestAnimationFrame(() => pick.scrollIntoView({block: 'center'}));
+    if (pick && !current) requestAnimationFrame(() => pick.scrollIntoView({block: 'center'}));
+    markNow();
   }
   function setView(view) {
     const url = new URL(location.href);
     if (view === 'list') url.searchParams.set('view', 'list'); else url.searchParams.delete('view');
-    for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);
+    if (!beside()) for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);  // beside, the text stays open
     url.hash = '';
     history.pushState({}, '', url); route();
   }
@@ -547,6 +549,22 @@
     for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);
     history.pushState({}, '', url); route();
   }
+  // On a wide screen the text opens beside the map or the list, which stay where they were; on a narrower one
+  // reading mode takes the page, with the plan as a rail.
+  const wide = matchMedia('(min-width: 1100px)');
+  const beside = () => wide.matches;
+  function renderBrowse() {  // the map or the list, whichever the URL says
+    const list = new URLSearchParams(location.search).get('view') === 'list';
+    $('ideas-view').hidden = true; $('map').hidden = false; $('list').hidden = !list; $('map-body').hidden = list;
+    $('view-map').setAttribute('aria-pressed', String(!list)); $('view-list').setAttribute('aria-pressed', String(list));
+    renderHead();
+    if (list) renderList(); else renderMap();
+    if (!current) setWhere(list ? {cluster: null, source: selected, idea: null} : {source: null, idea: null});
+  }
+  function markNow() {  // the source being read, marked wherever the map or the list shows it
+    document.querySelectorAll('#map .now').forEach(n => n.classList.remove('now'));
+    if (current) document.querySelectorAll(`#map [data-source="${CSS.escape(current)}"]`).forEach(n => n.classList.add('now'));
+  }
   function route() {
     const read = new URLSearchParams(location.search).get('read'), ideasView = location.hash === '#ideas';
     if (read && s.sources[read]) {
@@ -554,20 +572,22 @@
       if (ids.length > 1 && ids[at] === read) { thread = ids; pos = at; } else if (thread[pos] !== read) { thread = [read]; pos = 0; }
       if (!trail.length) trail = [...Object.keys(s.marks).filter(x => s.sources[x]), ...planIds()];
       if (!trail.includes(read)) trail.push(read);
-      showReading(read); return;
+      if (beside()) renderBrowse();
+      if (read !== current || !beside() || $('reading').hidden) showReading(read); else markNow();
+      return;
     }
-    current = null; $('reading').hidden = true; $('ideas-view').hidden = !ideasView; $('map').hidden = ideasView;
+    const wasBeside = $('stage').classList.contains('side');
+    current = null; $('stage').classList.remove('side'); $('reading').hidden = true; $('ideas-view').hidden = !ideasView; $('map').hidden = ideasView;
     toggleDrawer(false);
     if (ideasView) { renderIdeas(); return; }
-    const list = new URLSearchParams(location.search).get('view') === 'list';
-    $('list').hidden = !list; $('map-body').hidden = list;
-    $('view-map').setAttribute('aria-pressed', String(!list)); $('view-list').setAttribute('aria-pressed', String(list));
-    renderHead();
-    if (list) { renderList(); setWhere({cluster: null, source: selected, idea: null}); } else { renderMap(); setWhere({source: null, idea: null}); }
-    requestAnimationFrame(() => window.scrollTo({top: mapScroll}));
+    renderBrowse(); markNow();
+    if (!wasBeside) requestAnimationFrame(() => window.scrollTo({top: mapScroll}));  // beside, the map never moved
   }
   async function showReading(id) {
-    current = id; $('map').hidden = true; $('ideas-view').hidden = true; $('reading').hidden = false; $('pop').hidden = true;
+    const side = beside();
+    current = id; $('stage').classList.toggle('side', side); $('reading').hidden = false; $('pop').hidden = true;
+    $('ideas-view').hidden = true; $('map').hidden = !side;
+    if (side) markNow();
     const x = src(id), number = numbered();
     const opened = new URLSearchParams(location.search).get('in'), there = opened && opened !== x.cluster ? placementOf(opened, id) : null;
     $('r-eyebrow').textContent = [number.get(id) ? `#${number.get(id)}` : null, there ? `${clusterName(opened)}, also here` : clusterName(x.cluster),
@@ -577,7 +597,8 @@
     $('r-gist-text').textContent = (x.gist || x.hook) + (x.summary === 'lead' ? ' (its opening lines: no summary yet)' : '');
     $('r-gist').open = !s.marks[id];
     $('r-text').replaceChildren(el('p', 'Opening the text…', 'quiet')); $('ctx-body').replaceChildren(); $('r-tools').replaceChildren();
-    renderRail(); renderBar(); renderThread(); window.scrollTo({top: 0});
+    renderRail(); renderBar(); renderThread();
+    if (side) $('reading').scrollTop = 0; else window.scrollTo({top: 0});
     const from = new URLSearchParams(location.search).get('in');
     setWhere({cluster: from && cluster(from) ? from : x.cluster, source: id, idea: null});
     try {
@@ -660,7 +681,7 @@
       pop.append(box);
     }
     const r = anchor.getBoundingClientRect(), host = $('reading').getBoundingClientRect();
-    pop.style.left = `${Math.max(8, Math.min(r.left - host.left, host.width - 348))}px`; pop.style.top = `${r.bottom - host.top + 6}px`;
+    pop.style.left = `${Math.max(8, Math.min(r.left - host.left, host.width - 348))}px`; pop.style.top = `${r.bottom - host.top + $('reading').scrollTop + 6}px`;
     pop.hidden = false;
   }
   document.addEventListener('click', e => { if (!$('pop').hidden && !$('pop').contains(e.target)) $('pop').hidden = true; });
@@ -855,6 +876,8 @@
   // --- keys and history ---
   $('start').addEventListener('click', () => { const n = nextId(); if (n) openSource(n); });
   $('back').addEventListener('click', e => { e.preventDefault(); closeReading(); });
+  $('pane-close').addEventListener('click', closeReading);
+  wide.addEventListener('change', () => { if (current) route(); });
   window.addEventListener('popstate', route);
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !current) return;
