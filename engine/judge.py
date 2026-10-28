@@ -86,8 +86,8 @@ def _short(value, limit=800):
 def validate_review(data: dict, claims: list[dict], passages: list[dict]) -> dict:
     if not isinstance(data, dict) or set(data) != {"claims", "omitted_concepts", "summary"}:
         raise JudgeError("Judge must return claims, omitted_concepts and summary.")
-    if not _short(data["summary"], 1000):
-        raise JudgeError("Judge summary is missing or too long.")
+    if not isinstance(data["summary"], str) or not data["summary"].strip():
+        raise JudgeError("Judge summary is missing or blank.")
     rows = data["claims"]
     expected = {claim["claim_id"] for claim in claims}
     if not isinstance(rows, list) or len(rows) != len(claims):
@@ -118,7 +118,8 @@ def validate_review(data: dict, claims: list[dict], passages: list[dict]) -> dic
         pid = omission["passage_id"]
         if type(pid) is not int or pid not in valid_passages or not _short(omission["description"]):
             raise JudgeError("Judge omission must reference a real source passage.")
-    return {**data, "status": claim_status(rows)}
+    # Summary is display text; its length must not discard validated claim verdicts.
+    return {**data, "summary": data["summary"][:1000], "status": claim_status(rows)}
 
 
 def judge_capture(

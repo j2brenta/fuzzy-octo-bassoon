@@ -140,7 +140,7 @@ def _claim_row(store: MemoryStore, node) -> dict:
 
 
 def _why(sources: int, trust: float, band: str, firm: bool, central: float, votes: int) -> str:
-    parts = [f"{sources} independent source{'s' * (sources != 1)}", f"authors trusted {trust:.2f}", band]
+    parts = [f"{sources} independent source{'s' * (sources != 1)}", f"contributors trusted {trust:.2f}", band]
     parts.append("firm" if firm else "provisional")
     parts.append("central to the subject" if central >= 0.8 else "near the subject" if central >= 0.4
                  else "at the edge of the subject")
@@ -165,7 +165,8 @@ def build(store: MemoryStore, scope: Scope, at: datetime, documents: bool = True
         independent = [cid for cid in members if nodes[cid].duplicate_rank == 0]
         items = [store.item(nodes[cid].item_id) for cid in independent]
         sources = len({i.source_key or i.item_id for i in items})
-        authors = sorted({i.author_id for i in items if i.author_id})
+        authors = sorted({nodes[cid].speaker_id if nodes[cid].attribution is not None else store.item(nodes[cid].item_id).author_id
+                          for cid in independent if store.item(nodes[cid].item_id).review_status == "accepted"} - {None})
         trust = sum(store.trust(a) for a in authors) / len(authors) if authors else scoring.TRUST_PRIOR
         fresh = max((scores[cid].freshness for cid in current), default=0.0)
         support = min(1.0, math.log2(1 + sources) / math.log2(1 + SUPPORT_FULL))
@@ -234,7 +235,21 @@ def build(store: MemoryStore, scope: Scope, at: datetime, documents: bool = True
 
     reading, also = _reading_order(store, rows, changed)
     docs, threads = _documents(store, scope, rows, changed, contested, scores) if documents else ([], [])
+    ranked = store.experts(at, scope.key, idea_ids=scope.ideas, subject_title=scope.title)
+    all_people = {p.person_id: p for p in store.people()}
+    scope_items = {nodes[c].item_id for c in scope_claims}
+    about = {pid: {cid for cid in p.facts if cid in nodes and nodes[cid].item_id in scope_items
+                   and store.item(nodes[cid].item_id).review_status == "accepted"
+                   and store.item(nodes[cid].item_id).source.event_time <= at}
+             for pid, p in all_people.items()}
+    ranked = [r for r in ranked if set(r["claim_ids"]) & scope_claims or about[r["person_id"]]]
     nearby = _nearby(store, scope)
+    nearby["people"] = [{"id": p.person_id, "name": p.name, "trust": round(store.trust(p.person_id), 2),
+                         "importance": r["importance"], "score": r,
+                         "stated": len(set(r["claim_ids"]) & scope_claims),
+                         "wrote": len({nodes[c].item_id for c in scope_claims} & p.authored),
+                         "about": len(about[p.person_id])}
+                        for r in ranked[:8] for p in [all_people[r["person_id"]]]]
     counts = {t: sum(r["tier"] == t for r in rows) for t in TIERS}
     item_ids = sorted({i for r in rows for i in r["items"]} | {s["item"] for c in changed for s in c["steps"]})
     sources = {i: {"title": (item := store.item(i)).title, "source": item.source.source_name,
@@ -679,6 +694,8 @@ def render(d: dict, names: dict[str, str]) -> str:
     if any(rows for _, rows in parts):
         lines += ["", "## Nearby", ""]
         lines += [f"- {label}: " + ", ".join(link(r["id"]) for r in rows) for label, rows in parts if rows]
+        if near["people"]:
+            lines.append("- People: " + ", ".join(f"{link(p['id'])} (importance {p['importance']:.2f})" if p.get("importance") is not None else f"{link(p['id'])} (importance unscored)" for p in near["people"]))
     hidden = [r for r in d["ideas"] if r["tier"] in ("replaced", "noise")]
     if hidden:
         lines += ["", "## Replaced and noise", ""]

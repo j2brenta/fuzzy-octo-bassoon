@@ -849,3 +849,7 @@ still need a separate downloader; supported image uploads already work.
 No new API key is required; scanned pages use `NEBIUS_API_KEY` and
 `NEBIUS_VISION_MODEL`. Install updated requirements (or `uv sync`) and restart the
 bot. Verification: [PDF validation report](docs/pdf-support-validation-2026-10-23.md).
+
+### People importance
+
+The graph's **People** mode ranks attributed speakers for an accepted topic or provisional cluster, with score components, source counts, and explanations. Only accepted, current, nonduplicate statements contribute. Unknown attribution stays unscored, missing professional profiles stay neutral, and unresolved disagreements are not automatic credibility penalties. See [people-scoring policy and migration](docs/people-scoring.md). New submissions collect source-grounded speaker attribution in the existing relation call; `refresher relate --vault VAULT` upgrades older relation records once and incurs model usage. Viewing/rebuilding remains offline.

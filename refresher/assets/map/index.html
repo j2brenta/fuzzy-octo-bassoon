@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="nav.js"></script>
   <script defer src="cytoscape.min.js"></script>
+  <script defer src="people.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -20,20 +21,13 @@
   <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
 <main>
-  <section class="intro">
-    <div><p class="eyebrow">TOPICS → CLUSTERS → IDEAS → EVIDENCE</p><h1>See how it connects.<br><span>Check what it rests on.</span></h1></div>
-    <div class="intro-copy"><p>From a topic to an Idea, from a relation to the exact passage.<br>A repeated claim is not an independent confirmation.</p><div id="stats" class="stats"></div></div>
-  </section>
-  <section class="proposal-section" id="review" aria-label="Proposals">
-    <div class="section-top"><div><p class="eyebrow">FROM THE HOURLY REVIEW</p><h2>Waiting for you</h2></div><label class="check"><input type="checkbox" id="show-decided">Show decided and stale</label></div>
-    <p id="proposal-note" class="small quiet"></p>
-    <div id="proposals" class="proposals"></div>
-  </section>
+  <section class="graph-summary" aria-labelledby="graph-heading"><h1 id="graph-heading">Knowledge graph</h1><div id="stats" class="stats" aria-label="Graph totals"></div></section>
+
   <section aria-label="Topics" class="topic-section"><div class="section-top"><h2>Topics</h2><button id="reset" class="text-button">All items ↗</button></div><div id="topics" class="topics"></div></section>
   <p id="reading-scope" class="small quiet" role="status"></p>
   <section class="workspace">
     <aside class="timeline-column">
-      <div class="section-top"><h2>Timeline</h2><span id="list-count" class="small"></span></div>
+      <div class="section-top"><h2 id="timeline-heading">Timeline</h2><span id="list-count" class="small"></span></div>
       <label class="field">Idea<select id="story-filter"><option value="">All Ideas</option></select></label>
       <div class="filter-row"><label class="field">Quality<select id="quality-filter"><option value="">Any</option><option value="accepted">Accepted</option><option value="pending">Pending</option><option value="needs_revision">Needs revision</option></select></label><label class="field">Freshness<select id="band-filter"><option value="">Any</option><option value="fresh">Fresh</option><option value="fading">Fading</option><option value="stale">Stale</option></select></label></div>
       <label class="field">From date (publication, else capture)<input id="date-filter" type="date"></label>
@@ -43,15 +37,22 @@
       <p class="small quiet">Publication date when known; otherwise the capture date is shown.</p>
     </aside>
     <section class="map-column" aria-label="Interactive map">
-      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Sources</button><button id="mode-claims" aria-pressed="false" hidden>Claims</button><button id="mode-topics" aria-pressed="false">Topics</button></div><select id="review-filter" aria-label="Relation state"><option value="">All relations</option><option value="auto">Automatic</option><option value="accepted">Accepted by you</option><option value="proposal">Proposed</option></select></div>
+      <div class="map-toolbar"><div class="segmented"><button id="mode-documents" aria-pressed="true">Sources</button><button id="mode-claims" aria-pressed="false" hidden>Claims</button><button id="mode-topics" aria-pressed="false">Topics</button><button id="mode-people" aria-pressed="false">People</button></div><select id="people-subject" aria-label="People scoring subject" hidden><option value="">All subjects</option></select><select id="review-filter" aria-label="Relation state"><option value="">All relations</option><option value="auto">Automatic</option><option value="accepted">Accepted by you</option><option value="proposal">Proposed</option></select></div>
       <div class="map-title"><h2 id="map-title">Sources</h2><span id="map-count" class="small"></span></div>
       <div class="canvas-wrap"><div id="graph" aria-label="Graph; every node and relation is also listed below"></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="fit" aria-label="Fit the graph">⌖</button></div><div id="map-empty" hidden>Nothing in this slice yet.</div></div>
       <div class="map-footer"><span><i class="line auto"></i>Automatic</span><span><i class="line reviewed"></i>Accepted by you</span><span><i class="line proposed"></i>Proposed</span></div>
-      <p class="geometry">Regions are topics; in a cluster's claims (open a cluster, then "See its claims"), dashed regions inside them are clusters (close Ideas, found automatically). An item or claim with several topics is shown in one of them. Position inside a region is for reading, not causality. Arrows point from the later claim to the one it relates to. In Topics, a line between clusters or topics is solid when relations or shared Ideas back it, dashed when only similarity does; thicker is stronger.</p>
+      <div id="people-tools" hidden></div>
+      <p id="people-score-note" class="geometry" hidden>Contribution ranking uses accepted attributed statements, reviewer-checked distinct primary origins and cited professional domains. Missing profiles are neutral. Evidence level describes sample size, not a probability of truth. Timeline filters choose visible people; scores use all accepted evidence for the selected subject.</p>
+      <p class="geometry" id="graph-geometry">Regions are topics; in a cluster's claims (open a cluster, then "See its claims"), dashed regions inside them are clusters (close Ideas, found automatically). An item or claim with several topics is shown in one of them. Position inside a region is for reading, not causality. Arrows point from the later claim to the one it relates to. In Topics, a line between clusters or topics is solid when relations or shared Ideas back it, dashed when only similarity does; thicker is stronger.</p>
       <div class="focus-actions"><button id="ego" disabled>Neighbourhood of the selection</button><button id="clear-focus" hidden>Clear focus</button><span id="hidden-count" class="small"></span></div>
       <details class="accessible"><summary>Text list of the map's nodes and relations</summary><div id="graph-list"></div></details>
     </section>
     <aside class="evidence-column" aria-label="Evidence"><div class="section-top"><h2>Evidence</h2><div id="lang-switch" class="segmented lang" role="group" aria-label="Language of the text" hidden><button id="lang-original" aria-pressed="true">Original</button><button id="lang-translation" aria-pressed="false">Translation</button></div></div><div id="detail" aria-live="polite"><div class="empty-detail"><span>◎</span><h3>Every claim has a source</h3><p>Pick an item, a claim or an arrow. Its text, where its claims come from, and the Ideas, clusters, topics and people it leads to appear here.</p></div></div></aside>
+  </section>
+  <section class="proposal-section" id="review" aria-label="Proposals">
+    <div class="section-top"><div><p class="eyebrow">FROM THE HOURLY REVIEW</p><h2>Waiting for you</h2></div><label class="check"><input type="checkbox" id="show-decided">Show decided and stale</label></div>
+    <p id="proposal-note" class="small quiet"></p>
+    <div id="proposals" class="proposals"></div>
   </section>
   <section class="compare-section" aria-label="Compare claims"><div class="section-top"><div><p class="eyebrow">SIDE BY SIDE</p><h2>Same claim, or a different story?</h2></div><button id="clear-compare" class="text-button">Clear comparison</button></div><p class="quiet">Pick up to two claims. What is unknown stays unknown.</p><p id="compare-scope" class="small quiet"></p><div id="comparison" class="comparison"></div></section>
   <footer><span>Refresher Atlas · offline map of your vault</span><span>Relations are filed automatically; the review proposes topics and merges, and you decide them.</span></footer>

@@ -285,3 +285,51 @@ def test_the_reader_gets_a_source_and_marks_what_you_read(served):
     assert again["reading"]["items"][first]["state"] == "read"
     assert again["reading"]["last_visit"] is None  # the visit just made is this sitting, not the last one
     assert (v / "reading" / "log.jsonl").exists()
+
+
+def test_previous_graph_url_redirects_to_atlas_with_query(served):
+    _, base, _ = served
+    with urlopen(base + '/graph/?mode=people') as response:
+        assert response.geturl() == base + '/atlas/?mode=people'
+        assert b'id="mode-people"' in response.read()
+
+
+def test_people_review_controls_save_reset_and_reject_stale_or_cross_origin(served):
+    from tests.test_people_review import write
+    v,base,_=served
+    write(v,'speaker')
+    assert get(base+'/atlas/people.js')[0]==200
+    path='/api/people/attribution'
+    ctx=json.loads(get(base+path+'?claim=speaker-claim')[1])
+    body={'claim_id':'speaker-claim','token':ctx['token'],'action':'review',
+          'review':{'kind':'unknown','person':None,'passages':[], 'identity_url':None,'origin_url':None,'origin_checked':False}}
+    assert send(base,path,body,{'Origin':'https://elsewhere.test'})[0]==403
+    assert send(base,path,body)[0]==200
+    claim=next(c for c in json.loads(get(base+'/api/data')[1])['claims'] if c['id']=='speaker-claim')
+    assert claim['speaker'] is None and claim['attribution_reviewed']
+    assert send(base,path,body)[0]==409
+    ctx=json.loads(get(base+path+'?claim=speaker-claim')[1])
+    assert send(base,path,{'claim_id':'speaker-claim','token':ctx['token'],'action':'reset'})[0]==200
+    claim=next(c for c in json.loads(get(base+'/api/data')[1])['claims'] if c['id']=='speaker-claim')
+    assert claim['speaker'] and not claim['attribution_reviewed']
+    assert send(base,path,dict(body,review={}))[0] in {400,409}
+
+
+def test_people_backfill_http_preview_and_progress_use_only_selected_documents(served):
+    from tests.test_people_review import write, response
+    from tests.test_triage import FakeModel
+    from refresher import people_backfill
+    v,base,workspace=served
+    write(v,'old-speaker');(v/'relations/old-speaker.json').unlink()
+    model=FakeModel([response()])
+    with patch.object(people_backfill,'judge_client_from_environment',return_value=model):
+        preview=json.loads(get(base+'/api/people/backfill')[1])
+        assert model.calls==[]
+        body={'token':preview['token'],'item_ids':['old-speaker'],'confirm_paid':True}
+        assert send(base,'/api/people/backfill',dict(body,confirm_paid=False))[0]==400
+        status,job=send(base,'/api/people/backfill',body)
+        assert status==202
+        workspace.worker.shutdown(wait=True)
+        done=json.loads(get(base+'/api/people/backfill/'+job['id'])[1])
+        assert done['status']=='complete' and done['completed']==['old-speaker']
+    assert len(model.calls)==1

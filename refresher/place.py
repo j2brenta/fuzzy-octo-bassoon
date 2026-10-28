@@ -58,13 +58,15 @@ def relate_pending(vault_path: Path, relator: relate.Relator, only: Iterable[str
             relation = _relate_one(vault_path, store, ex, text, relator, only, run, log, warn)
             if run.error:
                 return run
-            store.apply(ex, text, relation)
+            from refresher.people_review import load as load_people_reviews
+            store.apply(ex, text, relation, attribution_reviews=load_people_reviews(vault_path, ex, text, relation))
     return run
 
 
 def _relate_one(vault_path, store, ex, text, relator, only, run, log, warn):
     relation = vault.load_relation(vault_path, ex)
-    upgrade = relation is not None and relation.relator == "lexical" and relator.name != "lexical"
+    upgrade = relation is not None and relator.name == "model" and (
+        relation.relator == "lexical" or relation.prompt_version != relator.prompt_version)
     missing = (relation is None or upgrade) and (only is None or ex.item_id in only)
     pool = store.placed_fingerprint()
     recheck = False

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import json
 import os
 import time
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -315,8 +316,22 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
 def pick_people(vault_path: Path, store, limit: int) -> list:
     """The most involved people not looked up yet."""
     def involvement(p):
-        return 2 * len(p.facts) + 2 * len(p.authored) + len(p.mentioned_in)
-    return sorted((p for p in store.people() if not vault.enriched(vault_path, p.person_id)),
+        return 2 * len(p.facts) + 2 * len(p.authored) + 2 * len(p.statements) + len(p.mentioned_in)
+    def eligible(p):
+        if vault.enriched(vault_path, p.person_id):
+            return False
+        if p.authored or not p.mentioned_in:
+            return True
+        # Protect old accepted artifacts too: do not pay to look up an eponym.
+        from engine.entities import _eponym_only
+        for item_id in p.mentioned_in:
+            text = store.item(item_id).text
+            mentions = [{"start_char": m.start(), "end_char": m.end()}
+                        for m in re.finditer(r"(?<!\w)" + re.escape(p.name) + r"(?!\w)", text, re.I)]
+            if not _eponym_only({"mentions": mentions}, text):
+                return True  # Missing context is not evidence to delete an identity.
+        return False
+    return sorted((p for p in store.people() if eligible(p)),
                   key=lambda p: (-involvement(p), p.person_id))[:limit]
 
 
@@ -338,7 +353,7 @@ def enrich_people(vault_path: Path, store, chosen: list, search, model: JsonMode
         titles = [store.item(i).title for i in sorted(p.authored | p.mentioned_in)]
         affiliation = next(iter(ties.get(p.person_id, [])), None) or \
             next((name for name in orgs.values() for f in facts if name.casefold() in f.casefold()), None)
-        context = facts + [f"Wrote: {store.item(i).title}" for i in sorted(p.authored)] + \
+        context = ([f"Profile identity checked by the user: {p.identity_url}"] if p.identity_url else []) + facts + [f"Wrote: {store.item(i).title}" for i in sorted(p.authored)] + \
                   [f"Mentioned in: {store.item(i).title}" for i in sorted(p.mentioned_in)]
         try:
             record = enrich(p.person_id, p.name, context, affiliation, titles[0] if titles else None, search, model,

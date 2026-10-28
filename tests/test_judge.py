@@ -58,6 +58,20 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual(validate_review(changed, self.claims, self.passages)['status'], 'accepted')
         self.assertTrue(validate_review(changed, self.claims, self.passages)['omitted_concepts'])
 
+    def test_long_summary_is_bounded_without_changing_review_verdicts(self):
+        data = {**self.data, 'summary': 'Review detail. ' * 100}
+        result = validate_review(data, self.claims, self.passages)
+        self.assertEqual(len(result['summary']), 1000)
+        self.assertEqual(result['claims'], data['claims'])
+        self.assertEqual(result['status'], 'accepted')
+        invalid = deepcopy(data)
+        invalid['claims'][0]['issues'] = ['unsupported']
+        with self.assertRaises(JudgeError):
+            validate_review(invalid, self.claims, self.passages)
+        for summary in ('', ' ', None, []):
+            with self.subTest(summary=summary), self.assertRaises(JudgeError):
+                validate_review({**data, 'summary': summary}, self.claims, self.passages)
+
     def test_unknown_missing_and_repeated_ids_cannot_pass(self):
         for rows in [self.data['claims'][:1], self.data['claims'] * 2,
                      [self.data['claims'][0], self.data['claims'][0]],
