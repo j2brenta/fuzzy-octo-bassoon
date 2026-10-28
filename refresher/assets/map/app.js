@@ -470,12 +470,13 @@
       el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join(' · '), 'detail-meta'), chips);
     if (item.quality !== 'accepted') $('detail').append(el('p', 'Ingestion has not accepted this item yet; check its claims before relying on them.', 'chip warn'));
     if (item.url) $('detail').append(external(item.url));
+    // The text first: it is what a source is opened for; where it leads follows.
+    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', 'Where it leads', 'detail-section'),
       flow([[item.claims.length, 'claim'], [ideaIds.length, 'Idea'], [clusterIds.length, 'cluster'], [item.topics.length, 'topic']]),
       ...section('Topics', item.topics.map(topicPill)), ...section('Clusters', clusterIds.map(clusterPill)),
       ...section('People', peopleOf([id])),
       ...section('Related sources', related.slice(0, 8).map(([i, why]) => itemPill(i, why)), related.length > 8 ? `and ${related.length - 8} more` : ''));
-    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', `Claims (${item.claims.length})`, 'detail-section'));
     const list = el('div', null, 'claim-list'); item.claims.forEach(cid => list.append(claimRow(claims.get(cid)))); $('detail').append(list);
     if (!item.claims.length) $('detail').append(el('p', 'No claims were extracted.', 'quiet'));
@@ -722,8 +723,11 @@
   function scope(itemIds) {
     state.only = itemIds ? new Set(itemIds) : null; state.selection = null; state.ego = false; clearDetail(); refresh();
   }
+  function showDetail() {  // a pick made from outside (the dossier): its evidence from the top, even when it sits below the map
+    $('detail').scrollTop = 0; document.querySelector('.evidence-column').scrollIntoView({block: 'start'});
+  }
   setMode(); renderProposals(); refresh();
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
-    spotlight, scope, onselect: null};
+    spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);
 })();

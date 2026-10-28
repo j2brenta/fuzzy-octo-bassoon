@@ -27,7 +27,7 @@
   }
   function source(itemId, label) {
     const s = d.sources[itemId] || {title: itemId};
-    const b = button(label || s.title, () => steer(() => atlas?.selectItem(itemId)), 'src');
+    const b = button(label || s.title, () => openSource(itemId), 'src');
     b.title = [s.source, s.author, s.time && day(s.time)].filter(Boolean).join(' · ');
     return b;
   }
@@ -133,7 +133,7 @@
     const list = el('ol', null, 'reading');
     for (const r of d.reading) {
       const li = el('li', null, 'read'), body = el('div'), h = el('h3');
-      h.append(button(r.title, () => steer(() => atlas?.selectItem(r.item))));
+      h.append(button(r.title, () => openSource(r.item)));
       body.append(h, el('p', [r.source, r.author, day(r.time)].filter(Boolean).join(' · '), 'where'), el('p', r.reason, 'reason'));
       if (r.url && /^https?:/.test(r.url)) { const a = el('a', 'Open the original ↗', 'small'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; body.append(a); }
       li.append(el('span', r.rank, 'n'), body); list.append(li);
@@ -184,6 +184,10 @@
     if (atlas) atlas.spotlight(ideaId ? [ideaId] : []);
   }
   function steer(action) { steering = true; try { action(); } finally { steering = false; } }
+  function openSource(itemId) {  // a source picked in the brief: unfold the map if it is folded and show the source's text
+    if (narrow.matches && $('pane').classList.contains('closed')) $('wide').click();
+    steer(() => { atlas?.selectItem(itemId); atlas?.showDetail(); });
+  }
   function reveal(ideaId) {
     const card = cards.get(ideaId); if (!card) return;
     const fold = card.closest('details'); if (fold) fold.open = true;
