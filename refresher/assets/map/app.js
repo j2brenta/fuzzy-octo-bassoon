@@ -211,6 +211,9 @@
       {selector: 'node[kind="topic"]', style: {'background-color': token('--r-graph-topic', '#f3e6ad'), 'border-color': token('--r-graph-topic-outline', '#c8aa45')}},
       {selector: 'node[kind="person"]', style: {'shape': 'round-rectangle', 'width': 180, 'height': 64,
         'background-color': token('--r-graph-person', '#fbe2d8'), 'border-color': token('--r-graph-person-outline', '#c77560'), 'font-size': 12, 'text-max-width': 166}},
+      {selector: 'node[entity]', style: {'width': 150, 'height': 40, 'text-max-width': 136}},  // a name only: a smaller box
+      {selector: 'node[entity="org"]', style: {'shape': 'hexagon', 'width': 164, 'height': 46, 'text-max-width': 128,
+        'background-color': token('--r-graph-org', '#e2eaf1'), 'border-color': token('--r-graph-org-outline', '#5f7f99')}},
       {selector: 'edge[kind="WROTE"]', style: {'width': 'data(width)', 'line-color': token('--r-graph-person-outline', '#c77560'), 'target-arrow-color': token('--r-graph-person-outline', '#c77560'),
         'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': .75}},
       {selector: 'node[pending=1]', style: {'border-color': token('--r-graph-pending-outline', '#bb8035'), 'background-color': token('--r-graph-pending', '#fff0cf')}},
@@ -287,13 +290,13 @@
       const ids = new Set([...nodes.map(n => n.id), ...shownTopics]);
       edges = links.filter(l => ids.has(l.source) && ids.has(l.target)).map(l => ({...l, kind: 'LINK', label: linkLabel(l),
         width: Math.min(9, 1 + 2 * l.weight), evidence: Number(l.relations.length + l.shared.length > 0)}));
-      // People and organizations: what is said about them, and "wrote" edges to the clusters their posts feed.
+      // People and organizations, by name only (what is said about them is in the evidence when picked), and
+      // "wrote" edges to the clusters their posts feed. An organization has its own shape.
       for (const person of people.values()) {
         const fed = Object.entries(person.clusters).filter(([cid]) => ids.has(cid));
         const facts = person.facts.filter(c => allowedItems.has(claims.get(c)?.item));
         if (!fed.length && !facts.length) continue;
-        nodes.push({id: person.id, kind: 'person', size: 40 + 3 * Math.min(facts.length, 20),
-          label: `${person.name}\n${facts.length} facts · ${person.items.length + person.about_in.length} posts`});
+        nodes.push({id: person.id, kind: 'person', entity: person.kind === 'organization' ? 'org' : 'person', label: person.name});
         const verb = person.items.length ? 'wrote' : 'in their posts';
         fed.forEach(([cid, n]) => edges.push({id: `wrote>${person.id}>${cid}`, source: person.id, target: cid, kind: 'WROTE',
           label: `${verb} · ${n} Ideas`, width: Math.min(7, 1 + n / 2), basis: 'auto'}));
