@@ -1,52 +1,30 @@
-// Run with: node --test tests/test_brain_animation.cjs
-const { test } = require('node:test');
+const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-test('packet arrival sparks its target; pause and reduced motion stop the clock', () => {
-  const frames = new Map();
-  const paused = new Set();
-  const sparks = new Set();
-  const motion = { matches: false, addEventListener() {} };
-  const attributes = {};
-  const packet = {
-    dataset: { route: 'route', target: 'target', duration: '1000', offset: '950' },
-    setAttribute(name, value) { attributes[name] = value; },
-  };
-  const route = { getTotalLength: () => 100, getPointAtLength: x => ({ x, y: 0 }) };
-  let id = 0;
-  const context = vm.createContext({
-    document: {
-      querySelectorAll: selector => selector === '.brain-packet' ? [packet] : [],
-      getElementById: name => name === 'route' ? route : { classList: sparks },
-    },
-    graphPanel: { classList: { contains: name => paused.has(name) } },
-    matchMedia: () => motion,
-    requestAnimationFrame(callback) { frames.set(++id, callback); return id; },
-    cancelAnimationFrame(frame) { frames.delete(frame); },
-  });
-  const source = fs.readFileSync('refresher/static/app.js', 'utf8');
-  vm.runInContext(source.slice(source.indexOf('// Packet positions and node arrival')), context);
-  function tick(time) {
-    assert.equal(frames.size, 1, 'only one animation loop should run');
-    const [key, callback] = frames.entries().next().value;
-    frames.delete(key);
-    callback(time);
-  }
-  tick(0);
-  assert.equal(sparks.size, 0);
-  tick(100);
-  assert.ok(sparks.has('is-sparking'), 'spark must coincide with arrival');
-  const beforePause = attributes.transform;
-  paused.add('motion-paused');
-  vm.runInContext('syncBrainAnimation()', context);
-  assert.equal(frames.size, 0);
-  paused.clear();
-  vm.runInContext('syncBrainAnimation()', context);
-  tick(100000);
-  assert.equal(attributes.transform, beforePause, 'resume must not jump over paused time');
-  motion.matches = true;
-  vm.runInContext('syncBrainAnimation()', context);
-  assert.equal(frames.size, 0);
+test('Home brain pauses, resumes without jumping, and stops offscreen or for reduced motion',()=>{
+  const frames=new Map(), classes=new Set(), sparks=new Set(), attributes={}, handlers={};
+  let id=0, intersection, visibility, preference;
+  const panel={classList:{add:n=>classes.add(n),contains:n=>classes.has(n),toggle(n,force){const next=force??!classes.has(n);if(next)classes.add(n);else classes.delete(n);return next;}}};
+  const text={textContent:''}, path={setAttribute(){}}, labels={};
+  const button=name=>({disabled:false,closest:()=>panel,querySelector:s=>s==='span'?text:path,setAttribute:(k,v)=>labels[name+':'+k]=v,addEventListener:(event,fn)=>handlers[name+':'+event]=fn});
+  const scene=button('scene'), pause=button('pause');
+  const packet={dataset:{route:'route',target:'target',duration:'1000',offset:'950'},setAttribute:(k,v)=>attributes[k]=v};
+  const route={getTotalLength:()=>100,getPointAtLength:x=>({x,y:0})};
+  const motion={matches:false,addEventListener:(name,fn)=>preference=fn};
+  const context={document:{hidden:false,getElementById:name=>({'brain-motion':scene,'brain-pause':pause,route,target:{classList:sparks}})[name],querySelector:()=>panel,querySelectorAll:s=>s==='.brain-packet'?[packet]:[],addEventListener:(name,fn)=>visibility=fn},matchMedia:()=>motion,IntersectionObserver:class{constructor(fn){intersection=fn;}observe(){}},requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:key=>frames.delete(key)};
+  vm.runInNewContext(fs.readFileSync('refresher/static/brain.js','utf8'),context);
+  assert.equal(frames.size,0,'hidden first-use hero should not animate');
+  intersection([{isIntersecting:true}]);
+  function tick(time){assert.equal(frames.size,1);const [key,fn]=frames.entries().next().value;frames.delete(key);fn(time);}
+  tick(0);tick(100);assert.ok(sparks.has('is-sparking'));
+  const before=attributes.transform;
+  handlers['pause:click']();assert.equal(frames.size,0);assert.equal(text.textContent,'Resume animation');
+  handlers['scene:click']();tick(100000);assert.equal(attributes.transform,before);
+  intersection([{isIntersecting:false}]);assert.equal(frames.size,0);
+  intersection([{isIntersecting:true}]);assert.equal(frames.size,1);
+  context.document.hidden=true;visibility();assert.equal(frames.size,0);
+  context.document.hidden=false;visibility();assert.equal(frames.size,1);
+  motion.matches=true;preference();assert.equal(frames.size,0);assert.equal(pause.disabled,true);assert.match(text.textContent,/Reduced motion/);
 });

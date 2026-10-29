@@ -1,36 +1,171 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
-<title>Refresher — Briefs</title>
+<title>Refresher — Home</title>
 <link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css">
-<script src="/static/nav.js" defer></script><script src="/static/topics.js" defer></script></head>
-<body>
-<a class="skip" href="#main">Skip to the briefs</a>
+<script src="/static/journey.js" defer></script><script src="/static/nav.js" defer></script><script src="/static/topics.js" defer></script><link rel="stylesheet" href="/static/journey.css"><link rel="stylesheet" href="/static/brain.css"><script src="/static/brain.js" defer></script></head>
+<body data-layout="home">
+<a class="skip" href="#main">Skip to home</a>
 <header class="app-bar">
-<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Briefs</span></a>
-<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Briefs</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Home</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="home">Home</a><a href="/library/" data-page="library">Library</a><a href="/atlas/" data-page="atlas">Explore</a><a class="nav-add" href="/capture/" data-page="capture">+ Add source</a><details class="nav-more"><summary>More <span class="count" id="nav-waiting"></span></summary><div class="nav-menu"><a href="/atlas/#review">Updates &amp; suggestions</a></div></details></nav>
 </header>
-<main id="main" class="wrap">
-  <section class="hero" aria-labelledby="hero-title">
-    <p class="eyebrow">Refresh a subject</p>
-    <h1 id="hero-title">What do you want<br><em>to know again?</em></h1>
-    <p>Type a subject or pick a topic. You get what has survived to now: the major ideas, the one source to read for each, what replaced what, and whom to listen to. Save a version, and next time you see what arrived since.</p>
-    <form class="search" action="/brief/" method="get" role="search"><label class="sr-only" for="q" hidden>Subject</label>
-      <input id="q" name="q" type="search" placeholder="A subject, e.g. hallucination" required maxlength="200" aria-label="Subject"><button type="submit">Refresh ↗</button></form>
+<main id="main" class="wrap app-frame">
+  <p id="home-loading" class="journey-notice" role="status">Opening your knowledge…</p>
+  <section id="home-welcome" class="home-welcome" aria-labelledby="welcome-title" hidden>
+    <div class="home-welcome-copy">
+      <p class="eyebrow">Personal knowledge, connected</p>
+      <h1 id="welcome-title">Collect the sparks.<br><em>Connect the dots.</em></h1>
+      <p class="home-welcome-intro">Turn notes, articles, and documents into clear claims, each linked to the original evidence.</p>
+      <div class="journey-actions"><a class="journey-primary" href="/capture/#capture-heading">Add your first source <span aria-hidden="true">↗</span></a><a href="/example/">See an example <span aria-hidden="true">→</span></a></div>
+      <p class="home-welcome-note">Originals retained · Claims linked to evidence</p>
+    </div>
+    <div class="home-welcome-art">
+<button type="button" id="brain-motion" class="brain-scene" aria-label="Pause animated brain knowledge graph" title="Click to pause or resume animation">
+<img class="brain-image" src="/capture/brain.png" alt="" width="1600" height="1000" decoding="async" fetchpriority="high">
+<svg viewBox="0 0 640 400" fill="none" class="brain-network" aria-hidden="true">
+<g class="brain-network-drift">
+<g class="brain-connections">
+<path d="M120 190L178 132"/>
+<path d="M120 190L192 225"/>
+<path d="M178 132L244 94"/>
+<path d="M178 132L267 186"/>
+<path d="M244 94L310 121"/>
+<path d="M244 94L267 186"/>
+<path d="M310 121L388 100"/>
+<path d="M310 121L344 202"/>
+<path d="M310 121L267 186"/>
+<path d="M388 100L467 147"/>
+<path d="M467 147L504 213"/>
+<path d="M467 147L425 223"/>
+<path d="M504 213L425 223"/>
+<path d="M425 223L344 202"/>
+<path d="M425 223L340 267"/>
+<path d="M425 223L408 293"/>
+<path d="M344 202L267 186"/>
+<path d="M344 202L340 267"/>
+<path d="M267 186L192 225"/>
+<path d="M267 186L253 272"/>
+<path d="M267 186L340 267"/>
+<path d="M192 225L253 272"/>
+<path d="M253 272L340 267"/>
+<path d="M340 267L408 293"/>
+</g>
+<g class="brain-routes">
+<path id="brain-route-a" d="M178 132L267 186L425 223"/>
+<path id="brain-route-b" d="M504 213L425 223L344 202L310 121"/>
+<path id="brain-route-c" d="M244 94L267 186L253 272L340 267"/>
+</g>
+<g id="brain-node-0" class="brain-node node-source" transform="translate(120 190)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-1" class="brain-node node-claim" transform="translate(178 132)">
+<circle class="brain-flare" r="18"/>
+<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-2" class="brain-node node-source" transform="translate(244 94)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-3" class="brain-node node-idea" transform="translate(310 121)">
+<circle class="brain-flare" r="19"/>
+<circle class="brain-node-surface" r="9"/><circle class="brain-node-core" r="7"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-4" class="brain-node node-person" transform="translate(388 100)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+<circle class="brain-person-dot" r="2"/></g>
+<g id="brain-node-5" class="brain-node node-source" transform="translate(467 147)">
+<circle class="brain-flare" r="18"/>
+<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-6" class="brain-node node-claim" transform="translate(504 213)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-7" class="brain-node node-idea" transform="translate(425 223)">
+<circle class="brain-flare" r="20"/>
+<circle class="brain-node-surface" r="10"/><circle class="brain-node-core" r="8"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-8" class="brain-node node-person" transform="translate(344 202)">
+<circle class="brain-flare" r="18"/>
+<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+<circle class="brain-person-dot" r="2"/></g>
+<g id="brain-node-9" class="brain-node node-idea" transform="translate(267 186)">
+<circle class="brain-flare" r="20"/>
+<circle class="brain-node-surface" r="10"/><circle class="brain-node-core" r="8"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-10" class="brain-node node-claim" transform="translate(192 225)">
+<circle class="brain-flare" r="18"/>
+<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-11" class="brain-node node-claim" transform="translate(253 272)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+</g>
+<g id="brain-node-12" class="brain-node node-person" transform="translate(340 267)">
+<circle class="brain-flare" r="19"/>
+<circle class="brain-node-surface" r="9"/><circle class="brain-node-core" r="7"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+<circle class="brain-person-dot" r="2"/></g>
+<g id="brain-node-13" class="brain-node node-person" transform="translate(408 293)">
+<circle class="brain-flare" r="17"/>
+<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
+<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
+<circle class="brain-person-dot" r="2"/></g>
+<g class="brain-packet" data-route="brain-route-a" data-target="brain-node-7" data-duration="6200" data-offset="0"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
+<g class="brain-packet" data-route="brain-route-b" data-target="brain-node-3" data-duration="7800" data-offset="2600"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
+<g class="brain-packet" data-route="brain-route-c" data-target="brain-node-12" data-duration="9000" data-offset="5700"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
+</g>
+</svg>
+</button>
+<div class="brain-footer">
+<ul class="brain-legend" aria-label="Knowledge graph node types">
+  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Sources</li>
+  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor" stroke="none"/></svg>Claims</li>
+  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor" stroke="none"/></svg>Ideas</li>
+  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none"/></svg>People</li>
+</ul><button type="button" id="brain-pause" class="brain-pause" aria-label="Pause brain animation"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10"/></svg><span>Pause animation</span></button></div>
+</div>
+    <ol class="home-welcome-steps" aria-label="How Refresher works">
+      <li><span aria-hidden="true">01</span><div><h2>Save a source</h2><p>Start with a note, an article, or a document.</p></div></li>
+      <li><span aria-hidden="true">02</span><div><h2>See the connections</h2><p>Explore extracted ideas and the passages behind them.</p></div></li>
+      <li><span aria-hidden="true">03</span><div><h2>Return with context</h2><p>Follow a subject and revisit it as your collection grows.</p></div></li>
+    </ol>
   </section>
-  <p id="error" class="empty" role="alert" hidden></p>
+  <section id="home-dashboard" class="hero app-page-head" aria-labelledby="hero-title" hidden>
+    <p class="eyebrow">Refresh a subject</p>
+    <h1 id="hero-title">Your saved knowledge,<br><em>ready when you need it.</em></h1>
+    <p id="home-intro">Save articles and notes. Return to a clear overview, with links to the original sources.</p>
+    <form id="subject-search" class="search" action="/brief/" method="get" role="search"><label class="sr-only" for="q" >What would you like to revisit?</label>
+      <input id="q" name="q" type="search" placeholder="A subject, e.g. hallucination" required maxlength="200" aria-label="What would you like to revisit?"><button type="submit">Open overview →</button></form>
+  </section>
+  <section id="resume" class="journey-resume" hidden aria-labelledby="resume-title"><p class="eyebrow">Pick up where you left off</p><h2 id="resume-title"></h2><a id="resume-link" class="journey-primary">Continue reading →</a></section><section id="recent-subjects" class="shelf" hidden><header><h2>Recently visited</h2></header><div id="recent-subject-list" class="cards"></div></section><p id="error" class="empty" role="alert" hidden></p>
   <section class="shelf" aria-labelledby="threads-title" id="threads-shelf" hidden>
-    <header><h2 id="threads-title">Saved briefs</h2><span class="small quiet">Briefs you saved a version of: what arrived since</span></header>
+    <header><h2 id="threads-title">Following</h2><span class="small quiet">Changes since your last checkpoint</span></header>
     <div class="cards" id="threads"></div>
   </section>
   <section class="shelf" aria-labelledby="topics-title" id="topics-shelf" hidden>
-    <header><h2 id="topics-title">Topics you accepted</h2><span class="small quiet" id="topics-count"></span></header>
+    <header><h2 id="topics-title">Your subjects</h2><span class="small quiet" id="topics-count"></span></header>
     <div class="cards" id="topics"></div>
   </section>
   <section class="shelf" aria-labelledby="clusters-title" id="clusters-shelf" hidden>
-    <header><h2 id="clusters-title">Clusters</h2><span class="small quiet">Close Ideas found automatically; a topic is made of them</span></header>
+    <header><h2 id="clusters-title">Related ideas</h2><span class="small quiet">Subjects discovered in your saved sources</span></header>
     <div class="cards" id="clusters"></div>
   </section>
-  <div id="empty" class="empty" hidden><h2 class="serif">Nothing to refresh yet.</h2><p class="quiet">Add a source, or send one to the bot. Its Ideas gather into clusters and topics here.</p><p><a href="/capture/">Add a source ↗</a></p></div>
+  <div id="empty" class="empty" hidden><h2 class="serif">A fresh start for your knowledge.</h2><p class="quiet">Add a source to get started. Saved content stays available in your Library while analysis runs.</p><p><a href="/capture/">Add a source ↗</a></p></div>
 </main>
 </body></html>

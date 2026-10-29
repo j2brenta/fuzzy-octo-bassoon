@@ -186,11 +186,11 @@
     if (!d) { box.hidden = true; return; }
     box.hidden = false;
     box.classList.toggle('critical', d.critical.length > 0);
-    if (!d.arrived) { box.replaceChildren(el('p', `Nothing new since your version of ${day(d.since)}.`, 'ce-since-line')); return; }
+    if (!d.arrived) { box.replaceChildren(el('p', `You're up to date with your saved sources since your checkpoint of ${day(d.since)}.`, 'ce-since-line')); return; }
     const noise = Object.values(d.noise).reduce((n, rows) => n + rows.length, 0);
     const det = el('details');
-    det.append(el('summary', [`${plural(d.arrived, 'source')} since your version of ${day(d.since)}`, d.critical.length && `${d.critical.length} critical`,
-      d.notes.length && plural(d.notes.length, 'note'), noise && `${noise} noise`].filter(Boolean).join(' · ')));
+    det.append(el('summary', [`${plural(d.arrived, 'source')} since your checkpoint of ${day(d.since)}`, d.critical.length && `${d.critical.length} critical`,
+      d.notes.length && plural(d.notes.length, 'note'), noise && `${noise} overlapping or less relevant`].filter(Boolean).join(' · ')));
     const reasons = {retells: ['retells what you know', 'retell what you know'],
       outdated: ['is an older view already replaced', 'are older views already replaced'],
       near: ['is only near the subject', 'are only near the subject']};
@@ -362,7 +362,7 @@
     }
     return score >= 0.25 ? best : [start, end];
   }
-  function setState(id, value) { return post(`/api/source/${encodeURIComponent(id)}/state`, {state: value, ...subject}).catch(() => {}); }
+  function setState(id, value) { return post(`/api/source/${encodeURIComponent(id)}/state`, {state: value, ...subject}); }
   function nextList(groups) {
     const out = [];
     let n = 0;
@@ -506,8 +506,10 @@
   let path = [], lit = null, overviewScroll = 0, current = null;
   const short = (t, n) => t && t.length > n ? t.slice(0, n - 1) + '…' : (t || '');
   function go(next, claim = null, push = true) {
+    if (push) window.RefresherJourney?.position();
     if (!path.length && next.length) overviewScroll = window.scrollY;
     path = next.filter(Boolean); lit = claim;
+    $('tab-sources').href = '/topic/?' + query + (path.length ? '&read=' + encodeURIComponent(path[path.length - 1]) : '');
     if (push) {
       const u = new URL(location.href);
       if (path.length) u.searchParams.set('read', path.join(',')); else u.searchParams.delete('read');
@@ -538,6 +540,9 @@
     $('grid').classList.toggle('reading', reading);
     document.body.classList.toggle('ce-reading', reading);
     $('esc-hint').hidden = !reading;
+    $('context-toggle').hidden = !reading;
+    $('subject-start').hidden = reading || !Object.keys(c.sources).length;
+    contextDrawer(false);
     layout();
     crumbs([]);
     sourcesList();
@@ -548,7 +553,9 @@
       setTimeout(() => window.scrollTo(0, overviewScroll), 380);
       return;
     }
+    const opening = path.join(',');
     const opened = await Promise.all(path.map(i => loadDoc(i).catch(e => ({error: e.message, id: i, title: i}))));
+    if (opening !== path.join(',')) return;
     const doc = opened[opened.length - 1];
     current = doc;
     crumbs(opened);
@@ -565,13 +572,13 @@
     markHere(doc.id);
     window.scrollTo({top: 0});
     if (lit) requestAnimationFrame(() => litClaim(lit, true));
-    if (!doc.read) { doc.read = 'skimmed'; setState(doc.id, 'skimmed'); }
+    window.RefresherJourney?.reading(doc.title);
   }
   function crumbs(opened) {
     const items = [];
-    const all = el('li'), briefs = el('a', 'Briefs'); briefs.href = '/'; all.append(briefs); items.push(all);  // every brief
+    const root = el('li'); const rootLink = el('a', 'Home'); rootLink.href = '/'; root.append(rootLink); items.push(root);
     const home = el('li');
-    if (path.length) { const a = el('a', short(c.scope.title, 40)); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go([]); }); home.append(a); }
+    if (path.length) { const a = el('a', `← Back to ${short(c.scope.title, 40)}`); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go([]); }); home.append(a); }
     else home.append(el('strong', short(c.scope.title, 60)));
     items.push(home);
     opened.forEach((d, k) => {
@@ -677,8 +684,16 @@
     const takes = el('button', showTakes ? 'Hide what the brief takes' : 'Show what the brief takes', 'ce-link-button'); takes.type = 'button';
     takes.addEventListener('click', () => { showTakes = !showTakes; text.classList.toggle('show-takes', showTakes); takes.textContent = showTakes ? 'Hide what the brief takes' : 'Show what the brief takes'; });
     const done = el('button', doc.read === 'read' ? '✓ Read' : 'Mark read', 'ce-link-button'); done.type = 'button';
-    done.addEventListener('click', async () => { doc.read = doc.read === 'read' ? 'unread' : 'read'; await setState(doc.id, doc.read); done.textContent = doc.read === 'read' ? '✓ Read' : 'Mark read'; });
+    done.addEventListener('click', async () => {
+      const value = doc.read === 'read' ? 'unread' : 'read'; done.disabled = true;
+      try { await setState(doc.id, value); doc.read = value; done.textContent = value === 'read' ? '✓ Read · undo' : 'Mark read'; }
+      catch (e) { $('notice').textContent = 'Reading status was not saved. ' + e.message; }
+      finally { done.disabled = false; }
+    });
     tools.append(takes, done);
+    const explore = el('a', 'Explore connections →', 'ce-link');
+    explore.href = '/atlas/?item=' + encodeURIComponent(doc.id) + '&return=' + encodeURIComponent(location.pathname + location.search);
+    tools.append(explore);
     if (doc.url) { const a = el('a', 'Original ↗', 'ce-link'); a.href = doc.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; tools.append(a); }
     head.append(tools);
     const text = sourceText(doc, claims);
@@ -686,7 +701,10 @@
     const count = doc.next.reduce((n, g) => n + g.rows.length, 0);
     const further = el('button', `↘ Go further: ${plural(count, 'related source')}`, 'ce-link-button ce-further'); further.type = 'button';
     further.addEventListener('click', furtherDialog);
-    box.replaceChildren(head, text, further);
+    const ids = Object.keys(c.sources).sort((a,b) => Number((sid(a)||'S999').slice(1))-Number((sid(b)||'S999').slice(1))), index = ids.indexOf(doc.id), next = ids[index + 1];
+    const actions = el('div', null, 'journey-actions');
+    if (next) { const a = el('a', 'Next: ' + (source(next).title || 'source'), 'journey-primary'); a.href = readHref(next); actions.append(a); }
+    box.replaceChildren(head, text, actions, further);
     follow(text);
   }
   // A person or organization, as the Atlas opens one: where they stand in this brief and why, their sources, what
@@ -801,7 +819,7 @@
     $('further-dialog').showModal();
   }
   $('further-open').addEventListener('click', furtherDialog);
-  window.addEventListener('resize', layout);
+  window.addEventListener('resize', () => { layout(); if (matchMedia('(min-width: 1001px)').matches) contextDrawer(false); });
 
   // A source link anywhere on the page: from the overview it starts a path; from a source it goes one step further.
   document.addEventListener('click', e => {
@@ -838,6 +856,20 @@
     $('meta').title = `${plural(k.rewrites, 'rewrite')} collapsed · ${k.superseded} superseded`;
     $('write').hidden = !c.written.missing;
     since(c.thread); versions(c.thread);
+    $('follow-subject').textContent = c.thread ? 'Following this subject' : 'Follow subject';
+    $('follow-subject').disabled = Boolean(c.thread);
+    window.RefresherJourney?.subject(c.scope.title);
+    const first = Object.keys(c.sources).sort((a,b) => (Number((sid(a)||'S999').slice(1))-Number((sid(b)||'S999').slice(1))))[0];
+    if (first) {
+      const resume = window.RefresherJourney?.data.resume;
+      const previous = resume && window.RefresherJourney.safe(resume.href) && new URL(resume.href, location.origin);
+      const same = previous?.pathname === '/brief/' && (previous.searchParams.get('id') || '') === (subject.id || '') && (previous.searchParams.get('q') || '') === (subject.q || '');
+      const last = same && previous.searchParams.get('read')?.split(',').pop();
+      $('subject-start').href = last && c.sources[last] ? resume.href : readHref(first);
+      $('subject-start').textContent = last && c.sources[last] ? 'Continue reading →' : 'Start reading →';
+      $('subject-start').hidden = false;
+    }
+    if (!c.thread?.stamps?.length) { $('since').hidden = false; $('since').replaceChildren(el('p', 'First overview — save a checkpoint to compare future changes.', 'ce-since-line')); }
     $('ideas').replaceChildren(...c.major.map((x, n) => ideaCard(x, n + 1)));
     $('ideas-note').textContent = plural(c.major.length, 'major idea');
     $('also-box').hidden = !c.also.length;
@@ -891,20 +923,42 @@
       const s = await post(`/api/threads/${encodeURIComponent(slug)}/stamp`, {});
       await load(); $('notice').textContent = `Saved this version, as of ${day(s.at)}.`;
     } catch (e) { $('notice').textContent = e.message; }
-    finally { b.disabled = false; b.textContent = 'Save version'; }
+    finally { b.disabled = false; b.textContent = 'Save checkpoint'; }
   });
+  $('follow-subject').addEventListener('click', async () => {
+    const b = $('follow-subject'); b.disabled = true;
+    try { await post('/api/threads', {...subject, title: c.scope.title}); await load(); $('notice').textContent = 'Following this subject. Save a checkpoint when you want to compare future changes.'; }
+    catch (e) { b.disabled = false; $('notice').textContent = e.message; }
+  });
+  function contextDrawer(open) {
+    $('side').classList.toggle('context-open', open); $('context-toggle').setAttribute('aria-expanded', String(open));
+    if (open) { $('side').setAttribute('role', 'dialog'); $('side').setAttribute('aria-modal', 'true'); $('context-close').focus(); }
+    else { $('side').removeAttribute('role'); $('side').removeAttribute('aria-modal'); }
+  }
+  $('context-toggle').addEventListener('click', () => contextDrawer(true));
+  $('context-close').addEventListener('click', () => { contextDrawer(false); $('context-toggle').focus(); });
+  document.addEventListener('keydown', e => {
+    if (!$('side').classList.contains('context-open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); contextDrawer(false); $('context-toggle').focus(); }
+    if (e.key === 'Tab') {
+      const nodes = [...$('side').querySelectorAll('a[href],button:not([disabled]),[tabindex="0"]')].filter(n => n.getClientRects().length);
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }, true);
   $('versions').addEventListener('click', e => { e.stopPropagation(); toggleVersions($('versions-list').hidden); });
   document.addEventListener('click', e => { if (!e.target.closest('.ce-versions')) toggleVersions(false); });
   $('write').addEventListener('click', () => writeBrief(false));
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
   if (!subject.id && !subject.q) { $('notice').textContent = 'Ask about a subject from the home page.'; return; }
-  load().then(x => { if (x.written.missing) writeBrief(true); }).catch(error => {
+  load().catch(error => {
     $('notice').textContent = '';
     $('notice').append(el('p', error.message, 'serif'));
     if (error.named?.length) {
       const list = el('ul');
-      error.named.forEach(x => { const li = el('li'); const a = el('a', x.title); a.href = '/read/?read=' + encodeURIComponent(x.id); li.append(a, el('span', ` · ${x.source || ''} · names ${x.names.join(', ')}`, 'small quiet')); list.append(li); });
+      error.named.forEach(x => { const li = el('li'); const a = el('a', x.title); a.href = '/library/?source=' + encodeURIComponent(x.id); li.append(a, el('span', ` · ${x.source || ''} · names ${x.names.join(', ')}`, 'small quiet')); list.append(li); });
       $('notice').append(el('p', 'Sources that name what you asked about:', 'quiet'), list);
     }
   });

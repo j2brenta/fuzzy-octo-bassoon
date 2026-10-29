@@ -14,6 +14,7 @@ was given must still be current, or the answer is 409 and the page shows the cur
 kept until a file it reads changes, so a page load does not replay the whole vault every time.
 """
 import json
+import hashlib
 import logging
 import os
 import re
@@ -27,7 +28,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from engine.llm import ModelError
 from graph.memory import MemoryStore
-from refresher import area as area_engine, brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
+from refresher import area as area_engine, brief, consolidate, context as context_engine, dossier, graphview, library, people_backfill, people_review, \
     profile, reading, subject, thesis_relate, threads, vault
 from refresher.web import STATIC, Workspace, read_json
 
@@ -45,6 +46,15 @@ THREAD = re.compile(r"^/api/threads/([\w-]{1,80})(?:/(stamp|snapshots)(?:/(\d{8}
 HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 FILES = {
     "/": (STATIC / "topics.html", HTML),
+    "/library/": (STATIC / "library.html", HTML),
+    "/timeline/": (STATIC / "timeline.html", HTML),
+    "/static/timeline.js": (STATIC / "timeline.js", JS),
+    "/example/": (STATIC / "example.html", HTML),
+    "/static/library.js": (STATIC / "library.js", JS),
+    "/static/journey.js": (STATIC / "journey.js", JS),
+    "/static/journey.css": (STATIC / "journey.css", CSS),
+    "/static/brain.js": (STATIC / "brain.js", JS),
+    "/static/brain.css": (STATIC / "brain.css", CSS),
     "/topic/": (STATIC / "dossier.html", HTML),
     "/brief/": (STATIC / "context.html", HTML),
     "/static/context.css": (STATIC / "context.css", CSS),
@@ -222,7 +232,7 @@ class State:
         with self._lock:
             store = self.store()
             if self._map is None or now - self._map_at > MAP_TTL:
-                self._map = {**graphview.map_data(store, now), "served": True}
+                self._map = {**graphview.map_data(store, now, vault=self.vault), "served": True}
                 self._map_at = now
             return self._map
 
@@ -321,6 +331,9 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             return self.headers.get("Host", "") in self._hosts()
 
         def _send(self, status: int, body: bytes, kind: str, csp: str = CSP["page"], headers=()):
+            if kind == HTML:
+                workspace_id = hashlib.sha256(str(vault_path.resolve()).encode()).hexdigest()[:16]
+                body = body.replace(b"<body", f'<body data-workspace="{workspace_id}"'.encode(), 1)
             self.send_response(status)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(body)))
@@ -355,7 +368,7 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._redirect("/atlas/?layout=read" + (f"&{url.query}" if url.query else ""))
             if path == "/graph" or path.startswith("/graph/"):
                 return self._redirect("/atlas/" + path.removeprefix("/graph").lstrip("/") + (f"?{url.query}" if url.query else ""))
-            if path in ("/atlas", "/capture", "/topic", "/brief"):
+            if path in ("/atlas", "/capture", "/topic", "/brief", "/library", "/example", "/timeline"):
                 return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
             if path == "/atlas/":
                 html = graphview.page(state.map())
@@ -457,6 +470,22 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                   result or {"error": "No such source in the vault."})
             if path == "/api/submissions":
                 return self._json(HTTPStatus.OK, workspace.list_jobs())
+            if path == "/api/library":
+                return self._json(HTTPStatus.OK, library.catalog(vault_path, workspace.list_jobs()))
+            if path == "/api/library/source":
+                result = library.source(vault_path, args.get("id", ""))
+                return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
+                                  result or {"error": "This source is no longer available. Return to your Library."})
+            if path == "/api/library/original":
+                try:
+                    content = library.original(vault_path, args.get("id", ""), args.get("kind", ""))
+                except (OSError, ValueError):
+                    return self._json(HTTPStatus.CONFLICT, {"error": "The original could not be verified."})
+                if content is not None:
+                    data, suffix = content
+                    return self._send(HTTPStatus.OK, data, "application/octet-stream",
+                                      headers=[("Content-Disposition", f'attachment; filename="saved-original{suffix}"')])
+                return self._json(HTTPStatus.NOT_FOUND, {"error": "Original not found."})
             if match := SUBMISSION.match(path):
                 result = workspace.detail(match[1])
                 return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,

@@ -3,16 +3,17 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>Refresher — Brief</title>
 <link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/context.css">
-<script src="/static/nav.js" defer></script><script src="/static/cytoscape.min.js" defer></script><script src="/static/context.js" defer></script></head>
-<body>
+<script src="/static/journey.js" defer></script><script src="/static/nav.js" defer></script><script src="/static/cytoscape.min.js" defer></script><script src="/static/context.js" defer></script><link rel="stylesheet" href="/static/journey.css"></head>
+<body data-layout="overview">
 <a class="skip" href="#main">Skip to the brief</a>
 <header class="app-bar">
 <a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Brief</span></a>
-<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Briefs</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="home">Home</a><a href="/library/" data-page="library">Library</a><a href="/atlas/" data-page="atlas">Explore</a><a class="nav-add" href="/capture/" data-page="capture">+ Add source</a><details class="nav-more"><summary>More <span class="count" id="nav-waiting"></span></summary><div class="nav-menu"><a href="/atlas/#review">Updates &amp; suggestions</a></div></details></nav>
 </header>
-<main id="main" class="ce ce-full">
+<main id="main" class="ce ce-full app-frame">
   <nav class="ce-crumbs" aria-label="Where you are"><ol id="crumbs"></ol>
-    <span class="ce-crumbs-end"><span class="small quiet" id="esc-hint" hidden>Esc to step back</span></span></nav>
+    <span class="ce-crumbs-end"><span class="small quiet" id="esc-hint" hidden>Esc to step back</span>
+    <span class="ce-tabs" aria-label="Views of this subject"><a id="tab-brief" aria-current="page">Overview</a><a id="tab-sources">Sources</a></span></span></nav>
   <p id="notice" class="ce-notice" role="status">Reading what you know…</p>
   <!-- The top band stays in both states; below it one grid of three slots that keep their jobs:
        the ideas (the brief, then a compact rail) | the source you read | a narrow panel about the centre -->
@@ -22,10 +23,10 @@
     <div class="ce-meta"><span id="meta"></span>
       <span class="ce-versions" id="versions-box" hidden><button type="button" id="versions" class="ce-quiet" aria-expanded="false" aria-controls="versions-list"></button>
         <ol id="versions-list" class="ce-versions-list" hidden></ol></span>
-      <button type="button" id="save" class="ce-quiet">Save version</button>
+      <button type="button" id="follow-subject" class="ce-quiet">Follow subject</button><button type="button" id="save" class="ce-quiet" title="Compare future updates with this version">Save checkpoint</button>
       <button type="button" id="write" class="ce-quiet" hidden>Write the brief</button>
       <a id="export" class="ce-quiet">Markdown ↓</a></div>
-    <div id="since" class="ce-since" hidden></div>
+    <a id="subject-start" class="journey-primary" hidden>Start reading →</a><div id="since" class="ce-since" hidden></div>
   </header>
   <div class="ce-grid" id="grid" hidden>
     <section id="brief-panel" class="ce-brief-panel" aria-label="The brief">
@@ -46,9 +47,9 @@
         <div class="ce-block-body ce-overview-only" id="further-body"><div id="further"></div></div>
       </section>
     </section>
-    <section id="source" class="ce-source" aria-live="polite"></section>
-    <aside id="side" class="ce-side" aria-label="About what you read">
-      <section class="ce-side-map" id="map-block">
+    <button type="button" id="context-toggle" class="ce-context-toggle" aria-expanded="false" aria-controls="side" hidden>Related ideas &amp; context</button><section id="source" class="ce-source" aria-live="polite"></section>
+    <aside id="side" tabindex="-1" class="ce-side" aria-label="About what you read">
+      <button type="button" id="context-close" class="ce-context-toggle">Close context</button><section class="ce-side-map" id="map-block">
         <div class="ce-block-head">
           <div class="ce-toggle" role="group" aria-label="What the map shows"><button type="button" id="show-area" aria-pressed="true">This area</button><button type="button" id="show-full" aria-pressed="false">Full graph</button><button type="button" id="show-ideas" aria-pressed="false">Ideas</button></div>
           <button type="button" id="map-zoom" class="ce-zoom" aria-label="Open the map larger" title="Open the map larger">⤢</button>

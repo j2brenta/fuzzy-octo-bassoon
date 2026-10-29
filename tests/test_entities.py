@@ -239,6 +239,23 @@ class EntityTests(unittest.TestCase):
             validate_entity_review(entity_review(entities, omitted_entities=[
                 {'name': 'Not named', 'kind': 'concept', 'evidence_passage_ids': [1, 2]}]), entities, TEXT, 'item', 'section')
 
+    def test_redundant_alias_is_dropped_without_losing_a_valid_entity(self):
+        text = 'Maya Chen spoke.\nMaya answered.'
+        row = {'name': 'Maya Chen', 'kind': 'person', 'evidence_passage_ids': [1],
+               'aliases': [{'name': 'Chen', 'evidence_passage_ids': [1]},
+                           {'name': 'Maya', 'evidence_passage_ids': [1, 2]}]}
+        original = deepcopy(row)
+        fixed, repairs = repair_entity_references({'entities': [row]}, text)
+        [entity] = validate_entities(fixed, text, 'item', 'section')
+        self.assertEqual(row, original)
+        self.assertEqual(entity['name'], 'Maya Chen')
+        self.assertEqual(entity['aliases'], ['Maya'])
+        self.assertEqual([m['surface_name'] for m in entity['mentions']], ['Maya Chen', 'Maya'])
+        self.assertTrue(any(r.get('alias') == 'Chen' and r['reason'] ==
+                            'dropped_alias_without_standalone_source_mention' for r in repairs))
+        with self.assertRaises(EntityError):
+            validate_entities({'entities': [row]}, text, 'item', 'section')
+
     def test_context_citations_do_not_relax_extracted_entity_or_alias_spans(self):
         for row in [
             {'name': 'Acme', 'kind': 'organization', 'evidence_passage_ids': [1, 2]},

@@ -3,20 +3,20 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>Refresher — Topic</title>
 <link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css"><link rel="stylesheet" href="/static/navigator.css"><link rel="stylesheet" href="/static/context.css">
-<script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script></head>
-<body>
-<a class="skip" href="#blocks">Skip to the clusters</a>
+<script src="/static/journey.js" defer></script><script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script><link rel="stylesheet" href="/static/journey.css"></head>
+<body data-layout="reader">
+<a class="skip" href="#blocks">Skip to reading plan</a>
 <header class="app-bar">
 <a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Topic</span></a>
-<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Briefs</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="home">Home</a><a href="/library/" data-page="library">Library</a><a href="/atlas/" data-page="atlas">Explore</a><a class="nav-add" href="/capture/" data-page="capture">+ Add source</a><details class="nav-more"><summary>More <span class="count" id="nav-waiting"></span></summary><div class="nav-menu"><a href="/atlas/#review">Updates &amp; suggestions</a></div></details></nav>
 </header>
-<nav class="ce-tabs ce-tabs-topic" aria-label="Views of this subject"><a id="tab-brief">Brief</a><a aria-current="page">Sources</a><a href="/read/">Read</a></nav>
+<nav class="ce-tabs ce-tabs-topic" aria-label="Views of this subject"><a id="tab-brief">Overview</a><a aria-current="page">Sources</a></nav>
 <div class="notice" id="notice" role="status">Gathering what you know…</div>
 <!-- The depth rail: where you are, All > subject > cluster > source > Idea, each with its count and position -->
 <nav class="depth-rail" id="path" aria-label="Where you are" hidden><ol id="path-list"></ol></nav>
 
 <!-- The stage: map mode, and reading mode beside it on a wide screen (instead of it on a narrow one) -->
-<div class="stage" id="stage">
+<div class="stage app-reader-frame" id="stage">
 <!-- Map mode: header, orientation (cluster graph beside the reading plan), cluster blocks -->
 <div id="map" hidden>
   <header class="s-head">
@@ -44,12 +44,12 @@
     </div>
     <div class="slices" id="slices" aria-label="How the results split"></div>
     <div class="table-wrap"><table class="results" id="results"></table></div>
-    <p class="list-legend small quiet">A filled mark is where a source lives (its home), a hollow one another cluster it also has Ideas in; the bigger the mark, the stronger its role there: anchor, perspective, noise.</p>
+    <p class="list-legend small quiet">A filled mark is where a source lives (its home), a hollow one another cluster it also has Ideas in; the bigger the mark, the stronger its role there: anchor, perspective, overlapping source.</p>
   </section>
   <div id="map-body">
   <section class="orient" aria-label="Orientation">
     <figure class="graph-box"><div id="graph"></div><figcaption id="graph-caption"></figcaption></figure>
-    <div class="plan-box"><h2>Reading plan</h2><ol class="plan" id="plan"></ol><p class="plan-note" id="plan-note"></p></div>
+    <div class="plan-box"><h2>Reading plan</h2><ol class="plan" id="plan"></ol><p class="plan-note" id="plan-note"></p><p class="small quiet">Coverage estimates the extracted ideas in your saved collection, not your understanding of the whole field.</p></div>
   </section>
   <main id="blocks" tabindex="-1"></main>
   <section class="far" id="far" aria-label="Sources far from the subject"></section>
@@ -59,19 +59,19 @@
 <!-- Reading mode: plan rail, text, context panel -->
 <div id="reading" class="reading" hidden>
   <aside class="rail" aria-label="Reading plan">
-    <a href="#" class="back" id="back">◂ Map <kbd>Esc</kbd></a>
+    <a href="#" class="back" id="back">◂ Back to reading plan <kbd>Esc</kbd></a>
     <div id="mini"></div>
     <ol class="plan compact" id="rail-plan"></ol>
   </aside>
   <div class="strip" id="strip" aria-label="Reading plan"></div>
   <article class="text-col" id="text-col">
-    <div class="pane-tools"><button type="button" class="pane-close" id="pane-close" aria-label="Close the text">✕ Close <kbd>Esc</kbd></button>
-      <button type="button" class="ctx-open" id="ctx-open" aria-controls="ctx" aria-expanded="false"></button></div>
+    <div class="pane-tools"><button type="button" class="pane-close" id="pane-close" aria-label="Back to sources">← Back to sources</button>
+      <button type="button" class="ghost" id="evidence-toggle" aria-pressed="false">Highlight evidence</button><button type="button" class="ctx-open" id="ctx-open" aria-controls="ctx" aria-expanded="false"></button></div>
     <nav class="thread" id="thread" aria-label="The thread you followed" hidden></nav>
     <p class="eyebrow" id="r-eyebrow"></p>
     <h1 id="r-title"></h1>
     <p class="meta" id="r-meta"></p>
-    <details class="gist" id="r-gist"><summary>Gist</summary><p id="r-gist-text"></p></details>
+    <details class="gist" id="r-gist"><summary>Summary</summary><p id="r-gist-text"></p></details>
     <div class="r-tools" id="r-tools"></div>
     <div class="text" id="r-text"></div>
     <footer class="r-bar" id="r-bar"></footer>

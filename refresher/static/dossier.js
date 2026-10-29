@@ -236,7 +236,7 @@
     const live = Object.values(s.sources), onSubj = s.clusters.filter(onSubject);
     const noise = live.filter(x => x.role === 'noise').length;
     const far = live.filter(x => x.role !== 'noise' && cluster(x.cluster)?.band === 'far').length;
-    $('counts').textContent = `${plural(live.length, 'source')} · ${plural(onSubj.length, 'cluster')} on the subject · ${far} far · ${noise} noise`;
+    $('counts').textContent = `${plural(live.length, 'source')} · ${plural(onSubj.length, 'cluster')} on the subject · ${far} far · ${noise} overlapping or less relevant`;
     $('cover-bar').style.width = pct(s.coverage);
     const to = s.coverage >= 0.8 ? 'you have read 80% of it' : s.plan.length ? `about ${s.minutes} min to ${pct(Math.min(0.8, s.plan.at(-1).cumulative))}` : 'nothing left that adds to it';
     $('cover-text').replaceChildren(el('strong', `Covered ${pct(s.coverage)}`), ` · ${to}`);
@@ -308,12 +308,12 @@
         c.perspectives.forEach(id => sec.append(piece(id)));
         if (c.noise.length) {
           const key = 'noise:' + c.id;
-          sec.append(button(`${plural(c.noise.length, 'noise source')} · ${shown.has(key) ? 'hide' : 'show'}`,
+          sec.append(button(`${plural(c.noise.length, 'overlapping source')} · ${shown.has(key) ? 'hide' : 'show'}`,
             () => { shown.has(key) ? shown.delete(key) : shown.add(key); renderBlocks(); }, 'link-btn more-line'));
           if (shown.has(key)) c.noise.forEach(id => sec.append(row(id, null, null, placementOf(c.id, id))));
         }
       } else if (c.perspectives.length || c.noise.length) {
-        sec.append(button(`${[c.perspectives.length && plural(c.perspectives.length, 'perspective'), c.noise.length && plural(c.noise.length, 'noise source')].filter(Boolean).join(' · ')} · open`,
+        sec.append(button(`${[c.perspectives.length && plural(c.perspectives.length, 'perspective'), c.noise.length && plural(c.noise.length, 'overlapping source')].filter(Boolean).join(' · ')} · open`,
           () => { openBlocks.add(c.id); renderBlocks(); }, 'link-btn more-line'));
       }
       box.append(sec);
@@ -382,7 +382,7 @@
     }
     return results.get(key);
   }
-  const roleCounts = roles => ['anchor', 'perspective', 'noise'].filter(k => roles[k]).map(k => plural(roles[k], k)).join(' · ');
+  const roleCounts = roles => ['anchor', 'perspective', 'noise'].filter(k => roles[k]).map(k => plural(roles[k], k === 'noise' ? 'overlapping source' : k)).join(' · ');
   function depthBar(depth, inputs) {
     const box = el('span', null, 'depth'); box.setAttribute('role', 'img');
     const why = inputs ? `${inputs.words.toLocaleString('en')} words · ${plural(inputs.ideas, 'Idea')} · ${inputs.specific} specific` : '';
@@ -527,6 +527,7 @@
   let thread = [], pos = 0;
   function openSource(id, detour = false, inCluster = null, via = null) {  // inCluster: the cluster it was opened from
     if (!s.sources[id]) return;
+    window.RefresherJourney?.position();
     selected = id;
     if (via === 'station') pos = thread.indexOf(id);
     else if (via === 'link') { thread = [...(thread.length ? thread.slice(0, pos + 1) : [current].filter(Boolean)), id]; pos = thread.length - 1; }
@@ -542,18 +543,17 @@
     if (inCluster && inCluster !== src(id).cluster) url.searchParams.set('in', inCluster); else url.searchParams.delete('in');
     if (thread.length > 1) { url.searchParams.set('thread', thread.join(',')); url.searchParams.set('pos', String(pos)); }
     else { url.searchParams.delete('thread'); url.searchParams.delete('pos'); }
-    if (current) history.replaceState({read: id}, '', url); else history.pushState({read: id}, '', url);
+    history.pushState({read: id}, '', url);
     showReading(id);
   }
   function closeReading() {
+    window.RefresherJourney?.position();
     const url = new URL(location.href);
     for (const k of ['read', 'in', 'thread', 'pos']) url.searchParams.delete(k);
     history.pushState({}, '', url); route();
   }
-  // On a wide screen the text opens beside the map or the list, which stay where they were; on a narrower one
-  // reading mode takes the page, with the plan as a rail.
-  const wide = matchMedia('(min-width: 1100px)');
-  const beside = () => wide.matches;
+  // Opening a source gives the article the page; the map remains in the browsing view.
+  const beside = () => false; // Reading has one focused layout at every screen size.
   function renderBrowse() {  // the map or the list, whichever the URL says
     const list = new URLSearchParams(location.search).get('view') === 'list';
     $('ideas-view').hidden = true; $('map').hidden = false; $('list').hidden = !list; $('map-body').hidden = list;
@@ -578,6 +578,7 @@
       return;
     }
     const wasBeside = $('stage').classList.contains('side');
+    document.body.classList.remove('source-reading-mode');
     current = null; $('stage').classList.remove('side'); $('reading').hidden = true; $('ideas-view').hidden = !ideasView; $('map').hidden = ideasView;
     toggleDrawer(false);
     if (ideasView) { renderIdeas(); return; }
@@ -586,6 +587,8 @@
   }
   async function showReading(id) {
     const side = beside();
+    document.body.classList.add('source-reading-mode');
+    $('tab-brief').href = '/brief/?' + subjectParams + '&read=' + encodeURIComponent(id);
     current = id; $('stage').classList.toggle('side', side); $('reading').hidden = false; $('pop').hidden = true;
     $('ideas-view').hidden = true; $('map').hidden = !side;
     if (side) markNow();
@@ -594,9 +597,13 @@
     $('r-eyebrow').textContent = [number.get(id) ? `#${number.get(id)}` : null, there ? `${clusterName(opened)}, also here` : clusterName(x.cluster),
       there ? there.role : x.role].filter(Boolean).join(' · ');
     $('r-title').textContent = x.title;
+    $('r-title').setAttribute('tabindex','-1');
     $('r-meta').textContent = [x.source, x.author, day(x.time), `${x.minutes} min`, gainText(id)].filter(Boolean).join(' · ');
     $('r-gist-text').textContent = (x.gist || x.hook) + (x.summary === 'lead' ? ' (its opening lines: no summary yet)' : '');
-    $('r-gist').open = !s.marks[id];
+    $('r-gist').open = false;
+    $('r-gist').hidden = x.summary === 'lead' || !(x.gist || x.hook);
+    $('reading').classList.remove('show-evidence');
+    $('evidence-toggle').setAttribute('aria-pressed','false');
     $('r-text').replaceChildren(el('p', 'Opening the text…', 'quiet')); $('ctx-body').replaceChildren(); $('r-tools').replaceChildren();
     renderRail(); renderBar(); renderThread();
     if (side) $('reading').scrollTop = 0; else window.scrollTo({top: 0});
@@ -607,6 +614,8 @@
       if (current !== id) return;
       highlight = null; renderText(contexts.get(id)); renderContext(contexts.get(id));
       if (from && from !== x.cluster) showPassage(contexts.get(id), from);
+      window.RefresherJourney?.subject(s.scope?.title || document.title.replace('Refresher — ', ''));
+      window.RefresherJourney?.reading(x.title);
     } catch (error) { $('r-text').replaceChildren(el('p', error.message, 'quiet')); }
   }
   async function loadContext(id, again = false) {
@@ -822,8 +831,8 @@
       for (const i of list) ideas.append(button(i.title, () => { showIdea(i.id); setWhere({idea: i.id}); }, 'ctx-idea'));
     }
     body.append(section('ideas', 'Ideas in this source', ctx.ideas.length, scoped.filter(i => i.new).map(i => i.title), ideas));
-    body.append(link('Check in Atlas ↗', '/atlas/?item=' + encodeURIComponent(ctx.id), 'atlas-link'));
-    $('ctx-open').textContent = `${ctx.people.length} ${ctx.people.length === 1 ? 'person' : 'people'} · ${ctx.links.length} connected`;
+    body.append(link('Explore connections →', '/atlas/?item=' + encodeURIComponent(ctx.id) + '&return=' + encodeURIComponent(location.pathname + location.search), 'atlas-link'));
+    $('ctx-open').textContent = 'Source details';
   }
   function person(p) {
     const box = el('div', null, 'person');
@@ -833,7 +842,19 @@
     if (!box.childElementCount) box.append(el('p', 'Nothing more is known of them yet.', 'small quiet'));
     return box;
   }
-  function toggleDrawer(open) { $('ctx').classList.toggle('open', open); $('ctx-open').setAttribute('aria-expanded', String(open)); }
+  function toggleDrawer(open) {
+    $('ctx').classList.toggle('open', open); $('ctx-open').setAttribute('aria-expanded', String(open));
+    if (open) { $('ctx').setAttribute('role','dialog'); $('ctx').setAttribute('aria-modal','true'); $('ctx-close').focus(); }
+    else { $('ctx').removeAttribute('role'); $('ctx').removeAttribute('aria-modal'); if ($('ctx').contains(document.activeElement)) $('ctx-open').focus(); }
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || !$('ctx').classList.contains('open')) return;
+    const focusable = [...$('ctx').querySelectorAll('a[href],button:not([disabled]),[tabindex="0"]')].filter(n => n.getClientRects().length);
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  $('evidence-toggle').addEventListener('click',()=>{const show=$('reading').classList.toggle('show-evidence');$('evidence-toggle').setAttribute('aria-pressed',String(show));});
   $('ctx-open').addEventListener('click', () => toggleDrawer(!$('ctx').classList.contains('open')));
   $('ctx-close').addEventListener('click', () => toggleDrawer(false));
 
@@ -878,7 +899,7 @@
   $('start').addEventListener('click', () => { const n = nextId(); if (n) openSource(n); });
   $('back').addEventListener('click', e => { e.preventDefault(); closeReading(); });
   $('pane-close').addEventListener('click', closeReading);
-  wide.addEventListener('change', () => { if (current) route(); });
+
   window.addEventListener('popstate', route);
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || !current) return;
@@ -897,6 +918,7 @@
     if (!r.ok) throw Object.assign(new Error(body.error || `HTTP ${r.status}`), {named: body.named || []});
     s = body;
     document.title = `Refresher — ${s.scope.title}`;
+    window.RefresherJourney?.subject(s.scope.title);
     $('kind').textContent = {topic: 'A topic you accepted', cluster: 'A cluster of close Ideas', query: 'What you asked about'}[s.scope.kind]
       + (s.scope.note ? ` · ${s.scope.note}` : '');
     $('title').textContent = s.scope.kind === 'query' ? `“${s.scope.title}”` : s.scope.title;
@@ -907,7 +929,13 @@
   }).catch(error => {
     clearTimeout(slow);
     $('notice').textContent = '';
-    $('notice').append(el('p', error.message, 'serif'));
+    $('notice').classList.add('subject-empty');
+    $('notice').append(el('h1', 'No matching subject'), el('p', error.message, 'quiet'));
+    const requestedSource = new URLSearchParams(location.search).get('read');
+    if (requestedSource && /^[\w-]{1,200}$/.test(requestedSource)) {
+      $('notice').append(el('p', 'You can still open the saved article without this subject filter.', 'quiet'),
+        link('Read saved article →', '/library/?source=' + encodeURIComponent(requestedSource), 'journey-primary'));
+    }
     if (error.named?.length) {  // no Idea matches, but sources name who or what was asked about
       const list = el('ul', null, 'named-list');
       error.named.forEach(x => { const li = el('li'); li.append(link(x.title, '/read/?read=' + encodeURIComponent(x.id)), el('span', ` · ${x.source || ''} · names ${x.names.join(', ')}`, 'small quiet')); list.append(li); });

@@ -4,11 +4,18 @@
    the page, so the links stay hidden and nothing is fetched. */
 'use strict';
 (() => {
+  // One page footer across the app and the exported map. Reading toolbars remain separate.
+  if (!document.querySelector('.app-footer')) {
+    const footer = document.createElement('footer');
+    footer.className = 'app-footer';
+    footer.innerHTML = '<span class="app-footer-brand"><span class="app-footer-wordmark">refresher<span class="app-footer-dot" aria-hidden="true">.</span></span><span class="app-footer-divider" aria-hidden="true">/</span>Collected with purpose.</span>'
+      + '<span class="app-footer-credits"><span>Built for the Nebius × NVIDIA Global AI Hackathon</span></span>';
+    document.body.append(footer);
+  }
   const nav = document.getElementById('app-nav');
   if (!nav || !/^https?:$/.test(location.protocol)) return;
   nav.hidden = false;
-  const here = location.pathname === '/' || /^\/(topic|brief)\//.test(location.pathname) ? 'topics'
-    : new URLSearchParams(location.search).get('layout') === 'read' ? 'read' : location.pathname.split('/')[1];
+  const here = ['/', '/topic/', '/brief/'].includes(location.pathname) ? 'home' : location.pathname === '/timeline/' ? 'atlas' : location.pathname.split('/')[1];
   for (const link of nav.querySelectorAll('a[data-page]')) {
     if (link.dataset.page === here) link.setAttribute('aria-current', 'page');
   }
@@ -23,6 +30,9 @@
   };
   countWaiting();
   consolidation(nav, countWaiting);
+  document.addEventListener('refresher:proposals', countWaiting);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') nav.querySelectorAll('details[open]').forEach(d => { d.open = false; d.querySelector('summary').focus(); }); });
+  document.addEventListener('click', e => { if (!e.target.closest('.nav-more')) nav.querySelectorAll('details[open]').forEach(d => { d.open = false; }); });
 
   // --- Consolidate: the hourly review, run now; the dialog says what the last run did ---
   function consolidation(nav, onDone) {
@@ -35,15 +45,15 @@
     const button = el('button', 'nav-run');
     button.type = 'button';
     button.setAttribute('aria-haspopup', 'dialog');
-    const label = el('span', '', 'Consolidate');
+    const label = el('span', '', 'Update connections');
     const ago = el('span', 'ago');
     button.append(label, ago);
-    const review = nav.querySelector('a[href="/atlas/#proposals"]');
-    nav.insertBefore(button, review ? review.nextSibling : null);
+    const menu = nav.querySelector('.nav-menu');
+    (menu || nav).append(button);
 
     const dialog = el('dialog', 'run-dialog');
     dialog.setAttribute('aria-labelledby', 'run-title');
-    const title = el('h2', '', 'Consolidate');
+    const title = el('h2', '', 'Update connections');
     title.id = 'run-title';
     const intro = el('p', 'run-intro', 'Reviews the whole graph: relations a later source changed, duplicate items, '
       + 'Ideas confirmed by two authors, topic and merge proposals, people, and the map. It also runs by itself '
@@ -109,7 +119,7 @@
       body.append(list);
       if (l.waiting) {
         const link = el('a', 'run-link', `Decide the ${l.waiting} waiting proposal${l.waiting === 1 ? '' : 's'} ↗`);
-        link.href = '/atlas/#proposals';
+        link.href = '/atlas/#review';
         body.append(link);
       }
       for (const note of l.notes || []) body.append(el('p', 'run-note', note));
@@ -144,13 +154,13 @@
     run.addEventListener('click', () => {
       run.disabled = true;
       fetch('/api/consolidate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Refresher': '1' } })
-        .then(r => r.json()).then(s => {
+        .then(async r => { const body = await r.json(); if (!r.ok) throw new Error(body.error); return body; }).then(s => {
           status = s;
           wasRunning = s.running;
           render();
           clearTimeout(timer);
           if (s.running) timer = setTimeout(refresh, 3000);
-        }).catch(() => { run.disabled = false; });
+        }).catch(() => { state.textContent = 'Could not start the update. Please try again.'; run.disabled = false; });
     });
     refresh();
     setInterval(() => { if (!document.hidden && !wasRunning) refresh(); }, 60000);
