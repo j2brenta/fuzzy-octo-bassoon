@@ -27,6 +27,10 @@ def proposal_id(kind: str, payload: dict) -> str:
 
 def fingerprint(store, kind: str, payload: dict) -> str | None:
     """What the covered claims (or people) say now; None when one of them is not in the graph."""
+    if kind == "split_person":
+        people = {p.person_id: p for p in store.people()}
+        person = people.get(payload["person"])
+        return None if person is None else _hash([payload["person"], person.name, payload["names"]])
     if kind == "merge_people":
         people = {p.person_id: p for p in store.people()}
         if not all(pid in people for pid in payload["people"]):

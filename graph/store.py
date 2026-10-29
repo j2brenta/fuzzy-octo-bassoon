@@ -179,7 +179,7 @@ class Link:
     shared: tuple[str, ...] = ()  # idea ids in both (topics only; clusters do not overlap)
 
 
-PROPOSAL_KINDS = ("merge_ideas", "merge_people", "topic", "relation")
+PROPOSAL_KINDS = ("merge_ideas", "merge_people", "split_person", "topic", "relation")
 
 
 @dataclass(frozen=True)
@@ -189,7 +189,8 @@ class Proposal:
     proposal_id: str
     kind: str  # one of PROPOSAL_KINDS
     payload: dict  # merge_ideas/topic: {"claims": [...], "title"?}; relation: {"claims": [src, dst], "type"};
-                   # merge_people: {"people": [absorbed, kept]}
+                   # merge_people: {"people": [absorbed, kept]};
+                   # split_person: {"person": id, "name": as written, "names": [one per person]}
     rationale: str
     at: datetime
     fingerprint: str
