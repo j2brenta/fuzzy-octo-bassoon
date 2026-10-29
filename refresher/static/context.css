@@ -116,3 +116,4 @@
 .ce .chip { white-space: normal; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
 .ce a, .ce p, .ce h1, .ce h3 { overflow-wrap: anywhere; }
 .ce-list .facts li { list-style: disc; }
+.ce-tabs-topic { max-width: 1400px; margin: 14px auto 0; padding: 0 max(16px, 3vw); }

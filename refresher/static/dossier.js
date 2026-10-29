@@ -28,6 +28,7 @@
   const params = new URLSearchParams(location.search);
   const subjectQuery = params.get('id') ? {id: params.get('id')} : {q: params.get('q') || ''};
   const subjectParams = new URLSearchParams(subjectQuery).toString();
+  $('tab-brief').href = '/brief/?' + subjectParams;  // the same subject as a brief
   const GRAPH_CAP = 8;
 
   let s = null, current = null, mapScroll = 0, trail = [], highlight = null, openCtx = 'connected';
@@ -224,7 +225,7 @@
     }).filter(Boolean);
     const box = $('about'); box.replaceChildren(); box.hidden = !parts.length;
     if (!parts.length) return;
-    box.append(el('span', parts.length > 1 ? `About: ${parts.length} threads` : 'About', 'about-label'));
+    box.append(el('span', parts.length > 1 ? `About: ${parts.length} clusters` : 'About', 'about-label'));
     for (const [c, idea] of parts) {
       const line = el('span', null, 'about-idea' + (c.band === 'main' ? ' main' : ''));
       line.append(el('b', c.title), ` — ${idea}`); box.append(line);

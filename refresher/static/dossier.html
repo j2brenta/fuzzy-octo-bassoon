@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>Refresher — Topic</title>
-<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css"><link rel="stylesheet" href="/static/navigator.css">
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/reading.css"><link rel="stylesheet" href="/static/navigator.css"><link rel="stylesheet" href="/static/context.css">
 <script src="/static/nav.js" defer></script><script src="/static/dossier.js" defer></script></head>
 <body>
 <a class="skip" href="#blocks">Skip to the clusters</a>
@@ -10,6 +10,7 @@
 <a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Topic</span></a>
 <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
+<nav class="ce-tabs ce-tabs-topic" aria-label="Views of this subject"><a id="tab-brief">Brief</a><a aria-current="page">Sources</a><a href="/read/">Read</a></nav>
 <div class="notice" id="notice" role="status">Gathering what you know…</div>
 <!-- The depth rail: where you are, All > subject > cluster > source > Idea, each with its count and position -->
 <nav class="depth-rail" id="path" aria-label="Where you are" hidden><ol id="path-list"></ol></nav>

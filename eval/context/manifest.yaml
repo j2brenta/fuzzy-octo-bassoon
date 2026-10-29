@@ -1,0 +1,42 @@
+# Golden subjects for the Context Engine (refresher/context.py, refresher/threads.py): `uv run refresher eval-context`.
+# Items are given by the first 10 characters of their id. A subject whose vault is missing is skipped (the Telegram
+# vault is private and not in the repository).
+schema_version: 1
+subjects:
+  - vault: .local-vault/seed
+    query: demo workshop time
+    ideas:
+      - base: 4c79c7f910          # the 16:00 correction
+        superseded: [8e95979454]  # the forwarded 14:00 announcement it replaced
+  - vault: .local-vault/seed
+    query: who to follow on AI introspection
+    ideas:
+      - base: 35d90abd31          # the people list
+        rewrites: [c9a834ca73]    # the introspection list repeats it
+  - vault: .local-vault/telegram
+    query: hallucination
+    ideas:
+      - base: 07d463ad77          # Krestnikov's paper, not the post that links it
+        builders: [0b3bd28fd1]    # the Telegram note building on it
+    people: [Konstantin Krestnikov]
+  - vault: .local-vault/telegram
+    query: Microsoft layoffs
+    ideas:
+      - base: 57b9ae5a5e          # CNBC
+        builders: [28e3f52254]    # TechSparks adds the share of the workforce and the grades
+        rewrites: [9530bc646c]    # the second CNBC capture
+    people: [Jordan Novet]
+deltas:
+  # Stamp the thread at `stamp`, then look at `at`: what arrived in between, and where it should land.
+  - vault: .local-vault/seed
+    query: demo workshop time
+    stamp: "2026-10-19T09:59:00+00:00"   # before anything was captured
+    at: "2026-10-29T00:00:00+00:00"
+    critical: [4c79c7f910]               # the correction starts the idea
+    noise: [8e95979454]                  # the 14:00 forward arrived after it: already replaced
+  - vault: .local-vault/seed
+    query: demo workshop time
+    stamp: "2026-10-19T10:00:30+00:00"   # after the correction, before the forward
+    at: "2026-10-29T00:00:00+00:00"
+    critical: []
+    noise: [8e95979454]

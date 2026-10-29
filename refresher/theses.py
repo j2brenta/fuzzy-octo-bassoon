@@ -15,7 +15,8 @@ and what it cites for it. Theses are related across sources (refresher/thesis_re
 is a major idea in a brief (refresher/brief.py).
 
 A model writes them once per item, in REFRESHER_LANGUAGE, into theses/<item_id>.json, keyed by the source hash, the
-claims, the language, the prompt and the model, so a change to any of them writes them again. Without a record an
+claims, the language and the prompt, so a change to any of them writes them again (the model is recorded, not
+compared: the judge's theses stay when the hourly review runs on the extraction model). Without a record an
 item has one thesis, its title, resting on all its claims, so a vault with no theses still briefs.
 """
 import hashlib
@@ -96,6 +97,14 @@ def load_all(vault: Path) -> dict[str, dict]:
     return out
 
 
+STALE_KEYS = ("source_content_hash", "claims_hash", "language", "prompt_version")  # not the model: a record from the
+# judge stays good when the hourly review runs on the extraction model
+
+
+def _current(stored: dict, identity: dict) -> bool:
+    return all(stored.get(k) == identity[k] for k in STALE_KEYS)
+
+
 def _identity(vault: Path, item_id: str, claims: list[tuple[str, str]], client: JsonModel) -> dict:
     raw = json.loads((vault / "raw" / f"{item_id}.json").read_text(encoding="utf-8"))
     return {"item_id": item_id, "source_content_hash": raw["content_hash"], "claims_hash": claims_hash(claims),
@@ -150,7 +159,7 @@ def theses_for(vault: Path, store, item_id: str, client: JsonModel, force: bool 
     if destination.exists() and not force:
         try:
             stored = json.loads(destination.read_text(encoding="utf-8"))
-            if all(stored.get(k) == v for k, v in identity.items()):
+            if _current(stored, identity):
                 return stored
         except ValueError:
             pass
@@ -176,7 +185,7 @@ def missing(vault: Path, store, item_ids, client: JsonModel) -> list[str]:
         except (OSError, ValueError, KeyError):
             out.append(item_id)
             continue
-        if any(stored.get(k) != v for k, v in identity.items()):
+        if not _current(stored, identity):
             out.append(item_id)
     return out
 

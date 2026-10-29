@@ -19,6 +19,7 @@
     uv run refresher theses [--vault V] [--force]     one to three theses per item over its claims, in theses/
     uv run refresher relate-theses [--vault V] [--force]   how theses of different items relate, in thesis-relations/
     uv run refresher brief [--vault V] [--at DATE] "subject"   the brief as markdown: major ideas, base, sources
+    uv run refresher eval-context [--manifest M] [--out F]   score briefs and deltas against golden subjects
     uv run refresher follow [--vault V] "subject"      make a subject a thread; then stamp it to mark you caught up
     uv run refresher stamp [--vault V] [--at DATE] SLUG   store the thread's brief as of now (or DATE) in threads/
 
@@ -92,7 +93,13 @@ def main(argv=None) -> int:
             p.add_argument("action", choices=("accept", "reject", "defer"))
             p.add_argument("--token", required=True, help="from `refresher proposals`; refused if anything changed")
             p.add_argument("--why", default="", help="your reason, kept with the decision")
+    p = sub.add_parser("eval-context", help="score the Context Engine against eval/context/manifest.yaml")
+    p.add_argument("--manifest", type=Path, default=Path("eval/context/manifest.yaml"))
+    p.add_argument("--out", type=Path, help="write the markdown report here")
+    p.add_argument("--at", help="ISO date to build the briefs at (default: now)")
     args = ap.parse_args(argv)
+    if args.command == "eval-context":
+        return _eval_context(args.manifest, args.out, _at(args.at))
     if not args.vault:
         ap.error("pass --vault or set REFRESHER_VAULT")
     if args.command != "serve" and not (args.vault / "processed").is_dir():  # the app may start an empty vault
@@ -286,6 +293,19 @@ def _brief(args, at: datetime) -> int:
     sys.stdout.write(brief.markdown(c, written))
     if written["validity"] is not None:
         print(f"\n(citation validity {written['validity']:.0%})", file=sys.stderr)
+    return 0
+
+
+def _eval_context(manifest: Path, out: Path | None, at: datetime) -> int:
+    from dotenv import load_dotenv
+    from refresher import eval_context
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    _language()
+    report = eval_context.run(manifest, Path.cwd(), at)
+    text = eval_context.markdown(report)
+    if out:
+        out.write_text(text, encoding="utf-8")
+    sys.stdout.write(text)
     return 0
 
 
