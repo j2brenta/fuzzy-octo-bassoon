@@ -1,0 +1,12 @@
+{
+  "item_id": "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a",
+  "prompt_version": "thesis-relate-v1",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "theses_hash": "5f7ce0eb15e00f96",
+  "candidates": {
+    "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:t1": [],
+    "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:t2": [],
+    "9c920429025ff09193ce4a3f58ca099eea97d659eb43ad916a04f3ad730efe6a:t3": []
+  },
+  "relations": []
+}
