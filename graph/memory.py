@@ -14,7 +14,7 @@ from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
 from engine.entities import eponym_only
-from graph.names import display_name, same_person as _same_person
+from graph.names import core as name_core, display_name, same_person as _same_person, surname_keys
 from graph.attribution import author_name, is_named_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
 from graph.store import (Affiliation, ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode,
@@ -58,9 +58,16 @@ def _eponym(name: str | None, text: str) -> bool:
 
 
 def _name_rank(p: PersonNode):
-    """Which name a merge keeps, last: more words, then no stray punctuation ("Krestnikov; Konstantin"), then the
-    longer (a full first name over a short form), then the id."""
-    return (len(_words(p.name)), -len(re.findall(r"[^\w\s.'-]", p.name)), len(p.name), p.person_id)
+    """Which name a merge keeps, last: no affiliation in brackets ("Herman Daly (University of Maryland)"), more
+    words, then no stray punctuation ("Krestnikov; Konstantin"), then the longer (a full first name over a short
+    form), then the id."""
+    name, bracket = name_core(p.name)
+    return (bracket is None, len(_words(name)), -len(re.findall(r"[^\w\s.'-]", p.name)), len(p.name), p.person_id)
+
+
+def _profile_pages(p: PersonNode) -> set[str]:
+    """The pages enrichment cited for who they are: their role, affiliation and domains."""
+    return {f["url"] for f in [p.role, p.affiliation, *p.domains] if isinstance(f, dict) and f.get("url")}
 
 
 def org_id(name: str) -> str:
@@ -330,6 +337,13 @@ class MemoryStore:
         if (gone.identity_url or person.identity_url) and gone.identity_url != person.identity_url:
             return  # Reviewed identities cannot be collapsed by name-based merges.
         self._aliases[absorbed] = kept
+        bracket = name_core(gone.name)[1]
+        if bracket and org_id(bracket) in self._orgs and self._posts_of(gone):
+            # "Herman Daly (University of Maryland)": the bracket was an affiliation; tied when that organization is
+            # one the vault knows, so a bracket such as "ECLAC tradition" makes no organization.
+            tie = Affiliation(kept, org_id(bracket), "affiliated", min(self._posts_of(gone)))
+            if tie not in self._affiliations:
+                self._affiliations.append(tie)
         person.handles |= gone.handles
         person.authored |= gone.authored
         person.mentioned_in |= gone.mentioned_in
@@ -903,30 +917,45 @@ class MemoryStore:
             add("topic", {"claims": claims, "title": (namer or cluster.title)(statements)},
                 f"{len(members)} Ideas{parts} from {len(posts)} posts sit close together.")
 
-        # People who are probably one person: same surname (in either script), compatible first names, and
-        # something in common: a post, linked posts (a page and the post that shared it), or an organization.
+        # People who are probably one person: compatible names (graph/names.py: the same surname in either script,
+        # first names that match, an affiliation in brackets set aside) and something in common: the same name
+        # apart from a bracket, a post, linked posts (a page and the post that shared it), an organization, or the
+        # page their profiles cite. Only namesakes are compared, so a new person meets the existing ones directly;
+        # a pair already proposed or decided keeps its proposal id and is not asked again.
         people = sorted(self._people.values(), key=lambda p: p.person_id)
         orgs_of: dict[str, set[str]] = {}
         for tie in self._affiliations:
             orgs_of.setdefault(tie.person_id, set()).add(tie.org_id)
-        for n, a in enumerate(people):
-            for b in people[n + 1:]:
-                if (a.identity_url or b.identity_url) and a.identity_url != b.identity_url:
-                    continue  # A name-based proposal cannot undo reviewed identity separation.
-                if not _same_person(a.name, b.name):
-                    continue
-                posts_a, posts_b = self._posts_of(a), self._posts_of(b)
-                if posts_a & posts_b:
-                    why = "appear together"
-                elif self._links_to(posts_a, posts_b) or self._links_to(posts_b, posts_a):
-                    why = "appear in a post and the page it links to"
-                elif orgs_of.get(a.person_id, set()) & orgs_of.get(b.person_id, set()):  # enrichment ties too
-                    why = "share an organization"
-                else:
-                    continue
-                absorbed, kept = sorted((a, b), key=_name_rank)
-                add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
-                    f"{absorbed.name} and {kept.name} share a surname and {why}.")
+        namesakes: dict[str, list[PersonNode]] = {}
+        for p in people:
+            for key in surname_keys(p.name):
+                namesakes.setdefault(key, []).append(p)
+        pairs = sorted({(a.person_id, b.person_id) for group in namesakes.values()
+                        for n, a in enumerate(group) for b in group[n + 1:]})
+        for pa, pb in pairs:
+            a, b = self._people[pa], self._people[pb]
+            if (a.identity_url or b.identity_url) and a.identity_url != b.identity_url:
+                continue  # A name-based proposal cannot undo reviewed identity separation.
+            if not _same_person(a.name, b.name):
+                continue
+            (name_a, bracket_a), (name_b, bracket_b) = name_core(a.name), name_core(b.name)
+            posts_a, posts_b = self._posts_of(a), self._posts_of(b)
+            if _words(name_a) == _words(name_b):
+                aside = [f"“{x}”" for x in (bracket_a, bracket_b) if x]
+                why = "have the same name" + (f" apart from {' and '.join(aside)}" if aside else "")
+            elif posts_a & posts_b:
+                why = "share a surname and appear together"
+            elif self._links_to(posts_a, posts_b) or self._links_to(posts_b, posts_a):
+                why = "share a surname and appear in a post and the page it links to"
+            elif orgs_of.get(a.person_id, set()) & orgs_of.get(b.person_id, set()):  # enrichment ties too
+                why = "share a surname and an organization"
+            elif _profile_pages(a) & _profile_pages(b):
+                why = "share a surname and their profiles cite the same page"
+            else:
+                continue
+            absorbed, kept = sorted((a, b), key=_name_rank)
+            add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
+                f"{absorbed.name} and {kept.name} {why}.")
 
         # Replacing or contradicting a durable claim is live already; the user confirms or rejects it.
         for e in sorted(self._relations, key=lambda e: (e.src, e.dst)):

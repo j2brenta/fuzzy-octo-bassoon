@@ -201,3 +201,21 @@ def test_a_run_over_budget_falls_back_to_wording_and_says_so(tmp_path):
     assert 0 < model.calls["relate"] < 10  # stopped part-way
     assert all(vault.load_relation(v, ex) is not None for ex, _ in vault.load_extractions(v))  # the rest by wording
     assert run.proposed == 4
+
+
+def test_a_profile_found_in_a_run_meets_its_namesakes_in_the_same_run(tmp_path, monkeypatch):
+    from tests.test_proposals import write
+    from tests.test_relate import item
+    v = topical_vault(tmp_path)
+    write(v, item("item-al", 30, [("al1", "Entropy probes run on a laptop.")], author="A. Lee"))
+
+    def enrich(vault_path, store, chosen, search, model, log, warn):  # both found at one lab
+        for pid, name in (("person:ann-lee", "Ann Lee"), ("person:a-lee", "A. Lee")):
+            vault.save_enrichment(vault_path, {"person_id": pid, "name": name, "match": True,
+                                               "affiliation": {"value": "Acme Lab", "url": "https://acme.example"}})
+        return 2, None
+    monkeypatch.setattr(job, "pick_people", lambda *a: [])
+    monkeypatch.setattr(job, "enrich_people", enrich)
+    job.consolidate(v, FakeModel(), search=object(), at=AT)
+    merges = [p for p in vault.load_proposals(v) if p.kind == "merge_people"]
+    assert ["person:a-lee", "person:ann-lee"] in [p.payload["people"] for p in merges]

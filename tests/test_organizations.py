@@ -183,3 +183,49 @@ def test_entity_extraction_does_not_read_the_arxiv_tool_list(tmp_path):
     model = FakeModel([ModelReply({"people": [], "organizations": [], "affiliations": []})])
     extract_entities(raw.path, model)
     assert "arXivLabs" not in model.calls[0][1] and "Wikipedia" in model.calls[0][1]
+
+
+def merges_of(store):
+    return [p for p in store.review(datetime(2026, 10, 22, tzinfo=timezone.utc)).proposals if p.kind == "merge_people"]
+
+
+def test_an_affiliation_in_brackets_is_not_part_of_the_name():
+    store = MemoryStore()
+    store.apply(post("panel", 20, "Kirill R", [
+        {"entity_id": "a", "name": "Herman Daly", "kind": "person"},
+        {"entity_id": "b", "name": "Herman Daly (University of Maryland)", "kind": "person"},
+        {"entity_id": "c", "name": "Abhijit Banerjee and Esther Duflo (MIT)", "kind": "person"},
+        {"entity_id": "d", "name": "Esther Duflo", "kind": "person"},
+        {"entity_id": "e", "name": "Ha‑Joon Chang (Cambridge)", "kind": "person"},
+        {"entity_id": "f", "name": "Ha-Joon Chang", "kind": "person"},
+        {"entity_id": "u", "name": "University of Maryland", "kind": "organization", "org_type": "university"}]))
+    merges = {tuple(p.payload["people"]): p.rationale for p in merges_of(store)}
+    assert set(merges) == {("person:herman-daly-university-of-maryland", "person:herman-daly"),
+                           ("person:hajoon-chang-cambridge", "person:ha-joon-chang")}  # the clean name is kept
+    assert "same name apart from “University of Maryland”" in merges[("person:herman-daly-university-of-maryland",
+                                                                       "person:herman-daly")]
+    store._merge_person("person:herman-daly-university-of-maryland", "person:herman-daly")
+    assert [(t.person_id, t.org_id) for t in store.affiliations()] == [("person:herman-daly", "org:university-of-maryland")]
+    store._merge_person("person:hajoon-chang-cambridge", "person:ha-joon-chang")
+    assert len(store.affiliations()) == 1  # no organization is named Cambridge here, so none is made
+
+
+def test_the_same_name_in_unrelated_posts_is_proposed_and_a_reviewed_identity_is_not():
+    store = MemoryStore()
+    store.apply(post("one", 20, "Kirill R", [{"entity_id": "a", "name": "Dani Rodrik", "kind": "person"}]))
+    store.apply(post("two", 21, "Kirill R", [{"entity_id": "b", "name": "Dani Rodrik (Harvard)", "kind": "person"}]))
+    [merge] = merges_of(store)
+    assert merge.payload["people"] == ["person:dani-rodrik-harvard", "person:dani-rodrik"]
+    store._people["person:dani-rodrik"].identity_url = "https://example.com/rodrik"
+    assert merges_of(store) == []
+
+
+def test_profiles_citing_the_same_page_make_namesakes_one_proposal():
+    store = MemoryStore()
+    store.apply(post("one", 20, "Yarin Gal", []))
+    store.apply(post("two", 21, "Kirill R", [{"entity_id": "a", "name": "Y. Gal", "kind": "person"}]))
+    assert merges_of(store) == []  # a surname and an initial, nothing in common
+    for pid in ("person:yarin-gal", "person:y-gal"):
+        store._people[pid].role = {"value": "Professor", "url": "https://example.com/gal"}
+    [merge] = merges_of(store)
+    assert "profiles cite the same page" in merge.rationale

@@ -311,17 +311,18 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
             lexical = relate_pending(vault_path, relate.LexicalRelator(), log=log, warn=warn)
             run.relate = run.relate or lexical
         store = vault.replay(vault_path, include_unreviewed=True)
+        if search is not None and model is not None:  # first, so a profile found now meets its namesakes below
+            run.enriched, error = enrich_people(vault_path, store, pick_people(vault_path, store, enrich_limit),
+                                                search, model, log, warn)
+            if error:
+                run.notes.append(f"enrichment stopped: {error}")
+            if run.enriched:
+                store = vault.replay(vault_path, include_unreviewed=True)
         report = store.review(at, namer=model_namer(model) if model else None,
                               confirm=model_confirm(model) if model else None)
         run.duplicates, run.firmed, run.proposed = len(report.item_duplicates), len(report.firmed), len(report.proposals)
         if report.item_duplicates or report.firmed or report.proposals:
             vault.save_review(vault_path, report)
-        if search is not None and model is not None:
-            store = vault.replay(vault_path, include_unreviewed=True)
-            run.enriched, error = enrich_people(vault_path, store, pick_people(vault_path, store, enrich_limit),
-                                                search, model, log, warn)
-            if error:
-                run.notes.append(f"enrichment stopped: {error}")
         store = vault.replay(vault_path, include_unreviewed=True)
         from refresher import translate
         namer = translate.client_from_environment()  # the cheap model only; without it clusters keep their central Idea
