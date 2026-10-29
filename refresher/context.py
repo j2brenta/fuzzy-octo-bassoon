@@ -30,13 +30,13 @@ from datetime import datetime
 
 from graph import cluster as grouping
 from graph import embed
-from refresher import dossier, scoring, summarize, theses, thesis_relate
+from refresher import authority, dossier, scoring, summarize, theses, thesis_relate
 
 FLOOR = {"qwen": 0.45, "hashed": 0.08}
 SPAN = {"qwen": 0.2, "hashed": 0.3}
 EXPAND = 3  # nearest theses averaged into a phrase's vector
 EXPAND_SPAN = {"qwen": 0.1, "hashed": 0.15}  # and only those this close to the phrase's best match
-ADJACENT = {"qwen": 0.6, "hashed": 0.4}  # a claim this close to an idea lends it a fact,
+ADJACENT = {"qwen": 0.65, "hashed": 0.4}  # a claim this close to an idea lends it a fact,
 ADJACENT_SPAN = 0.1  # if it is also on the subject: no further under the floor than this
 FACTS_PER_SOURCE, ADJACENT_SOURCES = 3, 5
 MAJOR_MAX = 6  # ideas a brief writes about; the rest are listed
@@ -103,25 +103,15 @@ def _author(store, item) -> str | None:
     return item.source.author_hint.name if item.source.author_hint else None
 
 
-def build(store, key: str | None = None, query: str | None = None, at: datetime | None = None,
-          pool: thesis_relate.Pool | None = None) -> dict | None:
-    """The context on a subject: ranked major ideas with roles, history and lent facts, and the sources they cite."""
-    from datetime import timezone
-    at = at or datetime.now(timezone.utc)
-    pool = pool or thesis_relate.Pool(store)
-    subject = resolve(store, pool, key, query)
-    if subject is None:
-        return None
-    family = _family()
+def groups(store, pool: thesis_relate.Pool, at: datetime) -> list[dict]:
+    """Every major idea in the vault, whatever the subject: its members and their roles, history, what it replaced
+    and its freshness. Relevance to a subject is added by build(); authority (refresher/authority.py) reads the roles."""
     items = {i.item_id: i for i in store.items()}
     of_item = {i: rows for i, rows in pool.of_item.items() if i in items}
     thesis = {t["id"]: (i, t) for i, rows in of_item.items() for t in rows}
     when = {i: items[i].source.event_time for i in items}
-    relevance = {t: max(0.0, embed.cosine(pool.vector[t], subject["vector"])) for t in thesis}
-    floor = max(FLOOR[family], max(relevance.values(), default=0.0) - SPAN[family])
     edges = thesis_relate.edges(getattr(store, "thesis_relations", {}) or {}, of_item)
 
-    # Groups and supersession.
     union = _Union()
     for t in thesis:
         union.find(t)
@@ -153,25 +143,23 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
         half = scoring.HALF_LIFE_DAYS.get(row.get("durability") or items[i].durability or "reference", 180)
         return scoring.freshness(half, when[i], at)
 
-    groups: dict[str, list[str]] = defaultdict(list)
+    grouped: dict[str, list[str]] = defaultdict(list)
     for t in sorted(thesis):
-        groups[union.find(t)].append(t)
+        grouped[union.find(t)].append(t)
     duplicates: dict[str, list[str]] = defaultdict(list)  # original item -> its reposts
     for i, item in items.items():
         if item.duplicate_of:
             duplicates[item.duplicate_of].append(i)
-
     edge_of: dict[str, list[dict]] = defaultdict(list)
     for e in edges:
         edge_of[e["thesis"]].append(e)
         edge_of[e["target"]].append(e)
 
-    ideas = []
-    for root, members in groups.items():
+    out = []
+    for root, members in grouped.items():
         current = [t for t in members if t not in superseded]
         if not current:
             continue
-        rel = max(relevance[t] for t in members)
         member_items = {thesis[t][0] for t in members}
         pointed = {t: sum(1 for j in member_items if j != thesis[t][0] and thesis[t][0] in pool.points_at.get(j, ()))
                    for t in current}
@@ -181,10 +169,8 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
         for t in members:
             if t in superseded:
                 roles[t] = "superseded"
-            elif t == base:
-                roles[t] = "base"
-            elif thesis[t][0] == thesis[base][0]:
-                roles[t] = "base"  # another thesis of the base source
+            elif t == base or thesis[t][0] == thesis[base][0]:
+                roles[t] = "base"  # another thesis of the base source too
             else:
                 # The judge of a SAME pair said whether its own thesis adds to the other's; from the other side,
                 # the stance stands in for it.
@@ -204,9 +190,6 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
                 sources.setdefault(j, "rewrite")
         writers = {_author(store, items[i]) or items[i].source.source_name or i
                    for i, r in sources.items() if r in ("base", "builder")}
-        freshness = max(fresh(t) for t in current)
-        support = len(writers)
-        score = rel * (0.5 + 0.5 * freshness) * (1 + 0.25 * math.log(support)) if support else 0.0
         history = []
         for t in sorted(members, key=lambda t: (when[thesis[t][0]], t)):
             earlier = [e for e in edge_of[t] if (e["target"] if e["thesis"] == t else e["thesis"]) in members
@@ -214,9 +197,8 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
                                   when, pool.points_at)]
             step = "first stated"
             if earlier:
-                e = earlier[0]
                 step = {"SAME": "restated" if roles[t] != "rewrite" else "retold", "BUILDS_ON": "built on",
-                        "UPDATES": "updated", "CONFLICTS": "contradicted"}[e["label"]]
+                        "UPDATES": "updated", "CONFLICTS": "contradicted"}[earlier[0]["label"]]
             history.append({"thesis": t, "item": thesis[t][0], "when": when[thesis[t][0]].isoformat(),
                             "statement": thesis[t][1]["statement"], "step": step, "role": roles[t],
                             "rationale": earlier[0]["rationale"] if earlier else ""})
@@ -226,18 +208,48 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
                        "new_statement": thesis[superseded[t]["by"]][1]["statement"],
                        "durability": thesis[t][1].get("durability"), "rationale": superseded[t]["rationale"]}
                       for t in members if t in superseded]
-        ideas.append({"id": root, "title": thesis[base][1]["statement"], "base": thesis[base][0], "base_thesis": base,
-                      "relevance": round(rel, 4), "in_scope": any(relevance[t] >= floor for t in current),
-                      "freshness": round(freshness, 4), "support": support, "score": round(score, 4),
-                      "members": [{"thesis": t, "item": thesis[t][0], "role": roles[t],
-                                   "stance": thesis[t][1]["stance"], "statement": thesis[t][1]["statement"],
-                                   "claims": thesis[t][1]["claims"], "relevance": round(relevance[t], 4)}
-                                  for t in sorted(members, key=lambda t: (ROLE_RANK[roles[t]], when[thesis[t][0]], t))],
-                      "sources": sources, "history": history, "previously": previously,
-                      "conflicts": [{"thesis": e["thesis"], "target": e["target"], "rationale": e["rationale"]}
-                                    for e in edges if e["label"] == "CONFLICTS" and (e["thesis"] in members or e["target"] in members)]})
+        out.append({"id": root, "title": thesis[base][1]["statement"], "base": thesis[base][0], "base_thesis": base,
+                    "freshness": round(max(fresh(t) for t in current), 4), "support": len(writers),
+                    "members": [{"thesis": t, "item": thesis[t][0], "role": roles[t],
+                                 "stance": thesis[t][1]["stance"], "statement": thesis[t][1]["statement"],
+                                 "claims": thesis[t][1]["claims"], "current": t not in superseded}
+                                for t in sorted(members, key=lambda t: (ROLE_RANK[roles[t]], when[thesis[t][0]], t))],
+                    "sources": sources, "history": history, "previously": previously,
+                    "conflicts": [{"thesis": e["thesis"], "target": e["target"], "rationale": e["rationale"]}
+                                  for e in edges if e["label"] == "CONFLICTS" and (e["thesis"] in members or e["target"] in members)]})
+    return out
+
+
+def relevance(pool: thesis_relate.Pool, vector: list[float], ideas: list[dict]) -> tuple[dict, float, dict]:
+    """Each idea's relevance (its most relevant member) and the subject's floor."""
+    by_thesis = {t: max(0.0, embed.cosine(v, vector)) for t, v in pool.vector.items()}
+    family = _family()
+    floor = max(FLOOR[family], max(by_thesis.values(), default=0.0) - SPAN[family])
+    return {x["id"]: max(by_thesis.get(m["thesis"], 0.0) for m in x["members"]) for x in ideas}, floor, by_thesis
+
+
+def build(store, key: str | None = None, query: str | None = None, at: datetime | None = None,
+          pool: thesis_relate.Pool | None = None, ideas: list[dict] | None = None) -> dict | None:
+    """The context on a subject: ranked major ideas with roles, history and lent facts, and the sources they cite."""
+    from datetime import timezone
+    at = at or datetime.now(timezone.utc)
+    pool = pool or thesis_relate.Pool(store)
+    subject = resolve(store, pool, key, query)
+    if subject is None:
+        return None
+    family = _family()
+    items = {i.item_id: i for i in store.items()}
+    when = {i: items[i].source.event_time for i in items}
+    ideas = [dict(x) for x in (ideas if ideas is not None else groups(store, pool, at))]
+    rel, floor, by_thesis = relevance(pool, subject["vector"], ideas)
+    for x in ideas:
+        x["relevance"] = round(rel[x["id"]], 4)
+        x["in_scope"] = any(by_thesis.get(m["thesis"], 0.0) >= floor for m in x["members"] if m["current"])
+        x["score"] = round(rel[x["id"]] * (0.5 + 0.5 * x["freshness"]) * (1 + 0.25 * math.log(x["support"]))
+                           if x["support"] else 0.0, 4)
+        x["members"] = [{**m, "relevance": round(by_thesis.get(m["thesis"], 0.0), 4)} for m in x["members"]]
     ideas.sort(key=lambda x: (not x["in_scope"], -x["score"], x["id"]))
-    scoped = [x for x in ideas if x["in_scope"]]
+    scoped = _by_base([x for x in ideas if x["in_scope"]])
     major = scoped[:MAJOR_MAX]
     _lend(store, pool, major, subject["vector"], floor - ADJACENT_SPAN, family)
     involved = {i for x in scoped for i in x["sources"]} | {a["item"] for x in major for a in x["adjacent"]}
@@ -250,11 +262,35 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
                       "captured": item.source.captured_at.isoformat(),
                       "minutes": max(1, round(len(item.text.split()) / WORDS_PER_MINUTE)),
                       "hook": (summaries.get(i) or {}).get("hook") or "", "repost_of": item.duplicate_of}
+    people = authority.for_subject(store, pool, ideas, at)
     return {"scope": {k: v for k, v in subject.items() if k != "vector"}, "at": at.isoformat(), "floor": round(floor, 4),
-            "major": major, "also": scoped[MAJOR_MAX:], "sources": sources,
+            "major": major, "also": scoped[MAJOR_MAX:], "sources": sources, **people,
             "counts": {"ideas": len(scoped), "sources": len({i for x in scoped for i in x["sources"]}),
                        "rewrites": sum(1 for x in scoped for r in x["sources"].values() if r == "rewrite"),
                        "superseded": sum(len(x["previously"]) for x in scoped)}}
+
+
+def _by_base(scoped: list[dict]) -> list[dict]:
+    """In-scope ideas with the same base source, as one: two theses of one paper (its finding and the principle it
+    proposes) are one thing to read, so the brief gives them one card. The best-scored keeps its title and id."""
+    out, at = [], {}
+    for x in scoped:
+        if x["base"] not in at:
+            at[x["base"]] = len(out)
+            out.append({**x, "parts": [x["id"]]})
+            continue
+        y = out[at[x["base"]]]
+        seen = {m["thesis"] for m in y["members"]}
+        y["members"] = y["members"] + [m for m in x["members"] if m["thesis"] not in seen]
+        for i, r in x["sources"].items():
+            if i not in y["sources"] or ROLE_RANK[r] < ROLE_RANK[y["sources"][i]]:
+                y["sources"] = {**y["sources"], i: r}
+        y["history"] = sorted(y["history"] + x["history"], key=lambda h: (h["when"], h["thesis"]))
+        y["previously"] = y["previously"] + x["previously"]
+        y["conflicts"] = y["conflicts"] + x["conflicts"]
+        y["support"] = max(y["support"], x["support"])
+        y["parts"] = y["parts"] + [x["id"]]
+    return out
 
 
 def _lend(store, pool, major: list[dict], center_of_subject: list[float], on_subject: float, family: str) -> None:

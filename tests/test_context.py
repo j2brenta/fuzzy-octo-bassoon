@@ -29,8 +29,8 @@ def dense():
     embed.use(embed.HashedEmbedder())
     s = MemoryStore()
 
-    def add(item_id, day, claims, author=None, text=None, url=None, durability="reference"):
-        ex = item(item_id, day, claims, author=author, durability=durability)
+    def add(item_id, day, claims, author=None, text=None, url=None, durability="reference", entities=()):
+        ex = item(item_id, day, claims, author=author, durability=durability, entities=entities)
         if url:
             ex = ex.model_copy(update={"source": ex.source.model_copy(update={"url": url})})
         s.apply(ex, text or " ".join(c for _, c in claims), verdicts(item_id))
@@ -39,12 +39,14 @@ def dense():
                      ("p2", "Semantic entropy samples several answers and clusters them by meaning.")],
         author="Ann Lee", url=PAPER_URL)
     add("blog", 3, [("b1", "Semantic entropy can gate chatbot answers in production."),
-                    ("b2", "Gating on semantic entropy cut confabulated answers by a third.")], author="Bo Chen")
-    add("digest", 4, [("d1", "Researchers found a way to detect confabulations in language models.")])
-    add("repost", 5, [("r1", "Researchers found a way to detect confabulations in language models.")])
+                    ("b2", "Gating on semantic entropy cut confabulated answers by a third.")], author="Bo Chen",
+        entities=[("Fay Lin", "person")])
+    rex = [("Rex Vale", "person")]  # named everywhere, credited nowhere
+    add("digest", 4, [("d1", "Researchers found a way to detect confabulations in language models.")], entities=rex)
+    add("repost", 5, [("r1", "Researchers found a way to detect confabulations in language models.")], entities=rex)
     s.item("repost").duplicate_of = "digest"
     add("lender", 6, [("l1", "Confabulations in language models are arbitrary answers semantic entropy detects."),
-                      ("l2", "Vocational training teaches teenagers shift work.")], author="Cy Ito")
+                      ("l2", "Vocational training teaches teenagers shift work.")], author="Cy Ito", entities=rex)
     add("old", 2, [("o1", "The confabulation workshop starts at 14:00 UTC.")], durability="ephemeral")
     add("fix", 7, [("f1", "The confabulation workshop starts at 16:00 UTC.")], durability="ephemeral")
     add("german", 8, [("g1", "German vocational training is a respected path for teenagers.")], author="Di Roy")
@@ -53,7 +55,7 @@ def dense():
         "paper": [thesis("paper", 1, "Semantic entropy detects confabulations in language models by sampling answers.",
                          ["p1", "p2"])],
         "blog": [thesis("blog", 1, "Gating chatbot answers on semantic entropy cuts confabulations in production.",
-                        ["b1", "b2"], "commentary", [{"url": PAPER_URL}])],
+                        ["b1", "b2"], "commentary", [{"url": PAPER_URL}, {"name": "Fay Lin"}])],
         "digest": [thesis("digest", 1, "Researchers detect confabulations in language models.", ["d1"], "summary")],
         "lender": [thesis("lender", 1, "Fluent wrong answers mislead users.", ["l1", "l2"], "commentary")],
         "old": [thesis("old", 1, "The confabulation workshop starts at 14:00 UTC.", ["o1"], durability="ephemeral")],
@@ -138,3 +140,57 @@ def test_without_theses_or_relations_every_source_is_its_own_idea(dense):
     dense.theses, dense.thesis_relations = {}, {}
     c = context.build(dense, query="semantic entropy confabulations", at=AT)
     assert all(len([r for r in x["sources"].values() if r == "base"]) == 1 for x in c["major"])
+
+
+def test_authority_comes_from_roles_and_credit_not_from_being_named(dense):
+    c = context.build(dense, query="semantic entropy confabulations", at=AT)
+    rows = {r["name"]: r for r in c["people"]}
+    assert rows["Ann Lee"]["authority"] == 1.0 and "1 base" in rows["Ann Lee"]["why"]
+    assert "credited by Bo Chen" in rows["Ann Lee"]["why"]
+    assert rows["Bo Chen"]["authority"] < rows["Ann Lee"]["authority"]
+    assert rows["Fay Lin"]["authority"] > 0 and rows["Fay Lin"]["reach"] == 1  # one credit from a builder
+    assert rows["Rex Vale"]["authority"] == 0 and rows["Rex Vale"]["reach"] >= 2  # many mentions, no credit
+    assert any(e["from"] == "person:bo-chen" and e["to"] == "person:ann-lee" for e in c["edges"])
+
+
+class Writer:
+    model_name = "writer"
+
+    def __init__(self, paragraph, previously=""):
+        self.paragraph, self.previously, self.calls = paragraph, previously, 0
+
+    def complete_json(self, system_prompt, content):
+        self.calls += 1
+        assert "DATA" in system_prompt and json.loads(content)["base"]["id"].startswith("S")
+        return type("Reply", (), {"data": {"paragraph": self.paragraph, "previously": self.previously}})()
+
+
+def test_a_brief_keeps_only_cited_sentences_and_caches_them(dense, tmp_path):
+    from refresher import brief
+    c = context.build(dense, query="semantic entropy confabulations", at=AT)
+    ids = brief.number(c)
+    idea = next(x for x in c["major"] if x["base"] == "paper")
+    paper, blog = ids["paper"], ids["blog"]
+    model = Writer(f"Semantic entropy detects confabulations [{paper}]. It gates chatbot answers [{blog}] [S99]. "
+                   "This is promising. Uncited claims are dropped.")
+    written = brief.write(tmp_path, c, model)
+    text = written["texts"][idea["id"]]
+    assert text["paragraph"] == f"Semantic entropy detects confabulations [{paper}]. It gates chatbot answers [{blog}]."
+    assert (text["kept"], text["given"]) == (2, 4) and written["validity"] < 1
+    calls = model.calls
+    assert brief.write(tmp_path, c, model)["texts"][idea["id"]] == text and model.calls == calls  # cached
+    assert brief.write(tmp_path, c, None)["texts"][idea["id"]] == text  # the cache serves a page without a model
+    md = brief.markdown(c, written)
+    assert f"Read in depth: {paper}" in md and "## Sources" in md
+
+
+def test_a_lent_fact_is_cited_as_lent_and_without_a_model_the_theses_stand_in(dense, tmp_path):
+    from refresher import brief
+    c = context.build(dense, query="semantic entropy confabulations", at=AT)
+    ids = brief.number(c)
+    idea = next(x for x in c["major"] if x["base"] == "paper")
+    lender = ids["lender"]
+    text = brief.write_one(tmp_path, c, idea, ids, Writer(f"Confabulations are arbitrary [{lender}]."))
+    assert text["paragraph"] == f"Confabulations are arbitrary [+{lender}]."
+    offline = brief.write(tmp_path / "other", c, None)["texts"][idea["id"]]
+    assert offline["written_by"] is None and f"[{ids['paper']}]" in offline["paragraph"]
