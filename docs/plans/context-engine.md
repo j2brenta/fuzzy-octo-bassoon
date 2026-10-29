@@ -117,3 +117,49 @@ Issues are rated 1 (cosmetic) to 4 (blocks the task).
 ## Evaluation
 
 `eval/context/manifest.yaml` lists golden subjects with the expected base, rewrites, superseded theses and top people; `refresher eval-context` reports base@1, rewrite precision and recall, supersession found, the share of brief sentences carrying a valid citation (target 95 %), and a delta check: stamp at T1, the correction that arrives later is critical, the repost noise, an off-query item absent.
+
+## As built, 29 October
+
+Branch `kirill/context-engine`, on top of `kirill/thread-navigator` (which stays as the Sources tab).
+
+| Piece | Where |
+| --- | --- |
+| Theses stage, `theses/` | `refresher/theses.py`, `refresher theses` |
+| Thesis relations, `thesis-relations/` | `refresher/thesis_relate.py`, `refresher relate-theses` |
+| Major ideas, roles, history, lent facts | `refresher/context.py` |
+| Authority and reach | `refresher/authority.py` |
+| Written brief with checked citations | `refresher/brief.py`, `refresher brief "subject"` |
+| Query threads and stamps, `threads/` | `refresher/threads.py`, `refresher follow`, `refresher stamp [--at]` |
+| Page | `/brief/?q=|id=` (`static/context.*`), home threads shelf, Brief / Sources / Read tabs |
+| API | `GET /api/brief`, `/api/brief.md`, `/api/threads`, `/api/threads/<slug>[/snapshots[/<stamp>]]`; `POST /api/threads`, `/api/brief/write`, `/api/threads/<slug>/stamp` |
+| Hourly review | writes theses and thesis relations for new items (`consolidate.thesis_items`) |
+| Eval | `eval/context/manifest.yaml`, `refresher eval-context` |
+
+### Measured
+
+- **Theses** (Nemotron Ultra, 19 items on the seed and Telegram vaults, no failures). Stances read right: the forwarded announcement is a retelling, the correction original, CNBC a summary, TechSparks a retelling. A thesis cites what it credits (the Telegram note credits Krestnikov's arXiv URL).
+- **Relations between sources appear at the thesis grain.** On the Telegram vault, where 221 of 222 claim verdicts were NONE, thesis relations tie the note to the paper and TechSparks to CNBC; on the seed vault the correction UPDATES the announcement.
+- **Embeddings cannot group theses (Qwen3).** Related pairs scored 0.60–0.78, unrelated pairs on one subject up to 0.56. Only the model's relations group them.
+- **Phrase relevance.** Expanding a phrase by its nearest theses pulled in a hub thesis on "wealth". Expanding only by theses within 0.1 of the best match fixed it. The floor is the higher of 0.45 and 0.2 under the best thesis.
+- **Lent facts.** Cosine 0.61–0.66 gave topic-only coincidences, so a lent fact needs 0.68 to the idea and must also be on the subject.
+- **Eval:** 15 of 15 checks pass, and 100 % of written sentences keep a valid citation. The golden labels were written on a 22-item corpus after seeing the output: they guard the behaviour, they do not prove it generalises.
+- **The seed eval holds at 24/40 strict.** With `--include-unreviewed` it went from 26 to 25 after the relate-v3 re-judge, which the thesis work does not touch.
+- **Paid runs:**
+  - relate-v3 on both vaults: 22 calls, about 143k tokens;
+  - theses: 19 calls;
+  - thesis relations: 19 calls;
+  - brief paragraphs: cached once written.
+
+### Where it departs from the design above
+
+- **One card per base source.** Two in-scope ideas with the same base (a paper's finding and the principle it proposes) are shown as one card, because they are one thing to read.
+- **The Brief is its own page (`/brief/`) with tabs**, rather than a tab inside `/topic/`, so the navigator's page is unchanged.
+- **Authority is computed per major idea and summed with weights.** The subject view weights by relevance; the cluster view (`authority.by_cluster`) weights by the share of claims in each cluster. Both read the same per-idea contributions. The cluster view is computed but not yet shown in the Atlas.
+- **Person names are joined in the people list only.** People resolution keeps «Кости Крестникова» and Konstantin Krestnikov apart, so the list merges rows whose long surnames match across scripts. Extraction still keeps them as two people.
+
+### Not done
+
+- Atlas role badges and per-cluster authority bars.
+- The bot's filing reply naming the thesis it joined.
+- The usability test, which needs two or three people.
+- **A dense corpus.** One story told by 6–10 sources, with a later update, is still the biggest lever: it is the only way to measure base versus rewrite and catch-up deltas at any scale.
