@@ -16,6 +16,7 @@
     uv run refresher problems [--vault V] [--since DATE] [--limit N]   warnings and errors kept in logs/problems.jsonl
     uv run refresher translate [--vault V] [--force]  passages in REFRESHER_LANGUAGE for reading, stored in translations/
     uv run refresher summarize [--vault V] [--force]  a hook and a gist per item for the reading map, in summaries/
+    uv run refresher theses [--vault V] [--force]     one to three theses per item over its claims, in theses/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -40,7 +41,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate", "summarize", "problems"):
+                 "translate", "summarize", "theses", "problems"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -72,6 +73,8 @@ def main(argv=None) -> int:
             p.add_argument("--force", action="store_true", help="translate again even when a stored translation matches")
         if name == "summarize":
             p.add_argument("--force", action="store_true", help="summarise again even when a stored summary matches")
+        if name == "theses":
+            p.add_argument("--force", action="store_true", help="write theses again even when stored ones match")
         if name == "proposals":
             p.add_argument("--all", action="store_true", help="also list decided, stale and unplaced proposals")
         if name == "decide":
@@ -95,6 +98,8 @@ def main(argv=None) -> int:
         return _translate(args.vault, args.force, at)
     if args.command == "summarize":
         return _summarize(args.vault, args.force)
+    if args.command == "theses":
+        return _theses(args.vault, args.force)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
@@ -209,6 +214,32 @@ def _summarize(vault_path: Path, force: bool) -> int:
         done += 1
         print(f"summarize: {item_id[:10]} {record['hook']}")
     print(f"summarize: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
+    return 1 if failed else 0
+
+
+def _theses(vault_path: Path, force: bool) -> int:
+    from dotenv import load_dotenv
+    from engine.llm import ModelError
+    from refresher import theses
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = theses.client_from_environment()
+    if client is None:
+        sys.exit("theses: needs NEBIUS_API_KEY and JUDGE_PROVIDER or TRIAGE_PROVIDER set to nebius.")
+    store = vault.replay(vault_path, include_unreviewed=True)
+    items = theses.eligible(store)
+    todo = items if force else theses.missing(vault_path, store, items, client)
+    done = failed = 0
+    for item_id in todo:
+        try:
+            record = theses.theses_for(vault_path, store, item_id, client, force=force)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            failed += 1
+            print(f"theses: {item_id[:10]} failed ({type(error).__name__}: {error})", file=sys.stderr)
+            continue
+        done += 1
+        for t in record["theses"]:
+            print(f"theses: {item_id[:10]} [{t['stance']}] {t['statement']}")
+    print(f"theses: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
     return 1 if failed else 0
 
 

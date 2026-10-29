@@ -33,7 +33,7 @@ from graph import proposals as proposal_stage
 from graph.memory import MemoryStore, person_id
 from graph.store import AFFILIATION_WORDS, Affiliation, Decision, Edge, GraphStore, Proposal, ReviewReport
 from refresher import dossier, km, scoring
-from refresher import summarize, translate
+from refresher import summarize, theses, translate
 from engine import language
 from refresher.schemas import Extraction, Override, Relation
 
@@ -254,6 +254,7 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     store.use_themes(load_themes(vault))
     store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
     store.summaries = summarize.load_all(vault)  # item id -> hook and gist, for choosing what to read
+    store.theses = theses.load_all(vault)  # item id -> what it argues, over its claims (refresher/theses.py)
     store.extras = extras  # item id -> the links it carries and its triage kind, for the Thread Navigator
     return store
 

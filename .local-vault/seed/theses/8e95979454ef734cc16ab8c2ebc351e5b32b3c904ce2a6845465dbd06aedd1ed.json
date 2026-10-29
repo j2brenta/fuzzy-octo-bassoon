@@ -1,0 +1,20 @@
+{
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "source_content_hash": "5194868ec288f27ebec344ff53a59c8060de81a309e37d8ef81674acc7992b33",
+  "claims_hash": "f108d9e03d80bb73",
+  "language": "en",
+  "prompt_version": "theses-v1",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "theses": [
+    {
+      "id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:t1",
+      "statement": "The demo workshop starts at 14:00 UTC on 25 October 2026.",
+      "claims": [
+        "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023"
+      ],
+      "stance": "retelling",
+      "cites": [],
+      "durability": "ephemeral"
+    }
+  ]
+}

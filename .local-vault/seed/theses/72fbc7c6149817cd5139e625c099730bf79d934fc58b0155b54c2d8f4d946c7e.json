@@ -1,0 +1,34 @@
+{
+  "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
+  "source_content_hash": "d096a3b3b8bc84290b42338419adc6f0c9b2083023365fc9ac9379eaba934418",
+  "claims_hash": "4651747f9e315f68",
+  "language": "en",
+  "prompt_version": "theses-v1",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "theses": [
+    {
+      "id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:t1",
+      "statement": "At 18:30, Samuel Agbede will present a talk on retrieval for AI agents, demonstrating hybrid search, filtering, incremental updates, and context selection with a Redis retail agent, exploring relevance, freshness, conflicting sources, and context issues.",
+      "claims": [
+        "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208",
+        "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
+        "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d"
+      ],
+      "stance": "original",
+      "cites": [],
+      "durability": "ephemeral"
+    },
+    {
+      "id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e:t2",
+      "statement": "At 19:00, Evangelos Resvanis will present a talk on memory for AI agents, demonstrating memory scoping, retrieval, corrections, retiring assumptions, and testing consistency without context expansion, covering working and long-term memory separation.",
+      "claims": [
+        "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
+        "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
+        "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7"
+      ],
+      "stance": "original",
+      "cites": [],
+      "durability": "ephemeral"
+    }
+  ]
+}

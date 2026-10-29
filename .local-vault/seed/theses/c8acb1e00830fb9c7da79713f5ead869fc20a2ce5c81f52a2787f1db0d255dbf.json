@@ -1,0 +1,148 @@
+{
+  "item_id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf",
+  "source_content_hash": "e6af957efe1142d270c6ecb1b3fc3bedc2a2140400ba203768a40492fcf0df63",
+  "claims_hash": "926a5a4aca4508f7",
+  "language": "en",
+  "prompt_version": "theses-v1",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "theses": [
+    {
+      "id": "c8acb1e00830fb9c7da79713f5ead869fc20a2ce5c81f52a2787f1db0d255dbf:t1",
+      "statement": "A rich ecosystem of economists embracing a “messy life” approach—network effects, cultural adaptation, ethnographic insight, methodological pluralism, emergent phenomena—is marginalized by mainstream departments but would likely predict AI impacts more accurately than Acemoglu.",
+      "claims": [
+        "16d458bd0e6b17f0f0244b458ff462583263d15f4379abf3e6e8d1ecfac79735",
+        "020a0e29b612e9d0b900b2bac22fb33e05f09572317d42959e1417f807acc647",
+        "0e1d2b6cf3802c14bf6b0fedef2f58558ef48d6e2f97d5c04f5088675e0f94aa",
+        "35dc97b3b83e68742461099ff044178d894867c7fdebc3639b331b669290c285",
+        "aa183481da8904e81e8bcee8df32107282988972f313c73eb448bebe89e1ed8f",
+        "3f3047bc43acdc5775e20e50185bce876db49906bfa9d35bdf45ad6b83101a1b",
+        "2aaff14598d29191f25e71e01c3ce3c16d84425604063ae114ce38ec8e654ad6",
+        "26311a69c16d0f9abdff46e60e27b78274fae82fe9f32317c129043a462abb60",
+        "808a4e8f402465f076fdf0d05580ce7020d1420914251fe141d8178bd3a3d8c6",
+        "9c84895e5c2e4dad6d18ad1f06f968e4600d3a5f352794f7384aa0587e6deda6",
+        "7e99d2e11022dd4be86c5a00bb01de258feb9b5aef75680223586ecc0237df70"
+      ],
+      "stance": "commentary",
+      "cites": [
+        {
+          "name": "Ha-Joon Chang"
+        },
+        {
+          "name": "Dani Rodrik"
+        },
+        {
+          "name": "James Robinson"
+        },
+        {
+          "name": "Matthew Jackson"
+        },
+        {
+          "name": "Brian Arthur"
+        },
+        {
+          "name": "César Hidalgo"
+        },
+        {
+          "name": "Sendhil Mullainathan"
+        },
+        {
+          "name": "Raghuram Rajan"
+        },
+        {
+          "name": "Abhijit Banerjee"
+        },
+        {
+          "name": "Esther Duflo"
+        },
+        {
+          "name": "Steve Keen"
+        },
+        {
+          "name": "Stephanie Kelton"
+        },
+        {
+          "name": "Herman Daly"
+        },
+        {
+          "name": "Mark Granovetter"
+        },
+        {
+          "name": "Viviana Zelizer"
+        },
+        {
+          "name": "Richard Swedberg"
+        },
+        {
+          "name": "Fernando Fajnzylber"
+        },
+        {
+          "name": "Justin Yifu Lin"
+        },
+        {
+          "name": "Benno Ndulu"
+        },
+        {
+          "name": "Shoshana Zuboff"
+        },
+        {
+          "name": "Nick Srnicek"
+        },
+        {
+          "name": "Raj Chetty"
+        },
+        {
+          "name": "Economics Rules"
+        },
+        {
+          "name": "The Narrow Corridor"
+        },
+        {
+          "name": "The Human Network"
+        },
+        {
+          "name": "The Nature of Technology"
+        },
+        {
+          "name": "Why Information Grows"
+        },
+        {
+          "name": "Scarcity"
+        },
+        {
+          "name": "The Third Pillar"
+        },
+        {
+          "name": "Good Economics for Hard Times"
+        },
+        {
+          "name": "Debunking Economics"
+        },
+        {
+          "name": "The Deficit Myth"
+        },
+        {
+          "name": "Beyond Growth"
+        },
+        {
+          "name": "Getting a Job"
+        },
+        {
+          "name": "Purchase of Intimacy"
+        },
+        {
+          "name": "Demystifying the Chinese Economy"
+        },
+        {
+          "name": "The Age of Surveillance Capitalism"
+        },
+        {
+          "name": "Platform Capitalism"
+        },
+        {
+          "name": "The Fading American Dream"
+        }
+      ],
+      "durability": "reference"
+    }
+  ]
+}

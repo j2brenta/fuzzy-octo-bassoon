@@ -69,6 +69,7 @@ CSP = {"page": BASE_CSP + "; style-src 'self'; frame-ancestors 'none'",
        "topic": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"}  # its graphs are Cytoscape
 # What vault.replay reads; a change to any of these files replays the vault again.
 WATCHED = ("raw", "processed", "relations", "graph-reviews", "people-reviews", "people", "translations", "summaries",
+           "theses", "thesis-relations", "threads",
            "overrides.yaml",
            ".cache/cluster-names.json", ".cache/cluster-themes.json", "wiki/items", "wiki/people")
 logger = logging.getLogger(__name__)
