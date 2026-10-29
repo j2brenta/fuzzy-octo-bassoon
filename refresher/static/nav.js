@@ -1,6 +1,7 @@
 /* The shared bar: marks the current page, shows how many proposals wait, and holds the Consolidate button with the
-   last review's results. Opened from disk (wiki/graph/) there is no app behind the page, so the links stay hidden and
-   nothing is fetched. */
+   last review's results. A review that finishes elsewhere (the hourly one, the bot) updates the count within a
+   minute, so new proposals show on Review without a reload. Opened from disk (wiki/graph/) there is no app behind
+   the page, so the links stay hidden and nothing is fetched. */
 'use strict';
 (() => {
   const nav = document.getElementById('app-nav');
@@ -59,7 +60,7 @@
     dialog.append(title, intro, state, body, actions);
     document.body.append(dialog);
 
-    let status = null, timer = null, wasRunning = false;
+    let status = null, timer = null, wasRunning = false, seen;  // seen: when the last finished review ran
     const when = iso => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
     const since = iso => {
       const minutes = Math.round((Date.now() - new Date(iso)) / 60000);
@@ -118,6 +119,9 @@
       return fetch('/api/consolidate').then(r => r.ok ? r.json() : null).then(s => {
         if (!s) return;
         status = s;
+        const at = s.last ? s.last.at : null;
+        if (seen !== undefined && at !== seen && !wasRunning) onDone();  // a review ran elsewhere
+        seen = at;
         if (wasRunning && !s.running) {
           onDone();
           if (!s.error && !dialog.querySelector('.run-reload')) {
@@ -149,5 +153,7 @@
         }).catch(() => { run.disabled = false; });
     });
     refresh();
+    setInterval(() => { if (!document.hidden && !wasRunning) refresh(); }, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !wasRunning) refresh(); });
   }
 })();

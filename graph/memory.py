@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
+from engine.entities import eponym_only
 from graph.names import display_name, same_person as _same_person
 from graph.attribution import author_name, is_named_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
@@ -46,6 +47,14 @@ def person_id(name: str) -> str:
     # Accents fold to ASCII; a name with no Latin letters (Cyrillic) keeps its own words, else all such names share "person:".
     folded = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     return "person:" + "-".join(WORD.findall(folded.casefold()) or WORD.findall(name.casefold()))
+
+
+def _eponym(name: str | None, text: str) -> bool:
+    """A name written only inside a law or theorem in this text ("третьего закона Ньютона"): no person here. A word
+    may carry a case ending, so "Ньютон" finds "Ньютона"; a name not found at all is kept."""
+    if not name or not name.strip():
+        return False
+    return eponym_only(text, (m.span() for m in re.finditer(r"\b" + re.escape(name.strip()) + r"\w*", text)))
 
 
 def _name_rank(p: PersonNode):
@@ -169,6 +178,8 @@ class MemoryStore:
                 new_edges.append(Edge(ex.item_id, "AUTHORED_BY", author.person_id))
             ids = {}  # entity id -> person or org id, for the affiliations
             for ent in ex.entities:
+                if ent.kind == "person" and _eponym(ent.name, text):
+                    continue  # records from before extraction left these out
                 if ent.kind == "person" and is_named_person(ent.name) and is_named_person(ent.base_name or ent.name):
                     # The nominative form, so "Кости Крестникова" here and "Костя Крестников" elsewhere are one id.
                     name = ent.base_name or ent.name
@@ -206,7 +217,8 @@ class MemoryStore:
             relation = relate.judge(ex, text, self.candidate_pool(ex.item_id), relate.LexicalRelator())
         base_names = {e.name: e.base_name or e.name for e in ex.entities}
         for verdict in relation.verdicts:
-            if verdict.subject == 'person' and not is_named_person(verdict.subject_name):
+            if verdict.subject == 'person' and (not is_named_person(verdict.subject_name)
+                                                or _eponym(verdict.subject_name, text)):
                 verdict = verdict.model_copy(update={'subject':'world','subject_name':None})
             elif verdict.subject != 'world':
                 verdict = verdict.model_copy(update={'subject_name':base_names.get(verdict.subject_name, verdict.subject_name)})

@@ -7,7 +7,7 @@ import pytest
 from engine.entities import (EntityError, extract_entities, review_entities, supported_affiliations,
                              validate_entity_review)
 from engine.llm import ModelReply
-from engine.parse.article import citation_authors
+from engine.parse.article import chrome_start, citation_authors
 from graph.memory import MemoryStore
 from graph.memory import person_id
 from graph.names import display_name, same_person
@@ -168,3 +168,18 @@ def test_cited_names_read_first_name_first_and_share_an_id(cited, shown):
     assert display_name(cited) == shown
     if shown != cited:
         assert person_id(cited) == person_id(shown)
+
+
+def test_an_arxiv_page_ends_where_its_tool_list_starts():
+    text = "Abstract: truth is a compression artifact.\nBibliographic and Citation Tools\narXivLabs: projects\n"
+    assert text[:chrome_start(text)] == "Abstract: truth is a compression artifact.\n"
+    assert chrome_start("No chrome here.") == len("No chrome here.")
+
+
+def test_entity_extraction_does_not_read_the_arxiv_tool_list(tmp_path):
+    raw = capture_text("Konstantin Krestnikov trains models on Wikipedia.\nBibliographic and Citation Tools\n"
+                       "arXivLabs is a framework for new arXiv features.", tmp_path, channel="file",
+                       source_id="fixture:arxiv", source_name="arXiv fixture")
+    model = FakeModel([ModelReply({"people": [], "organizations": [], "affiliations": []})])
+    extract_entities(raw.path, model)
+    assert "arXivLabs" not in model.calls[0][1] and "Wikipedia" in model.calls[0][1]

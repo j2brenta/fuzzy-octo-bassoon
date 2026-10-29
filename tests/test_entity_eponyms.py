@@ -27,15 +27,42 @@ def test_separate_person_discussion_is_retained(text, name):
     assert validate_entity_review(entity_review(entities), entities, text, 'item', 'section')['status'] == 'accepted'
 
 
-def test_legacy_eponym_does_not_spend_an_enrichment_lookup(tmp_path):
+def test_a_legacy_eponym_is_no_person_and_spends_no_enrichment_lookup(tmp_path):
     from graph.memory import MemoryStore, person_id
     from refresher.consolidate import pick_people
-    from tests.test_people_scoring import record
+    from tests.test_people_scoring import record, relation
     ex, _ = record('eponym', speaker='Ньютона', author=None)
     store = MemoryStore()
-    store.apply(ex, 'Объяснение третьего закона Ньютона.')
-    assert person_id('Ньютона') in {p.person_id for p in store.people()}
+    store.apply(ex, 'Объяснение третьего закона Ньютона.', relation(ex, None))  # a record kept from before the rule
+    assert person_id('Ньютона') not in {p.person_id for p in store.people()}
     assert pick_people(tmp_path, store, 10) == []
+
+
+def test_a_claim_about_a_name_inside_a_law_is_about_the_world():
+    from graph.memory import MemoryStore
+    from tests.test_people_scoring import record, relation
+    ex, _ = record('eponym', speaker='Ньютона', author=None)
+    rel = relation(ex, None)
+    rel = rel.model_copy(update={'verdicts': [rel.verdicts[0].model_copy(update={'subject': 'person',
+                                                                                 'subject_name': 'Ньютона'})]})
+    store = MemoryStore()
+    store.apply(ex, 'Объяснение третьего закона Ньютона.', rel)
+    [claim] = [c for c in store.claims() if c.item_id == ex.item_id]
+    assert claim.subject_id is None
+
+
+def test_extraction_leaves_out_a_name_only_inside_a_law(tmp_path):
+    from engine.entities import extract_entities
+    from engine.llm import ModelReply
+    from store.raw import capture_text
+    from tests.test_triage import FakeModel
+    raw = capture_text('Костя Крестников объясняет третий закон Ньютона.', tmp_path, channel='file',
+                       source_id='fixture:eponym', source_name='Eponym fixture')
+    reply = {'people': [{'name': 'Костя Крестников', 'base_name': 'Костя Крестников', 'aliases': []},
+                        {'name': 'Ньютона', 'base_name': 'Ньютон', 'aliases': []}],
+             'organizations': [], 'affiliations': []}
+    result = extract_entities(raw.path, FakeModel([ModelReply(reply)]))
+    assert [e['name'] for e in result.entities] == ['Костя Крестников']
 
 
 def test_actual_person_still_eligible_for_enrichment(tmp_path):

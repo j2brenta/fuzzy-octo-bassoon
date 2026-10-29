@@ -17,6 +17,7 @@
     uv run refresher translate [--vault V] [--force]  passages in REFRESHER_LANGUAGE for reading, stored in translations/
     uv run refresher summarize [--vault V] [--force]  a hook and a gist per item for the reading map, in summaries/
     uv run refresher theses [--vault V] [--force]     one to three theses per item over its claims, in theses/
+    uv run refresher entities [--vault V] [--item ID]  extract people and organizations again where an older prompt did
     uv run refresher relate-theses [--vault V] [--force]   how theses of different items relate, in thesis-relations/
     uv run refresher brief [--vault V] [--at DATE] "subject"   the brief as markdown: major ideas, base, sources
     uv run refresher eval-context [--manifest M] [--out F]   score briefs and deltas against golden subjects
@@ -46,7 +47,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate", "summarize", "theses", "relate-theses", "brief", "follow", "stamp", "problems"):
+                 "translate", "summarize", "theses", "relate-theses", "brief", "follow", "stamp", "problems",
+                 "entities"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -84,6 +86,8 @@ def main(argv=None) -> int:
         if name == "stamp":
             p.add_argument("thread", help="the thread's slug, as `follow` printed it")
             p.add_argument("--offline", action="store_true", help="no model: cached paragraphs or the theses themselves")
+        if name == "entities":
+            p.add_argument("--item", action="append", default=[], help="only this item id (repeatable)")
         if name in ("theses", "relate-theses"):
             p.add_argument("--force", action="store_true", help="write theses again even when stored ones match")
         if name == "proposals":
@@ -117,6 +121,8 @@ def main(argv=None) -> int:
         return _summarize(args.vault, args.force)
     if args.command == "theses":
         return _theses(args.vault, args.force)
+    if args.command == "entities":
+        return _entities(args.vault, args.item)
     if args.command == "relate-theses":
         return _relate_theses(args.vault, args.force)
     if args.command in ("brief", "follow", "stamp"):
@@ -261,6 +267,40 @@ def _theses(vault_path: Path, force: bool) -> int:
         for t in record["theses"]:
             print(f"theses: {item_id[:10]} [{t['stance']}] {t['statement']}")
     print(f"theses: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
+    return 1 if failed else 0
+
+
+def _entities(vault_path: Path, only: list[str]) -> int:
+    """Entity records an older prompt wrote, extracted and reviewed again and the item repackaged, as a capture is:
+    base names, organization types and ties, eponyms left out. The graph picks them up on its next replay."""
+    from dotenv import load_dotenv
+    from engine import entities
+    from engine.llm import ModelError
+    from engine.package import PackageError, build_extraction
+    from engine.placement import apply_storage_stub
+    from engine.results import write_item_note
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = entities.entity_client_from_environment()
+    if client is None:
+        sys.exit("entities: set ENTITY_EXTRACTION=on and a model provider.")
+    todo = [p for p in entities.stale(vault_path) if not only or p.stem in only]
+    done = failed = 0
+    for path in todo:
+        try:
+            with vault.lock(vault_path):
+                result = entities.extract_entities(path, client)
+                review = entities.review_entities(path, client, result)
+                apply_storage_stub(build_extraction(path).path)
+                write_item_note(path)
+        except (ModelError, entities.EntityError, PackageError, OSError, ValueError) as error:
+            failed += 1
+            print(f"entities: {path.stem[:10]} failed ({type(error).__name__}: {error})", file=sys.stderr)
+            continue
+        done += 1
+        names = [e.get("base_name") or e["name"] for e in result.entities if e["kind"] != "concept"]
+        print(f"entities: {path.stem[:10]} {review.review['status']}: {', '.join(names)}")
+    print(f"entities: {done} items extracted again with {client.model_name}, {failed} failed, "
+          f"{entities.PROMPT_VERSION} current")
     return 1 if failed else 0
 
 
