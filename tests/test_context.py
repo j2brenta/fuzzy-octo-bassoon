@@ -35,13 +35,13 @@ def dense():
             ex = ex.model_copy(update={"source": ex.source.model_copy(update={"url": url})})
         s.apply(ex, text or " ".join(c for _, c in claims), verdicts(item_id))
 
+    rex = [("Rex Vale", "person")]  # named everywhere, credited nowhere
     add("paper", 1, [("p1", "Semantic entropy detects confabulations in language models."),
                      ("p2", "Semantic entropy samples several answers and clusters them by meaning.")],
-        author="Ann Lee", url=PAPER_URL)
+        author="Ann Lee", url=PAPER_URL, entities=rex)
     add("blog", 3, [("b1", "Semantic entropy can gate chatbot answers in production."),
                     ("b2", "Gating on semantic entropy cut confabulated answers by a third.")], author="Bo Chen",
         entities=[("Fay Lin", "person")])
-    rex = [("Rex Vale", "person")]  # named everywhere, credited nowhere
     add("digest", 4, [("d1", "Researchers found a way to detect confabulations in language models.")], entities=rex)
     add("repost", 5, [("r1", "Researchers found a way to detect confabulations in language models.")], entities=rex)
     s.item("repost").duplicate_of = "digest"
@@ -74,11 +74,11 @@ def dense():
 def test_the_paper_is_the_base_and_each_source_has_its_role(dense):
     c = context.build(dense, query="semantic entropy confabulations", at=AT)
     idea = next(x for x in c["major"] if x["base"] == "paper")
-    assert idea["sources"] == {"paper": "base", "blog": "builder", "digest": "rewrite", "repost": "rewrite"}
-    assert idea["support"] == 2  # Ann Lee and Bo Chen: a digest and its repost add no independent writer
+    assert idea["sources"] == {"paper": "base", "blog": "builder", "digest": "rewrite"}  # a repost is the digest again
+    assert idea["support"] == 2  # Ann Lee and Bo Chen: a digest adds no independent writer
     assert [h["step"] for h in idea["history"]] == ["first stated", "built on", "retold"]
     assert "german" not in c["sources"]  # off the subject
-    assert c["counts"]["rewrites"] >= 2
+    assert "repost" not in c["sources"]
 
 
 def test_a_link_makes_the_linked_source_the_base_whatever_the_dates(dense):
