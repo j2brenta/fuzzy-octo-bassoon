@@ -14,7 +14,7 @@ from typing import Iterable
 
 from graph import cluster, embed, proposals as proposal_stage, relate
 from engine.entities import eponym_only
-from graph.names import core as name_core, display_name, same_person as _same_person, surname_keys
+from graph.names import core as name_core, display_name, same_person as _same_person, split_names, surname_keys
 from graph.attribution import author_name, is_named_person
 from graph.relate import Candidate, jaccard as _jaccard, words as _words
 from graph.store import (Affiliation, ClaimNode, ClusterNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode,
@@ -133,6 +133,7 @@ class MemoryStore:
         self._grouped = True  # clusters, topics and links match the Ideas; built on first read (_groups)
         self._vectors: dict[tuple[str, str], list[float]] = {}  # (embedder, Idea title) -> vector
         self._aliases: dict[str, str] = {}  # absorbed person id -> kept person id
+        self._splits: dict[str, list[str]] = {}  # a record naming several people -> their names, as accepted
         self.proposals: dict = {}  # proposal id -> ProposalState, filled by vault.replay
         self.held_back: dict[str, str] = {}  # item id -> reason
         # SAME verdicts of held-back claims: a verdict judged with unreviewed items in the pool may target one,
@@ -288,6 +289,7 @@ class MemoryStore:
     def _refresh(self):
         self._dirty = False
         groups = self._resolve()
+        self._split_people()
         self._recount_duplicates()
         self._derive()
         self._build_ideas(groups)
@@ -328,6 +330,8 @@ class MemoryStore:
             self._topic_specs["topic:" + p.proposal_id[2:14]] = (p.payload["title"], list(p.payload["claims"]))
         elif p.kind == "merge_people":
             self._merge_person(*p.payload["people"])
+        elif p.kind == "split_person":
+            self._splits[p.payload["person"]] = list(p.payload["names"])
         self._refresh()
 
     def _merge_person(self, absorbed: str, kept: str) -> None:
@@ -356,6 +360,42 @@ class MemoryStore:
                 item.author_id = kept
         self._edges = list(dict.fromkeys(Edge(e.src, e.type, kept if e.dst == absorbed else e.dst, e.rationale, e.at)
                                          for e in self._edges))
+
+    def _split_people(self) -> None:
+        """Each accepted split, again on every refresh, since a post placed later may name the pair as one: the
+        record's posts, facts, statements and ties go to every person it names (each joins a person the vault
+        already has under that name), the claims and items that point at one id to the first, and an affiliation
+        in brackets ("(MIT)") ties them all when the organization is known. The record itself is gone."""
+        for compound, names in self._splits.items():
+            gone = self._people.pop(compound, None)
+            if gone is None:
+                continue
+            parts = [self._person(n) for n in names]
+            first = parts[0].person_id
+            for part in parts:
+                part.handles |= gone.handles
+                part.authored |= gone.authored
+                part.mentioned_in |= gone.mentioned_in
+                part.facts |= gone.facts
+                part.statements |= gone.statements
+            for item in self._items.values():
+                if item.author_id == compound:
+                    item.author_id = first
+            for node in self._claims.values():
+                node.speaker_id = first if node.speaker_id == compound else node.speaker_id
+                node.subject_id = first if node.subject_id == compound else node.subject_id
+            bracket = name_core(gone.name)[1]
+            posts = self._posts_of(parts[0])
+            known = [Affiliation(p.person_id, org_id(bracket), "affiliated", min(posts)) for p in parts] \
+                if bracket and org_id(bracket) in self._orgs and posts else []
+            moved = [Affiliation(p.person_id, a.org_id, a.relation, a.item_id, a.url)
+                     for a in self._affiliations if a.person_id == compound for p in parts]
+            self._affiliations = list(dict.fromkeys(
+                [a for a in self._affiliations if a.person_id != compound] + moved + known))
+            self._edges = list(dict.fromkeys(
+                e2 for e in self._edges
+                for e2 in ([Edge(e.src, e.type, p.person_id, e.rationale, e.at) for p in parts]
+                           if e.dst == compound else [e])))
 
     def placed_fingerprint(self) -> str:
         """Which items are placed, in O(1): stored with each verdict file (Relation.pool)."""
@@ -956,6 +996,15 @@ class MemoryStore:
             absorbed, kept = sorted((a, b), key=_name_rank)
             add("merge_people", {"people": [absorbed.person_id, kept.person_id]},
                 f"{absorbed.name} and {kept.name} {why}.")
+
+        # A record that names several people at once ("Abhijit Banerjee and Esther Duflo (MIT)"): one each.
+        for p in people:
+            names = split_names(p.name)
+            if names and not p.identity_url:
+                here = [n for n in names if self._aliases.get(person_id(n), person_id(n)) in self._people]
+                also = f"; {' and '.join(here)} {'is' if len(here) == 1 else 'are'} already here" if here else ""
+                add("split_person", {"person": p.person_id, "name": p.name, "names": names},
+                    f"“{p.name}” names {len(names)} people: {', '.join(names)}{also}.")
 
         # Replacing or contradicting a durable claim is live already; the user confirms or rejects it.
         for e in sorted(self._relations, key=lambda e: (e.src, e.dst)):

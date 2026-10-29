@@ -53,7 +53,7 @@
   }
   const scoreText = score => score?.importance == null ? (people.get(score?.person_id)?.facts?.length ? 'Facts about them' : 'Unscored') : `Rank #${score.rank}`;
   const kinds = {merge_ideas: 'Merge two Ideas', topic: 'New topic', merge_people: 'Same person',
-    relation: 'Confirm a relation'};
+    split_person: 'Several people', relation: 'Confirm a relation'};
   const basisWords = {auto: 'automatic', accepted: 'accepted by you', proposal: 'proposed, waiting for you'};
   const contextFields = {subject: 'Subject', version: 'Version', metric: 'Metric', dataset: 'Dataset',
     unit: 'Unit', conditions: 'Conditions', time_attribution: 'Time / attribution', unknowns: 'Unknown'};
@@ -115,7 +115,8 @@
     const card = el('article', null, 'proposal' + (p.status === 'proposed' ? ' waiting' : ''));
     card.append(el('span', kinds[p.kind] || p.kind, 'kind'));
     const head = p.kind === 'topic' ? p.title : p.kind === 'relation' ? `${p.claims[0]?.statement.slice(0, 60)}… ${p.type.toLowerCase()} an earlier claim`
-      : p.kind === 'merge_people' ? p.people.join(' = ') : 'These say the same thing';
+      : p.kind === 'merge_people' ? p.people.join(' = ') : p.kind === 'split_person' ? `${p.people[0]} → ${p.people.slice(1).join(' + ')}`
+      : 'These say the same thing';
     card.append(el('h3', head));
     if (p.claims.length) {
       const list = el('ul');

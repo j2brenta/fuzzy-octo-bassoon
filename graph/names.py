@@ -67,6 +67,29 @@ def surname_keys(name: str) -> set[str]:
     return {latin(w[-1])} | ({latin(w[0])} if len(w) == 2 else set())
 
 
+_JOINED = re.compile(r"\s*[,;]\s*(?:(?:and|&|и|und|et)\s+)?|\s+(?:and|&|и|und|et)\s+")
+_NAME_PART = re.compile(rf"^(?:{_NAME_WORD}\s+){{1,3}}{_NAME_WORD}$")
+
+
+def split_names(name: str) -> list[str]:
+    """The people a record names together, when it names more than one: "Abhijit Banerjee and Esther Duflo (MIT)"
+    is ["Abhijit Banerjee", "Esther Duflo"]. Every part has to be a full name of two to four capitalised words (a
+    particle such as "de" aside), so
+    "Procter and Gamble", "Bill and Melinda Gates" and "Gal, Yarin" stay one record."""
+    parts = [x.strip() for x in _JOINED.split(core(name)[0]) if x.strip()]
+    if len(parts) < 2 or not all(_NAME_PART.match(x) and _capitalised(x.split()) for x in parts):
+        return []
+    return parts
+
+
+_PARTICLES = {"de", "da", "di", "du", "del", "della", "der", "den", "van", "von", "la", "le", "bin", "ibn", "al"}
+
+
+def _capitalised(w: list[str]) -> bool:
+    """Every word starts with a capital, except a particle inside the name ("Simone de Beauvoir")."""
+    return w[0][0].isupper() and w[-1][0].isupper() and all(x[0].isupper() or x in _PARTICLES for x in w[1:-1])
+
+
 def latin(word: str) -> str:
     """A casefolded word in Latin letters, with spelling variants folded, so Крестников and Krestnikov meet."""
     out = "".join(_LATIN.get(ch, ch) for ch in word.casefold())

@@ -120,6 +120,21 @@ def test_an_accepted_people_merge_moves_authorship(tmp_path):
     assert store.item("gal").author_id == "person:yarin-gal"
 
 
+def test_an_accepted_split_gives_each_person_the_record_s_posts(tmp_path):
+    pair = item("pair", 11, [("p1", "Randomised trials changed development economics.")],
+                entities=[("Abhijit Banerjee and Esther Duflo", "person")])
+    v = write(tmp_path, ALPHA, pair)
+    payload = {"person": "person:abhijit-banerjee-and-esther-duflo", "name": "Abhijit Banerjee and Esther Duflo",
+               "names": ["Abhijit Banerjee", "Esther Duflo"]}
+    p = propose(v, "split_person", payload)
+    vault.decide(v, p.proposal_id, "accept", token(v, p.proposal_id), at=AT)
+    store = vault.replay(v)
+    assert store.proposals[p.proposal_id].status == "accepted"
+    people = {p.person_id: p for p in store.people()}
+    assert payload["person"] not in people
+    assert people["person:abhijit-banerjee"].mentioned_in == people["person:esther-duflo"].mentioned_in == {"pair"}
+
+
 def test_a_proposal_about_a_held_back_item_is_unplaced_in_a_strict_rebuild(tmp_path):
     pending = BETA.model_copy(update={"quality_status": "needs_revision", "quality_gate_passed": False})
     v = write(tmp_path, ALPHA, pending)

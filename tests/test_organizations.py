@@ -10,7 +10,7 @@ from engine.llm import ModelReply
 from engine.parse.article import chrome_start, citation_authors
 from graph.memory import MemoryStore
 from graph.memory import person_id
-from graph.names import display_name, same_person
+from graph.names import display_name, same_person, split_names
 from refresher.graphview import map_data
 from refresher.schemas import Extraction
 from store.raw import capture_text
@@ -229,3 +229,41 @@ def test_profiles_citing_the_same_page_make_namesakes_one_proposal():
         store._people[pid].role = {"value": "Professor", "url": "https://example.com/gal"}
     [merge] = merges_of(store)
     assert "profiles cite the same page" in merge.rationale
+
+
+@pytest.mark.parametrize("name, parts", [
+    ("Abhijit Banerjee and Esther Duflo (MIT)", ["Abhijit Banerjee", "Esther Duflo"]),
+    ("Abhijit Banerjee, Esther Duflo, and Michael Kremer", ["Abhijit Banerjee", "Esther Duflo", "Michael Kremer"]),
+    ("Ada Lovelace; Alan Turing", ["Ada Lovelace", "Alan Turing"]),
+    ("Анна Иванова и Иван Петров", ["Анна Иванова", "Иван Петров"]),
+    ("Jean-Paul Sartre and Simone de Beauvoir", ["Jean-Paul Sartre", "Simone de Beauvoir"]),
+    ("Procter and Gamble", []), ("Bill and Melinda Gates", []), ("Gal, Yarin", []), ("Herman Daly (Maryland)", []),
+])
+def test_a_record_naming_several_people_is_read_as_each(name, parts):
+    assert split_names(name) == parts
+
+
+def test_a_record_of_two_people_is_proposed_split_and_stays_split():
+    store = MemoryStore()
+    store.apply(post("panel", 20, "Kirill R", [
+        {"entity_id": "a", "name": "Abhijit Banerjee and Esther Duflo (MIT)", "kind": "person"},
+        {"entity_id": "m", "name": "MIT", "kind": "organization", "org_type": "university"}],
+        [{"affiliation_id": "t1", "person": "a", "organization": "m", "relation": "works_at"}]))
+    store.apply(post("talk", 21, "Esther Duflo", []))
+    [split] = [p for p in store.review(datetime(2026, 10, 22, tzinfo=timezone.utc)).proposals if p.kind == "split_person"]
+    assert split.payload == {"person": "person:abhijit-banerjee-and-esther-duflo-mit",
+                             "name": "Abhijit Banerjee and Esther Duflo (MIT)", "names": ["Abhijit Banerjee", "Esther Duflo"]}
+    assert "Esther Duflo is already here" in split.rationale
+    store._splits[split.payload["person"]] = split.payload["names"]
+    store._refresh()
+    people = {p.person_id: p for p in store.people()}
+    assert split.payload["person"] not in people
+    assert people["person:abhijit-banerjee"].mentioned_in == {"panel"}
+    assert people["person:esther-duflo"].mentioned_in == {"panel"} and people["person:esther-duflo"].authored == {"talk"}
+    assert {(t.person_id, t.org_id) for t in store.affiliations()} == {("person:abhijit-banerjee", "org:mit"),
+                                                                       ("person:esther-duflo", "org:mit")}
+    store.apply(post("later", 22, "Kirill R", [{"entity_id": "a", "name": "Abhijit Banerjee and Esther Duflo (MIT)",
+                                                "kind": "person"}]))  # named as one again: split again
+    people = {p.person_id: p for p in store.people()}
+    assert split.payload["person"] not in people and "later" in people["person:esther-duflo"].mentioned_in
+    assert not [p for p in store.review(datetime(2026, 10, 23, tzinfo=timezone.utc)).proposals if p.kind == "split_person"]

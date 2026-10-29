@@ -230,7 +230,8 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             "type": p.payload.get("type"),
             "claims": [{"id": c, "statement": all_claims.get(c, "(not in this graph)"),
                         "item": claims[c].item_id if c in claims else None} for c in p.payload.get("claims", [])],
-            "people": [people.get(pid, pid) for pid in p.payload.get("people", [])],
+            "people": [people.get(pid, pid) for pid in p.payload.get("people", [])] if p.kind != "split_person"
+            else [p.payload["name"], *p.payload["names"]],  # the record as written, then the people it names
             "decisions": [{"action": d.action, "at": d.at.isoformat(), "rationale": d.rationale}
                           for d in st.decisions]})
 
