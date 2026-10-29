@@ -3,7 +3,7 @@
   "item_id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v2",
+  "prompt_version": "relate-v3",
   "candidates": {
     "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c": [
       "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023"
@@ -15,32 +15,42 @@
   "verdicts": [
     {
       "claim_id": "505a3b8f0cf60b3c628fb16da571c3a532624d467f83cc8b80fafcda3004f81c",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "UPDATES",
       "target_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
       "abstention": null,
       "context": {
-        "subject": "demo workshop",
+        "subject": "demo workshop start time",
         "version": "",
-        "metric": "start time",
+        "metric": "time",
         "dataset": "",
         "unit": "UTC",
         "conditions": "25 October 2026",
-        "time_attribution": "announcement",
+        "time_attribution": "",
         "unknowns": ""
       },
-      "rationale": "The claim updates the workshop start time from 14:00 to 16:00 UTC on the same date."
+      "rationale": "The claim updates the start time from 14:00 to 16:00 UTC for the same workshop date."
     },
     {
       "claim_id": "28326d26a5c87b50ddac506808f39563d263e547fd0232223414b0cc3e4a0273",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "SAME",
       "target_id": "37423c21cc038f5673be5d7593b9a936063ddbe751ab195044dee3f3813c1023",
       "abstention": null,
       "context": null,
-      "rationale": "Both state the workshop was announced to start at 14:00 UTC on 25 October 2026."
+      "rationale": "Both assert the workshop was previously scheduled for 14:00 UTC."
     }
   ],
   "pool": "c75c040db8cc534d"

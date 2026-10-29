@@ -3,13 +3,18 @@
   "item_id": "8e196a59a7e84bae21e892f00b376fd5b495fd831ce2670c0d8ce36d5ca1fa54",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v2",
+  "prompt_version": "relate-v3",
   "candidates": {
     "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908": []
   },
   "verdicts": [
     {
       "claim_id": "bc8aa4c91d27f4b4e6ba7e762774f5ab4b7e092ad7f364b774c10064a79dc908",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "NONE",

@@ -3,7 +3,7 @@
   "item_id": "72fbc7c6149817cd5139e625c099730bf79d934fc58b0155b54c2d8f4d946c7e",
   "relator": "model",
   "model": "nvidia/nemotron-3-super-120b-a12b",
-  "prompt_version": "relate-v2",
+  "prompt_version": "relate-v3",
   "candidates": {
     "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208": [],
     "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7": [],
@@ -15,6 +15,11 @@
   "verdicts": [
     {
       "claim_id": "3b02c37d35948bdb92a57bef4e10409b17323dc2b745a5d7c1d0aa10a99da208",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "person",
       "subject_name": "Samuel Agbede",
       "label": "NONE",
@@ -25,6 +30,11 @@
     },
     {
       "claim_id": "cd4ae43f9235ecb36e423858a73f6fc658553cad21e85377a321bce485e0e6d7",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "person",
       "subject_name": "Evangelos Resvanis",
       "label": "NONE",
@@ -35,6 +45,11 @@
     },
     {
       "claim_id": "78645c54795d135b3f7c78cf3704f38ba205bcca2cfac9b68a0964761d7f189d",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "NONE",
@@ -45,6 +60,11 @@
     },
     {
       "claim_id": "6e0a747bd145a0e537914dc75663b08ef6ff61d701fbd8fdae484e7ac1e0125f",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "NONE",
@@ -55,6 +75,11 @@
     },
     {
       "claim_id": "c02d5d1a5d2d722cf57a262b9c4c4c97a05aec2d2574e91b1eab3895d557203e",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "NONE",
@@ -65,6 +90,11 @@
     },
     {
       "claim_id": "945e5ede52665cc4630eb70c201de4498236e7c07338097970b475b6bbe5e4ea",
+      "attribution": {
+        "kind": "unknown",
+        "person_name": null,
+        "evidence": []
+      },
       "subject": "world",
       "subject_name": null,
       "label": "NONE",
