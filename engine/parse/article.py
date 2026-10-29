@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import json
+import re
 
 from lxml import html, etree
 from trafilatura import bare_extraction
@@ -9,6 +10,9 @@ from trafilatura import bare_extraction
 from engine.parse.web import WebError
 
 ARTICLE_PARSER_VERSION = "article-v1"
+# Site chrome trafilatura keeps after an article, by the line it starts with: an arXiv abstract page ends with its
+# tool list and the arXivLabs blurb, which name arXiv and arXivLabs and nothing the paper is about.
+CHROME = (re.compile(r"^Bibliographic and Citation Tools$", re.M),)
 
 
 @dataclass(frozen=True)
@@ -69,6 +73,12 @@ def citation_authors(content: bytes) -> list[str]:
     return names
 
 
+def chrome_start(text: str) -> int:
+    """Where site chrome starts in an article's text; its length when there is none. Captures parsed before it was
+    cut still hold it, so entity extraction reads only up to here too."""
+    return min((m.start() for pattern in CHROME if (m := pattern.search(text))), default=len(text))
+
+
 def _first(names: list[str]) -> str | None:
     return names[0] if names else None  # an item has one author: the first one listed
 
@@ -78,9 +88,11 @@ def parse_article(content: bytes, url: str) -> Article:
         document = bare_extraction(content, url=url, with_metadata=True,
                                    include_comments=False, include_tables=True,
                                    favor_precision=True, date_extraction_params={"extensive_search": False})
-        if document is None or not isinstance(document.text, str) or len(document.text.strip()) < 100:
+        text = document.text.strip() if document is not None and isinstance(document.text, str) else ""
+        text = text[:chrome_start(text)].rstrip()
+        if len(text) < 100:
             raise WebError("Could not extract a substantive article; paste the text if the page requires login or JavaScript.")
-        return Article(document.text.strip(), document.title or None, _first(citation_authors(content)) or document.author or None,
+        return Article(text, document.title or None, _first(citation_authors(content)) or document.author or None,
                        document.sitename or None, _publication_date(content))
     except WebError:
         raise

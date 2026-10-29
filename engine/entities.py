@@ -17,6 +17,7 @@ from engine.artifacts import save_rejected, atomic_json, fingerprint
 from engine.extract import source_passages
 from engine.llm import JsonModel, ModelError, ModelOutputError, judge_client_from_environment
 from engine.parse import parse_capture
+from engine.parse.article import chrome_start
 
 PROMPT_VERSION = "entities-v8"
 SUPPORTED_ENTITY_VERSIONS = {"entities-v1", "entities-v2", "entities-v3", "entities-v4", "entities-v5", "entities-v6", "entities-v7",
@@ -194,14 +195,20 @@ def _base_name_fits(name: str, base) -> bool:
     return len(written) == len(said) and all(a[0] == b[0] for a, b in zip(written, said))
 
 
+_EPONYM_BEFORE = re.compile(r"(?:\b(?:law|theorem|principle|unit)\s+of|\b(?:закон[а-я]*|теорем[а-я]*|принцип[а-я]*|единиц[а-я]*))\s*$", re.I)
+_EPONYM_AFTER = re.compile(r"^\s*(?:['’]s?\s+)?(?:(?:first|second|third|\d+(?:st|nd|rd|th))\s+)?(?:law|theorem|principle|unit)\b", re.I)
+
+
+def eponym_only(text: str, spans) -> bool:
+    """Whether every (start, end) occurrence of a name is inside a law, theorem, principle or unit ("третьего закона
+    Ньютона", "Bayes' theorem"): unambiguous adjacent syntax only; semantic cases are left to review."""
+    spans = list(spans)
+    return bool(spans) and all(_EPONYM_BEFORE.search(text[max(0, start - 70):start])
+                               or _EPONYM_AFTER.search(text[end:end + 70]) for start, end in spans)
+
+
 def _eponym_only(entity, text):
-    """Recognize unambiguous adjacent eponym syntax; leave semantic cases to review."""
-    before = re.compile(r"(?:\b(?:law|theorem|principle|unit)\s+of|\b(?:закон[а-я]*|теорем[а-я]*|принцип[а-я]*|единиц[а-я]*))\s*$", re.I)
-    after = re.compile(r"^\s*(?:['’]s?\s+)?(?:(?:first|second|third|\d+(?:st|nd|rd|th))\s+)?(?:law|theorem|principle|unit)\b", re.I)
-    mentions = entity.get("mentions", [])
-    return bool(mentions) and all(
-        before.search(text[max(0, m["start_char"]-70):m["start_char"]]) or
-        after.search(text[m["end_char"]:m["end_char"]+70]) for m in mentions)
+    return eponym_only(text, ((m["start_char"], m["end_char"]) for m in entity.get("mentions", [])))
 
 
 def validate_entities(data: dict, text: str, item_id: str, section_id: str, *, limit: int = MAX_ENTITIES,
@@ -490,7 +497,9 @@ def extract_entities(raw_path: Path, client: JsonModel) -> EntityResult:
                                     _cached_affiliations(cached.get("affiliations", []), entities, raw["item_id"]))
         except (ValueError, EntityError):
             pass
-    content = json.dumps({"passages": [{"id": p["id"], "text": p["text"]} for p in source_passages(text)]}, ensure_ascii=False)
+    chrome = chrome_start(text)  # an arXiv page's tool list names arXiv, not anyone the paper is about
+    content = json.dumps({"passages": [{"id": p["id"], "text": p["text"]} for p in source_passages(text)
+                                       if p["start"] < chrome]}, ensure_ascii=False)
     feedback = ""
     failed_data = None
     errors = []
@@ -511,6 +520,8 @@ def extract_entities(raw_path: Path, client: JsonModel) -> EntityResult:
                     except EntityError as error:
                         raise EntityError(f"Entity entry {index}: {error}") from None
             entities = validate_entities(normalized, text, raw["item_id"], section)
+            # A name only inside a law or theorem is no person here: left out, so it cannot hold the item back.
+            entities = [e for e in entities if not (e["kind"] == "person" and _eponym_only(e, text))]
             ties, tie_repairs = repair_affiliations(ties, entities)
             affiliations = validate_affiliations(ties, entities, raw["item_id"])
             reference_repairs += tie_repairs
@@ -651,6 +662,19 @@ def review_entities(raw_path: Path, client: JsonModel, extracted: EntityResult) 
                              "actual_model": reply.actual_model, "request_id": reply.request_id,
                              "usage": reply.usage, "usage_scope": "final_response_only"})
     return EntityReviewResult(destination, review, False)
+
+
+def stale(vault: Path) -> list[Path]:
+    """Captures whose entity record an older prompt wrote: kept and used until they are extracted again."""
+    out = []
+    for record in sorted((vault / "entities").glob("*.json")):
+        try:
+            version = json.loads(record.read_text(encoding="utf-8")).get("prompt_version")
+        except (OSError, ValueError):
+            continue
+        if version != PROMPT_VERSION and (vault / "raw" / record.name).exists():
+            out.append(vault / "raw" / record.name)
+    return out
 
 
 def main() -> int:
