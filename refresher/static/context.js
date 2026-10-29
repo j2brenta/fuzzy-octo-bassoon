@@ -61,8 +61,8 @@
     const card = el('article', null, 'ce-idea'); card.id = 'idea-' + n; card.dataset.idea = x.id;
     card.style.setProperty('--idea', ideaVar(n - 1));
     const t = c.written.texts[x.id] || {};
-    const head = el('div', null, 'ce-chips');
-    head.append(el('span', `IDEA ${n}`, 'ce-num'));
+    const head = el('div', null, 'ce-chips ce-idea-head');
+    head.append(el('span', `IDEA ${n}`, 'ce-num'), el('span', '', 'ce-here'));
     const n_sources = Object.keys(x.sources).length;
     head.append(el('span', plural(n_sources, 'source'), 'chip muted'));
     if (x.support > 1) head.append(el('span', `${x.support} independent writers`, 'chip'));
@@ -419,8 +419,8 @@
     return out.length ? out : [el('p', 'Nothing further on this subject yet.', 'small quiet')];
   }
 
-  let areaCy = null, miniCy = null, mapMode = 'area';
-  function mapTap(area) { return data => data.kind === 'source' ? go([data.item]) : peek($('peek'), data, area); }
+  let areaCy = null, mapMode = 'area';
+  function mapTap(area) { return data => data.kind === 'source' ? open(data.item) : peek($('peek'), data, area); }
   function showMap(which) {
     mapMode = which;
     for (const [id, mode] of [['show-area', 'area'], ['show-full', 'full'], ['show-ideas', 'ideas']]) $(id).setAttribute('aria-pressed', String(which === mode));
@@ -429,17 +429,19 @@
     const area = which === 'full' ? c.area_full : c.area;
     if (areaCy) areaCy.destroy();
     areaCy = drawArea($('area'), area, null, mapTap(area));
+    if (path.length) markHere(path[path.length - 1]);
     $('map-note').textContent = which === 'full'
       ? `${plural(area.clusters.length, 'cluster')} you have; the brief’s ${area.clusters.filter(k => k.in_brief).length} lit`
       : `${plural(area.clusters.filter(k => k.in_brief).length, 'cluster')} of the brief, ${area.clusters.filter(k => !k.in_brief).length} beyond`;
   }
 
-  // --- the overview's details: sources, people and organizations as badges, claims by kind, further reading ---
+  // --- the details panel: the whole brief, or the source you read; people and organizations as badges ---
   const KINDS = ['principle', 'fact', 'opinion', 'how-to', 'announcement'];
   const KIND_WORDS = {principle: 'Principles', fact: 'Facts', opinion: 'Opinions', 'how-to': 'How-to', announcement: 'Announcements'};
   const RELATION = {wrote: 'wrote it', quoted: 'quoted', about: 'facts about them', mentioned: 'named'};
+  const cap = t => t ? t[0].toUpperCase() + t.slice(1) : t;
   function badges(box, rows, item) {
-    box.replaceChildren(...rows.slice(0, 24).map(r => {
+    box.replaceChildren(...rows.slice(0, 30).map(r => {
       const rel = item ? r.relation : Object.values(r.items || {})[0];
       const b = el('span', r.name, 'badge ' + (rel || ''));
       b.title = item ? (RELATION[rel] || '') : Object.entries(r.items || {}).map(([i, x]) => `${RELATION[x] || x} in ${sid(i) || source(i).source || ''}`).join('; ');
@@ -447,40 +449,84 @@
     }));
     if (!rows.length) box.append(el('span', 'none named', 'small quiet'));
   }
-  function details() {
+  function claimButton(cl, onClick) {
+    const li = el('li', null, cl.superseded ? 'superseded' : '');
+    const b = el('button', cl.statement, 'ce-claim'); b.type = 'button'; b.dataset.claim = cl.id;
+    if (cl.idea != null) { b.style.setProperty('--idea', ideaVar(cl.idea)); b.classList.add('in-brief'); }
+    b.addEventListener('click', onClick);
+    li.append(b);
+    return li;
+  }
+  function group(title, rows, open, colour) {
+    const det = el('details', null, 'ce-kind'); det.open = open;
+    if (colour != null) det.style.setProperty('--idea', ideaVar(colour));
+    det.append(el('summary', `${title} · ${rows.length}`));
+    const ul = el('ul', null, 'ce-claims'); rows.forEach(r => ul.append(r)); det.append(ul);
+    return det;
+  }
+  function briefDetails() {
     const d = c.details;
-    const ids = c.written.ids;
-    const order = Object.keys(c.sources).sort((a, b) => (ids[a] ? +ids[a].slice(1) : 999) - (ids[b] ? +ids[b].slice(1) : 999) || a.localeCompare(b));
-    $('sources').replaceChildren(...order.map(i => {
-      const li = el('li'); const a = el('a', source(i).title || i); a.href = readHref(i);
-      li.append(el('span', sid(i) || '·', 'sid'), a);
-      const roles = el('span', null, 'roles');
-      c.major.forEach((x, n) => { if (x.sources[i]) { const ch = el('span', `${x.sources[i]} · idea ${n + 1}`, 'chip role'); ch.style.setProperty('--idea', ideaVar(n)); roles.append(ch); } });
-      li.append(roles); return li;
-    }));
+    $('scope-label').textContent = 'the whole brief';
+    $('claims-title').textContent = 'Claims, by kind';
     badges($('people'), d.people); badges($('orgs'), d.organizations);
     const groups = KINDS.map(k => [k, d.claims.filter(cl => (cl.kind || 'fact') === k)]).filter(([, list]) => list.length);
-    $('claims').replaceChildren(...groups.map(([k, list]) => {
-      const det = el('details', null, 'ce-kind'); det.open = list.length <= 6;
-      det.append(el('summary', `${KIND_WORDS[k]} · ${list.length}`));
-      const ul = el('ul', null, 'ce-claims');
-      list.sort((a, b) => (a.idea == null) - (b.idea == null)).forEach(cl => {
-        const li = el('li', null, cl.superseded ? 'superseded' : '');
-        const b = el('button', cl.statement, 'ce-claim'); b.type = 'button';
-        if (cl.idea != null) { b.style.setProperty('--idea', ideaVar(cl.idea)); b.classList.add('in-brief'); }
-        b.title = 'Read it in its source';
-        b.addEventListener('click', () => go([cl.item], cl.id));
-        li.append(b, el('span', ` ${sid(cl.item) || ''} ${source(cl.item).source || ''}`, 'small quiet')); ul.append(li);
-      });
-      det.append(ul); return det;
-    }));
+    $('claims').replaceChildren(...groups.map(([k, list]) => group(KIND_WORDS[k],
+      list.sort((a, b) => (a.idea == null) - (b.idea == null)).map(cl => {
+        const li = claimButton(cl, () => open(cl.item, cl.id));
+        li.append(el('span', ` ${sid(cl.item) || ''} ${source(cl.item).source || ''}`, 'small quiet'));
+        return li;
+      }), list.length <= 6)));
+    if (!groups.length) $('claims').append(el('p', 'No claims were extracted.', 'small quiet'));
     $('next').replaceChildren(...nextList(c.further || []));
   }
+  function sourceDetails(doc, claims) {
+    $('scope-label').textContent = `${sid(doc.id) || ''} ${short(doc.title || '', 60)}`.trim();
+    $('claims-title').textContent = 'What was extracted';
+    badges($('people'), doc.people || [], doc.id); badges($('orgs'), doc.organizations || [], doc.id);
+    // Grouped by what the brief does with each claim: the ideas it feeds (as what), the facts it lends, the rest.
+    const groups = [];
+    c.major.forEach((x, n) => {
+      const takes = claims.filter(cl => cl.mark && cl.mark.idea === n && cl.mark.kind !== 'lent');
+      const lends = claims.filter(cl => cl.mark && cl.mark.idea === n && cl.mark.kind === 'lent');
+      if (takes.length) groups.push(group(`Idea ${n + 1} · ${x.sources[doc.id] || 'in it'}`, takes.map(row), true, n));
+      if (lends.length) groups.push(group(`Lent to idea ${n + 1}`, lends.map(row), true, n));
+    });
+    const rest = claims.filter(cl => !cl.mark);
+    for (const k of KINDS) {
+      const list = rest.filter(cl => (cl.kind || 'fact') === k);
+      if (list.length) groups.push(group(`Not in the brief · ${KIND_WORDS[k].toLowerCase()}`, list.map(row), list.length <= 8));
+    }
+    $('claims').replaceChildren(...groups);
+    if (!groups.length) $('claims').append(el('p', 'No claims were extracted from this source.', 'small quiet'));
+    $('next').replaceChildren(...nextList(doc.next));
+    function row(cl) {
+      const li = claimButton({...cl, idea: cl.mark ? cl.mark.idea : null}, () => litClaim(cl.id, true));
+      const b = li.querySelector('button');
+      b.addEventListener('mouseenter', () => hover(cl.id, true)); b.addEventListener('mouseleave', () => hover(cl.id, false));
+      b.addEventListener('focus', () => hover(cl.id, true)); b.addEventListener('blur', () => hover(cl.id, false));
+      return li;
+    }
+  }
+  function sourcesList() {
+    const ids = c.written.ids, current = path[path.length - 1];
+    const order = Object.keys(c.sources).sort((a, b) => (ids[a] ? +ids[a].slice(1) : 999) - (ids[b] ? +ids[b].slice(1) : 999) || a.localeCompare(b));
+    for (const i of path) if (!order.includes(i)) order.push(i);  // sources outside the brief you opened
+    $('sources').replaceChildren(...order.map(i => {
+      const li = el('li', null, i === current ? 'current' : path.includes(i) ? 'on-path' : '');
+      const a = el('a', source(i).title || (docs[i] ? '…' : i)); a.href = readHref(i);
+      if (!source(i).title && docs[i]) docs[i].then(d => { a.textContent = d.title; }).catch(() => {});
+      li.append(el('span', sid(i) || '·', 'sid'), a);
+      const roles = el('span', null, 'roles');
+      c.major.forEach((x, n) => { if (x.sources[i]) { const ch = el('span', `${x.sources[i]} · ${n + 1}`, 'chip role'); ch.style.setProperty('--idea', ideaVar(n)); roles.append(ch); } });
+      li.append(roles); return li;
+    }));
+  }
 
-  // --- reading: a path of sources, the brief as a rail, earlier sources folded into bars ---
-  let path = [], lit = null;
+  // --- reading: a path of sources; the same panels, narrower; earlier sources folded into bars ---
+  let path = [], lit = null, overviewScroll = 0;
   const short = (t, n) => t && t.length > n ? t.slice(0, n - 1) + '…' : (t || '');
   function go(next, claim = null, push = true) {
+    if (!path.length && next.length) overviewScroll = window.scrollY;
     path = next.filter(Boolean); lit = claim;
     if (push) {
       const u = new URL(location.href);
@@ -489,64 +535,82 @@
     }
     show();
   }
-  function forward(item) { go([...path, item]); }
+  function open(item, claim = null) {
+    if (!path.length) return go([item], claim);
+    if (item === path[path.length - 1]) return claim ? litClaim(claim, true) : null;
+    const at = path.indexOf(item);
+    go(at >= 0 ? path.slice(0, at + 1) : [...path, item], claim);
+  }
   function back() { go(path.slice(0, -1)); }
+  function layout() {
+    // Percentages on all four tracks, so the change between the two states animates.
+    const grid = $('grid');
+    if (matchMedia('(max-width: 1000px)').matches) { grid.style.gridTemplateColumns = ''; return; }
+    const W = grid.clientWidth || 1200, bars = 50 * Math.max(0, path.length - 1);
+    const pc = px => (100 * px / W).toFixed(2) + '%';
+    if (!path.length) { grid.style.gridTemplateColumns = '44% 0% 0% 56%'; return; }
+    const brief = 250, details = Math.max(330, 0.27 * W), sourceW = W - brief - bars - details - 3 * 14;
+    grid.style.gridTemplateColumns = `${pc(brief)} ${pc(bars)} ${pc(Math.max(300, sourceW))} ${pc(details)}`;
+  }
   async function show() {
     const reading = path.length > 0;
-    $('overview').hidden = reading; $('reading').hidden = !reading;
+    $('grid').classList.toggle('reading', reading);
     document.body.classList.toggle('ce-reading', reading);
-    if (!reading) { if (areaCy) { areaCy.resize(); areaCy.fit(undefined, 16); } return; }
-    window.scrollTo(0, 0);
-    const opened = await Promise.all(path.map(i => loadDoc(i).catch(e => ({error: e.message, id: i}))));
-    const current = opened[opened.length - 1];
-    // Breadcrumbs: the brief, then every source of the path.
-    const crumbs = [el('li')];
-    const home = el('a', `Brief: ${short(c.scope.title, 40)}`); home.href = '#'; home.addEventListener('click', e => { e.preventDefault(); go([]); });
-    crumbs[0].append(home);
-    opened.forEach((d, k) => {
-      const li = el('li');
-      const label = `${sid(path[k]) || ''} ${short(d.title || '', 34)}`.trim();
-      if (k === opened.length - 1) li.append(el('strong', label));
-      else { const a = el('a', label); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go(path.slice(0, k + 1)); }); li.append(a); }
-      crumbs.push(li);
-    });
-    $('crumbs').replaceChildren(...crumbs);
-    // Earlier sources of the path, folded.
+    $('esc-hint').hidden = !reading;
+    layout();
+    crumbs([]);
+    sourcesList();
+    if (!reading) {
+      document.querySelectorAll('.ce-idea').forEach(card => { card.classList.remove('here'); card.querySelector('.ce-here').textContent = ''; });
+      $('source').replaceChildren(); $('bars').replaceChildren();
+      briefDetails(); markHere(null);
+      setTimeout(() => { if (areaCy) { areaCy.resize(); areaCy.fit(undefined, 16); } window.scrollTo(0, overviewScroll); }, 380);
+      return;
+    }
+    const opened = await Promise.all(path.map(i => loadDoc(i).catch(e => ({error: e.message, id: i, title: i}))));
+    const doc = opened[opened.length - 1];
+    crumbs(opened);
+    sourcesList();
     $('bars').replaceChildren(...opened.slice(0, -1).map((d, k) => {
       const b = el('button', null, 'ce-bar'); b.type = 'button'; b.title = 'Back to ' + (d.title || '');
       b.append(el('span', `${sid(path[k]) || ''} · ${short(d.title || '', 60)}`));
       b.addEventListener('click', () => go(path.slice(0, k + 1)));
       return b;
     }));
-    rail(current);
-    sourcePanel(current);
-    if (!current.read) { current.read = 'skimmed'; setState(current.id, 'skimmed'); }
+    c.major.forEach((x, n) => {  // the ideas this source serves, marked where they stand
+      const card = $('idea-' + (n + 1)); if (!card) return;
+      const role = x.sources[doc.id] || ((x.adjacent || []).some(a => a.item === doc.id) ? 'lends facts' : '');
+      card.classList.toggle('here', !!role); card.querySelector('.ce-here').textContent = role ? `here · ${role}` : '';
+    });
+    if (doc.error) { $('source').replaceChildren(el('p', doc.error, 'quiet')); return; }
+    const claims = claimsOf(doc);
+    sourcePanel(doc, claims);
+    sourceDetails(doc, claims);
+    markHere(doc.id);
+    setTimeout(() => { if (areaCy) { areaCy.resize(); areaCy.fit(undefined, 10); markHere(doc.id); } }, 380);
+    window.scrollTo({top: 0});
+    if (lit) requestAnimationFrame(() => litClaim(lit, true));
+    if (!doc.read) { doc.read = 'skimmed'; setState(doc.id, 'skimmed'); }
   }
-  function rail(doc) {
-    $('rail-ideas').replaceChildren(...c.major.map((x, n) => {
-      const li = el('li'); li.style.setProperty('--idea', ideaVar(n));
-      const role = x.sources[doc.id] || ((x.adjacent || []).some(a => a.item === doc.id) ? 'lends facts' : null);
-      const b = el('button', null, 'ce-rail-idea' + (role ? ' here' : '')); b.type = 'button';
-      b.append(el('span', `Idea ${n + 1} · ${short(x.title, 60)}`));
-      if (role) b.append(el('span', ` · here, ${role}`, 'quiet'));
-      b.title = role ? 'Show its passages in this source' : 'Open its base source';
-      b.addEventListener('click', () => {
-        if (role) { const m = document.querySelector(`#source .pass[data-idea="${n}"]`); if (m) m.scrollIntoView({behavior: 'smooth', block: 'center'}); }
-        else if (x.base !== doc.id) forward(x.base);
-      });
-      li.append(b); return li;
-    }));
-    if (miniCy) miniCy.destroy();
-    const area = {...c.area, sources: {...c.area.sources}, clusters: [...c.area.clusters]};
-    const here = doc.here?.cluster;
-    if (here && !area.clusters.some(k => k.id === here)) area.clusters.push({id: here, title: 'This source', in_brief: false, count: 1, sources: [doc.id], also: []});
-    if (!area.sources[doc.id]) area.sources[doc.id] = {title: doc.title, idea: null, thesis: doc.theses?.[0]?.statement || ''};
-    area.clusters = area.clusters.map(k => k.id === here && !k.sources.includes(doc.id) ? {...k, sources: [...k.sources, doc.id]} : k);
-    $('mini-peek').hidden = true;
-    miniCy = drawArea($('mini'), area, here ? {cluster: here, item: doc.id} : null,
-      data => data.kind === 'source' ? (data.item !== doc.id && forward(data.item)) : peek($('mini-peek'), data, area));
+  function crumbs(opened) {
+    const items = [];
+    const home = el('li');
+    if (path.length) { const a = el('a', `Brief: ${short(c.scope.title, 40)}`); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go([]); }); home.append(a); }
+    else home.append(el('strong', `Brief: ${short(c.scope.title, 60)}`));
+    items.push(home);
+    opened.forEach((d, k) => {
+      const li = el('li'), label = `${sid(path[k]) || ''} ${short(d.title || '', 34)}`.trim();
+      if (k === opened.length - 1) li.append(el('strong', label));
+      else { const a = el('a', label); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go(path.slice(0, k + 1)); }); li.append(a); }
+      items.push(li);
+    });
+    $('crumbs').replaceChildren(...items);
   }
-  // The text with every extracted claim's passage (the best sentence of it), tinted when the brief takes it.
+  function markHere(item) {
+    if (!areaCy) return;
+    areaCy.nodes('[kind="source"]').forEach(n => n.data('here', n.data('item') === item ? 1 : 0));
+  }
+  // The claims of a source, each at its best-matching sentence (the recorded passage is often a whole paragraph).
   function claimsOf(doc) {
     const by = {};
     for (const s of doc.spans) {
@@ -556,89 +620,74 @@
     }
     return Object.values(by).sort((x, y) => x.start - y.start || x.end - y.end);
   }
+  // Plain text: claim sentences are wrapped, unstyled until lit from the details or asked for with the toggle.
   function sourceText(doc, claims) {
     const box = el('div', null, 'ce-dense');
     const text = doc.text || '';
     if (!text) { box.append(el('p', 'The text of this source is not in the vault.', 'quiet')); return box; }
     const cuts = [...new Set([0, text.length, ...claims.flatMap(x => [x.start, x.end])])].sort((a, b) => a - b);
     const squeeze = t => t.replace(/[ \t]*\n[ \t]*(\n[ \t]*)+/g, '\n');
-    const rank = x => x.mark ? (x.mark.kind === 'thesis' ? 0 : x.mark.kind === 'lent' ? 1 : 2) : 3;
     for (let k = 0; k + 1 < cuts.length; k++) {
       const [a, b] = [cuts[k], cuts[k + 1]], piece = squeeze(text.slice(a, b));
       const over = claims.filter(x => x.start < b && x.end > a);
       if (!over.length) { box.append(document.createTextNode(piece)); continue; }
-      const top = [...over].sort((x, y) => rank(x) - rank(y))[0];
-      const span = el('span', piece, 'pass ' + (top.mark ? top.mark.kind : 'plain') + (over.some(x => x.id === lit) ? ' flash' : ''));
+      const top = over.find(x => x.mark && x.mark.kind === 'thesis') || over.find(x => x.mark) || over[0];
+      const span = el('span', piece, 'pass' + (top.mark && top.mark.kind === 'thesis' ? ' takes' : ''));
       span.dataset.claims = over.map(x => x.id).join(' ');
-      if (top.mark) { span.style.setProperty('--idea', ideaVar(top.mark.idea)); span.dataset.idea = String(top.mark.idea); }
+      if (top.mark) span.style.setProperty('--idea', ideaVar(top.mark.idea));
       box.append(span);
     }
     return box;
   }
-  function note(x) {
-    const n = el('button', null, 'ce-note ' + (x.mark ? x.mark.kind : 'plain')); n.type = 'button'; n.dataset.claim = x.id;
-    if (x.mark) n.style.setProperty('--idea', ideaVar(x.mark.idea));
-    const roles = x.mark ? c.major[x.mark.idea]?.sources : null;
-    const what = x.mark
-      ? (x.mark.kind === 'lent' ? `Fact lent → Idea ${x.mark.idea + 1}` : `${x.kind === 'fact' ? 'Claim' : x.kind[0].toUpperCase() + x.kind.slice(1)} → Idea ${x.mark.idea + 1}`)
-      : `${x.kind[0].toUpperCase() + x.kind.slice(1)}`;
-    const sub = x.mark ? (x.mark.kind === 'lent' ? 'lends a fact' : (roles && roles[path[path.length - 1]]) || x.mark.kind) : 'not in the brief';
-    n.append(el('span', what, 'what'), el('span', sub, 'sub'));
-    n.title = x.statement;
-    n.addEventListener('mouseenter', () => light(x.id, true)); n.addEventListener('mouseleave', () => light(x.id, false));
-    n.addEventListener('click', () => { lit = x.id; document.querySelectorAll('#source .pass.flash').forEach(p => p.classList.remove('flash'));
-      document.querySelectorAll(`#source .pass`).forEach(p => { if (p.dataset.claims.split(' ').includes(x.id)) p.classList.add('flash'); }); });
-    return n;
-    function light(id, on) { document.querySelectorAll('#source .pass').forEach(p => { if (p.dataset.claims.split(' ').includes(id)) p.classList.toggle('hover', on); }); }
+  const passesOf = id => [...document.querySelectorAll('#source .pass')].filter(p => p.dataset.claims.split(' ').includes(id));
+  function hover(id, on) { passesOf(id).forEach(p => p.classList.toggle('hover', on)); }
+  function litClaim(id, scroll) {
+    lit = id;
+    document.querySelectorAll('#source .pass.lit').forEach(p => p.classList.remove('lit'));
+    document.querySelectorAll('#details .ce-claim.lit').forEach(b => b.classList.remove('lit'));
+    const passes = passesOf(id);
+    passes.forEach(p => p.classList.add('lit'));
+    const b = document.querySelector(`#details .ce-claim[data-claim="${CSS.escape(id)}"]`);
+    if (b) { b.classList.add('lit'); const d = b.closest('details'); if (d) d.open = true; }
+    if (scroll && passes[0]) passes[0].scrollIntoView({behavior: 'smooth', block: 'center'});
   }
-  function placeNotes(textBox, margin) {
-    // Each note level with the first passage of its claim, pushed down when the one above it is still there.
-    const top0 = textBox.getBoundingClientRect().top;
-    let floor = 0;
-    for (const n of margin.children) {
-      const pass = [...textBox.querySelectorAll('.pass')].find(p => p.dataset.claims.split(' ').includes(n.dataset.claim));
-      const want = pass ? pass.getBoundingClientRect().top - top0 : floor;
-      const y = Math.max(want, floor);
-      n.style.top = y + 'px';
-      floor = y + n.offsetHeight + 4;
-    }
-    margin.style.height = Math.max(floor, textBox.offsetHeight) + 'px';
+  // As the text scrolls, the details mark the claims whose sentences are on screen.
+  let watcher = null;
+  function follow(textBox) {
+    if (watcher) watcher.disconnect();
+    const seen = new Map();
+    watcher = new IntersectionObserver(entries => {
+      for (const e of entries) for (const id of e.target.dataset.claims.split(' ')) {
+        const n = (seen.get(id) || 0) + (e.isIntersecting ? 1 : -1); seen.set(id, Math.max(0, n));
+      }
+      document.querySelectorAll('#details .ce-claim').forEach(b => b.classList.toggle('in-view', (seen.get(b.dataset.claim) || 0) > 0));
+    }, {rootMargin: '-90px 0px -15% 0px'});
+    textBox.querySelectorAll('.pass').forEach(p => watcher.observe(p));
   }
-  function sourcePanel(doc) {
+  let showTakes = false;
+  function sourcePanel(doc, claims) {
     const box = $('source');
-    if (doc.error) { box.replaceChildren(el('p', doc.error, 'quiet')); return; }
     const meta = [doc.source, doc.author && doc.author !== doc.source ? doc.author : null, day(doc.time)].filter(Boolean).join(' · ');
     const head = el('header', null, 'ce-source-head');
     head.append(el('p', meta, 'small quiet'), el('h1', doc.title, 'serif'));
-    const roles = el('div', null, 'ce-chips');
-    for (const r of doc.roles) { const ch = el('span', `${r.role} of idea ${r.idea + 1}`, 'chip role'); ch.style.setProperty('--idea', ideaVar(r.idea)); roles.append(ch); }
-    const tools = el('span', null, 'ce-source-tools');
+    const tools = el('div', null, 'ce-chips');
+    for (const r of doc.roles) { const ch = el('span', `${r.role} of idea ${r.idea + 1}`, 'chip role'); ch.style.setProperty('--idea', ideaVar(r.idea)); tools.append(ch); }
+    const takes = el('button', showTakes ? 'Hide what the brief takes' : 'Show what the brief takes', 'ce-link-button'); takes.type = 'button';
+    takes.addEventListener('click', () => { showTakes = !showTakes; text.classList.toggle('show-takes', showTakes); takes.textContent = showTakes ? 'Hide what the brief takes' : 'Show what the brief takes'; });
     const done = el('button', doc.read === 'read' ? '✓ Read' : 'Mark read', 'ce-link-button'); done.type = 'button';
     done.addEventListener('click', async () => { doc.read = doc.read === 'read' ? 'unread' : 'read'; await setState(doc.id, doc.read); done.textContent = doc.read === 'read' ? '✓ Read' : 'Mark read'; });
-    tools.append(done);
+    tools.append(takes, done);
     if (doc.url) { const a = el('a', 'Original ↗', 'ce-link'); a.href = doc.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; tools.append(a); }
-    roles.append(tools);
-    const people = el('div', null, 'ce-badges'), orgs = el('div', null, 'ce-badges');
-    badges(people, doc.people || [], doc.id); badges(orgs, doc.organizations || [], doc.id);
-    const who = el('div', null, 'ce-who'); who.append(people, orgs);
-    head.append(roles, who);
-    const claims = claimsOf(doc);
+    head.append(tools);
     const text = sourceText(doc, claims);
-    const margin = el('div', null, 'ce-margin'); margin.setAttribute('aria-label', 'What was extracted here');
-    claims.forEach(x => margin.append(note(x)));
-    const body = el('div', null, 'ce-source-body'); body.append(text, margin);
+    text.classList.toggle('show-takes', showTakes);
     const further = el('details', null, 'ce-further');
     const count = doc.next.reduce((n, g) => n + g.rows.length, 0);
-    further.append(el('summary', `↘ Go further: ${plural(count, 'related source')}`));
-    further.append(...nextList(doc.next));
-    box.replaceChildren(head, body, further);
-    box.scrollTop = 0;
-    requestAnimationFrame(() => {
-      placeNotes(text, margin);
-      const f = box.querySelector('.pass.flash'); if (f) f.scrollIntoView({block: 'center'});
-    });
+    further.append(el('summary', `↘ Go further: ${plural(count, 'related source')}`), ...nextList(doc.next));
+    box.replaceChildren(head, text, further);
+    follow(text);
   }
-  window.addEventListener('resize', () => { const t = document.querySelector('#source .ce-dense'), m = document.querySelector('#source .ce-margin'); if (t && m) placeNotes(t, m); });
+  window.addEventListener('resize', layout);
 
   // A source link anywhere on the page: from the overview it starts a path; from a source it goes one step further.
   document.addEventListener('click', e => {
@@ -649,8 +698,7 @@
     if (u.pathname !== '/brief/' || !u.searchParams.get('read') || !same) return;
     e.preventDefault();
     const item = u.searchParams.get('read').split(',').pop();
-    if (path.length && !$('reading').hidden) { if (item !== path[path.length - 1]) forward(item); }
-    else go([item]);
+    open(item);
   });
   window.addEventListener('popstate', () => { const r = new URLSearchParams(location.search).get('read'); go(r ? r.split(',') : [], null, false); });
   document.addEventListener('keydown', e => {
@@ -680,7 +728,6 @@
     $('ideas-note').textContent = plural(c.major.length, 'major idea');
     $('also-box').hidden = !c.also.length;
     $('also').replaceChildren(...c.also.map(x => { const li = el('li'); li.append(el('span', x.title), document.createTextNode(' '), chip(x.base, 'muted')); return li; }));
-    details();
     constellation(c.major);
     $('grid').hidden = false;
     showMap((c.area?.clusters || []).filter(k => k.in_brief).length > 1 ? 'area' : 'full');
