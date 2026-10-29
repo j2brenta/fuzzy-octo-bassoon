@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, urlsplit
 from engine.llm import ModelError
 from graph.memory import MemoryStore
 from refresher import area as area_engine, brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
-    reading, subject, thesis_relate, threads, vault
+    profile, reading, subject, thesis_relate, threads, vault
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -155,6 +155,14 @@ class State:
             return None
         with self._lock:
             return area_engine.reader(self.store(), c, c["area"], self.pool(), item_id, self.marks())
+
+    def brief_entity(self, key: str | None, query: str | None, entity_id: str) -> dict | None:
+        """A person or organization opened from a brief: standing, sources, facts, neighbours for the mini map."""
+        c = self.brief(key, query)
+        if c is None:
+            return None
+        with self._lock:
+            return profile.card(self.store(), self.pool(), c, entity_id, datetime.fromisoformat(c["at"]))
 
     def thread(self, name: str, at: datetime | None = None) -> dict | None:
         with self._lock:
@@ -388,6 +396,9 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 name = threads.slug(args.get("id") or args.get("q") or "")
                 thread = state.thread(name, at) if threads.load(vault_path, name) else None
                 return self._json(HTTPStatus.OK, {**c, "thread": thread and {k: v for k, v in thread.items() if k != "context"}})
+            if path == "/api/brief/entity":
+                r = state.brief_entity(args.get("id") or None, args.get("q") or None, args.get("entity", ""))
+                return self._json(HTTPStatus.OK if r else HTTPStatus.NOT_FOUND, r or {"error": "No such person here."})
             if match := BRIEF_SOURCE.match(path):
                 r = state.brief_source(args.get("id") or None, args.get("q") or None, match[1])
                 return self._json(HTTPStatus.OK if r else HTTPStatus.NOT_FOUND, r or {"error": "No such source here."})

@@ -69,6 +69,9 @@ def test_the_app_serves_a_brief_follows_and_stamps(tmp_path, monkeypatch):
     from http.server import ThreadingHTTPServer
     from refresher import app
     from refresher.web import Workspace
+    from urllib.error import HTTPError
+    from urllib.parse import quote
+    import pytest
     from tests.test_app import get, send
     from tests.test_proposals import topical_vault
     from refresher import brief
@@ -83,6 +86,12 @@ def test_the_app_serves_a_brief_follows_and_stamps(tmp_path, monkeypatch):
         assert status == 200
         b = json.loads(get(base + "/api/brief?q=hallucination+detection")[1])
         assert b["major"] and b["written"]["ids"] and b["thread"] is None and "people" in b
+        who = b["details"]["people"][0]["id"]
+        card = json.loads(get(base + "/api/brief/entity?q=hallucination+detection&entity=" + quote(who))[1])
+        assert card["id"] == who and card["kind"] == "person" and card["sources"]
+        with pytest.raises(HTTPError) as missing:
+            get(base + "/api/brief/entity?q=hallucination+detection&entity=person:nobody")
+        assert missing.value.code == 404
         md = get(base + "/api/brief.md?q=hallucination+detection")[1]
         assert md.startswith("# hallucination detection")
         t = send(base, "/api/threads", {"q": "hallucination detection"})[1]
