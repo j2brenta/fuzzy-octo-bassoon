@@ -7,7 +7,7 @@ it every source has a role:
     base        the source to read in depth: pointed at by the others (linked, captured from, its writer named),
                 then the most original stance, then the earliest, then the most claims
     builder     builds on the base, or restates it with evidence of its own
-    rewrite     restates it and adds nothing (a retelling, a digest), or reposts a member's text
+    rewrite     restates it and adds nothing (a retelling, a digest)
     superseded  an older answer a member updated, or a thesis whose claims a newer claim replaced
     adjacent    its thesis lives elsewhere, but some of its claims bear on this idea: listed with the facts it lends
 
@@ -16,6 +16,9 @@ theses: alone, a short phrase sits near hub statements (measured on Qwen3, 29 Oc
 search tools at 0.47 against the wealth post's 0.59); expanded, a subject's own theses score 0.65-0.79 and others
 under 0.6. A thesis is in scope from the higher of FLOOR and SPAN under the best one. An idea is as relevant as its
 most relevant member, and in scope when one current member is.
+
+A repost (the same text captured again) is not a source of its own: it is left out of its original's idea, so a
+brief lists that document once.
 
 Embeddings never merge theses: related pairs scored 0.60-0.78 and unrelated ones on one subject up to 0.56, so only
 the model's relations group them.
@@ -154,10 +157,6 @@ def groups(store, pool: thesis_relate.Pool, at: datetime) -> list[dict]:
     grouped: dict[str, list[str]] = defaultdict(list)
     for t in sorted(thesis):
         grouped[union.find(t)].append(t)
-    duplicates: dict[str, list[str]] = defaultdict(list)  # original item -> its reposts
-    for i, item in items.items():
-        if item.duplicate_of:
-            duplicates[item.duplicate_of].append(i)
     edge_of: dict[str, list[dict]] = defaultdict(list)
     for e in edges:
         edge_of[e["thesis"]].append(e)
@@ -193,9 +192,6 @@ def groups(store, pool: thesis_relate.Pool, at: datetime) -> list[dict]:
             i = thesis[t][0]
             if i not in sources or ROLE_RANK[roles[t]] < ROLE_RANK[sources[i]]:
                 sources[i] = roles[t]
-        for i in list(sources):
-            for j in duplicates.get(i, []):
-                sources.setdefault(j, "rewrite")
         writers = {_author(store, items[i]) or items[i].source.source_name or i
                    for i, r in sources.items() if r in ("base", "builder")}
         history = []
@@ -314,10 +310,12 @@ def _by_base(scoped: list[dict]) -> list[dict]:
 def _lend(store, pool, major: list[dict], center_of_subject: list[float], on_subject: float, family: str,
           items: dict) -> None:
     """Each major idea's adjacent sources: claims of other sources close to the idea and on the subject, not
-    already its own (a claim near the idea but off the subject is a coincidence of wording)."""
+    already its own (a claim near the idea but off the subject is a coincidence of wording). A repost lends nothing:
+    its claims are its original's."""
     if not major:
         return
-    rows = [c for c in store.claims() if not c.superseded_by and c.item_id in items]
+    rows = [c for c in store.claims()
+            if not c.superseded_by and c.item_id in items and not items[c.item_id].duplicate_of]
     vectors = dict(zip((c.claim.claim_id for c in rows), embed.vectors([c.claim.statement for c in rows]))) if rows else {}
     for idea in major:
         center = grouping.centroid([pool.vector[m["thesis"]] for m in idea["members"] if m["role"] != "superseded"])

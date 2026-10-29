@@ -156,13 +156,14 @@ def delta(store, last: dict, current: dict, pool) -> dict:
 
     for i in arrived:
         relevance = current["on_subject"].get(i)
-        on_thread = i in place or i in lent  # part of an idea on the query, or lending one facts, whatever its thesis
+        original = store.item(i).duplicate_of  # a repost stands where its original does
+        on_thread = i in place or original in place or i in lent  # part of an idea on the query, or lending one facts
         if not on_thread and (relevance is None or relevance < floor - NEAR):
             continue  # not about this thread
         mine = set(t["id"] for t in pool.of_item.get(i, []))
         hit = next((e for e in edges if e["label"] in ("UPDATES", "CONFLICTS") and
                     ((e["thesis"] in mine and e["target"] in known_theses) or (e["target"] in mine and e["thesis"] in known_theses))), None)
-        placed = sorted(place.get(i, []), key=lambda xr: context.ROLE_RANK[xr[1]])
+        placed = sorted(place.get(i) or place.get(original, []), key=lambda xr: context.ROLE_RANK[xr[1]])
         idea, role = placed[0] if placed else (None, None)
         if hit and role != "superseded":
             other = hit["target"] if hit["thesis"] in mine else hit["thesis"]
@@ -172,8 +173,8 @@ def delta(store, last: dict, current: dict, pool) -> dict:
         if role == "superseded":
             noise.setdefault("outdated", []).append(row(i, "outdated", idea, None, "an older view the brief already replaced"))
             continue
-        if store.item(i).duplicate_of or role == "rewrite":
-            noise.setdefault("retells", []).append(row(i, "retells", idea, idea["base"] if idea else store.item(i).duplicate_of,
+        if original or role == "rewrite":
+            noise.setdefault("retells", []).append(row(i, "retells", idea, idea["base"] if idea else original,
                                                        "retells a known thesis"))
             continue
         wid = authority_mod.writer(store, store.item(i))[0]
