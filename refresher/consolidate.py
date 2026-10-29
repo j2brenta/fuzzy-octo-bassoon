@@ -331,7 +331,10 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
         if run.summarized:
             store.summaries = summarize.load_all(vault_path)
         if model is not None:  # the run's model, under its budget: theses decide what a brief says
-            run.theses, run.thesis_related = thesis_items(vault_path, store, model, log)
+            try:
+                run.theses, run.thesis_related = thesis_items(vault_path, store, model, log)
+            except Exception as error:  # noqa: BLE001 - an enrichment: it never fails the review it rides on
+                run.notes.append(f"theses stopped: {type(error).__name__}")
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())
