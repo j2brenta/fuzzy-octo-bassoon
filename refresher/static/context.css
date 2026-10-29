@@ -117,3 +117,60 @@
 .ce a, .ce p, .ce h1, .ce h3 { overflow-wrap: anywhere; }
 .ce-list .facts li { list-style: disc; }
 .ce-tabs-topic { max-width: 1400px; margin: 14px auto 0; padding: 0 max(16px, 3vw); }
+
+/* --- one colour per major idea: card stripe, chips, map dots, passages in the reader --- */
+:root { --idea-0: #234cc5; --idea-1: #b7791f; --idea-2: #2f855a; --idea-3: #7b4bb7; --idea-4: #c4533d; --idea-5: #1f7a8c; }
+.ce-idea { border-left: 5px solid var(--idea, var(--r-line)); }
+.ce-idea .ce-num { color: var(--idea, var(--r-brand)); }
+.area-chip { border: 0; background: color-mix(in srgb, var(--idea, #234cc5) 14%, white); color: var(--r-ink); cursor: pointer; }
+.ce-idea .area-chip { background: color-mix(in srgb, var(--idea) 14%, white); }
+.chip.role { background: color-mix(in srgb, var(--idea) 16%, white); color: var(--r-ink); border-left: 3px solid var(--idea); }
+
+/* --- the map panel: Area or Ideas --- */
+.ce-toggle { display: inline-flex; border: 1px solid var(--r-line); border-radius: 20px; overflow: hidden; margin: 12px 0 8px; }
+.ce-toggle button { border: 0; background: transparent; padding: 5px 14px; font-size: 12px; }
+.ce-toggle button[aria-pressed="true"] { background: var(--r-brand); color: white; }
+.ce-area { width: 100%; height: 460px; border-radius: 8px; background: var(--r-bg); margin-top: 6px; }
+.ce-area.mini { height: 280px; }
+#area-box, .ce-here { position: relative; }
+.ce-peek { position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 10px;
+  padding: 10px 12px; box-shadow: 0 6px 24px rgba(37, 37, 31, .18); display: grid; gap: 6px; max-height: 70%; overflow: auto; z-index: 3; }
+.ce-peek .ce-close { position: absolute; top: 2px; right: 6px; font-size: 20px; }
+.ce-peek h3 { font-size: 16px; padding-right: 20px; }
+.ce-peek-list { margin: 0; padding-left: 16px; display: grid; gap: 4px; font-size: 13px; }
+.ce-peek .ce-button { justify-self: start; text-decoration: none; }
+
+/* --- reading in place: the reader takes the side column; the brief stays where it was --- */
+.ce-grid.reading { grid-template-columns: minmax(0, 1fr) minmax(420px, 1.1fr); }
+.ce-grid.reading .ce-side { display: none; }
+.ce-reader { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow: auto; display: grid; gap: 14px; align-content: start;
+  background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; padding: 0 20px 18px; }
+.ce-reader-bar { position: sticky; top: 0; z-index: 2; background: var(--r-paper); display: flex; gap: 10px; align-items: center; padding: 12px 0 8px;
+  border-bottom: 1px solid var(--r-line); }
+.ce-trail { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; font-size: 12px; }
+.ce-trail li + li::before { content: "›"; color: var(--r-muted); margin-right: 4px; }
+.ce-trail a[aria-current="step"] { font-weight: 700; color: var(--r-ink); text-decoration: none; }
+.ce-reader-title { font-size: 26px; line-height: 1.15; margin-top: 4px; }
+.ce-reader-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ce-theses { margin: 0; padding-left: 18px; font: 15px/1.5 var(--r-serif); display: grid; gap: 4px; }
+.ce-text { font: 17px/1.75 var(--r-serif); white-space: pre-wrap; overflow-wrap: anywhere; max-width: 68ch; }
+.ce-text .pass.thesis { background: color-mix(in srgb, var(--idea) 16%, transparent); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--idea) 55%, transparent); }
+.ce-text .pass.lent { text-decoration: underline dotted color-mix(in srgb, var(--idea) 80%, transparent); text-underline-offset: 4px; }
+.ce-text .pass.superseded { text-decoration: line-through; text-decoration-color: var(--r-supersedes); }
+.ce-text.inspect .pass.claim { text-decoration: underline dashed var(--r-graph-border); text-underline-offset: 4px; cursor: help; }
+.ce-text.inspect .pass { cursor: help; }
+.ce-next-group { border-left: 4px solid var(--idea, var(--r-line)); padding-left: 10px; margin-bottom: 12px; }
+.ce-next-title { font: 400 15px/1.35 var(--r-serif); margin-bottom: 6px; }
+.ce-next { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ce-next li { display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; }
+.ce-next li > * { grid-column: 2; }
+.ce-next .n { grid-column: 1; grid-row: 1 / span 3; font: 700 11px var(--r-sans); color: white; background: var(--r-ink); border-radius: 50%;
+  width: 20px; height: 20px; display: grid; place-items: center; }
+.ce-next li.read { opacity: .6; }
+.ce-next .thesis { font-size: 13px; }
+.ce-next .why { font-size: 12px; color: var(--r-muted); }
+@media (max-width: 1100px) {
+  .ce-grid.reading { grid-template-columns: minmax(0, 1fr); }
+  .ce-reader { position: fixed; inset: 0; z-index: 30; max-height: none; border-radius: 0; border: 0; }
+  body.ce-reading { overflow: hidden; }
+}

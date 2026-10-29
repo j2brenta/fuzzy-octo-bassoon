@@ -138,3 +138,11 @@ body.read-layout .pill.source{display:grid;gap:3px;width:100%;text-align:left;pa
 @media(max-width:1150px){body.read-layout .workspace{grid-template-columns:minmax(260px,38%) minmax(0,1fr)}body.read-layout .map-column{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}body.read-layout .reader-column{position:static;max-height:none}}
 body.read-layout .claim-list{display:grid;grid-auto-flow:row;grid-template-columns:minmax(0,1fr);overflow:visible;gap:6px}
 body.read-layout .claim-list>*{width:auto;min-width:0}
+
+/* Reading: a tap on the map peeks instead of replacing the evidence (refresher/assets/map/app.js peekNode). */
+.canvas-wrap { position: relative; }
+.atlas-peek { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; background: var(--paper, #fffcf5); border: 1px solid var(--line, #d9d3c6);
+  border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(37, 37, 31, .18); display: grid; gap: 6px; max-height: 60%; overflow: auto; }
+.atlas-peek .peek-close { position: absolute; top: 2px; right: 6px; border: 0; background: transparent; font-size: 20px; cursor: pointer; }
+.atlas-peek .detail-title { padding-right: 22px; }
+.atlas-peek[hidden] { display: none; }

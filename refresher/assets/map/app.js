@@ -5,7 +5,7 @@
   const data = JSON.parse(document.getElementById('map-data').textContent);
   const $ = id => document.getElementById(id);
   const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: [],
-    lang: 'original', view: null, peopleSubject: ''};
+    lang: 'original', view: null, peopleSubject: '', inspect: false};
   try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
   // Embedded in a dossier (/topic/): the map and the evidence only, over the dossier's sources (atlas.scope).
   const params = new URLSearchParams(location.search);
@@ -482,7 +482,8 @@
     const covering = (s, e) => [...new Set(spans.filter(([a, b]) => a < e && b > s).map(x => x[2]))];
     const piece = (text, s, e, cls) => {
       const ids = covering(s, e);
-      if (!ids.length) { box.append(cls ? el('span', text, cls) : document.createTextNode(text)); return; }
+      // Reading, the text is text: claim marks only when you ask to inspect them.
+      if (!ids.length || (reading && !state.inspect)) { box.append(cls ? el('span', text, cls) : document.createTextNode(text)); return; }
       const mark = el('mark', text, ids.includes(focus) ? 'on' : null);
       mark.dataset.claims = ids.join(' '); mark.tabIndex = 0; mark.setAttribute('role', 'button');
       mark.title = ids.map(id => '• ' + claims.get(id).statement).join('\n') + '\n\nOpen the claim';
@@ -798,6 +799,7 @@
     if (item.translation.length) tools.append(button(translated(item) ? 'Translation · show the original' : 'Original · show the translation',
       () => setLang(translated(item) ? 'original' : 'translation')));
     if (item.url) tools.append(external(item.url));
+    tools.append(button(state.inspect ? 'Hide claim marks' : 'Inspect claims', () => { state.inspect = !state.inspect; openReader(readerItem, readerFocus); }));
     const text = sourceText(item, focus); text.classList.add('open', 'reader-text');
     box.replaceChildren(el('p', [item.source, date(item)].filter(Boolean).join(' · '), 'eyebrow'), el('h1', item.title, 'reader-title'),
       el('p', [item.author ? 'by ' + item.author : null, plural(item.claims.length, 'claim'), item.repost_of ? 'a repost' : null].filter(Boolean).join(' · '), 'detail-meta'),
@@ -845,7 +847,25 @@
     renderTimeline(visible); renderGraph(visible); renderComparison();
     if (reading && !state.view) clearDetail();  // the sources of the new slice
   }
-  cy.on('tap', 'node', e => { if (!['region', 'cluster-region'].includes(e.target.data('kind'))) selectNode(e.target.id()); });
+  // Reading, a tap on the map peeks: the evidence and the text you were in stay until you choose to go there.
+  function peekNode(id) {
+    let box = $('atlas-peek');
+    if (!box) { box = el('div', null, 'atlas-peek'); box.id = 'atlas-peek'; $('graph').parentElement.append(box); }
+    const item = items.get(id), claim = claims.get(id), person = people.get(id), group = clusters.get(id) || data.topics.find(t => t.id === id);
+    const kind = item ? 'SOURCE' : claim ? 'CLAIM' : person ? (person.kind === 'person' ? 'PERSON' : 'ORGANIZATION') : group ? (clusters.has(id) ? 'CLUSTER' : 'TOPIC') : '';
+    if (!kind) { box.hidden = true; return; }
+    const title = item ? item.title : claim ? claim.statement : person ? person.name : group.title;
+    const sub = item ? [item.source, date(item), item.hook].filter(Boolean).join(' · ')
+      : group ? plural((clusters.get(id)?.items || data.items.filter(i => i.topics.includes(id))).length, 'source') : '';
+    const close = button('×', () => { box.hidden = true; }, 'peek-close');
+    const go = button(item ? 'Read this →' : 'Show in the evidence →', () => { box.hidden = true; selectNode(id); }, 'pill');
+    box.replaceChildren(close, el('p', kind, 'eyebrow'), el('h3', title, 'detail-title'), sub ? el('p', sub, 'detail-meta') : '', go);
+    box.hidden = false;
+  }
+  cy.on('tap', 'node', e => {
+    if (['region', 'cluster-region'].includes(e.target.data('kind'))) return;
+    if (reading) peekNode(e.target.id()); else selectNode(e.target.id());
+  });
   cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data())
     : ['WROTE', 'CONTRIBUTES'].includes(e.target.data('kind')) ? selectPerson(e.target.data('source')) : selectEdge(e.target.data()));
   $('people-subject').addEventListener('change', e => {state.peopleSubject = e.target.value; state.topic = ''; state.story = ''; $('story-filter').value = ''; state.selection = null; clearDetail(); refresh();});

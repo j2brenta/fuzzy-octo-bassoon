@@ -27,7 +27,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from engine.llm import ModelError
 from graph.memory import MemoryStore
-from refresher import brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
+from refresher import area as area_engine, brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
     reading, subject, thesis_relate, threads, vault
 from refresher.web import STATIC, Workspace, read_json
 
@@ -40,6 +40,7 @@ SUBMISSION = re.compile(r"^/api/submissions/([a-f0-9]{32})$")
 RETRY = re.compile(r"^/api/submissions/([a-f0-9]{32})/retry$")
 UPLOAD = re.compile(r"^/api/uploads/([a-f0-9]{64})$")
 SOURCE = re.compile(r"^/api/source/([\w.:-]{1,200})/(context|state)$")
+BRIEF_SOURCE = re.compile(r"^/api/brief/source/([\w.:-]{1,200})$")
 THREAD = re.compile(r"^/api/threads/([\w-]{1,80})(?:/(stamp|snapshots)(?:/(\d{8}T\d{6}Z))?)?$")
 HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 FILES = {
@@ -135,11 +136,21 @@ class State:
             cache = (key, query, at.isoformat() if at else None)
             if cache not in self._contexts:
                 c = context_engine.build(store, key, query, now, pool, self._groups if at is None else None)
+                if c is not None:
+                    c["area"] = area_engine.area(store, c, pool)
                 self._contexts[cache] = c
             c = self._contexts[cache]
         if c is None:
             return None
         return {**c, "written": brief.write(self.vault, c, None)}
+
+    def brief_source(self, key: str | None, query: str | None, item_id: str) -> dict | None:
+        """One source read inside its brief: text, passages by idea, where it sits, where to go next."""
+        c = self.brief(key, query)
+        if c is None:
+            return None
+        with self._lock:
+            return area_engine.reader(self.store(), c, c["area"], self.pool(), item_id, self.marks())
 
     def thread(self, name: str, at: datetime | None = None) -> dict | None:
         with self._lock:
@@ -373,6 +384,9 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 name = threads.slug(args.get("id") or args.get("q") or "")
                 thread = state.thread(name, at) if threads.load(vault_path, name) else None
                 return self._json(HTTPStatus.OK, {**c, "thread": thread and {k: v for k, v in thread.items() if k != "context"}})
+            if match := BRIEF_SOURCE.match(path):
+                r = state.brief_source(args.get("id") or None, args.get("q") or None, match[1])
+                return self._json(HTTPStatus.OK if r else HTTPStatus.NOT_FOUND, r or {"error": "No such source here."})
             if path == "/api/threads":
                 return self._json(HTTPStatus.OK, state.threads())
             if match := THREAD.match(path):
