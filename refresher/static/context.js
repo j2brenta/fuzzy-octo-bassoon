@@ -25,7 +25,6 @@
   const post = (path, body) => fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Refresher': '1'},
     body: JSON.stringify(body || {})}).then(async r => { const b = await r.json().catch(() => ({})); if (!r.ok) throw new Error(b.error || `HTTP ${r.status}`); return b; });
 
-  $('tab-sources').href = '/topic/?' + query;
   $('export').href = '/api/brief.md?' + query;
 
   function sid(item) { return c.written.ids[item]; }
@@ -548,9 +547,10 @@
   }
   function crumbs(opened) {
     const items = [];
+    const all = el('li'), briefs = el('a', 'Briefs'); briefs.href = '/'; all.append(briefs); items.push(all);  // every brief
     const home = el('li');
-    if (path.length) { const a = el('a', `Brief: ${short(c.scope.title, 40)}`); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go([]); }); home.append(a); }
-    else home.append(el('strong', `Brief: ${short(c.scope.title, 60)}`));
+    if (path.length) { const a = el('a', short(c.scope.title, 40)); a.href = '#'; a.addEventListener('click', e => { e.preventDefault(); go([]); }); home.append(a); }
+    else home.append(el('strong', short(c.scope.title, 60)));
     items.push(home);
     opened.forEach((d, k) => {
       const li = el('li'), label = `${sid(path[k]) || ''} ${short(d.title || '', 34)}`.trim();

@@ -37,7 +37,7 @@
     if (t.arrived) head.append(el('span', `${t.arrived} arrived`, 'chip new'));
     if (head.childNodes.length) a.append(head);
     a.append(el('h3', t.title));
-    const when = t.last ? 'stamped ' + new Date(t.last).toLocaleDateString('en', {day: 'numeric', month: 'short'}) : 'not stamped yet';
+    const when = t.last ? 'version of ' + new Date(t.last).toLocaleDateString('en', {day: 'numeric', month: 'short'}) : 'no version saved yet';
     a.append(el('p', t.arrived == null ? when : `${when} · ${t.notes || 0} notes · ${t.noise || 0} noise`, 'top'));
     return a;
   }
