@@ -1,12 +1,35 @@
-/* The brief (/brief/): what survives to now on a subject. Reading column left, constellation and people right. */
+/* The brief (/brief/): a top band that stays, then three slots that keep their jobs:
+   the brief (a compact rail while reading) | the source | a narrow panel with the mini map. */
 .ce { padding-top: 18px; }
-.ce-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--r-line); margin-bottom: 22px; }
-.ce-tabs a { padding: 8px 14px; font-size: 13px; text-decoration: none; color: var(--r-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.ce-tabs a[aria-current="page"] { color: var(--r-ink); border-color: var(--r-brand); font-weight: 600; }
+.ce-tabs { display: inline-flex; gap: 2px; }
+.ce-tabs a { padding: 3px 10px; font-size: 13px; text-decoration: none; color: var(--r-muted); border-radius: 14px; }
+.ce-tabs a[aria-current="page"] { color: var(--r-ink); background: var(--r-soft); font-weight: 600; }
 .ce-tabs a:hover { color: var(--r-brand); }
-.ce-head { display: grid; gap: 8px; margin-bottom: 18px; }
-.ce-head h1 { font-size: clamp(28px, 4vw, 46px); line-height: 1.08; letter-spacing: -1px; }
-.ce-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+
+/* --- the top band: title, keywords, one quiet line; it stays when a source opens, condensed --- */
+.ce-top { display: grid; gap: 8px; margin: 4px 0 16px; }
+/* the breadcrumb names the brief; the heading stays for screen readers only */
+.ce-top h1 { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.kw.query { background: var(--r-soft); border-color: var(--r-brand); color: var(--r-brand-dark); font-weight: 600; }
+.ce-keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+.ce-keywords[hidden] { display: none; }
+.kw { font-size: 12px; padding: 2px 10px; border-radius: 12px; background: var(--r-paper); border: 1px solid var(--r-line); color: var(--r-ink); }
+button.kw { cursor: pointer; }
+button.kw:hover { border-color: var(--r-brand); color: var(--r-brand); }
+.ce-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0; margin: 0; font-size: 13px; color: var(--r-muted); }
+.ce-meta > * + *::before { content: "·"; margin: 0 8px; color: var(--r-muted); }
+.ce-meta > [hidden] { display: none; }
+.ce-quiet { border: 0; background: transparent; padding: 0; font: inherit; color: var(--r-brand); cursor: pointer; text-decoration: none; }
+.ce-quiet:hover { text-decoration: underline; }
+.ce-quiet[disabled] { color: var(--r-muted); cursor: progress; }
+.ce-versions { position: relative; }
+.ce-versions-list { position: absolute; z-index: 8; top: 22px; left: 0; min-width: 280px; list-style: none; margin: 0; padding: 6px;
+  background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 10px; box-shadow: 0 6px 24px rgba(37, 37, 31, .16); display: grid; gap: 4px; }
+.ce-versions-list[hidden] { display: none; }
+.ce-versions-list button { width: 100%; text-align: left; border: 0; background: transparent; border-radius: 6px; padding: 6px 8px; font-size: 13px; color: var(--r-ink); }
+.ce-versions-list button:hover { background: var(--r-soft); }
+.ce-versions-list .diff { font-size: 12px; color: var(--r-muted); margin: 0; padding: 0 8px 4px; }
+.ce-reading .ce-top { gap: 4px; margin-bottom: 10px; }
 .ce-button { border: 1px solid var(--r-line); background: var(--r-paper); border-radius: 20px; padding: 7px 14px; font-size: 13px; }
 .ce-button:hover { border-color: var(--r-brand); color: var(--r-brand); }
 .ce-button.primary { background: var(--r-brand); border-color: var(--r-brand); color: white; }
@@ -17,10 +40,13 @@
 .ce-notice:empty { display: none; }
 .ce-section { font: 600 11px/1.4 var(--r-sans); letter-spacing: 1.6px; text-transform: uppercase; color: var(--r-muted); margin: 26px 0 10px; }
 
-/* --- since the last stamp --- */
-.ce-since { background: var(--r-paper); border: 1px solid var(--r-line); border-left: 4px solid var(--r-coral); border-radius: 10px;
-  padding: 18px 20px; margin-bottom: 22px; display: grid; gap: 12px; }
-.ce-since h2 { font-size: 22px; }
+/* --- since the last saved version: one line, opened on demand; never in place of the ideas --- */
+.ce-since { font-size: 13px; background: #fbf3dc; border-radius: 8px; padding: 5px 12px; justify-self: start; max-width: 100%; }
+.ce-since.critical { background: #fde8e1; }
+.ce-since p, .ce-since summary { margin: 0; color: #6b5a1e; }
+.ce-since.critical summary { color: var(--r-conflict); }
+.ce-since summary { cursor: pointer; }
+.ce-since-body { display: grid; gap: 8px; padding: 8px 0 4px; }
 .ce-arrival { display: grid; gap: 3px; padding: 10px 12px; border-radius: 8px; background: var(--r-bg); }
 .ce-arrival.critical { background: #fde8e1; }
 .ce-arrival .what { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; color: var(--r-conflict); }
@@ -86,11 +112,7 @@
 .ce-people .reach { font-size: 11px; color: var(--r-muted); white-space: nowrap; }
 .ce-people .why { font-size: 12px; color: var(--r-muted); }
 
-/* --- stamps and dialogs --- */
-.ce-stamps { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
-.ce-stamps button { width: 100%; text-align: left; border: 1px solid var(--r-line); background: var(--r-bg); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
-.ce-stamps button:hover { border-color: var(--r-brand); }
-.ce-stamps .diff { font-size: 12px; color: var(--r-muted); padding: 2px 10px 0; }
+/* --- dialogs --- */
 .ce-dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 64px); border: 1px solid var(--r-line); border-radius: 14px;
   background: var(--r-paper); color: var(--r-ink); padding: 0 22px 20px; }
 .ce-dialog::backdrop { background: rgba(37, 37, 31, .45); }
@@ -121,10 +143,17 @@
 
 /* --- the map panel: Area or Ideas --- */
 .ce-toggle { display: inline-flex; border: 1px solid var(--r-line); border-radius: 20px; overflow: hidden; margin: 12px 0 8px; }
-.ce-toggle button { border: 0; background: transparent; padding: 5px 14px; font-size: 12px; }
+.ce-toggle button { border: 0; background: transparent; padding: 4px 10px; font-size: 12px; }
 .ce-toggle button[aria-pressed="true"] { background: var(--r-brand); color: white; }
-.ce-area { width: 100%; height: 320px; border-radius: 8px; background: var(--r-bg); margin-top: 6px; }
-#area-box, .ce-here { position: relative; }
+#area-box, .ce-here, .ce-map-big { position: relative; }
+.ce-zoom { border: 1px solid var(--r-line); background: var(--r-paper); border-radius: 8px; width: 28px; height: 26px; padding: 0; font-size: 15px; line-height: 1; margin-left: auto; }
+.ce-zoom:hover { border-color: var(--r-brand); color: var(--r-brand); }
+/* the map, larger: the same map in a dialog, to pan and zoom */
+.ce-map-dialog { width: min(1280px, calc(100vw - 32px)); }
+.ce-map-dialog header { gap: 12px; }
+.ce-map-dialog header .small { margin-right: auto; }
+.ce-map-big .ce-area { height: min(76vh, 820px); }
+.ce-map-big svg { display: block; width: 100%; height: min(76vh, 820px); }
 .ce-peek { position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 10px;
   padding: 10px 12px; box-shadow: 0 6px 24px rgba(37, 37, 31, .18); display: grid; gap: 6px; max-height: 70%; overflow: auto; z-index: 3; }
 .ce-peek .ce-close { position: absolute; top: 2px; right: 6px; font-size: 20px; }
@@ -143,20 +172,22 @@
 .ce-next .thesis { font-size: 13px; }
 .ce-next .why { font-size: 12px; color: var(--r-muted); }
 
-/* --- one grid, two densities: the overview (brief | details) narrows into reading
-       (brief, compact | earlier sources as bars | the source | details of the source) --- */
-.ce-full { max-width: none; padding: 10px max(16px, 2vw) 48px; }
+/* --- one grid, three slots that keep their jobs: the brief (in the centre, then a compact rail) | the source |
+       a narrow panel about the centre (the mini map always at its top, the same size in both states) --- */
+.ce-full { max-width: 1680px; padding: 10px max(16px, 2vw) 48px; }
 .ce-crumbs { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--r-paper);
-  border: 1px solid var(--r-line); border-radius: 12px; padding: 8px 14px; margin-bottom: 12px; position: sticky; top: 64px; z-index: 6; }
+  border: 1px solid var(--r-line); border-radius: 12px; padding: 6px 14px; margin-bottom: 12px; position: sticky; top: 64px; z-index: 6; }
 .ce-crumbs ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; padding: 0; font-size: 15px; min-width: 0; }
 .ce-crumbs li + li::before { content: "›"; color: var(--r-muted); margin: 0 6px; }
 .ce-crumbs a { text-decoration: none; }
 .ce-crumbs a:hover { text-decoration: underline; }
-.ce-grid { display: grid; grid-template-columns: 44% 0% 0% 56%; column-gap: 14px; align-items: start;
+.ce-crumbs-end { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.ce-grid { display: grid; grid-template-columns: 75% 0% 25%; column-gap: 14px; align-items: start;
   transition: grid-template-columns .35s ease; }
-.ce-grid:not(.reading) { column-gap: 0; }
-.ce-grid:not(.reading) .ce-brief-panel { margin-right: 14px; }
-.ce-grid:not(.reading) #bars, .ce-grid:not(.reading) #source { visibility: hidden; overflow: hidden; padding: 0; border: 0; height: 0; }
+.ce-grid:not(.reading) #source { visibility: hidden; overflow: hidden; padding: 0; border: 0; height: 0; }
+.ce-reading-only { display: none !important; }
+.reading .ce-reading-only { display: revert !important; }
+.reading .ce-overview-only { display: none !important; }
 .ce-brief-panel { display: grid; gap: 12px; min-width: 0; }
 .ce-block { background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; padding: 4px 16px 12px; }
 .ce-block-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 8px 0 6px; }
@@ -166,18 +197,16 @@
 .ce-block-head .ce-toggle { margin: 0; }
 .ce-link-button { border: 0; background: transparent; color: var(--r-brand); font-size: 12px; padding: 2px 4px; text-decoration: underline; }
 .ce-block .ce-idea { margin-bottom: 10px; }
-#ideas-box svg { max-height: 320px; width: 100%; }
+.ce-idea .para, .ce-previously { max-width: 80ch; }
 
-/* reading: the brief panel keeps every part, narrower and less detailed */
-.reading .ce-overview-only { display: none; }
-.reading .ce-brief-panel { position: sticky; top: 122px; max-height: calc(100vh - 134px); overflow: auto; gap: 8px; }
+/* reading: the brief panel becomes the rail, the same cards, title only */
+.reading .ce-brief-panel { position: sticky; top: 122px; max-height: calc(100vh - 134px); overflow: auto; overflow-x: hidden; gap: 8px; }
 .reading .ce-block { padding: 2px 10px 8px; }
-.reading .ce-block-head .ce-toggle, .reading #map-note, .reading .legend { display: none; }
-.reading .ce-area { height: 180px; }
 .reading .ce-idea { padding: 6px 8px; gap: 2px; margin-bottom: 6px; border-radius: 8px; border-left-width: 4px; }
 .reading .ce-idea > :not(.ce-idea-head):not(h3) { display: none; }
 .reading .ce-idea-head > :not(.ce-num):not(.ce-here) { display: none; }
 .reading .ce-idea h3 { font: 13px/1.3 var(--r-sans); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.reading #further-block .ce-block-head { padding: 4px 0 0; }
 .ce-here { font-size: 11px; color: var(--r-muted); }
 .ce-idea.here { box-shadow: 0 0 0 2px color-mix(in srgb, var(--idea) 35%, transparent); }
 .ce-idea.here .ce-here { color: var(--r-ink); font-weight: 600; }
@@ -191,38 +220,36 @@
 .reading .ce-sources { font-size: 12px; gap: 3px; }
 .reading .ce-sources .roles { display: none; }
 
-/* the path: earlier sources as vertical bars */
-.ce-bars { display: flex; gap: 8px; justify-content: end; position: sticky; top: 122px; min-width: 0; }
-.ce-bar { writing-mode: vertical-rl; transform: rotate(180deg); background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px;
-  padding: 14px 8px; font-size: 13px; color: var(--r-ink); cursor: pointer; height: min(440px, calc(100vh - 150px)); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; width: 42px; }
-.ce-bar:hover { border-color: var(--r-brand); color: var(--r-brand); }
-
-/* the source: plain text, dense; a sentence is lit only from the details, or with "Show what the brief takes" */
+/* the source: plain text, dense; what the brief takes is tinted by its idea unless hidden */
 .ce-source { background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; padding: 14px 20px 18px; min-width: 0; }
 .ce-source-head { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--r-line); margin-bottom: 12px; }
 .ce-source-head h1 { font-size: 24px; line-height: 1.15; }
-.ce-dense { font: 13.5px/1.5 var(--r-sans); white-space: pre-line; overflow-wrap: anywhere; color: var(--r-ink); max-width: 76ch; }
+.ce-dense { font: 13.5px/1.55 var(--r-sans); white-space: pre-line; overflow-wrap: anywhere; color: var(--r-ink); max-width: 76ch; }
 .ce-dense .pass { border-radius: 2px; transition: background-color .15s; }
 .ce-dense.show-takes .pass.takes { background: color-mix(in srgb, var(--idea) 14%, transparent); }
-.ce-dense .pass.hover { background: color-mix(in srgb, var(--r-brand) 12%, transparent); }
-.ce-dense .pass.lit { background: color-mix(in srgb, var(--r-coral) 24%, transparent); }
-.ce-further { margin-top: 16px; padding-top: 10px; border-top: 1px dashed var(--r-line); max-width: 76ch; }
-.ce-further > summary { cursor: pointer; font-size: 14px; color: var(--r-ink); list-style: none; margin-bottom: 8px; }
-.ce-further > summary::-webkit-details-marker { display: none; }
+.ce-dense.show-takes .pass.takes.lent { background: transparent; text-decoration: underline dotted color-mix(in srgb, var(--idea) 70%, transparent); text-underline-offset: 3px; }
+.ce-dense.show-takes .pass.takes.superseded { background: transparent; text-decoration: underline dashed var(--r-supersedes); text-underline-offset: 3px; }
+.ce-dense .pass.hover { background: color-mix(in srgb, var(--r-brand) 16%, transparent) !important; }
+.ce-dense .pass.lit { background: color-mix(in srgb, var(--r-coral) 26%, transparent) !important; }
+.ce-further { display: block; margin-top: 16px; padding-top: 10px; font-size: 14px; }
 
-/* the details: dense, the larger share in the overview, scoped to the source when reading */
-.ce-details { background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; padding: 4px 16px 16px; min-width: 0; }
-.reading .ce-details { position: sticky; top: 122px; max-height: calc(100vh - 134px); overflow: auto; }
-.ce-scope { margin: 10px 0 0; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--r-line); }
-.ce-side-block .ce-section { margin: 14px 0 6px; }
-.ce-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+/* the narrow panel: the map on top, then compact rows; while reading, what was extracted from the source */
+.ce-side { background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; padding: 4px 14px 14px; min-width: 0;
+  position: sticky; top: 122px; max-height: calc(100vh - 134px); overflow: auto; }
+.ce-side-map .ce-block-head { padding: 8px 0 2px; min-height: 24px; }
+.ce-area { width: 100%; height: 230px; border-radius: 8px; background: var(--r-bg); margin-top: 4px; position: relative; overflow: hidden; }
+#ideas-box svg { max-height: 230px; width: 100%; }
+.ce-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 10px 0 0; }
+.ce-row .label { font: 600 10.5px/1.4 var(--r-sans); letter-spacing: 1.2px; text-transform: uppercase; color: var(--r-muted); }
+.ce-side .ce-section { margin: 16px 0 6px; }
+.ce-badges { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .badge { font-size: 11.5px; padding: 1px 8px; border-radius: 10px; background: var(--r-graph-person); color: var(--r-ink); white-space: nowrap; }
 .ce-badges.orgs .badge { background: var(--r-graph-org); }
 .badge.wrote { font-weight: 600; }
 .badge.mentioned { background: transparent !important; border: 1px solid var(--r-line); color: var(--r-muted); }
-.ce-kind { margin-bottom: 4px; }
-.ce-kind summary { cursor: pointer; font-size: 12px; font-weight: 600; padding: 4px 0; }
-.ce-kind[style] summary { color: var(--idea); }
+.ce-group { margin-bottom: 4px; }
+.ce-group summary { cursor: pointer; font-size: 12px; font-weight: 600; padding: 4px 0; }
+.ce-group[style] summary { color: var(--idea); }
 .ce-claims { list-style: none; padding: 0; margin: 2px 0 6px; display: grid; gap: 3px; }
 .ce-claim { text-align: left; border: 0; background: transparent; padding: 2px 0 2px 8px; font-size: 12.5px; line-height: 1.35; cursor: pointer;
   border-left: 3px solid var(--r-line); color: var(--r-ink); width: 100%; }
@@ -231,19 +258,15 @@
 .ce-claim.in-view { background: color-mix(in srgb, var(--r-brand) 7%, transparent); }
 .ce-claim.lit { background: color-mix(in srgb, var(--r-coral) 20%, transparent); }
 .ce-claims li.superseded .ce-claim { text-decoration: line-through; color: var(--r-muted); }
-.ce-details .ce-next-title { font-size: 13px; }
-.ce-details .ce-next .thesis { font-size: 12px; }
+.ce-kind-label { font: 600 9.5px/1 var(--r-sans); letter-spacing: .8px; text-transform: uppercase; color: var(--r-muted);
+  border: 1px solid var(--r-line); border-radius: 6px; padding: 2px 4px; margin-right: 6px; vertical-align: 1px; }
+#further-from .ce-section:first-child { margin-top: 4px; }
 
 @media (max-width: 1000px) {
   .ce-grid, .ce-grid.reading { display: flex; flex-direction: column; gap: 12px; }
-  .ce-grid:not(.reading) .ce-brief-panel { margin-right: 0; }
-  .reading .ce-brief-panel, .reading .ce-details, .ce-bars { position: static; max-height: none; }
-  .reading #bars { order: 1; } .reading #source { order: 2; } .reading #details { order: 3; } .reading #brief-panel { order: 4; }
-  .ce-bars { flex-wrap: wrap; justify-content: start; }
-  .ce-bar { writing-mode: horizontal-tb; transform: none; height: auto; width: auto; padding: 6px 10px; }
-  .ce-crumbs > .small { display: none; }
+  .reading .ce-brief-panel, .ce-side { position: static; max-height: none; }
+  .reading #source { order: 1; } .reading #side { order: 2; } .reading #brief-panel { order: 3; }
+  .ce-crumbs #esc-hint { display: none; }
 }
 /* panels never take their width from their content (a map canvas keeps its old size until it is resized) */
 .ce-brief-panel > *, .ce-block, .ce-block-body, #area-box { min-width: 0; }
-.ce-area { position: relative; overflow: hidden; }
-.reading .ce-brief-panel { overflow-x: hidden; }
