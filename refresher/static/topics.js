@@ -37,19 +37,53 @@
     if (t.arrived) head.append(el('span', `${t.arrived} arrived`, 'chip new'));
     if (head.childNodes.length) a.append(head);
     a.append(el('h3', t.title));
-    const when = t.last ? 'version of ' + new Date(t.last).toLocaleDateString('en', {day: 'numeric', month: 'short'}) : 'no version saved yet';
-    a.append(el('p', t.arrived == null ? when : `${when} · ${t.notes || 0} notes · ${t.noise || 0} noise`, 'top'));
+    const when = t.last ? 'checkpoint ' + new Date(t.last).toLocaleDateString('en', {day: 'numeric', month: 'short'}) : 'no checkpoint yet';
+    a.append(el('p', t.arrived == null ? when : `${when} · ${t.notes || 0} notes · ${t.noise || 0} overlapping or less relevant`, 'top'));
     return a;
   }
+  let homeEmpty = null;
+  const journey = window.RefresherJourney;
+  const resume = journey?.data.resume;
+  if (resume && journey.safe(resume.href)) {
+    $('resume').hidden = false; $('resume-title').textContent = /^https?:\/\//i.test(resume.title || '') ? 'Your last article' : resume.title; $('resume-link').href = journey.safe(resume.href); $('subject-search').before($('resume'));
+  }
+  const recent = (journey?.data.recent || []).filter(r => journey.safe(r.href));
+  $('recent-subjects').hidden = !recent.length;
+  $('recent-subject-list').replaceChildren(...recent.map(r => { const a = el('a', null, 'card'); a.href = journey.safe(r.href); a.append(el('h3', r.title), el('span', 'Open overview →', 'quiet')); return a; }));
   fetch('/api/threads').then(r => r.ok ? r.json() : []).then(rows => {
-    $('threads').replaceChildren(...rows.map(threadCard)); $('threads-shelf').hidden = !rows.length;
+    $('threads').replaceChildren(...rows.map(threadCard)); $('threads-shelf').hidden = !rows.length || homeEmpty === true;
   }).catch(() => {});
-  fetch('/api/topics').then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(rows => {
+  const get = path => fetch(path).then(r => { if (!r.ok) throw new Error(); return r.json(); });
+  Promise.all([get('/api/topics'), get('/api/library')]).then(([rows, sources]) => {
+    if (resume && journey.safe(resume.href)) {
+      const query = new URLSearchParams(resume.href.split('?')[1] || '');
+      const id = query.get('source') || query.get('read');
+      const source = sources.find(s => s.id === id) || sources.find(s =>
+        s.url && /^https?:\/\//i.test(resume.title || '') && s.url.split('#')[0] === resume.title.split('#')[0]);
+      if (source?.title) $('resume-title').textContent = source.title;
+    }
+    homeEmpty = !rows.length && !sources.length;
+    $('home-loading').hidden = true;
+    $('home-welcome').hidden = !homeEmpty;
+    $('home-dashboard').hidden = homeEmpty;
+    $('subject-search').hidden = !rows.length;
+    document.body.classList.toggle('home-populated', !homeEmpty);
+    if (homeEmpty) {
+      $('resume').hidden = true; $('recent-subjects').hidden = true; $('threads-shelf').hidden = true;
+    } else {
+      $('hero-title').textContent = rows.length ? 'What would you like to revisit?' : 'Your collection has begun.';
+      if (!rows.length) $('home-intro').textContent = 'Your originals are saved. Read them in Library while your collection takes shape.';
+    }
     const order = (a, b) => Number(b.latest > lastVisit) - Number(a.latest > lastVisit) || b.latest.localeCompare(a.latest);
     const topics = rows.filter(r => r.kind === 'topic').sort(order), clusters = rows.filter(r => r.kind === 'cluster').sort(order);
     $('topics').replaceChildren(...topics.map(card)); $('clusters').replaceChildren(...clusters.map(card));
-    $('topics-shelf').hidden = !topics.length; $('clusters-shelf').hidden = !clusters.length; $('empty').hidden = rows.length > 0;
+    $('topics-shelf').hidden = !topics.length; $('clusters-shelf').hidden = !clusters.length; $('empty').hidden = homeEmpty || rows.length > 0;
+    if (!homeEmpty && !rows.length) {
+      $('empty').querySelector('h2').textContent = 'No subjects yet.';
+      $('empty').querySelector('.quiet').textContent = sources.some(s => ['queued', 'processing'].includes(s.status)) ? 'Analysis is underway. Subjects can form as sources are connected; your originals are already available in Library.' : 'Subjects form from analyzed sources. You can read your originals in Library or add another source.';
+      const a = $('empty').querySelector('a'); a.href = '/library/'; a.textContent = 'Open Library →';
+    }
     $('topics-count').textContent = plural(topics.length, 'topic');
     try { localStorage.setItem('topics-visit', new Date().toISOString()); } catch (e) { /* fine without */ }
-  }).catch(() => { $('error').textContent = 'Cannot reach Refresher. Is `refresher serve` still running?'; $('error').hidden = false; });
+  }).catch(() => { $('home-loading').hidden = true; $('error').textContent = 'Could not open your collection. Please reload to reconnect. Your saved sources are retained.'; $('error').hidden = false; });
 })();

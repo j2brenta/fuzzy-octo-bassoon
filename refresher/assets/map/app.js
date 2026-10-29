@@ -9,8 +9,21 @@
   try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
   // Embedded in a dossier (/topic/): the map and the evidence only, over the dossier's sources (atlas.scope).
   const params = new URLSearchParams(location.search);
+  const back = document.getElementById('return-to-reading');
+  if (back && params.get('return')) {
+    try { const u = new URL(params.get('return'), location.origin);
+      if (u.origin === location.origin && ['/brief/', '/topic/', '/library/', '/timeline/'].includes(u.pathname)) { back.href = u.pathname + u.search; back.hidden = false; }
+    } catch { /* invalid return path */ }
+  }
   const embedded = params.has('embed');
   if (embedded) document.body.classList.add('embedded');
+  if (!embedded && data.items.length === 0) {
+    $('atlas-content').hidden = true;
+    $('atlas-empty').hidden = false;
+    document.querySelector('.header-note').hidden = true;
+    document.querySelector('.nav-more').hidden = true;
+    return;
+  }
   // The reading layout (/read/ = ?layout=read): the evidence on the left, the text of the source picked in the middle,
   // the map on the right. No timeline, and no source text in the evidence: a source there is its gist, and picking
   // it opens its text in the middle.
@@ -144,7 +157,8 @@
       const feedback = el('p', '', 'feedback');
       for (const action of ['accept', 'reject', 'defer']) {
         if (p.status !== 'proposed' && action === 'defer') continue;
-        actions.append(button(action[0].toUpperCase() + action.slice(1), () => decide(p, action, why.value, feedback, actions), action));
+        const actionLabel = action === 'reject' ? 'Dismiss' : action === 'accept' && p.kind === 'topic' ? 'Create topic' : action === 'accept' && p.kind === 'merge_ideas' ? 'Merge ideas' : action === 'accept' && p.kind === 'merge_people' ? 'Merge people' : action === 'defer' ? 'Decide later' : 'Accept';
+        actions.append(button(actionLabel, () => decide(p, action, why.value, feedback, actions), action));
       }
       actions.prepend(why);
       card.append(actions, feedback);
@@ -159,7 +173,7 @@
         headers: {'Content-Type': 'application/json', 'X-Refresher': '1'},
         body: JSON.stringify({action, token: p.token, rationale})});
       const body = await response.json().catch(() => ({}));
-      if (response.ok) { feedback.textContent = `${action}ed; rebuilding the map…`; location.reload(); return; }
+      if (response.ok) { feedback.textContent = 'Decision saved. Updating suggestions…'; document.dispatchEvent(new Event('refresher:proposals')); location.reload(); return; }
       feedback.className = 'feedback error';
       feedback.textContent = body.error || `Not saved (HTTP ${response.status}).`;
       feedback.append(' ', button('Look again', () => location.reload()));
@@ -329,26 +343,6 @@
     const shown = new Set(nodes.map(n => n.id));
     return {nodes, edges: edges.filter(e => shown.has(e.source) && shown.has(e.target)), total, allNodes, allEdges};
   }
-  function renderTimeline(visible) {
-    $('timeline-heading').textContent = state.mode === 'people' ? 'People' : 'Timeline';
-    if (state.mode === 'people') {
-      const rows = rankedPeople(visible); $('timeline').replaceChildren(); $('list-count').textContent = `${rows.length} people`;
-      rows.forEach(r => {const person = people.get(r.person_id); const entry = button('', () => selectPerson(r.person_id), 'item-button' + (state.selection === r.person_id ? ' active' : ''));
-        entry.append(el('span', person.name, 'item-title'), el('span', `${r.importance == null ? '' : scoreText(r) + ' · '}${peopleSummary(person)}`, 'item-source')); $('timeline').append(entry);});
-      if (!rows.length) $('timeline').append(el('p', 'No attributed speakers or sourced facts about people in this view yet.', 'quiet'));
-      return;
-    }
-    $('timeline').replaceChildren(); $('list-count').textContent = `${visible.length} items`;
-    for (const item of visible) {
-      const active = state.selection === item.id || claims.get(state.selection)?.item === item.id;
-      const b = button('', () => selectItem(item.id), 'item-button' + (active ? ' active' : ''));
-      b.dataset.item = item.id;
-      const meta = [item.source, item.author, item.quality !== 'accepted' ? item.quality : null, item.repost_of ? 'repost' : null].filter(Boolean).join(' · ');
-      b.append(el('span', date(item), 'item-date'), el('span', item.title, 'item-title'), el('span', meta, 'item-source'));
-      $('timeline').append(b);
-    }
-    if (!visible.length) $('timeline').append(el('p', 'No items match these filters.', 'quiet'));
-  }
   function peopleLayout(count, width) {
     const cols = Math.max(1, Math.min(count, Math.floor(width / 240)));
     return {name:'grid', cols, rows:Math.max(1, Math.ceil(count / cols)), avoidOverlap:true,
@@ -411,7 +405,21 @@
       () => e.kind === 'LINK' ? selectLink(e) : ['WROTE', 'CONTRIBUTES'].includes(e.kind) ? selectPerson(e.source) : selectEdge(e))));
     highlight();
   }
+  function updateTimelineLink() {
+    const link = $('open-timeline'); if (!link) return;
+    const q = new URLSearchParams();
+    const fields = {topic: state.topic, idea: state.story, cluster: state.drill || '', mode: state.mode,
+      quality: $('quality-filter').value, freshness: $('band-filter').value, from: $('date-filter').value,
+      search: $('search').value, hide_reposts: $('hide-reposts').checked ? '1' : '', return: params.get('return') || ''};
+    const selected = items.has(state.selection) ? state.selection : claims.get(state.selection)?.item;
+    if (selected) fields.item = selected;
+    for (const [key, value] of Object.entries(fields)) if (value) q.set(key, value);
+    link.href = '/timeline/?' + q;
+    link.hidden = embedded;
+    if (!data.served) link.hidden = true;
+  }
   function highlight() {
+    updateTimelineLink();
     cy.elements().removeClass('dim highlight');
     const selected = state.selection && cy.getElementById(state.selection);
     if (selected && selected.length) {
@@ -576,7 +584,7 @@
     const list = el('div', null, 'claim-list'); item.claims.forEach(cid => list.append(claimRow(claims.get(cid)))); $('detail').append(list);
     if (!item.claims.length) $('detail').append(el('p', 'No claims were extracted.', 'quiet'));
     $('detail').append(el('p', 'Obsidian note: ' + item.note, 'locator'));
-    renderTimeline(filteredItems()); highlight();
+    highlight();
   }
   function ideaButton(ideaId) {
     const story = stories.get(ideaId); if (!story) return el('li', ideaId);
@@ -725,7 +733,7 @@
         () => selectEdge(e), 'relation', basisWords[e.basis]); })));
     const compare = button(state.comparison.includes(id) ? '✓ In comparison' : 'Add to comparison', () => toggleCompare(id));
     compare.dataset.compare = id; compare.classList.add('pill'); $('detail').append(pills([compare]));
-    renderTimeline(filteredItems()); highlight();
+    highlight();
   }
   function selectEdge(edge) {
     show(selectEdge, edge);
@@ -742,7 +750,7 @@
       $('detail').append(button('Go to the comparison ↓', () => $('comparison').scrollIntoView({behavior: 'smooth', block: 'start'})));
     }
     if (edge.proposal) $('detail').append(el('p', 'The review asked you about this relation; see Waiting for you above.', 'chip warn'));
-    state.selection = edge.source; renderTimeline(filteredItems()); highlight();
+    state.selection = edge.source; highlight();
   }
   function contextTable(context, caption) {
     const table = el('table', null, 'context-table');
@@ -845,7 +853,7 @@
     const scope = `${topic} / ${story.slice(0, 60)} · ${visible.length} items · quality: ${$('quality-filter').value || 'any'} · freshness: ${$('band-filter').value || 'any'} · from: ${$('date-filter').value || 'any date'}`;
     const scoringLabel = state.mode === 'people' ? `Scoring subject: ${data.people_subjects?.find(s => s.id === scoreSubject())?.title || 'All subjects'} · ` : '';
     $('reading-scope').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
-    renderTimeline(visible); renderGraph(visible); renderComparison();
+    renderGraph(visible); renderComparison(); updateTimelineLink();
     if (reading && !state.view) clearDetail();  // the sources of the new slice
   }
   // Reading, a tap on the map peeks: the evidence and the text you were in stay until you choose to go there.
@@ -913,6 +921,11 @@
     $('detail').scrollTop = 0; document.querySelector('.evidence-column').scrollIntoView({block: 'start'});
   }
   if (data.served) window.peopleReview.backfill($('people-tools'));
+  for (const [key, id] of Object.entries({quality:'quality-filter', freshness:'band-filter', from:'date-filter', search:'search'})) {
+    if (params.has(key)) $(id).value = params.get(key);
+  }
+  $('hide-reposts').checked = params.get('hide_reposts') === '1';
+  if (params.get('topic') === 'unassigned' || data.topics.some(t => t.id === params.get('topic'))) state.topic = params.get('topic') || '';
   setMode(); renderProposals(); refresh();
   // Arriving from a topic's reader or Idea finder: the slice around what was picked, not the whole corpus.
   if (params.get('idea') && stories.has(params.get('idea'))) { state.story = params.get('idea'); $('story-filter').value = state.story; refresh(); }

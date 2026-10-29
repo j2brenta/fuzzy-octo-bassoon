@@ -25,6 +25,22 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def recovery(job):
+    """Old receipts predate recovery codes; give them the same useful actions."""
+    if job.get("status") != "pending":
+        return None
+    if job.get("recovery"):
+        return job["recovery"]
+    message = job.get("message", "")
+    if "AI processing is disabled" in message:
+        return "setup"
+    if job.get("stage") == "Link needs attention":
+        return "paste"
+    if job.get("attachment") and any(word in message for word in ("parser", "Scanned PDF", "PDF processing supports", "PDF text exceeds", "UTF-8 text", "Extracted text is empty")):
+        return "format"
+    return "retry"
+
+
 class Workspace:
     def __init__(self, vault, place=None):
         self.vault = Path(vault)
@@ -41,8 +57,10 @@ class Workspace:
                 raise ValueError("Submission not found.")
             if job["status"] != "pending":
                 raise ValueError("Only a stopped submission can be retried.")
+            if recovery(job) == "format":
+                raise ValueError("This format cannot be analyzed here. Paste its text or upload a supported file.")
             # Retain the same original and paid-stage caches on retry.
-            job.update(status="queued", stage="Queued to resume", message="")
+            job.update(status="queued", stage="Queued to resume", message="", recovery=None)
             job["items"] = job["items"][:1]
             self.save(job)
             self.worker.submit(self.process, job)
@@ -187,7 +205,7 @@ class Workspace:
             client = client_from_environment()
             if client is None:
                 logger.info("submission %s · AI processing is off (TRIAGE_PROVIDER)", job["id"][:10])
-                job.update(status="pending", stage="Ready for analysis", message="Original saved. AI processing is disabled in the server configuration.")
+                job.update(status="pending", stage="Ready for analysis", recovery="setup", message="Original saved. AI processing is disabled in the server configuration.")
                 return
             for path in paths:
                 raw = read_json(path)
@@ -231,13 +249,14 @@ class Workspace:
                         time.monotonic() - started, len(paths), len(failed))
             job.update(status="complete", stage="Processing finished", message="Some links could not be read. See their status below." if failed else "Your original and available results are saved.")
             if job["kind"] == "link" and not any(row.get("status") == "captured" for row in links):
-                job.update(status="pending", stage="Link needs attention", message="The URL is saved, but article text was not available. Paste the article text to continue.")
+                job.update(status="pending", stage="Link needs attention", recovery="paste", message="The URL is saved, but article text was not available. Paste the article text to continue.")
         except Exception as error:
             logger.exception("Submission %s stopped", job["id"])
             # Do not expose API payloads, credentials or filesystem internals.
             from engine.llm import ModelError
             message = str(error) if isinstance(error, ModelError) or type(error) is ValueError else "Processing stopped. The original is retained; check the server log for details."
-            job.update(status="pending", stage="Needs attention", message=message)
+            job.update(status="pending", stage="Needs attention", message=message,
+                       recovery="format" if type(error) is ValueError and job.get("attachment") and job.get("stage") == "Preparing source" else "retry")
         finally:
             self.save(job)
 
@@ -249,6 +268,7 @@ class Workspace:
         job = read_json(self.vault / "submissions" / f"{job_id}.json")
         if not job:
             return None
+        job["recovery"] = recovery(job)
         job["results"] = []
         for item in job["items"]:
             raw = read_json(self.vault / "raw" / f"{item}.json")

@@ -84,3 +84,18 @@ def test_the_map_script_parses():
     script = Path(__file__).parents[1] / "refresher" / "assets" / "map" / "app.js"
     result = subprocess.run([node, "--check", str(script)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_web_article_titles_label_sources_without_merging_distinct_articles(tmp_path):
+    v = topical_vault(tmp_path)
+    store = vault.replay(v, include_unreviewed=True)
+    before = graphview.map_data(store, AT)
+    item_id = before['items'][0]['id']
+    path = v / 'raw' / f'{item_id}.json'
+    raw = json.loads(path.read_text())
+    raw['channel_metadata'] = {'web_article': {'title': 'A clear article title'}}
+    path.write_text(json.dumps(raw))
+    after = graphview.map_data(store, AT, vault=v)
+    assert next(i for i in after['items'] if i['id'] == item_id)['title'] == 'A clear article title'
+    assert {i['id'] for i in after['items']} == {i['id'] for i in before['items']}
+    assert after['claims'] == before['claims']

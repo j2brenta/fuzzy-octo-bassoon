@@ -1,162 +1,32 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Refresher — Add a source</title><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="app.css"><script src="nav.js" defer></script><script src="app.js" defer></script></head>
-<body>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Refresher — Add a source</title><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="app.css"><script src="/static/journey.js" defer></script><script src="nav.js" defer></script><script src="app.js" defer></script><link rel="stylesheet" href="/static/journey.css"></head>
+<body data-layout="capture">
 <a class="skip" href="#main">Skip to workspace</a>
 <header class="app-bar">
 <a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Add a source</span></a>
-<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Briefs</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="home">Home</a><a href="/library/" data-page="library">Library</a><a href="/atlas/" data-page="atlas">Explore</a><a class="nav-add" href="/capture/" data-page="capture">+ Add source</a><details class="nav-more"><summary>More <span class="count" id="nav-waiting"></span></summary><div class="nav-menu"><a href="/atlas/#review">Updates &amp; suggestions</a></div></details></nav>
 </header>
-<div class="shell">
-<header class="topbar"><span>Your knowledge workspace</span><span class="demo-badge"><span></span> Product preview</span></header>
+<div class="shell app-frame">
+<header class="topbar app-page-head"><h1>Your knowledge workspace</h1><p>Save a new source or revisit your recent submissions.</p></header>
 <main id="main">
-<section class="page-heading" aria-labelledby="hero-title">
-  <div class="hero-copy">
-    <p class="eyebrow"><span class="eyebrow-line"></span> PERSONAL KNOWLEDGE, CONNECTED</p>
-    <h1 id="hero-title">Collect the sparks.<br><em>Connect the dots.</em></h1>
-    <p class="intro">Turn notes, articles, and documents into clear claims, each linked to the original evidence.</p>
-    <div class="hero-actions"><a class="hero-cta" href="#capture-heading">Add a source <span aria-hidden="true">↘</span></a><button type="button" id="hero-example" class="hero-secondary">Try a sample <span aria-hidden="true">→</span></button></div>
-    <div class="hero-footnote"><span class="hero-dot"></span> Originals retained · Claims linked to evidence</div>
-  </div>
-  <div class="hero-art">
-<button type="button" id="brain-motion" class="brain-scene" aria-label="Pause animated brain knowledge graph" title="Click to pause or resume animation">
-<img class="brain-image" src="brain.png" alt="" width="1600" height="1000" decoding="async" fetchpriority="high">
-<svg viewBox="0 0 640 400" fill="none" class="brain-network" aria-hidden="true">
-<g class="brain-network-drift">
-<g class="brain-connections">
-<path d="M120 190L178 132"/>
-<path d="M120 190L192 225"/>
-<path d="M178 132L244 94"/>
-<path d="M178 132L267 186"/>
-<path d="M244 94L310 121"/>
-<path d="M244 94L267 186"/>
-<path d="M310 121L388 100"/>
-<path d="M310 121L344 202"/>
-<path d="M310 121L267 186"/>
-<path d="M388 100L467 147"/>
-<path d="M467 147L504 213"/>
-<path d="M467 147L425 223"/>
-<path d="M504 213L425 223"/>
-<path d="M425 223L344 202"/>
-<path d="M425 223L340 267"/>
-<path d="M425 223L408 293"/>
-<path d="M344 202L267 186"/>
-<path d="M344 202L340 267"/>
-<path d="M267 186L192 225"/>
-<path d="M267 186L253 272"/>
-<path d="M267 186L340 267"/>
-<path d="M192 225L253 272"/>
-<path d="M253 272L340 267"/>
-<path d="M340 267L408 293"/>
-</g>
-<g class="brain-routes">
-<path id="brain-route-a" d="M178 132L267 186L425 223"/>
-<path id="brain-route-b" d="M504 213L425 223L344 202L310 121"/>
-<path id="brain-route-c" d="M244 94L267 186L253 272L340 267"/>
-</g>
-<g id="brain-node-0" class="brain-node node-source" transform="translate(120 190)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-1" class="brain-node node-claim" transform="translate(178 132)">
-<circle class="brain-flare" r="18"/>
-<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-2" class="brain-node node-source" transform="translate(244 94)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-3" class="brain-node node-idea" transform="translate(310 121)">
-<circle class="brain-flare" r="19"/>
-<circle class="brain-node-surface" r="9"/><circle class="brain-node-core" r="7"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-4" class="brain-node node-person" transform="translate(388 100)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-<circle class="brain-person-dot" r="2"/></g>
-<g id="brain-node-5" class="brain-node node-source" transform="translate(467 147)">
-<circle class="brain-flare" r="18"/>
-<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-6" class="brain-node node-claim" transform="translate(504 213)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-7" class="brain-node node-idea" transform="translate(425 223)">
-<circle class="brain-flare" r="20"/>
-<circle class="brain-node-surface" r="10"/><circle class="brain-node-core" r="8"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-8" class="brain-node node-person" transform="translate(344 202)">
-<circle class="brain-flare" r="18"/>
-<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-<circle class="brain-person-dot" r="2"/></g>
-<g id="brain-node-9" class="brain-node node-idea" transform="translate(267 186)">
-<circle class="brain-flare" r="20"/>
-<circle class="brain-node-surface" r="10"/><circle class="brain-node-core" r="8"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-10" class="brain-node node-claim" transform="translate(192 225)">
-<circle class="brain-flare" r="18"/>
-<circle class="brain-node-surface" r="8"/><circle class="brain-node-core" r="6"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-11" class="brain-node node-claim" transform="translate(253 272)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-</g>
-<g id="brain-node-12" class="brain-node node-person" transform="translate(340 267)">
-<circle class="brain-flare" r="19"/>
-<circle class="brain-node-surface" r="9"/><circle class="brain-node-core" r="7"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-<circle class="brain-person-dot" r="2"/></g>
-<g id="brain-node-13" class="brain-node node-person" transform="translate(408 293)">
-<circle class="brain-flare" r="17"/>
-<circle class="brain-node-surface" r="7"/><circle class="brain-node-core" r="5"/>
-<path class="brain-spark" d="M-15 -4h4v4h-4zM10 -12h3v3h-3zM12 9h4v4h-4zM-8 13h2v2h-2z"/>
-<circle class="brain-person-dot" r="2"/></g>
-<g class="brain-packet" data-route="brain-route-a" data-target="brain-node-7" data-duration="6200" data-offset="0"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
-<g class="brain-packet" data-route="brain-route-b" data-target="brain-node-3" data-duration="7800" data-offset="2600"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
-<g class="brain-packet" data-route="brain-route-c" data-target="brain-node-12" data-duration="9000" data-offset="5700"><rect x="-2" y="-2" width="4" height="4"/><rect x="-7" y="-1" width="2" height="2" opacity=".4"/></g>
-</g>
-</svg>
-</button>
-<div class="brain-footer">
-<ul class="brain-legend" aria-label="Knowledge graph node types">
-  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Sources</li>
-  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor" stroke="none"/></svg>Claims</li>
-  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor" stroke="none"/></svg>Ideas</li>
-  <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none"/></svg>People</li>
-</ul><button type="button" id="brain-pause" class="brain-pause" aria-label="Pause brain animation"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10"/></svg><span>Pause animation</span></button></div>
-  </div>
-</section>
-<div class="workspace-grid">
+<p id="receipt-notice" class="journey-notice" role="status" hidden></p><div class="workspace-grid">
 <section class="capture-card" aria-labelledby="capture-heading">
 <div class="card-top"><div class="section-number">01</div><div><h2 id="capture-heading" tabindex="-1">Add to your knowledge</h2><p>Paste content, share an article, or upload a document.</p></div></div>
 <div class="input-modes" role="group" aria-label="Input type"><button type="button" class="mode selected" data-mode="text" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M12 5v15M8 20h8"/></svg>Paste text</button><button type="button" class="mode" data-mode="link" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4M8 15l-2 2a4 4 0 0 1-5-5l5-5a4 4 0 0 1 6 0M16 9l2-2a4 4 0 0 1 5 5l-5 5a4 4 0 0 1-6 0" transform="translate(1 0) scale(.9)"/></svg>Add a link</button><button type="button" class="mode" data-mode="file" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/></svg>Upload file</button></div>
 <form id="capture-form">
 <div id="text-panel"><label id="content-label" for="content">What would you like to remember?</label><textarea id="content" maxlength="60000" placeholder="Paste an article, a newsletter, a conversation…&#10;Or simply write down an idea." rows="8" aria-describedby="content-hint"></textarea><div class="field-meta"><span id="content-hint">Your original is kept exactly as submitted.</span><span id="char-count">0 / 60,000</span></div></div>
-<div id="file-panel" hidden><label for="file" class="dropzone" id="dropzone"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 22V5m-6 6 6-6 6 6M6 21v7h20v-7"/></svg><strong id="file-name">Choose a file or drop it here</strong><span>Any file · up to 20 MB</span><input id="file" type="file" aria-describedby="file-hint"></label><p class="field-meta" id="file-hint">Text files and text PDFs can be analyzed. Images, scans, audio and other formats are saved for later parsing.</p></div>
+<div id="file-panel" hidden><label for="file" class="dropzone" id="dropzone"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 22V5m-6 6 6-6 6 6M6 21v7h20v-7"/></svg><strong id="file-name">Choose a file or drop it here</strong><span>Any file · up to 20 MB</span><input id="file" type="file" aria-describedby="file-hint"></label><p class="field-meta" id="file-hint">UTF-8 text and native-text PDFs can be analyzed (20 pages / 50,000 extracted characters). Images, scans, audio and other formats are saved for later parsing.</p></div>
 <label for="title">Source title <span class="optional">optional</span></label><input type="text" id="title" maxlength="200" placeholder="A title you’ll recognize">
-<div class="submit-row"><span class="save-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4"/></svg>Originals always retained</span><button class="primary" id="submit" type="submit">Capture knowledge <span aria-hidden="true">↗</span></button></div>
+<div class="submit-row"><span class="save-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10h14v11H5zM8 10V6a4 4 0 0 1 8 0v4"/></svg>Originals always retained</span><button class="primary" id="submit" type="submit">Save source <span aria-hidden="true">↗</span></button></div>
 <p id="form-error" class="error" role="alert" tabindex="-1" hidden></p>
 </form>
-<div class="example-row"><span>JUST EXPLORING?</span><button id="example" type="button">Try a sample note <span aria-hidden="true">→</span></button></div>
+<div class="example-row"><span>JUST EXPLORING?</span><button id="example" type="button">Fill with sample text <span aria-hidden="true">→</span></button></div>
 <p class="review-disclaimer">AI review checks claims against their source; it does not independently verify facts.</p>
 </section>
-<section class="library" id="library" aria-labelledby="library-heading"><div class="library-header"><div><p class="eyebrow">YOUR GROWING COLLECTION</p><h2 id="library-heading">Saved sources <span id="source-count">0</span></h2></div><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><span class="sr-only">Search saved sources</span><input id="search" type="search" placeholder="Find a source…"></label></div><p id="connection-error" class="error" role="alert" hidden></p><div id="source-list" class="source-list"></div><div id="empty" class="empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 12h12l4 5h16v24H8zM8 22h32M24 27v9m-4-4h8"/></svg><h3>A fresh start for your knowledge.</h3><p>Add a source above. Its claims and evidence will appear here.</p></div></section>
+<section class="library" id="library" aria-labelledby="library-heading"><div class="library-header"><div><p class="eyebrow">YOUR GROWING COLLECTION</p><h2 id="library-heading">Recent submissions <span id="source-count">0</span></h2></div><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><span class="sr-only">Search saved sources</span><input id="search" type="search" placeholder="Find a source…"></label></div><p id="connection-error" class="error" role="alert" hidden></p><div id="source-list" class="source-list"></div><div id="empty" class="empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 12h12l4 5h16v24H8zM8 22h32M24 27v9m-4-4h8"/></svg><h3>A fresh start for your knowledge.</h3><p>Add a source above. Its claims and evidence will appear here.</p></div><a class="library-browse" href="/library/">Browse all saved sources <span aria-hidden="true">→</span></a></section>
 </div>
-<footer><span>refresher<span class="brand-dot">.</span> <span class="footer-divider">/</span> Collected with purpose.</span><span>Built with NVIDIA Nemotron · Nebius Token Factory</span></footer>
 </main></div>
-<dialog id="detail"><div class="detail-head"><div><p class="eyebrow">SOURCE & EVIDENCE</p><h2 id="detail-title"></h2></div><button id="close-detail" type="button" aria-label="Close source details">×</button></div><div id="detail-body"></div></dialog>
+<dialog id="detail" aria-labelledby="detail-title"><div class="detail-head"><div><p class="eyebrow">SOURCE & EVIDENCE</p><h2 id="detail-title"></h2></div><button id="close-detail" type="button" aria-label="Close source details">×</button></div><div id="detail-body"></div></dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 </body></html>

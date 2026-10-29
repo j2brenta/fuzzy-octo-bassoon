@@ -5,7 +5,7 @@ progress. The application captures UTF-8 files and Telegram text, imports a
 labeled seed corpus, prepares source sections and links, extracts claims, and runs automated
 quality review with bounded corrections. It also extracts and reviews named entity
 mentions and saves a combined handoff record with a storage-only receipt.
-Graph placement and refreshers are not implemented yet.
+The unified browser workspace provides subject overviews, a source library, evidence reading and graph exploration.
 
 ## Local setup
 
@@ -16,6 +16,19 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
+
+## Browser workspace
+
+```bash
+uv run refresher serve --vault .local-vault/telegram --port 8080
+```
+
+Open <http://127.0.0.1:8080/>. Home is the entry point; Library holds saved
+originals, Explore shows connections, and Add source captures new material.
+Use the same vault as the Telegram bot to see its captures. The read-only
+[prepared example](http://127.0.0.1:8080/example/) saves nothing and makes no model calls.
+See the [UX implementation and validation](docs/ux/implementation.md) for the
+journeys, input limits, local setup and verification boundaries.
 
 ## Docker Compose
 

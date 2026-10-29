@@ -1,0 +1,36 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+test('an unanalyzed receipt shows one status and one original action',()=>{
+ const node=(tag,text='')=>({tag,text,children:[],append(...xs){this.children.push(...xs)},replaceChildren(...xs){this.children=xs},addEventListener(){}});
+ const elements={'detail-title':node('h2'),'detail-body':node('div')};
+ const source=fs.readFileSync('refresher/static/app.js','utf8');
+ const context={node,$:id=>elements[id],encodeURIComponent};vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('function retryAnalysisButton'),source.indexOf('function renderDetail')),context);
+ context.renderUnanalyzed({id:'receipt',title:'Article',status:'pending',recovery:'setup',results:[{id:'source',text:'Original',processed:{quality_status:'pending'}}]});
+ const labels=n=>[n.text,...n.children.flatMap(labels)].filter(Boolean);
+ const text=labels(elements['detail-body']).join(' ');
+ assert.equal((text.match(/Original saved/g)||[]).length,1);
+ assert.match(text,/Retry analysis/);assert.match(text,/Read saved original/);
+ assert.doesNotMatch(text,/Source review|No claims|server operator/);
+});
+test('processing stays quiet even with partial claims, then offers the analyzed source',()=>{
+ const node=(tag,text='')=>({tag,text,children:[],append(...xs){this.children.push(...xs)},replaceChildren(...xs){this.children=xs},addEventListener(){},setAttribute(){},classList:{toggle(){}}});
+ const elements={'detail':node('dialog'),'detail-title':node('h2'),'detail-body':node('div')};
+ const source=fs.readFileSync('refresher/static/app.js','utf8');
+ const context={node,$:id=>elements[id],encodeURIComponent,URL};vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('function retryAnalysisButton'),source.indexOf('async function openDetail')),context);
+ const job={id:'receipt',title:'https://example.com/long-article.html',status:'processing',stage:'Reading people and organizations',results:[{id:'parent'},{id:'article',processed:{claims:[{}]}}]};
+ context.renderDetail(job);
+ const labels=n=>[n.text,...n.children.flatMap(labels)].filter(Boolean);
+ const text=labels(elements['detail-body']).join(' ');
+ assert.equal(elements['detail-title'].textContent,'example.com');
+ assert.match(text,/Analyzing your source…/); assert.match(text,/Back to Library/);
+ assert.doesNotMatch(text,/Reading people|Add another|Source review|Retry analysis/);
+ assert.equal(elements['detail-body'].children.find(n=>n.tag==='details').text,'');
+ context.renderDetail({...job,status:'complete'});
+ assert.match(labels(elements['detail-body']).join(' '),/Ready to explore/);
+ const actions=elements['detail-body'].children.find(n=>n.tag==='div');
+ assert.equal(actions.children[0].href,'/library/?source=article');
+});

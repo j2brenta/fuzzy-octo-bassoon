@@ -59,7 +59,7 @@ def _gist(item, summaries: dict, translation) -> dict:
     return {"hook": hook, "gist": gist, "summary": "lead"}
 
 
-def map_data(store: MemoryStore, at: datetime) -> dict:
+def map_data(store: MemoryStore, at: datetime, vault: Path | None = None) -> dict:
     """Everything the map shows, as plain JSON, scored at `at`."""
     scores = km.score_claims(store, at)
     names = note_names(store)
@@ -103,10 +103,16 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
     summaries = getattr(store, "summaries", {})
     for item in sorted(items.values(), key=lambda i: (i.source.event_time, i.item_id)):
         src = item.source
+        title = item.title
+        if vault is not None:
+            raw_path = vault / "raw" / f"{item.item_id}.json"
+            if raw_path.is_file():
+                raw = json.loads(raw_path.read_text(encoding="utf-8"))
+                title = (raw.get("channel_metadata") or {}).get("web_article", {}).get("title") or title
         mine = [c for c in claim_rows if c["item"] == item.item_id]
         idea_ids = sorted({c["idea"] for c in mine if c["idea"]})
         item_rows.append({
-            "id": item.item_id, "title": item.title, "source": src.source_name or src.channel,
+            "id": item.item_id, "title": title, "source": src.source_name or src.channel,
             "author": store.person(item.author_id).name if item.author_id else None,
             "url": src.url, "time": (src.published_at or src.captured_at).isoformat(),
             "time_basis": "publication" if src.published_at else "capture", "quality": item.review_status,
@@ -257,7 +263,7 @@ def write(store: MemoryStore, vault: Path, at: datetime) -> Path:
     """Write wiki/graph/: graph.json, and index.html with its scripts beside it."""
     out = vault / "wiki" / "graph"
     out.mkdir(parents=True, exist_ok=True)
-    data = map_data(store, at)
+    data = map_data(store, at, vault=vault)
     (out / "graph.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (out / "index.html").write_text(page(data), encoding="utf-8")
     for name in MAP_ASSETS[1:]:

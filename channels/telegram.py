@@ -26,6 +26,7 @@ from aiogram.utils.serialization import deserialize_telegram_object_to_python
 from dotenv import load_dotenv
 
 from channels.pasted import telegram_copy_metadata
+from refresher.library import app_url
 from store.raw import CaptureResult, capture_text
 from channels.web import fetch_linked_articles
 from channels.pdf import capture_pdf, interpret_pdf, pdf_attachment
@@ -232,7 +233,9 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
         )
         return
     status = "Already captured" if result.duplicate else "Captured"
-    await message.answer(f"{status}.\nItem: {result.item_id}\nText and source metadata saved; AI processing comes later.")
+    source_link = app_url(result.item_id)
+    await message.answer(f"{status}.\nItem: {result.item_id}\nText and source metadata saved; AI processing comes later."
+                         + (f"\nOpen saved source: {source_link}" if source_link else ""))
     try:
         prepared = await stage(item_label(result.item_id), "prepare", parse_capture, result.path, detail=False,
                                describe=lambda p: f"{p.section_count} sections, {p.link_count} links{cached(p)}")
@@ -464,7 +467,9 @@ async def _process_capture(message: Message, result: CaptureResult) -> None:
         return
     waiting = sum(s.status == "proposed" for s in store.proposals.values())
     tail = f"\n{waiting} proposal(s) wait for you: run `refresher serve` to review them." if waiting else ""
-    await message.answer(f"{saved}\n{reply_text(placed, store, note)}{tail}")
+    source_link = app_url(result.item_id)
+    await message.answer(f"{saved}\n{reply_text(placed, store, note)}{tail}"
+                         + (f"\nRead this source: {source_link}" if source_link else ""))
     vault_path = packaged.path.parent.parent
     if review_on() and due(vault_path):
         # The hourly review rides on captures, after the reply: the user is not kept waiting, and the bot

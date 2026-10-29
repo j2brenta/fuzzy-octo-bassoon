@@ -475,6 +475,30 @@ def repair_entity_references(data: dict, text: str) -> tuple[dict, list[dict]]:
                 form["evidence_passage_ids"] = [actual]
                 changes.append({"name": name, "supplied_passage_ids": ids, "resolved_passage_ids": [actual],
                                 "reason": "unique_exact_name_on_adjacent_source_line"})
+        # A model sometimes repeats part of a full name as an alias without an
+        # independent mention. Omit that alias; never invent identity evidence.
+        if isinstance(aliases, list) and aliases:
+            try:
+                canonical = {**entity, "aliases": []}
+                mentions = validate_entities({"entities": [canonical]}, text, "item", "section")[0]["mentions"]
+            except EntityError:
+                continue  # Canonical/schema errors still use the normal repair retry.
+            kept = []
+            for alias in aliases:
+                try:
+                    if not isinstance(alias, dict) or set(alias) != {"name", "evidence_passage_ids"}:
+                        raise EntityError("Invalid alias fields.")
+                    found = _surface_mentions(alias["name"], alias["evidence_passage_ids"], passages, "item", "section")
+                except (EntityError, TypeError, KeyError):
+                    kept.append(alias)  # Other errors remain subject to strict validation.
+                    continue
+                if found and all(any(full["start_char"] <= m["start_char"] and m["end_char"] <= full["end_char"]
+                                     for full in mentions) for m in found):
+                    changes.append({"name": entity["name"], "alias": alias["name"],
+                                    "reason": "dropped_alias_without_standalone_source_mention"})
+                else:
+                    kept.append(alias)
+            entity["aliases"] = kept
     return fixed, changes
 
 
