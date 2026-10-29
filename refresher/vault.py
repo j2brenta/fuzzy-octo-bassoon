@@ -33,7 +33,7 @@ from graph import proposals as proposal_stage
 from graph.memory import MemoryStore, person_id
 from graph.store import AFFILIATION_WORDS, Affiliation, Decision, Edge, GraphStore, Proposal, ReviewReport
 from refresher import dossier, km, scoring
-from refresher import translate
+from refresher import summarize, theses, thesis_relate, translate
 from engine import language
 from refresher.schemas import Extraction, Override, Relation
 
@@ -220,11 +220,14 @@ def merged_overrides(vault: Path) -> list[Override]:
 
 def replay(vault: Path, overrides: list[Override] | None = None, include_unreviewed: bool = False) -> MemoryStore:
     store = MemoryStore(include_unreviewed=include_unreviewed)
+    extras = {}
     with store.deferred():  # one recomputation for the whole vault
         for ex, text in load_extractions(vault):
             from refresher.people_review import load as load_people_reviews
             relation = load_relation(vault, ex)
             store.apply(ex, text, relation, attribution_reviews=load_people_reviews(vault, ex, text, relation))
+            extras[ex.item_id] = {"links": [lk["url"] for lk in ex.links if isinstance(lk, dict) and lk.get("url")],
+                                  "kind": ex.triage.kind if ex.triage else None}
     for report in load_reviews(vault):
         store.apply_review(report)
     # Every state is judged against the graph before any proposal applies, so the order of decisions never
@@ -250,6 +253,10 @@ def replay(vault: Path, overrides: list[Override] | None = None, include_unrevie
     store.use_cluster_names(load_cluster_names(vault))
     store.use_themes(load_themes(vault))
     store.translations = translate.load_all(vault)  # item id -> passages in the output language, for reading
+    store.summaries = summarize.load_all(vault)  # item id -> hook and gist, for choosing what to read
+    store.theses = theses.load_all(vault)  # item id -> what it argues, over its claims (refresher/theses.py)
+    store.thesis_relations = thesis_relate.load_all(vault)  # item id -> how its theses relate to other sources'
+    store.extras = extras  # item id -> the links it carries and its triage kind, for the Thread Navigator
     return store
 
 

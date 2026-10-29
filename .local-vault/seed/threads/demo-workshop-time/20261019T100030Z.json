@@ -1,0 +1,60 @@
+{
+  "thread": "demo-workshop-time",
+  "query": "demo workshop time",
+  "key": null,
+  "title": "demo workshop time",
+  "at": "2026-10-19T10:00:30+00:00",
+  "stamp": "20261019T100030Z",
+  "items": [
+    "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23"
+  ],
+  "major": [
+    {
+      "id": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:t1",
+      "parts": [
+        "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:t1"
+      ],
+      "title": "The demo workshop now starts at 16:00 UTC on 25 October 2026, correcting the earlier 14:00 UTC announcement.",
+      "base": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23",
+      "sources": {
+        "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23": "base"
+      },
+      "theses": [
+        "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:t1"
+      ],
+      "previously": [],
+      "text": {
+        "paragraph": "The demo workshop is scheduled to start at 16:00 UTC on 25 October 2026 [S1]. This corrects an earlier announcement that had set the start time for 14:00 UTC [S1].",
+        "previously": "",
+        "kept": 3,
+        "given": 3,
+        "written_by": "nvidia/Nemotron-3-Ultra-550b-a55b"
+      }
+    }
+  ],
+  "also": [],
+  "people": [
+    {
+      "id": "person:demo-organizer",
+      "name": "Demo Organizer",
+      "authority": 1.0
+    }
+  ],
+  "sources": {
+    "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23": {
+      "title": "Synthetic test fixture correction: The demo workshop starts at 16:00 UTC on 25 O",
+      "source": "Synthetic demo organizer",
+      "when": "2026-10-16T09:00:00+00:00"
+    }
+  },
+  "ids": {
+    "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23": "S1"
+  },
+  "counts": {
+    "ideas": 1,
+    "sources": 1,
+    "rewrites": 0,
+    "superseded": 0
+  },
+  "validity": 1.0
+}

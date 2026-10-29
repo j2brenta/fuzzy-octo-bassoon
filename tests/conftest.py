@@ -15,6 +15,7 @@ def offline_embeddings(monkeypatch):
 def no_live_translation(monkeypatch):
     """Tests never call the translation model; a test that wants a translator passes its own."""
     monkeypatch.setattr("refresher.translate.client_from_environment", lambda env=None: None)
+    monkeypatch.setattr("refresher.summarize.client_from_environment", lambda env=None: None)
 
 
 @pytest.fixture(autouse=True)

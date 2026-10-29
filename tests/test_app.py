@@ -196,9 +196,14 @@ def test_topics_and_dossiers_are_served(served):
     accepted = next(r for r in rows if r["kind"] == "topic")
     assert accepted["title"] == topic["title"] and accepted["counts"]["ideas"] >= 3
     status, page, headers = get(f"{base}/topic/?id={accepted['id']}")
-    assert status == 200 and 'src="/atlas/?embed=1&amp;mode=topics"' in page and "frame-ancestors 'none'" in headers["Content-Security-Policy"]
+    assert status == 200 and 'src="/static/dossier.js"' in page and 'id="reading"' in page
+    assert "frame-ancestors 'none'" in headers["Content-Security-Policy"]
+    for name in ("dossier.js", "reading.css", "brief.css", "cytoscape.min.js"):
+        assert get(f"{base}/static/{name}")[0] == 200
     d = json.loads(get(f"{base}/api/dossier?topic={accepted['id']}")[1])
     assert d["scope"]["id"] == accepted["id"] and d["ideas"][0]["tier"] == "core" and d["sources"]
+    assert d["documents"] and d["documents"][0]["key"] and d["threads"] and "people" in d["people"]
+    assert d["reading"] == {"items": {}, "last_visit": None}
     d = json.loads(get(f"{base}/api/dossier?q=GPU+rental+prices&at=2026-11-01")[1])
     assert d["scope"]["kind"] == "query" and d["at"].startswith("2026-11-01")
     for bad in ("q=medieval+falconry", "topic=topic:nope", "q=GPU&at=yesterday"):
@@ -261,6 +266,25 @@ def test_a_failed_run_from_the_page_is_shown(tmp_path):
     assert review.start()
     review._thread.join(10)
     assert review.status()["error"] == "OSError: disk full" and not review.status()["running"]
+
+
+def test_the_reader_gets_a_source_and_marks_what_you_read(served):
+    v, base, _ = served
+    d = json.loads(get(f"{base}/api/dossier?q=hallucination")[1])
+    first = d["documents"][0]["id"]
+    src = json.loads(get(f"{base}/api/document?id={first}")[1])
+    assert src["id"] == first and src["text"] and src["spans"] and all(s["start"] < s["end"] for s in src["spans"])
+    with pytest.raises(HTTPError) as error:
+        get(f"{base}/api/document?id=nope")
+    assert error.value.code == 404
+    assert send(base, "/api/reading", {"item": first, "state": "read"})[0] == 200
+    assert send(base, "/api/reading", {"visit": d["scope"]["id"]})[0] == 200
+    assert send(base, "/api/reading", {"item": first, "state": "loved"})[0] == 400
+    assert send(base, "/api/reading", {"item": first, "state": "read"}, {"X-Refresher": "0"})[0] == 403
+    again = json.loads(get(f"{base}/api/dossier?q=hallucination")[1])
+    assert again["reading"]["items"][first]["state"] == "read"
+    assert again["reading"]["last_visit"] is None  # the visit just made is this sitting, not the last one
+    assert (v / "reading" / "log.jsonl").exists()
 
 
 def test_previous_graph_url_redirects_to_atlas_with_query(served):

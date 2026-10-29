@@ -1,7 +1,7 @@
 """refresher serve: the one local app on one vault: add a source, see the Atlas, decide the review's proposals.
 
     /           the topics: pick a subject, or type one
-    /topic/     its dossier (refresher/dossier.py): Ideas ranked, what changed, what to read first, beside the map
+    /topic/     a subject read cluster by cluster (refresher/subject.py): a plan, the clusters, a reader beside it
     /capture/   add a source and follow it through ingestion (Olga's workspace, refresher/web.py)
     /atlas/     the map and the proposals waiting for you (Victor's viewer, refresher/assets/map/)
     /api/...    submissions and uploads, the map's data, topics and dossiers, proposals and decisions
@@ -25,8 +25,10 @@ from pathlib import Path
 from threading import Lock, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
+from engine.llm import ModelError
 from graph.memory import MemoryStore
-from refresher import consolidate, dossier, graphview, vault, people_review, people_backfill
+from refresher import area as area_engine, brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
+    reading, subject, thesis_relate, threads, vault
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -37,13 +39,22 @@ DECIDE = re.compile(r"^/api/proposals/(p-[0-9a-f]{16})$")
 SUBMISSION = re.compile(r"^/api/submissions/([a-f0-9]{32})$")
 RETRY = re.compile(r"^/api/submissions/([a-f0-9]{32})/retry$")
 UPLOAD = re.compile(r"^/api/uploads/([a-f0-9]{64})$")
+SOURCE = re.compile(r"^/api/source/([\w.:-]{1,200})/(context|state)$")
+BRIEF_SOURCE = re.compile(r"^/api/brief/source/([\w.:-]{1,200})$")
+THREAD = re.compile(r"^/api/threads/([\w-]{1,80})(?:/(stamp|snapshots)(?:/(\d{8}T\d{6}Z))?)?$")
 HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 FILES = {
     "/": (STATIC / "topics.html", HTML),
     "/topic/": (STATIC / "dossier.html", HTML),
+    "/brief/": (STATIC / "context.html", HTML),
+    "/static/context.css": (STATIC / "context.css", CSS),
+    "/static/context.js": (STATIC / "context.js", JS),
     "/static/brief.css": (STATIC / "brief.css", CSS),
+    "/static/reading.css": (STATIC / "reading.css", CSS),
+    "/static/navigator.css": (STATIC / "navigator.css", CSS),
     "/static/topics.js": (STATIC / "topics.js", JS),
     "/static/dossier.js": (STATIC / "dossier.js", JS),
+    "/static/cytoscape.min.js": (graphview.ASSETS / "cytoscape.min.js", JS),
     "/capture/": (STATIC / "index.html", HTML),
     "/capture/app.css": (STATIC / "app.css", CSS),
     "/capture/app.js": (STATIC / "app.js", JS),
@@ -60,9 +71,12 @@ BASE_CSP = "default-src 'self'; script-src 'self'; img-src 'self' data:; connect
            "base-uri 'none'; form-action 'self'"
 CSP = {"page": BASE_CSP + "; style-src 'self'; frame-ancestors 'none'",
        # Cytoscape and the map set inline styles; a dossier embeds the map from the same origin
-       "atlas": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'"}
+       "atlas": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'",
+       "topic": BASE_CSP + "; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"}  # its graphs are Cytoscape
 # What vault.replay reads; a change to any of these files replays the vault again.
-WATCHED = ("raw", "processed", "relations", "graph-reviews", "people-reviews", "people", "translations", "overrides.yaml",
+WATCHED = ("raw", "processed", "relations", "graph-reviews", "people-reviews", "people", "translations", "summaries",
+           "theses", "thesis-relations", "threads",
+           "overrides.yaml",
            ".cache/cluster-names.json", ".cache/cluster-themes.json", "wiki/items", "wiki/people")
 logger = logging.getLogger(__name__)
 
@@ -89,6 +103,9 @@ class State:
         self.vault, self.include_unreviewed = vault_path, include_unreviewed
         self._lock = RLock()
         self._key = self._store = self._map = self._map_at = None
+        self._subjects: dict[tuple, dict] = {}  # scored subjects, kept until the vault changes
+        self._pool = self._groups = None  # every source's theses with vectors, and the major ideas over them
+        self._contexts: dict[tuple, dict] = {}
 
     def store(self) -> MemoryStore:
         key = fingerprint(self.vault)
@@ -96,18 +113,101 @@ class State:
             if key != self._key:
                 self._store = vault.replay(self.vault, include_unreviewed=self.include_unreviewed)
                 self._store.topics()  # build the groups now, while no one else reads
-                self._key, self._map = key, None
+                self._key, self._map, self._subjects = key, None, {}
+                self._pool = self._groups = None
+                self._contexts = {}
             return self._store
+
+    def pool(self) -> thesis_relate.Pool:
+        with self._lock:
+            store = self.store()
+            if self._pool is None:
+                self._pool = thesis_relate.Pool(store)
+            return self._pool
+
+    def brief(self, key: str | None, query: str | None, at: datetime | None = None) -> dict | None:
+        """The Context Engine on a subject (refresher/context.py) with what is written of it, once per vault state
+        (and per moment, when one is asked for)."""
+        with self._lock:
+            store, pool = self.store(), self.pool()
+            now = at or datetime.now(timezone.utc)
+            if at is None and self._groups is None:
+                self._groups = context_engine.groups(store, pool, now)
+            cache = (key, query, at.isoformat() if at else None)
+            if cache not in self._contexts:
+                c = context_engine.build(store, key, query, now, pool, self._groups if at is None else None)
+                if c is not None:
+                    c["area"] = area_engine.area(store, c, pool)
+                    c["area_full"] = area_engine.area(store, c, pool, full=True)
+                    c["details"] = area_engine.details(store, c)
+                self._contexts[cache] = c
+            c = self._contexts[cache]
+        if c is None:
+            return None
+        with self._lock:
+            further = area_engine.further(self.store(), c, c["area"], self.pool(), self.marks())
+        return {**c, "written": brief.write(self.vault, c, None), "further": further}
+
+    def brief_source(self, key: str | None, query: str | None, item_id: str) -> dict | None:
+        """One source read inside its brief: text, passages by idea, where it sits, where to go next."""
+        c = self.brief(key, query)
+        if c is None:
+            return None
+        with self._lock:
+            return area_engine.reader(self.store(), c, c["area"], self.pool(), item_id, self.marks())
+
+    def thread(self, name: str, at: datetime | None = None) -> dict | None:
+        with self._lock:
+            return threads.view(self.vault, self.store(), name, at, self.pool())
+
+    def threads(self) -> list[dict]:
+        with self._lock:
+            return threads.summary(self.vault, self.store(), pool=self.pool())
 
     def catalog(self, now: datetime | None = None) -> list[dict]:
         with self._lock:
             return dossier.catalog(self.store(), now or datetime.now(timezone.utc))
 
     def dossier(self, key: str | None, query: str | None, at: datetime | None = None) -> dict | None:
+        """The dossier with what you have read of it and when you last came (reading/log.jsonl)."""
+        now = datetime.now(timezone.utc)
         with self._lock:
             store = self.store()
             scope = dossier.resolve(store, key, query)
-            return dossier.build(store, scope, at or datetime.now(timezone.utc)) if scope else None
+            d = dossier.build(store, scope, at or now) if scope else None
+        if d is not None:
+            d["reading"] = reading.for_scope(reading.load(self.vault), d["scope"]["id"],
+                                             [x["id"] for x in d["documents"]], now)
+        return d
+
+    def subject(self, key: str | None, query: str | None) -> dict | None:
+        """The scored subject (refresher/subject.py), computed once per vault state."""
+        with self._lock:
+            store = self.store()
+            if (key, query) not in self._subjects:
+                scope = dossier.resolve(store, key, query)
+                self._subjects[(key, query)] = subject.subject(store, scope, datetime.now(timezone.utc)) if scope else None
+            return self._subjects[(key, query)]
+
+    def named(self, query: str | None) -> list[dict]:
+        if not query:
+            return []
+        with self._lock:
+            return dossier.named(self.store(), query)
+
+    def marks(self) -> dict[str, str]:
+        return {i: v["state"] for i, v in reading.load(self.vault)["items"].items()}
+
+    def context(self, key: str | None, query: str | None, item_id: str) -> dict | None:
+        s = self.subject(key, query)
+        if s is None:
+            return None
+        with self._lock:
+            return subject.context(self.store(), s, item_id, self.marks())
+
+    def document(self, item_id: str) -> dict | None:
+        with self._lock:
+            return dossier.document(self.store(), item_id)
 
     def map(self, now: datetime | None = None) -> dict:
         now = now or datetime.now(timezone.utc)
@@ -232,13 +332,22 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             self._send(HTTPStatus.FOUND, b"", "text/plain", headers=[("Location", to)])
 
         def do_GET(self):
+            try:
+                return self._get()
+            except ModelError as error:  # a model or the embeddings service did not answer: say so, never hang up
+                logger.warning("GET %s: %s", urlsplit(self.path).path, error)
+                return self._json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(error)})
+
+        def _get(self):
             if not self._local():
                 return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
             url = urlsplit(self.path)
             path, args = url.path, {k: v[-1] for k, v in parse_qs(url.query).items()}
+            if path in ("/read", "/read/"):  # the reading layout of the Atlas: evidence, text, map
+                return self._redirect("/atlas/?layout=read" + (f"&{url.query}" if url.query else ""))
             if path == "/graph" or path.startswith("/graph/"):
                 return self._redirect("/atlas/" + path.removeprefix("/graph").lstrip("/") + (f"?{url.query}" if url.query else ""))
-            if path in ("/atlas", "/capture", "/topic"):
+            if path in ("/atlas", "/capture", "/topic", "/brief"):
                 return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
             if path == "/atlas/":
                 html = graphview.page(state.map())
@@ -264,6 +373,38 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.OK, state.catalog())
             if path == "/api/consolidate":
                 return self._json(HTTPStatus.OK, review.status())
+            if path in ("/api/brief", "/api/brief.md"):
+                try:
+                    at = datetime.fromisoformat(args["at"]) if args.get("at") else None
+                except ValueError:
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "at must be an ISO date."})
+                at = at.replace(tzinfo=at.tzinfo or timezone.utc) if at else None
+                c = state.brief(args.get("id") or None, args.get("q") or None, at)
+                if c is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet.",
+                                                             "named": state.named(args.get("q") or None)})
+                if path == "/api/brief.md":
+                    return self._send(HTTPStatus.OK, brief.markdown(c, c["written"]).encode(), "text/markdown; charset=utf-8")
+                name = threads.slug(args.get("id") or args.get("q") or "")
+                thread = state.thread(name, at) if threads.load(vault_path, name) else None
+                return self._json(HTTPStatus.OK, {**c, "thread": thread and {k: v for k, v in thread.items() if k != "context"}})
+            if match := BRIEF_SOURCE.match(path):
+                r = state.brief_source(args.get("id") or None, args.get("q") or None, match[1])
+                return self._json(HTTPStatus.OK if r else HTTPStatus.NOT_FOUND, r or {"error": "No such source here."})
+            if path == "/api/threads":
+                return self._json(HTTPStatus.OK, state.threads())
+            if match := THREAD.match(path):
+                if match[2] == "snapshots" and match[3]:
+                    snap = next((x for x in threads.snapshots(vault_path, match[1]) if x["stamp"] == match[3]), None)
+                    return self._json(HTTPStatus.OK if snap else HTTPStatus.NOT_FOUND, snap or {"error": "No such stamp."})
+                if match[2] == "snapshots":
+                    snaps = threads.snapshots(vault_path, match[1])
+                    diffs = [threads.diff(a, b) for a, b in zip(snaps, snaps[1:])]
+                    return self._json(HTTPStatus.OK, {"snapshots": [{k: v for k, v in x.items() if k != "items"} for x in snaps],
+                                                      "diffs": diffs})
+                v = state.thread(match[1])
+                return self._json(HTTPStatus.OK if v else HTTPStatus.NOT_FOUND,
+                                  {k: x for k, x in v.items() if k != "context"} if v else {"error": "No such thread."})
             if path == "/api/dossier":
                 try:
                     at = datetime.fromisoformat(args["at"]) if args.get("at") else None
@@ -273,6 +414,36 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                        at.replace(tzinfo=at.tzinfo or timezone.utc) if at else None)
                 return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
                                   result or {"error": "Nothing in your knowledge matches that yet."})
+            if path == "/api/subject":
+                s = state.subject(args.get("id") or None, args.get("q") or None)
+                if s is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet.",
+                                                             "named": state.named(args.get("q") or None)})
+                return self._json(HTTPStatus.OK, {**s, **subject.plan(s, state.marks())})
+            if path in ("/api/subject/results", "/api/path"):
+                s = state.subject(args.get("id") or None, args.get("q") or None)
+                if s is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
+                try:
+                    if path == "/api/path":
+                        levels = subject.path(s, args.get("cluster") or None, args.get("source") or None,
+                                              args.get("idea") or None)
+                        return self._json(HTTPStatus.OK, {"levels": levels})
+                    return self._json(HTTPStatus.OK, subject.results(
+                        s, subject.plan(s, state.marks()), args.get("group_by") or "cluster_home",
+                        args.get("scope") or None, args.get("only_matches", "1") not in ("0", "false")))
+                except ValueError as error:
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
+                except KeyError:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "No such cluster, source, Idea or topic here."})
+            if (match := SOURCE.match(path)) and match[2] == "context":
+                result = state.context(args.get("id") or None, args.get("q") or None, match[1])
+                return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
+                                  result or {"error": "No such source in this subject."})
+            if path == "/api/document":
+                result = state.document(args.get("id") or "")
+                return self._json(HTTPStatus.OK if result else HTTPStatus.NOT_FOUND,
+                                  result or {"error": "No such source in the vault."})
             if path == "/api/submissions":
                 return self._json(HTTPStatus.OK, workspace.list_jobs())
             if match := SUBMISSION.match(path):
@@ -284,8 +455,50 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                   headers=[("Content-Disposition", 'attachment; filename="original-upload"')])
             if path in FILES:
                 file, kind = FILES[path]
-                return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP["atlas" if path.startswith("/atlas/") else "page"])
+                csp = "atlas" if path.startswith("/atlas/") else "topic" if path in ("/topic/", "/brief/") else "page"
+                return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP[csp])
             return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
+
+        def _brief_post(self, path, thread_post):
+            """Follow a subject, write its brief with the model, or stamp a thread. Writing calls the model, so
+            these answer when the paragraphs are written (a minute for a large brief)."""
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                body = json.loads(self.rfile.read(length)) if 0 < length <= MAX_DECISION else {}
+                if not isinstance(body, dict):
+                    raise ValueError
+            except ValueError:
+                return self._json(HTTPStatus.BAD_REQUEST, {"error": "Send a JSON object."})
+            key, query = (body.get("id") or None), (body.get("q") or None)
+            for v in (key, query):
+                if v is not None and (not isinstance(v, str) or len(v) > 200):
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "id and q are short strings."})
+            try:
+                model = brief.client_from_environment()
+            except ModelError as error:
+                return self._json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(error)})
+            if path == "/api/threads":
+                if not (key or query):
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "Say what to follow: id or q."})
+                with vault.lock(vault_path):
+                    t = threads.follow(vault_path, query=query, key=key, title=body.get("title") if isinstance(body.get("title"), str) else None)
+                return self._json(HTTPStatus.OK, t)
+            if path == "/api/brief/write":
+                c = state.brief(key, query)
+                if c is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
+                written = brief.write(vault_path, {k: v for k, v in c.items() if k != "written"}, model)
+                return self._json(HTTPStatus.OK, written)
+            name = thread_post[1]
+            if threads.load(vault_path, name) is None:
+                return self._json(HTTPStatus.NOT_FOUND, {"error": "No such thread."})
+            try:
+                with vault.lock(vault_path):
+                    with state._lock:
+                        snap = threads.stamp(vault_path, state.store(), name, model=model, pool=state.pool())
+            except LookupError as error:
+                return self._json(HTTPStatus.NOT_FOUND, {"error": str(error)})
+            return self._json(HTTPStatus.OK, {k: v for k, v in snap.items() if k != "items"})
 
         def do_POST(self):
             origin = self.headers.get("Origin")
@@ -297,9 +510,14 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 started = review.start()
                 return self._json(HTTPStatus.ACCEPTED if started else HTTPStatus.CONFLICT,
                                   {**review.status(), **({} if started else {"error": "A review is already running."})})
-            decide, retry = DECIDE.match(path), RETRY.match(path)
+            decide, retry, source = DECIDE.match(path), RETRY.match(path), SOURCE.match(path)
+            if source and source[2] != "state":
+                source = None
             people_change = path in {'/api/people/attribution', '/api/people/backfill'}
-            if not (decide or retry or people_change or path == "/api/submissions"):
+            thread_post = THREAD.match(path)
+            if path in ("/api/threads", "/api/brief/write") or (thread_post and thread_post[2] == "stamp" and not thread_post[3]):
+                return self._brief_post(path, thread_post)
+            if not (decide or retry or source or people_change or path in ("/api/submissions", "/api/reading")):
                 return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
             if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
                 return self._json(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, {"error": "Use JSON."})
@@ -337,6 +555,10 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                     return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {'error':'Could not save this change. Check server storage.'})
             if decide:
                 return self._decide(decide[1], length)
+            if path == "/api/reading":
+                return self._reading(length)
+            if source:
+                return self._source_state(source[1], length)
             try:
                 data = json.loads(self.rfile.read(length))
                 if not isinstance(data, dict):
@@ -347,6 +569,42 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             except OSError:
                 return self._json(HTTPStatus.INTERNAL_SERVER_ERROR,
                                   {"error": "Could not save this submission. Check server storage and try again."})
+
+        def _reading(self, length: int):
+            """{"item": id, "state": "read" | "skimmed" | "unread"} marks a source; {"visit": scope id} notes a visit."""
+            if length > MAX_DECISION:
+                return self._json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"error": "Too long."})
+            try:
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict):
+                    raise ValueError("Send an object.")
+                at = datetime.now(timezone.utc)
+                if isinstance(body.get("visit"), str):
+                    reading.visit(vault_path, body["visit"], at)
+                elif isinstance(body.get("item"), str) and isinstance(body.get("state"), str):
+                    reading.mark(vault_path, body["item"], body["state"], at)
+                else:
+                    raise ValueError("Send item and state, or visit.")
+            except (ValueError, UnicodeError) as error:
+                return self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
+            return self._json(HTTPStatus.OK, {"ok": True, "at": at.isoformat()})
+
+        def _source_state(self, item_id: str, length: int):
+            """{"state": "read" | "skimmed" | "unread", "id" or "q": the subject} marks a source and returns the plan
+            and coverage recomputed for that subject."""
+            if length > MAX_DECISION:
+                return self._json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"error": "Too long."})
+            try:
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict) or not isinstance(body.get("state"), str):
+                    raise ValueError("Send a state: read, skimmed or unread.")
+                s = state.subject(body.get("id") or None, body.get("q") or None)
+                if s is None or item_id not in s["sources"]:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "No such source in this subject."})
+                reading.mark(vault_path, item_id, body["state"], datetime.now(timezone.utc))
+            except (ValueError, UnicodeError) as error:
+                return self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
+            return self._json(HTTPStatus.OK, subject.plan(s, state.marks()))
 
         def _decide(self, proposal_id: str, length: int):
             try:

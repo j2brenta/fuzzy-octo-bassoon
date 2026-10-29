@@ -6,7 +6,8 @@
   const nav = document.getElementById('app-nav');
   if (!nav || !/^https?:$/.test(location.protocol)) return;
   nav.hidden = false;
-  const here = location.pathname === '/' || location.pathname.startsWith('/topic/') ? 'topics' : location.pathname.split('/')[1];
+  const here = location.pathname === '/' || location.pathname.startsWith('/topic/') ? 'topics'
+    : new URLSearchParams(location.search).get('layout') === 'read' ? 'read' : location.pathname.split('/')[1];
   for (const link of nav.querySelectorAll('a[data-page]')) {
     if (link.dataset.page === here) link.setAttribute('aria-current', 'page');
   }

@@ -16,7 +16,7 @@ from engine import language
 from engine.extract import source_passages
 from graph.memory import MemoryStore
 from graph.store import AFFILIATION_WORDS
-from refresher import km, translate
+from refresher import km, summarize, translate
 from refresher.people_scoring import subjects as scoring_subjects
 from refresher.vault import note_names
 
@@ -49,6 +49,14 @@ def _lines(text: str, translation: dict | None) -> list[dict]:
     done = (translation or {}).get("passages") or {}
     return [{"start": p["start"], "end": p["end"], "text": done[str(p["id"])]}
             for p in source_passages(text) if str(p["id"]) in done]
+
+
+def _gist(item, summaries: dict, translation) -> dict:
+    """A source's preview: the model's hook and gist, else its lead sentences (as the topic page shows them)."""
+    if item.item_id in summaries:
+        return {"hook": summaries[item.item_id]["hook"], "gist": summaries[item.item_id].get("gist", ""), "summary": "model"}
+    hook, gist = summarize.lead(translate.translated_text(translation, item.text) or item.text.splitlines(), item.title)
+    return {"hook": hook, "gist": gist, "summary": "lead"}
 
 
 def map_data(store: MemoryStore, at: datetime) -> dict:
@@ -92,6 +100,7 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             mentions.setdefault(e.src, set()).add(e.dst)
     named = {p.person_id: p.name for p in store.people()} | {o.org_id: o.name for o in store.organizations()}
     item_rows = []
+    summaries = getattr(store, "summaries", {})
     for item in sorted(items.values(), key=lambda i: (i.source.event_time, i.item_id)):
         src = item.source
         mine = [c for c in claim_rows if c["item"] == item.item_id]
@@ -105,6 +114,7 @@ def map_data(store: MemoryStore, at: datetime) -> dict:
             "claims": [c["id"] for c in mine], "stories": idea_ids,
             "topics": sorted({t for i in idea_ids for t in topic_of_idea.get(i, [])}),
             "text": item.text, "translation": _lines(item.text, translations.get(item.item_id)),
+            **_gist(item, summaries, translations.get(item.item_id)),
             "mentions": [{"id": m, "name": named.get(m, m), "kind": "organization" if m.startswith("org:") else "person"}
                          for m in sorted(mentions.get(item.item_id, ()))]})
 

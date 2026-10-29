@@ -5,12 +5,17 @@
   const data = JSON.parse(document.getElementById('map-data').textContent);
   const $ = id => document.getElementById(id);
   const state = {topic: '', story: '', mode: 'documents', selection: null, ego: false, comparison: [], detailItems: [],
-    lang: 'original', view: null, peopleSubject: ''};
+    lang: 'original', view: null, peopleSubject: '', inspect: false};
   try { if (localStorage.getItem('atlas-lang') === 'translation') state.lang = 'translation'; } catch (e) { /* no storage: original */ }
   // Embedded in a dossier (/topic/): the map and the evidence only, over the dossier's sources (atlas.scope).
   const params = new URLSearchParams(location.search);
   const embedded = params.has('embed');
   if (embedded) document.body.classList.add('embedded');
+  // The reading layout (/read/ = ?layout=read): the evidence on the left, the text of the source picked in the middle,
+  // the map on the right. No timeline, and no source text in the evidence: a source there is its gist, and picking
+  // it opens its text in the middle.
+  const reading = params.get('layout') === 'read' && !embedded;
+  if (reading) document.body.classList.add('read-layout');
   if (['documents', 'claims', 'topics', 'people'].includes(params.get('mode'))) state.mode = params.get('mode');
   state.only = null;  // item ids, or null for all
   const items = new Map(data.items.map(x => [x.id, x]));
@@ -72,6 +77,7 @@
     a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.referrerPolicy = 'no-referrer'; return a;
   }
   function quote(anchor) {  // the passage in the language picked above the evidence, never both at once
+    if (reading) return document.createDocumentFragment();  // the text is in the middle column, not the evidence
     const box = el('blockquote', null, 'quote');
     box.title = `Passage ${anchor.span} · characters [${anchor.start_char}, ${anchor.end_char}) of the original`;
     if (state.lang === 'translation' && anchor.translation) {
@@ -211,6 +217,9 @@
       {selector: 'node[kind="topic"]', style: {'background-color': token('--r-graph-topic', '#f3e6ad'), 'border-color': token('--r-graph-topic-outline', '#c8aa45')}},
       {selector: 'node[kind="person"]', style: {'shape': 'round-rectangle', 'width': 180, 'height': 64,
         'background-color': token('--r-graph-person', '#fbe2d8'), 'border-color': token('--r-graph-person-outline', '#c77560'), 'font-size': 12, 'text-max-width': 166}},
+      {selector: 'node[entity]', style: {'width': 150, 'height': 40, 'text-max-width': 136}},  // a name only: a smaller box
+      {selector: 'node[entity="org"]', style: {'shape': 'hexagon', 'width': 164, 'height': 46, 'text-max-width': 128,
+        'background-color': token('--r-graph-org', '#e2eaf1'), 'border-color': token('--r-graph-org-outline', '#5f7f99')}},
       {selector: 'edge[kind="WROTE"]', style: {'width': 'data(width)', 'line-color': token('--r-graph-person-outline', '#c77560'), 'target-arrow-color': token('--r-graph-person-outline', '#c77560'),
         'target-arrow-shape': 'triangle', 'curve-style': 'bezier', 'opacity': .75}},
       {selector: 'node[pending=1]', style: {'border-color': token('--r-graph-pending-outline', '#bb8035'), 'background-color': token('--r-graph-pending', '#fff0cf')}},
@@ -287,20 +296,21 @@
       const ids = new Set([...nodes.map(n => n.id), ...shownTopics]);
       edges = links.filter(l => ids.has(l.source) && ids.has(l.target)).map(l => ({...l, kind: 'LINK', label: linkLabel(l),
         width: Math.min(9, 1 + 2 * l.weight), evidence: Number(l.relations.length + l.shared.length > 0)}));
-      // People and organizations: what is said about them, and "wrote" edges to the clusters their posts feed.
+      // People and organizations, by name only (what is said about them is in the evidence when picked), and
+      // "wrote" edges to the clusters their posts feed. An organization has its own shape.
       for (const person of people.values()) {
         const fed = Object.entries(person.clusters).filter(([cid]) => ids.has(cid));
         const facts = person.facts.filter(c => allowedItems.has(claims.get(c)?.item));
         if (!fed.length && !facts.length) continue;
-        nodes.push({id: person.id, kind: 'person', size: 40 + 3 * Math.min(facts.length, 20),
-          label: `${person.name}\n${facts.length} facts · ${person.items.length + person.about_in.length} posts`});
+        nodes.push({id: person.id, kind: 'person', entity: person.kind === 'organization' ? 'org' : 'person', label: person.name});
         const verb = person.items.length ? 'wrote' : 'in their posts';
         fed.forEach(([cid, n]) => edges.push({id: `wrote>${person.id}>${cid}`, source: person.id, target: cid, kind: 'WROTE',
           label: `${verb} · ${n} Ideas`, width: Math.min(7, 1 + n / 2), basis: 'auto'}));
       }
       return {nodes, edges, total: nodes.length, allNodes: nodes, allEdges: edges, topics: [...shownTopics].sort()};
     } else {
-      nodes = data.claims.filter(c => allowedItems.has(c.item)).map(c => ({id: c.id, kind: 'claim', label: c.statement.slice(0, 110),
+      const held = state.drill ? new Set(clusters.get(state.drill)?.ideas || []) : null;  // a cluster's own claims, not all its posts'
+      nodes = data.claims.filter(c => allowedItems.has(c.item) && (!held || held.has(c.idea))).map(c => ({id: c.id, kind: 'claim', label: c.statement.slice(0, 110),
         pending: Number(c.quality !== 'accepted'), superseded: Number(c.superseded)}));
       const n = new Set(nodes.map(x => x.id));
       edges = data.edges.filter(e => n.has(e.source) && n.has(e.target));
@@ -429,7 +439,11 @@
     return row;
   }
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  const itemPill = (id, sub) => pill(items.get(id)?.title || id, () => selectItem(id), 'source', sub);
+  const itemPill = (id, sub) => {  // in the reading layout with its gist as a preview
+    const node = pill(items.get(id)?.title || id, () => selectItem(id), 'source', sub), gist = reading && (items.get(id)?.gist || items.get(id)?.hook);
+    if (gist) node.append(el('span', gist, 'pill-gist'));
+    return node;
+  };
   const clusterPill = id => pill(clusters.get(id)?.title || id, () => selectGroup(id), 'cluster',
     clusters.has(id) ? plural(clusters.get(id).ideas.length, 'Idea') : null);
   const topicPill = id => pill(topicTitle(id), () => selectGroup(id), 'topic');
@@ -468,7 +482,8 @@
     const covering = (s, e) => [...new Set(spans.filter(([a, b]) => a < e && b > s).map(x => x[2]))];
     const piece = (text, s, e, cls) => {
       const ids = covering(s, e);
-      if (!ids.length) { box.append(cls ? el('span', text, cls) : document.createTextNode(text)); return; }
+      // Reading, the text is text: claim marks only when you ask to inspect them.
+      if (!ids.length || (reading && !state.inspect)) { box.append(cls ? el('span', text, cls) : document.createTextNode(text)); return; }
       const mark = el('mark', text, ids.includes(focus) ? 'on' : null);
       mark.dataset.claims = ids.join(' '); mark.tabIndex = 0; mark.setAttribute('role', 'button');
       mark.title = ids.map(id => '• ' + claims.get(id).statement).join('\n') + '\n\nOpen the claim';
@@ -546,8 +561,11 @@
       el('p', [item.source, item.author ? 'by ' + item.author : null, date(item)].filter(Boolean).join(' · '), 'detail-meta'), chips);
     if (item.quality !== 'accepted') $('detail').append(el('p', 'Ingestion has not accepted this item yet; check its claims before relying on them.', 'chip warn'));
     if (item.url) $('detail').append(external(item.url));
-    // The text first: it is what a source is opened for; where it leads follows.
-    $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
+    // The text first: it is what a source is opened for; where it leads follows. Reading, the text is in the middle.
+    if (reading) {
+      if (item.gist || item.hook) $('detail').append(el('h3', 'Gist', 'detail-section'), el('p', item.gist || item.hook, 'gist-preview'));
+      openReader(item, focus);
+    } else $('detail').append(el('h3', 'Text', 'detail-section'), textBlock(item, focus));
     $('detail').append(el('h3', 'Where it leads', 'detail-section'),
       flow([[item.claims.length, 'claim'], [ideaIds.length, 'Idea'], [clusterIds.length, 'cluster'], [item.topics.length, 'topic']]),
       ...section('Topics', item.topics.map(topicPill)), ...section('Clusters', clusterIds.map(clusterPill)),
@@ -580,6 +598,7 @@
     const ideaIds = c ? c.ideas : [...t.ideas, ...t.attached];
     const postIds = c ? c.items : data.items.filter(i => i.topics.includes(id)).map(i => i.id);
     if (c) {
+      $('detail').append(button(`See its ${c.ideas.length > 1 ? 'claims' : 'claim'}: the Claims view of this cluster ↓`, () => drill(id), 'chip'));
       const how = c.theme ? 'a theme the model gave Ideas no cluster held'
         : 'found by similarity' + (c.assigned.length ? `; the model placed ${c.assigned.length} more here` : '');
       $('detail').append(el('p', `${plural(c.ideas.length, 'Idea')} from ${plural(c.items.length, 'post')} · ${how}`, 'detail-meta'));
@@ -665,7 +684,7 @@
     if (items.has(id)) return selectItem(id);
     if (!claims.has(id)) return;
     show(selectNode, id);
-    if (state.mode !== 'claims') { state.mode = 'claims'; setMode(); refresh(); }
+    if (state.mode !== 'claims' && !reading) { state.mode = 'claims'; setMode(); refresh(); }  // reading, the map stays
     state.selection = id;
     state.detailItems = [claims.get(id).item];
     if (!cy.getElementById(id).length) renderGraph(filteredItems());
@@ -761,17 +780,51 @@
   }
   function clearDetail() {
     state.detailItems = []; state.view = null;
+    if (reading) {  // nothing picked: every source of the slice, newest first, its gist a preview
+      const list = filteredItems().slice().sort((a, b) => b.time.localeCompare(a.time));
+      $('detail').replaceChildren(el('p', 'SOURCES', 'eyebrow'), el('p', `${plural(list.length, 'source')} in this slice: pick one to read it`, 'detail-meta'),
+        pills(list.map(i => itemPill(i.id, [i.source, i.author, date(i)].filter(Boolean).join(' · ')))));
+      return;
+    }
     $('detail').replaceChildren(el('p', 'Pick an item or a relation in this slice.', 'quiet'));
+  }
+  // --- the reading layout's middle column: the whole text of the source picked, its claims marked ---
+  let readerItem = null, readerFocus = null;
+  function openReader(item, focus) {
+    readerItem = item; readerFocus = focus;
+    const node = cy.getElementById(item.id);  // the map is narrow here: bring the source into its middle
+    if (node.length) cy.animate({center: {eles: node}}, {duration: 250});
+    const url = new URL(location.href); url.searchParams.set('read', item.id); history.replaceState(history.state, '', url);
+    const box = $('reader'), tools = el('div', null, 'reader-tools');
+    if (item.translation.length) tools.append(button(translated(item) ? 'Translation · show the original' : 'Original · show the translation',
+      () => setLang(translated(item) ? 'original' : 'translation')));
+    if (item.url) tools.append(external(item.url));
+    tools.append(button(state.inspect ? 'Hide claim marks' : 'Inspect claims', () => { state.inspect = !state.inspect; openReader(readerItem, readerFocus); }));
+    const text = sourceText(item, focus); text.classList.add('open', 'reader-text');
+    box.replaceChildren(el('p', [item.source, date(item)].filter(Boolean).join(' · '), 'eyebrow'), el('h1', item.title, 'reader-title'),
+      el('p', [item.author ? 'by ' + item.author : null, plural(item.claims.length, 'claim'), item.repost_of ? 'a repost' : null].filter(Boolean).join(' · '), 'detail-meta'),
+      tools, translated(item) ? el('p', `Machine translation into ${data.language}, for reading only; claims were judged on the original.`, 'small quiet') : '', text);
+    box.scrollTop = 0;
+    const on = text.querySelector('mark.on'); if (on) requestAnimationFrame(() => on.scrollIntoView({block: 'center'}));
   }
   function setLang(lang) {
     state.lang = lang;
     try { localStorage.setItem('atlas-lang', lang); } catch (e) { /* the choice lasts for this page only */ }
     for (const other of ['original', 'translation']) $('lang-' + other).setAttribute('aria-pressed', String(other === lang));
     if (state.view) state.view[0](...state.view[1]);
+    if (reading && readerItem && state.view?.[0] !== selectItem) openReader(readerItem, readerFocus);
     renderComparison();
   }
   function setMode() {
     for (const other of ['documents', 'claims', 'topics', 'people']) $('mode-' + other).setAttribute('aria-pressed', String(other === state.mode));
+    // Claims is a drill-down from a cluster, not a view of everything: its button shows only while you are in it.
+    $('mode-claims').hidden = state.mode !== 'claims';
+    $('mode-claims').textContent = state.drill ? `Claims · ${(clusters.get(state.drill)?.title || '').slice(0, 40)}` : 'Claims';
+  }
+  function drill(clusterId) {  // a cluster's claims, the only way into the Claims view
+    const c = clusters.get(clusterId); if (!c) return;
+    state.drill = clusterId; state.only = new Set(c.items); state.mode = 'claims'; state.ego = false; state.selection = null;
+    clearDetail(); setMode(); refresh();
   }
   function refresh() {
     $('people-subject').hidden = state.mode !== 'people';
@@ -792,8 +845,27 @@
     const scoringLabel = state.mode === 'people' ? `Scoring subject: ${data.people_subjects?.find(s => s.id === scoreSubject())?.title || 'All subjects'} · ` : '';
     $('reading-scope').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
     renderTimeline(visible); renderGraph(visible); renderComparison();
+    if (reading && !state.view) clearDetail();  // the sources of the new slice
   }
-  cy.on('tap', 'node', e => { if (!['region', 'cluster-region'].includes(e.target.data('kind'))) selectNode(e.target.id()); });
+  // Reading, a tap on the map peeks: the evidence and the text you were in stay until you choose to go there.
+  function peekNode(id) {
+    let box = $('atlas-peek');
+    if (!box) { box = el('div', null, 'atlas-peek'); box.id = 'atlas-peek'; $('graph').parentElement.append(box); }
+    const item = items.get(id), claim = claims.get(id), person = people.get(id), group = clusters.get(id) || data.topics.find(t => t.id === id);
+    const kind = item ? 'SOURCE' : claim ? 'CLAIM' : person ? (person.kind === 'person' ? 'PERSON' : 'ORGANIZATION') : group ? (clusters.has(id) ? 'CLUSTER' : 'TOPIC') : '';
+    if (!kind) { box.hidden = true; return; }
+    const title = item ? item.title : claim ? claim.statement : person ? person.name : group.title;
+    const sub = item ? [item.source, date(item), item.hook].filter(Boolean).join(' · ')
+      : group ? plural((clusters.get(id)?.items || data.items.filter(i => i.topics.includes(id))).length, 'source') : '';
+    const close = button('×', () => { box.hidden = true; }, 'peek-close');
+    const go = button(item ? 'Read this →' : 'Show in the evidence →', () => { box.hidden = true; selectNode(id); }, 'pill');
+    box.replaceChildren(close, el('p', kind, 'eyebrow'), el('h3', title, 'detail-title'), sub ? el('p', sub, 'detail-meta') : '', go);
+    box.hidden = false;
+  }
+  cy.on('tap', 'node', e => {
+    if (['region', 'cluster-region'].includes(e.target.data('kind'))) return;
+    if (reading) peekNode(e.target.id()); else selectNode(e.target.id());
+  });
   cy.on('tap', 'edge', e => e.target.data('kind') === 'LINK' ? selectLink(e.target.data())
     : ['WROTE', 'CONTRIBUTES'].includes(e.target.data('kind')) ? selectPerson(e.target.data('source')) : selectEdge(e.target.data()));
   $('people-subject').addEventListener('change', e => {state.peopleSubject = e.target.value; state.topic = ''; state.story = ''; $('story-filter').value = ''; state.selection = null; clearDetail(); refresh();});
@@ -806,6 +878,8 @@
   for (const lang of ['original', 'translation']) $('lang-' + lang).setAttribute('aria-pressed', String(lang === state.lang));
   $('search').addEventListener('input', refresh);
   for (const mode of ['documents', 'claims', 'topics', 'people']) $('mode-' + mode).addEventListener('click', () => {
+    if (mode === state.mode) return;
+    if (state.drill) { state.drill = null; state.only = null; }  // leaving a cluster's claims: back to everything
     state.mode = mode; state.ego = false; state.selection = null; clearDetail(); setMode(); refresh();
   });
   $('zoom-in').addEventListener('click', () => cy.zoom({level: cy.zoom() * 1.25, renderedPosition: {x: cy.width() / 2, y: cy.height() / 2}}));
@@ -839,7 +913,17 @@
   }
   if (data.served) window.peopleReview.backfill($('people-tools'));
   setMode(); renderProposals(); refresh();
+  // Arriving from a topic's reader or Idea finder: the slice around what was picked, not the whole corpus.
+  if (params.get('idea') && stories.has(params.get('idea'))) { state.story = params.get('idea'); $('story-filter').value = state.story; refresh(); }
+  if (params.get('cluster') && clusters.has(params.get('cluster'))) drill(params.get('cluster'));
+  if (params.get('item') && items.has(params.get('item'))) {
+    selectItem(params.get('item')); state.ego = true; renderGraph(filteredItems()); showDetail();
+  }
   if (params.get('claim')) selectNode(params.get('claim'));
+  if (reading) {
+    $('reader').hidden = false;
+    if (items.has(params.get('read'))) selectItem(params.get('read'));
+  }
   window.atlas = {cy, state, data, refresh, selectItem, selectNode, selectEdge, selectLink, selectPerson, selectGroup, filteredItems,
     spotlight, scope, showDetail, onselect: null};
   if (embedded && window.parent !== window) window.parent.postMessage({type: 'atlas-ready'}, location.origin);

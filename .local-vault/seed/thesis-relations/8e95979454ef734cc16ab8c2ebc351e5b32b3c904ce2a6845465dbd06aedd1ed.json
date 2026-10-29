@@ -1,0 +1,20 @@
+{
+  "item_id": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed",
+  "prompt_version": "thesis-relate-v1",
+  "model_name": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "theses_hash": "d4202c2493619ff2",
+  "candidates": {
+    "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:t1": [
+      "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:t1"
+    ]
+  },
+  "relations": [
+    {
+      "thesis": "8e95979454ef734cc16ab8c2ebc351e5b32b3c904ce2a6845465dbd06aedd1ed:t1",
+      "target": "4c79c7f910a40fe8f08920739b7a1f0b9674f7c10033cccf6a5795e949f57a23:t1",
+      "label": "UPDATES",
+      "adds": false,
+      "rationale": "The candidate corrects the workshop start time from 14:00 to 16:00 UTC on 25 October 2026, explicitly updating the earlier announcement."
+    }
+  ]
+}

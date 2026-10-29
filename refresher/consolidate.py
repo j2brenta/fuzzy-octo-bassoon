@@ -23,7 +23,7 @@ from typing import Callable
 from engine.llm import BudgetedModel, JsonModel, ModelError
 from engine import language
 from graph import cluster, relate
-from refresher import graphview, vault
+from refresher import graphview, summarize, theses, thesis_relate, vault
 from refresher.place import RelateRun, _quiet, _warn, relate_pending
 
 EVERY = timedelta(hours=1)
@@ -143,6 +143,44 @@ def name_clusters(vault_path: Path, store, model: JsonModel | None, log: Callabl
     return len(fresh)
 
 
+def summarize_items(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> int:
+    """A hook and a gist for every visible item without a current summary (refresher/summarize.py), one call each.
+    A failed call stores nothing: the reading map shows the item's lead sentences and it is summarised next time."""
+    if model is None:
+        return 0
+    done = 0
+    for item_id in summarize.missing(vault_path, sorted(i.item_id for i in store.items()), model):
+        try:
+            summarize.summarize_item(vault_path, item_id, model)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            log(f"item {item_id[:10]}: not summarised ({type(error).__name__})")
+            continue
+        done += 1
+    return done
+
+
+def thesis_items(vault_path: Path, store, model: JsonModel | None, log: Callable[[str], None] = _quiet) -> tuple[int, int]:
+    """Theses for every item without current ones (refresher/theses.py), then their relations to other sources'
+    (refresher/thesis_relate.py): (items given theses, items related). A failed call stores nothing; the item is
+    done next time."""
+    if model is None:
+        return 0, 0
+    done = 0
+    for item_id in theses.missing(vault_path, store, theses.eligible(store), model):
+        try:
+            theses.theses_for(vault_path, store, item_id, model)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            log(f"item {item_id[:10]}: no theses ({type(error).__name__})")
+            continue
+        done += 1
+    if done:
+        store.theses = theses.load_all(vault_path)
+    related, _ = thesis_relate.relate_all(vault_path, store, model, log=log)
+    if related:
+        store.thesis_relations = thesis_relate.load_all(vault_path)
+    return done, related
+
+
 def model_confirm(model: JsonModel) -> Callable[[str, str], bool]:
     def same(a: str, b: str) -> bool:
         try:
@@ -163,6 +201,9 @@ class ConsolidateRun:
     enriched: int = 0
     named: int = 0  # clusters given a name this run
     placed: int = 0  # Ideas a model gave a cluster or theme this run
+    summarized: int = 0  # items given a hook and a gist this run
+    theses: int = 0  # items given theses this run
+    thesis_related: int = 0  # items whose theses were related to other sources' this run
     notes: list[str] = None
     budget: BudgetedModel | None = None
     took: float = 0.0  # seconds, waiting for the lock included
@@ -171,7 +212,9 @@ class ConsolidateRun:
         return {"at": self.at.isoformat(), "took": round(self.took, 1), "summary": self.summary(),
                 "related": self.relate.judged if self.relate else 0, "duplicates": self.duplicates,
                 "firmed": self.firmed, "proposed": self.proposed, "waiting": self.waiting, "enriched": self.enriched,
-                "named": self.named, "placed": self.placed, "notes": list(self.notes or []),
+                "named": self.named, "placed": self.placed, "summarized": self.summarized,
+                "theses": self.theses, "thesis_related": self.thesis_related,
+                "notes": list(self.notes or []),
                 "model_calls": self.budget.calls if self.budget else 0,
                 "tokens": self.budget.spent if self.budget else 0}
 
@@ -187,6 +230,10 @@ class ConsolidateRun:
             parts.append(f"{self.named} clusters named")
         if self.placed:
             parts.append(f"{self.placed} Ideas placed in themes")
+        if self.summarized:
+            parts.append(f"{self.summarized} items summarised")
+        if self.theses or self.thesis_related:
+            parts.append(f"{self.theses} items given theses, {self.thesis_related} related by thesis")
         if self.budget is not None:
             parts.append(f"{self.budget.calls} model calls, about {self.budget.spent:,} tokens")
         return "consolidate: " + ", ".join(parts) + "".join(f"; {n}" for n in self.notes or [])
@@ -280,6 +327,14 @@ def consolidate(vault_path: Path, model: JsonModel | None = None, search=None, a
         namer = translate.client_from_environment()  # the cheap model only; without it clusters keep their central Idea
         run.named = name_clusters(vault_path, store, namer, log) if namer is not None else 0
         run.placed = assign_themes(vault_path, store, namer, log) if namer is not None else 0
+        run.summarized = summarize_items(vault_path, store, summarize.client_from_environment(), log)
+        if run.summarized:
+            store.summaries = summarize.load_all(vault_path)
+        if model is not None:  # the run's model, under its budget: theses decide what a brief says
+            try:
+                run.theses, run.thesis_related = thesis_items(vault_path, store, model, log)
+            except Exception as error:  # noqa: BLE001 - an enrichment: it never fails the review it rides on
+                run.notes.append(f"theses stopped: {type(error).__name__}")
         vault.export(store, vault_path, at)
         graphview.write(store, vault_path, at)
         run.waiting = sum(s.status == "proposed" for s in store.proposals.values())

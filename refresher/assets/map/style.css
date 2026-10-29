@@ -114,3 +114,35 @@ body.embedded .workspace { display:grid; }
 .people-passage { display:flex; align-items:flex-start; gap:8px; padding:8px 0; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
 .people-passage input { flex:none; margin-top:4px; }
 .people-update-list { max-height:240px; overflow:auto; }
+/* The reading layout (/read/, ?layout=read): evidence | the text of the source picked | map. No timeline. */
+.reader-column{display:none}
+body.read-layout .reader-column{display:block}
+body.read-layout .timeline-column,body.read-layout .proposal-section,body.read-layout .compare-section{display:none}
+body.read-layout .workspace{grid-template-columns:minmax(300px,26%) minmax(0,1fr) minmax(380px,32%)}
+body.read-layout .evidence-column{order:1;border-right:1px solid var(--line);grid-column:auto;border-top:0}
+body.read-layout .evidence-column #detail{columns:auto;max-height:calc(100vh - 120px)}
+body.read-layout .reader-column{order:2;min-width:0;padding:22px clamp(18px,2.6vw,40px) 40px;max-height:calc(100vh - 40px);overflow:auto;position:sticky;top:0}
+body.read-layout .map-column{order:3;border-right:0;border-left:1px solid var(--line)}
+.reader-title{font:400 clamp(24px,2.3vw,34px)/1.18 var(--r-serif);letter-spacing:-.8px;margin:4px 0 6px;overflow-wrap:anywhere}
+.reader-tools{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.reader-tools button,.reader-tools a{font-size:12px;padding:5px 12px;border-radius:20px}
+.reader-empty{padding-top:40px;text-align:center;font-size:13px}
+.source-text.reader-text{max-height:none;overflow:visible;font:17px/1.75 var(--r-serif);border:0;padding:0;background:transparent;max-width:70ch}
+.reader-text mark{background:transparent;color:inherit;text-decoration:underline;text-decoration-color:#c9d2f2;text-decoration-thickness:1.5px;text-underline-offset:4px;cursor:pointer}
+.reader-text mark:hover,.reader-text mark:focus{background:var(--r-soft);outline:none}
+.reader-text mark.on{background:var(--r-graph-topic)}
+body.read-layout .pills{display:grid;gap:6px}
+body.read-layout .pill.source{display:grid;gap:3px;width:100%;text-align:left;padding:9px 11px}
+.pill-gist{display:block;font-size:12px;line-height:1.45;color:var(--ink);font-weight:400}
+.gist-preview{font-size:13px;line-height:1.55;margin:4px 0 0}
+@media(max-width:1150px){body.read-layout .workspace{grid-template-columns:minmax(260px,38%) minmax(0,1fr)}body.read-layout .map-column{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}body.read-layout .reader-column{position:static;max-height:none}}
+body.read-layout .claim-list{display:grid;grid-auto-flow:row;grid-template-columns:minmax(0,1fr);overflow:visible;gap:6px}
+body.read-layout .claim-list>*{width:auto;min-width:0}
+
+/* Reading: a tap on the map peeks instead of replacing the evidence (refresher/assets/map/app.js peekNode). */
+.canvas-wrap { position: relative; }
+.atlas-peek { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; background: var(--paper, #fffcf5); border: 1px solid var(--line, #d9d3c6);
+  border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(37, 37, 31, .18); display: grid; gap: 6px; max-height: 60%; overflow: auto; }
+.atlas-peek .peek-close { position: absolute; top: 2px; right: 6px; border: 0; background: transparent; font-size: 20px; cursor: pointer; }
+.atlas-peek .detail-title { padding-right: 22px; }
+.atlas-peek[hidden] { display: none; }

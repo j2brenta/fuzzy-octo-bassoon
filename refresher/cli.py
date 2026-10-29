@@ -15,6 +15,13 @@
     uv run refresher decide [--vault V] ID accept|reject|defer --token T [--why TEXT]
     uv run refresher problems [--vault V] [--since DATE] [--limit N]   warnings and errors kept in logs/problems.jsonl
     uv run refresher translate [--vault V] [--force]  passages in REFRESHER_LANGUAGE for reading, stored in translations/
+    uv run refresher summarize [--vault V] [--force]  a hook and a gist per item for the reading map, in summaries/
+    uv run refresher theses [--vault V] [--force]     one to three theses per item over its claims, in theses/
+    uv run refresher relate-theses [--vault V] [--force]   how theses of different items relate, in thesis-relations/
+    uv run refresher brief [--vault V] [--at DATE] "subject"   the brief as markdown: major ideas, base, sources
+    uv run refresher eval-context [--manifest M] [--out F]   score briefs and deltas against golden subjects
+    uv run refresher follow [--vault V] "subject"      make a subject a thread; then stamp it to mark you caught up
+    uv run refresher stamp [--vault V] [--at DATE] SLUG   store the thread's brief as of now (or DATE) in threads/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -39,7 +46,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate", "problems"):
+                 "translate", "summarize", "theses", "relate-theses", "brief", "follow", "stamp", "problems"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -69,6 +76,16 @@ def main(argv=None) -> int:
             p.add_argument("--limit", type=int, default=20, help="latest problems shown in full (default 20)")
         if name == "translate":
             p.add_argument("--force", action="store_true", help="translate again even when a stored translation matches")
+        if name == "summarize":
+            p.add_argument("--force", action="store_true", help="summarise again even when a stored summary matches")
+        if name in ("brief", "follow"):
+            p.add_argument("subject", help="a phrase, or topic:/cluster: id")
+            p.add_argument("--offline", action="store_true", help="no model: cached paragraphs or the theses themselves")
+        if name == "stamp":
+            p.add_argument("thread", help="the thread's slug, as `follow` printed it")
+            p.add_argument("--offline", action="store_true", help="no model: cached paragraphs or the theses themselves")
+        if name in ("theses", "relate-theses"):
+            p.add_argument("--force", action="store_true", help="write theses again even when stored ones match")
         if name == "proposals":
             p.add_argument("--all", action="store_true", help="also list decided, stale and unplaced proposals")
         if name == "decide":
@@ -76,7 +93,13 @@ def main(argv=None) -> int:
             p.add_argument("action", choices=("accept", "reject", "defer"))
             p.add_argument("--token", required=True, help="from `refresher proposals`; refused if anything changed")
             p.add_argument("--why", default="", help="your reason, kept with the decision")
+    p = sub.add_parser("eval-context", help="score the Context Engine against eval/context/manifest.yaml")
+    p.add_argument("--manifest", type=Path, default=Path("eval/context/manifest.yaml"))
+    p.add_argument("--out", type=Path, help="write the markdown report here")
+    p.add_argument("--at", help="ISO date to build the briefs at (default: now)")
     args = ap.parse_args(argv)
+    if args.command == "eval-context":
+        return _eval_context(args.manifest, args.out, _at(args.at))
     if not args.vault:
         ap.error("pass --vault or set REFRESHER_VAULT")
     if args.command != "serve" and not (args.vault / "processed").is_dir():  # the app may start an empty vault
@@ -90,6 +113,14 @@ def main(argv=None) -> int:
     _embedder(args.vault)
     if args.command == "translate":
         return _translate(args.vault, args.force, at)
+    if args.command == "summarize":
+        return _summarize(args.vault, args.force)
+    if args.command == "theses":
+        return _theses(args.vault, args.force)
+    if args.command == "relate-theses":
+        return _relate_theses(args.vault, args.force)
+    if args.command in ("brief", "follow", "stamp"):
+        return _brief(args, at)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
@@ -181,6 +212,114 @@ def _language() -> None:
     configured = dotenv_values(Path(__file__).resolve().parents[1] / ".env").get("REFRESHER_LANGUAGE")
     if configured:
         os.environ.setdefault("REFRESHER_LANGUAGE", configured)
+
+
+def _summarize(vault_path: Path, force: bool) -> int:
+    from dotenv import load_dotenv
+    from engine.llm import ModelError
+    from refresher import summarize
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = summarize.client_from_environment()
+    if client is None:
+        sys.exit("summarize: needs NEBIUS_API_KEY and TRIAGE_PROVIDER=nebius.")
+    items = sorted({ex.item_id for ex, _ in vault.load_extractions(vault_path)})
+    todo = items if force else summarize.missing(vault_path, items, client)
+    done = failed = 0
+    for item_id in todo:
+        try:
+            record = summarize.summarize_item(vault_path, item_id, client, force=force)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            failed += 1
+            print(f"summarize: {item_id[:10]} failed ({type(error).__name__})", file=sys.stderr)
+            continue
+        done += 1
+        print(f"summarize: {item_id[:10]} {record['hook']}")
+    print(f"summarize: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
+    return 1 if failed else 0
+
+
+def _theses(vault_path: Path, force: bool) -> int:
+    from dotenv import load_dotenv
+    from engine.llm import ModelError
+    from refresher import theses
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = theses.client_from_environment()
+    if client is None:
+        sys.exit("theses: needs NEBIUS_API_KEY and JUDGE_PROVIDER or TRIAGE_PROVIDER set to nebius.")
+    store = vault.replay(vault_path, include_unreviewed=True)
+    items = theses.eligible(store)
+    todo = items if force else theses.missing(vault_path, store, items, client)
+    done = failed = 0
+    for item_id in todo:
+        try:
+            record = theses.theses_for(vault_path, store, item_id, client, force=force)
+        except (ModelError, OSError, ValueError, KeyError) as error:
+            failed += 1
+            print(f"theses: {item_id[:10]} failed ({type(error).__name__}: {error})", file=sys.stderr)
+            continue
+        done += 1
+        for t in record["theses"]:
+            print(f"theses: {item_id[:10]} [{t['stance']}] {t['statement']}")
+    print(f"theses: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
+    return 1 if failed else 0
+
+
+def _brief(args, at: datetime) -> int:
+    from dotenv import load_dotenv
+    from refresher import brief, context, threads
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    subject = getattr(args, "subject", None)
+    key, query = (subject, None) if subject and subject.startswith(("topic:", "cluster:")) else (None, subject)
+    if args.command == "follow":
+        t = threads.follow(args.vault, query=query, key=key, at=at)
+        print(f"follow: thread {t['slug']} ({t['title']}); stamp it with `refresher stamp {t['slug']}`")
+        return 0
+    model = None if args.offline else brief.client_from_environment()
+    store = vault.replay(args.vault, include_unreviewed=True)
+    if args.command == "stamp":
+        try:
+            snap = threads.stamp(args.vault, store, args.thread, at, model)
+        except KeyError:
+            sys.exit(f"stamp: no thread {args.thread}; follow a subject first")
+        except LookupError as error:
+            sys.exit(f"stamp: {error}")
+        print(f"stamp: {args.thread} as of {snap['at']}: {len(snap['major'])} major ideas from "
+              f"{snap['counts']['sources']} sources; wrote threads/{args.thread}/{snap['stamp']}.md")
+        return 0
+    c = context.build(store, key=key, query=query, at=at)
+    if c is None:
+        sys.exit("brief: nothing in your knowledge matches that yet")
+    written = brief.write(args.vault, c, model)
+    sys.stdout.write(brief.markdown(c, written))
+    if written["validity"] is not None:
+        print(f"\n(citation validity {written['validity']:.0%})", file=sys.stderr)
+    return 0
+
+
+def _eval_context(manifest: Path, out: Path | None, at: datetime) -> int:
+    from dotenv import load_dotenv
+    from refresher import eval_context
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    _language()
+    report = eval_context.run(manifest, Path.cwd(), at)
+    text = eval_context.markdown(report)
+    if out:
+        out.write_text(text, encoding="utf-8")
+    sys.stdout.write(text)
+    return 0
+
+
+def _relate_theses(vault_path: Path, force: bool) -> int:
+    from dotenv import load_dotenv
+    from refresher import theses, thesis_relate
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    client = theses.client_from_environment()
+    if client is None:
+        sys.exit("relate-theses: needs NEBIUS_API_KEY and JUDGE_PROVIDER or TRIAGE_PROVIDER set to nebius.")
+    store = vault.replay(vault_path, include_unreviewed=True)
+    judged, failed = thesis_relate.relate_all(vault_path, store, client, force, log=print)
+    print(f"relate-theses: {judged} items judged with {client.model_name}, {failed} failed")
+    return 1 if failed else 0
 
 
 def _translate(vault_path: Path, force: bool, at: datetime) -> int:
