@@ -188,10 +188,12 @@
       : `Nothing new on this since your stamp of ${day(d.since)}.`;
     $('critical').replaceChildren(...d.critical.map(r => arrival(r, 'critical')));
     $('notes').replaceChildren(...d.notes.map(r => arrival(r, 'note')));
-    const reasons = {retells: 'retell what you know', outdated: 'are older views already replaced', near: 'are only near the subject'};
+    const reasons = {retells: ['retells what you know', 'retell what you know'],
+      outdated: ['is an older view already replaced', 'are older views already replaced'],
+      near: ['is only near the subject', 'are only near the subject']};
     $('noise').replaceChildren(...Object.entries(d.noise).map(([k, rows]) => {
       const det = el('details', null, 'ce-noise');
-      det.append(el('summary', `${plural(rows.length, 'source')} ${reasons[k] || k}`));
+      det.append(el('summary', `${plural(rows.length, 'source')} ${(reasons[k] || [k, k])[rows.length === 1 ? 0 : 1]}`));
       const ul = el('ul'); rows.forEach(r => { const li = el('li'); const a = el('a', r.title); a.href = readHref(r.item); li.append(a, document.createTextNode(` · ${r.source || ''}`)); ul.append(li); });
       det.append(ul); return det;
     }));
