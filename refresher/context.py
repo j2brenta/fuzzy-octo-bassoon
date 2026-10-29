@@ -50,6 +50,12 @@ def _family() -> str:
     return "hashed" if embed.thresholds() is embed.HASHED else "qwen"
 
 
+def captured(store, at: datetime) -> dict:
+    """item id -> item, for what had been captured by `at`: a brief as of a past moment knows only what reached you
+    by then."""
+    return {i.item_id: i for i in store.items() if i.source.captured_at <= at}
+
+
 def resolve(store, pool: thesis_relate.Pool, key: str | None, query: str | None) -> dict | None:
     """The subject: {kind, id, title, vector}. A topic or cluster is its centroid; a phrase is expanded by its nearest
     theses."""
@@ -105,8 +111,9 @@ def _author(store, item) -> str | None:
 
 def groups(store, pool: thesis_relate.Pool, at: datetime) -> list[dict]:
     """Every major idea in the vault, whatever the subject: its members and their roles, history, what it replaced
-    and its freshness. Relevance to a subject is added by build(); authority (refresher/authority.py) reads the roles."""
-    items = {i.item_id: i for i in store.items()}
+    and its freshness, from what was captured by `at`. Relevance to a subject is added by build(); authority
+    (refresher/authority.py) reads the roles."""
+    items = captured(store, at)
     of_item = {i: rows for i, rows in pool.of_item.items() if i in items}
     thesis = {t["id"]: (i, t) for i, rows in of_item.items() for t in rows}
     when = {i: items[i].source.event_time for i in items}
@@ -238,10 +245,18 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
     if subject is None:
         return None
     family = _family()
-    items = {i.item_id: i for i in store.items()}
+    items = captured(store, at)
     when = {i: items[i].source.event_time for i in items}
     ideas = [dict(x) for x in (ideas if ideas is not None else groups(store, pool, at))]
     rel, floor, by_thesis = relevance(pool, subject["vector"], ideas)
+    on_subject = {}  # item -> its most relevant thesis; a repost takes its original's
+    for t, r in by_thesis.items():
+        i = thesis_relate.item_of(t)
+        if i in items:
+            on_subject[i] = max(on_subject.get(i, 0.0), r)
+    for i, item in items.items():
+        if item.duplicate_of in on_subject:
+            on_subject[i] = on_subject[item.duplicate_of]
     for x in ideas:
         x["relevance"] = round(rel[x["id"]], 4)
         x["in_scope"] = any(by_thesis.get(m["thesis"], 0.0) >= floor for m in x["members"] if m["current"])
@@ -251,7 +266,7 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
     ideas.sort(key=lambda x: (not x["in_scope"], -x["score"], x["id"]))
     scoped = _by_base([x for x in ideas if x["in_scope"]])
     major = scoped[:MAJOR_MAX]
-    _lend(store, pool, major, subject["vector"], floor - ADJACENT_SPAN, family)
+    _lend(store, pool, major, subject["vector"], floor - ADJACENT_SPAN, family, items)
     involved = {i for x in scoped for i in x["sources"]} | {a["item"] for x in major for a in x["adjacent"]}
     summaries = getattr(store, "summaries", {}) or {}
     sources = {}
@@ -265,6 +280,7 @@ def build(store, key: str | None = None, query: str | None = None, at: datetime 
     people = authority.for_subject(store, pool, ideas, at)
     return {"scope": {k: v for k, v in subject.items() if k != "vector"}, "at": at.isoformat(), "floor": round(floor, 4),
             "major": major, "also": scoped[MAJOR_MAX:], "sources": sources, **people,
+            "on_subject": {i: round(r, 4) for i, r in on_subject.items()},
             "counts": {"ideas": len(scoped), "sources": len({i for x in scoped for i in x["sources"]}),
                        "rewrites": sum(1 for x in scoped for r in x["sources"].values() if r == "rewrite"),
                        "superseded": sum(len(x["previously"]) for x in scoped)}}
@@ -293,12 +309,13 @@ def _by_base(scoped: list[dict]) -> list[dict]:
     return out
 
 
-def _lend(store, pool, major: list[dict], center_of_subject: list[float], on_subject: float, family: str) -> None:
+def _lend(store, pool, major: list[dict], center_of_subject: list[float], on_subject: float, family: str,
+          items: dict) -> None:
     """Each major idea's adjacent sources: claims of other sources close to the idea and on the subject, not
     already its own (a claim near the idea but off the subject is a coincidence of wording)."""
     if not major:
         return
-    rows = [c for c in store.claims() if not c.superseded_by]
+    rows = [c for c in store.claims() if not c.superseded_by and c.item_id in items]
     vectors = dict(zip((c.claim.claim_id for c in rows), embed.vectors([c.claim.statement for c in rows]))) if rows else {}
     for idea in major:
         center = grouping.centroid([pool.vector[m["thesis"]] for m in idea["members"] if m["role"] != "superseded"])
