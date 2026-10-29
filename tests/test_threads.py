@@ -61,3 +61,41 @@ def test_a_repost_after_the_stamp_is_noise_and_the_home_lists_threads(dense, tmp
     assert threads.view(tmp_path, dense, t["slug"], T2)["delta"]["arrived"] == 0
     change = threads.diff(first, second)
     assert change["from"] == first["stamp"] and change["to"] == second["stamp"]
+
+
+def test_the_app_serves_a_brief_follows_and_stamps(tmp_path, monkeypatch):
+    import json
+    import threading
+    from http.server import ThreadingHTTPServer
+    from refresher import app
+    from refresher.web import Workspace
+    from tests.test_app import get, send
+    from tests.test_proposals import topical_vault
+    from refresher import brief
+    monkeypatch.setattr(brief, "client_from_environment", lambda: None)  # the cited theses, no model
+    v = topical_vault(tmp_path)
+    workspace = Workspace(v, place=lambda item_id, client: {"item": item_id, "status": "placed"})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), app.handler(v, workspace, app.State(v), log=lambda m: None))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        status, body = get(base + "/brief/?q=hallucination+detection")[:2]
+        assert status == 200
+        b = json.loads(get(base + "/api/brief?q=hallucination+detection")[1])
+        assert b["major"] and b["written"]["ids"] and b["thread"] is None and "people" in b
+        md = get(base + "/api/brief.md?q=hallucination+detection")[1]
+        assert md.startswith("# hallucination detection")
+        t = send(base, "/api/threads", {"q": "hallucination detection"})[1]
+        status, snap = send(base, f"/api/threads/{t['slug']}/stamp", {})
+        assert status == 200, snap
+        assert snap["major"] and "items" not in snap
+        b = json.loads(get(base + "/api/brief?q=hallucination+detection")[1])
+        assert b["thread"]["delta"]["arrived"] == 0 and len(b["thread"]["stamps"]) == 1
+        [row] = json.loads(get(base + "/api/threads")[1])
+        assert row["slug"] == t["slug"] and row["stamps"] == 1
+        snaps = json.loads(get(base + f"/api/threads/{t['slug']}/snapshots")[1])
+        assert snaps["snapshots"][0]["stamp"] == snap["stamp"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        workspace.worker.shutdown(wait=True)

@@ -14,7 +14,7 @@
     return bar;
   }
   function card(row) {
-    const a = el('a', null, 'card'); a.href = '/topic/?id=' + encodeURIComponent(row.id);
+    const a = el('a', null, 'card'); a.href = '/brief/?id=' + encodeURIComponent(row.id);
     const fresh = lastVisit && row.latest > lastVisit;
     const head = el('div', null, 'counts');
     if (fresh) head.append(el('span', 'new since your last visit', 'chip new'));
@@ -30,6 +30,20 @@
     a.append(counts);
     return a;
   }
+  function threadCard(t) {
+    const a = el('a', null, 'card'); a.href = '/brief/?' + (t.key ? 'id=' + encodeURIComponent(t.key) : 'q=' + encodeURIComponent(t.query || ''));
+    const head = el('div', null, 'counts');
+    if (t.critical) head.append(el('span', `${t.critical} critical`, 'chip warn'));
+    if (t.arrived) head.append(el('span', `${t.arrived} arrived`, 'chip new'));
+    if (head.childNodes.length) a.append(head);
+    a.append(el('h3', t.title));
+    const when = t.last ? 'stamped ' + new Date(t.last).toLocaleDateString('en', {day: 'numeric', month: 'short'}) : 'not stamped yet';
+    a.append(el('p', t.arrived == null ? when : `${when} · ${t.notes || 0} notes · ${t.noise || 0} noise`, 'top'));
+    return a;
+  }
+  fetch('/api/threads').then(r => r.ok ? r.json() : []).then(rows => {
+    $('threads').replaceChildren(...rows.map(threadCard)); $('threads-shelf').hidden = !rows.length;
+  }).catch(() => {});
   fetch('/api/topics').then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(rows => {
     const order = (a, b) => Number(b.latest > lastVisit) - Number(a.latest > lastVisit) || b.latest.localeCompare(a.latest);
     const topics = rows.filter(r => r.kind === 'topic').sort(order), clusters = rows.filter(r => r.kind === 'cluster').sort(order);

@@ -18,6 +18,9 @@
     uv run refresher summarize [--vault V] [--force]  a hook and a gist per item for the reading map, in summaries/
     uv run refresher theses [--vault V] [--force]     one to three theses per item over its claims, in theses/
     uv run refresher relate-theses [--vault V] [--force]   how theses of different items relate, in thesis-relations/
+    uv run refresher brief [--vault V] [--at DATE] "subject"   the brief as markdown: major ideas, base, sources
+    uv run refresher follow [--vault V] "subject"      make a subject a thread; then stamp it to mark you caught up
+    uv run refresher stamp [--vault V] [--at DATE] SLUG   store the thread's brief as of now (or DATE) in threads/
 
 The vault defaults to $REFRESHER_VAULT.
 """
@@ -42,7 +45,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="refresher", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("rebuild", "km", "eval", "relate", "review", "graph", "enrich", "proposals", "decide", "consolidate", "serve",
-                 "translate", "summarize", "theses", "relate-theses", "problems"):
+                 "translate", "summarize", "theses", "relate-theses", "brief", "follow", "stamp", "problems"):
         p = sub.add_parser(name)
         p.add_argument("--vault", type=Path, default=os.environ.get("REFRESHER_VAULT"))
         p.add_argument("--at", help="ISO date or datetime to score at (default: now)")
@@ -74,6 +77,12 @@ def main(argv=None) -> int:
             p.add_argument("--force", action="store_true", help="translate again even when a stored translation matches")
         if name == "summarize":
             p.add_argument("--force", action="store_true", help="summarise again even when a stored summary matches")
+        if name in ("brief", "follow"):
+            p.add_argument("subject", help="a phrase, or topic:/cluster: id")
+            p.add_argument("--offline", action="store_true", help="no model: cached paragraphs or the theses themselves")
+        if name == "stamp":
+            p.add_argument("thread", help="the thread's slug, as `follow` printed it")
+            p.add_argument("--offline", action="store_true", help="no model: cached paragraphs or the theses themselves")
         if name in ("theses", "relate-theses"):
             p.add_argument("--force", action="store_true", help="write theses again even when stored ones match")
         if name == "proposals":
@@ -103,6 +112,8 @@ def main(argv=None) -> int:
         return _theses(args.vault, args.force)
     if args.command == "relate-theses":
         return _relate_theses(args.vault, args.force)
+    if args.command in ("brief", "follow", "stamp"):
+        return _brief(args, at)
     if args.command == "relate":
         return _relate(args.vault, args.lexical)
     if args.command == "enrich":
@@ -244,6 +255,38 @@ def _theses(vault_path: Path, force: bool) -> int:
             print(f"theses: {item_id[:10]} [{t['stance']}] {t['statement']}")
     print(f"theses: {done} items with {client.model_name}, {failed} failed, {len(items) - len(todo)} already done")
     return 1 if failed else 0
+
+
+def _brief(args, at: datetime) -> int:
+    from dotenv import load_dotenv
+    from refresher import brief, context, threads
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+    subject = getattr(args, "subject", None)
+    key, query = (subject, None) if subject and subject.startswith(("topic:", "cluster:")) else (None, subject)
+    if args.command == "follow":
+        t = threads.follow(args.vault, query=query, key=key, at=at)
+        print(f"follow: thread {t['slug']} ({t['title']}); stamp it with `refresher stamp {t['slug']}`")
+        return 0
+    model = None if args.offline else brief.client_from_environment()
+    store = vault.replay(args.vault, include_unreviewed=True)
+    if args.command == "stamp":
+        try:
+            snap = threads.stamp(args.vault, store, args.thread, at, model)
+        except KeyError:
+            sys.exit(f"stamp: no thread {args.thread}; follow a subject first")
+        except LookupError as error:
+            sys.exit(f"stamp: {error}")
+        print(f"stamp: {args.thread} as of {snap['at']}: {len(snap['major'])} major ideas from "
+              f"{snap['counts']['sources']} sources; wrote threads/{args.thread}/{snap['stamp']}.md")
+        return 0
+    c = context.build(store, key=key, query=query, at=at)
+    if c is None:
+        sys.exit("brief: nothing in your knowledge matches that yet")
+    written = brief.write(args.vault, c, model)
+    sys.stdout.write(brief.markdown(c, written))
+    if written["validity"] is not None:
+        print(f"\n(citation validity {written['validity']:.0%})", file=sys.stderr)
+    return 0
 
 
 def _relate_theses(vault_path: Path, force: bool) -> int:

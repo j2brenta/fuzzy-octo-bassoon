@@ -27,7 +27,8 @@ from urllib.parse import parse_qs, urlsplit
 
 from engine.llm import ModelError
 from graph.memory import MemoryStore
-from refresher import consolidate, dossier, graphview, people_backfill, people_review, reading, subject, vault
+from refresher import brief, consolidate, context as context_engine, dossier, graphview, people_backfill, people_review, \
+    reading, subject, thesis_relate, threads, vault
 from refresher.web import STATIC, Workspace, read_json
 
 PORT = 8080
@@ -39,10 +40,14 @@ SUBMISSION = re.compile(r"^/api/submissions/([a-f0-9]{32})$")
 RETRY = re.compile(r"^/api/submissions/([a-f0-9]{32})/retry$")
 UPLOAD = re.compile(r"^/api/uploads/([a-f0-9]{64})$")
 SOURCE = re.compile(r"^/api/source/([\w.:-]{1,200})/(context|state)$")
+THREAD = re.compile(r"^/api/threads/([\w-]{1,80})(?:/(stamp|snapshots)(?:/(\d{8}T\d{6}Z))?)?$")
 HTML, CSS, JS = "text/html; charset=utf-8", "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 FILES = {
     "/": (STATIC / "topics.html", HTML),
     "/topic/": (STATIC / "dossier.html", HTML),
+    "/brief/": (STATIC / "context.html", HTML),
+    "/static/context.css": (STATIC / "context.css", CSS),
+    "/static/context.js": (STATIC / "context.js", JS),
     "/static/brief.css": (STATIC / "brief.css", CSS),
     "/static/reading.css": (STATIC / "reading.css", CSS),
     "/static/navigator.css": (STATIC / "navigator.css", CSS),
@@ -98,6 +103,8 @@ class State:
         self._lock = RLock()
         self._key = self._store = self._map = self._map_at = None
         self._subjects: dict[tuple, dict] = {}  # scored subjects, kept until the vault changes
+        self._pool = self._groups = None  # every source's theses with vectors, and the major ideas over them
+        self._contexts: dict[tuple, dict] = {}
 
     def store(self) -> MemoryStore:
         key = fingerprint(self.vault)
@@ -106,7 +113,41 @@ class State:
                 self._store = vault.replay(self.vault, include_unreviewed=self.include_unreviewed)
                 self._store.topics()  # build the groups now, while no one else reads
                 self._key, self._map, self._subjects = key, None, {}
+                self._pool = self._groups = None
+                self._contexts = {}
             return self._store
+
+    def pool(self) -> thesis_relate.Pool:
+        with self._lock:
+            store = self.store()
+            if self._pool is None:
+                self._pool = thesis_relate.Pool(store)
+            return self._pool
+
+    def brief(self, key: str | None, query: str | None, at: datetime | None = None) -> dict | None:
+        """The Context Engine on a subject (refresher/context.py) with what is written of it, once per vault state
+        (and per moment, when one is asked for)."""
+        with self._lock:
+            store, pool = self.store(), self.pool()
+            now = at or datetime.now(timezone.utc)
+            if at is None and self._groups is None:
+                self._groups = context_engine.groups(store, pool, now)
+            cache = (key, query, at.isoformat() if at else None)
+            if cache not in self._contexts:
+                c = context_engine.build(store, key, query, now, pool, self._groups if at is None else None)
+                self._contexts[cache] = c
+            c = self._contexts[cache]
+        if c is None:
+            return None
+        return {**c, "written": brief.write(self.vault, c, None)}
+
+    def thread(self, name: str, at: datetime | None = None) -> dict | None:
+        with self._lock:
+            return threads.view(self.vault, self.store(), name, at, self.pool())
+
+    def threads(self) -> list[dict]:
+        with self._lock:
+            return threads.summary(self.vault, self.store(), pool=self.pool())
 
     def catalog(self, now: datetime | None = None) -> list[dict]:
         with self._lock:
@@ -291,7 +332,7 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._redirect("/atlas/?layout=read" + (f"&{url.query}" if url.query else ""))
             if path == "/graph" or path.startswith("/graph/"):
                 return self._redirect("/atlas/" + path.removeprefix("/graph").lstrip("/") + (f"?{url.query}" if url.query else ""))
-            if path in ("/atlas", "/capture", "/topic"):
+            if path in ("/atlas", "/capture", "/topic", "/brief"):
                 return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
             if path == "/atlas/":
                 html = graphview.page(state.map())
@@ -317,6 +358,35 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._json(HTTPStatus.OK, state.catalog())
             if path == "/api/consolidate":
                 return self._json(HTTPStatus.OK, review.status())
+            if path in ("/api/brief", "/api/brief.md"):
+                try:
+                    at = datetime.fromisoformat(args["at"]) if args.get("at") else None
+                except ValueError:
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "at must be an ISO date."})
+                at = at.replace(tzinfo=at.tzinfo or timezone.utc) if at else None
+                c = state.brief(args.get("id") or None, args.get("q") or None, at)
+                if c is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet.",
+                                                             "named": state.named(args.get("q") or None)})
+                if path == "/api/brief.md":
+                    return self._send(HTTPStatus.OK, brief.markdown(c, c["written"]).encode(), "text/markdown; charset=utf-8")
+                name = threads.slug(args.get("id") or args.get("q") or "")
+                thread = state.thread(name, at) if threads.load(vault_path, name) else None
+                return self._json(HTTPStatus.OK, {**c, "thread": thread and {k: v for k, v in thread.items() if k != "context"}})
+            if path == "/api/threads":
+                return self._json(HTTPStatus.OK, state.threads())
+            if match := THREAD.match(path):
+                if match[2] == "snapshots" and match[3]:
+                    snap = next((x for x in threads.snapshots(vault_path, match[1]) if x["stamp"] == match[3]), None)
+                    return self._json(HTTPStatus.OK if snap else HTTPStatus.NOT_FOUND, snap or {"error": "No such stamp."})
+                if match[2] == "snapshots":
+                    snaps = threads.snapshots(vault_path, match[1])
+                    diffs = [threads.diff(a, b) for a, b in zip(snaps, snaps[1:])]
+                    return self._json(HTTPStatus.OK, {"snapshots": [{k: v for k, v in x.items() if k != "items"} for x in snaps],
+                                                      "diffs": diffs})
+                v = state.thread(match[1])
+                return self._json(HTTPStatus.OK if v else HTTPStatus.NOT_FOUND,
+                                  {k: x for k, x in v.items() if k != "context"} if v else {"error": "No such thread."})
             if path == "/api/dossier":
                 try:
                     at = datetime.fromisoformat(args["at"]) if args.get("at") else None
@@ -367,9 +437,50 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                   headers=[("Content-Disposition", 'attachment; filename="original-upload"')])
             if path in FILES:
                 file, kind = FILES[path]
-                csp = "atlas" if path.startswith("/atlas/") else "topic" if path == "/topic/" else "page"
+                csp = "atlas" if path.startswith("/atlas/") else "topic" if path in ("/topic/", "/brief/") else "page"
                 return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP[csp])
             return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
+
+        def _brief_post(self, path, thread_post):
+            """Follow a subject, write its brief with the model, or stamp a thread. Writing calls the model, so
+            these answer when the paragraphs are written (a minute for a large brief)."""
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                body = json.loads(self.rfile.read(length)) if 0 < length <= MAX_DECISION else {}
+                if not isinstance(body, dict):
+                    raise ValueError
+            except ValueError:
+                return self._json(HTTPStatus.BAD_REQUEST, {"error": "Send a JSON object."})
+            key, query = (body.get("id") or None), (body.get("q") or None)
+            for v in (key, query):
+                if v is not None and (not isinstance(v, str) or len(v) > 200):
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "id and q are short strings."})
+            try:
+                model = brief.client_from_environment()
+            except ModelError as error:
+                return self._json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(error)})
+            if path == "/api/threads":
+                if not (key or query):
+                    return self._json(HTTPStatus.BAD_REQUEST, {"error": "Say what to follow: id or q."})
+                with vault.lock(vault_path):
+                    t = threads.follow(vault_path, query=query, key=key, title=body.get("title") if isinstance(body.get("title"), str) else None)
+                return self._json(HTTPStatus.OK, t)
+            if path == "/api/brief/write":
+                c = state.brief(key, query)
+                if c is None:
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
+                written = brief.write(vault_path, {k: v for k, v in c.items() if k != "written"}, model)
+                return self._json(HTTPStatus.OK, written)
+            name = thread_post[1]
+            if threads.load(vault_path, name) is None:
+                return self._json(HTTPStatus.NOT_FOUND, {"error": "No such thread."})
+            try:
+                with vault.lock(vault_path):
+                    with state._lock:
+                        snap = threads.stamp(vault_path, state.store(), name, model=model, pool=state.pool())
+            except LookupError as error:
+                return self._json(HTTPStatus.NOT_FOUND, {"error": str(error)})
+            return self._json(HTTPStatus.OK, {k: v for k, v in snap.items() if k != "items"})
 
         def do_POST(self):
             origin = self.headers.get("Origin")
@@ -385,6 +496,9 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             if source and source[2] != "state":
                 source = None
             people_change = path in {'/api/people/attribution', '/api/people/backfill'}
+            thread_post = THREAD.match(path)
+            if path in ("/api/threads", "/api/brief/write") or (thread_post and thread_post[2] == "stamp" and not thread_post[3]):
+                return self._brief_post(path, thread_post)
             if not (decide or retry or source or people_change or path in ("/api/submissions", "/api/reading")):
                 return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
             if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":

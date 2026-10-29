@@ -36,7 +36,8 @@ FLOOR = {"qwen": 0.45, "hashed": 0.08}
 SPAN = {"qwen": 0.2, "hashed": 0.3}
 EXPAND = 3  # nearest theses averaged into a phrase's vector
 EXPAND_SPAN = {"qwen": 0.1, "hashed": 0.15}  # and only those this close to the phrase's best match
-ADJACENT = {"qwen": 0.65, "hashed": 0.4}  # a claim this close to an idea lends it a fact,
+ADJACENT = {"qwen": 0.68, "hashed": 0.4}  # a claim this close to an idea lends it a fact (Qwen3, 29 Oct: 0.61-0.66 were
+# topic-only coincidences such as "AI should enhance human understanding" lent to a thesis on search tools),
 ADJACENT_SPAN = 0.1  # if it is also on the subject: no further under the floor than this
 FACTS_PER_SOURCE, ADJACENT_SOURCES = 3, 5
 MAJOR_MAX = 6  # ideas a brief writes about; the rest are listed
@@ -305,8 +306,9 @@ def _by_base(scoped: list[dict]) -> list[dict]:
         y["previously"] = y["previously"] + x["previously"]
         y["conflicts"] = y["conflicts"] + x["conflicts"]
         y["support"] = max(y["support"], x["support"])
+        y["score"] = max(y["score"], x["score"])
         y["parts"] = y["parts"] + [x["id"]]
-    return out
+    return sorted(out, key=lambda x: (-x["score"], x["id"]))
 
 
 def _lend(store, pool, major: list[dict], center_of_subject: list[float], on_subject: float, family: str,

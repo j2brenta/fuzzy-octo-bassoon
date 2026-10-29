@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<title>Refresher — Brief</title>
+<link rel="stylesheet" href="/static/shell.css"><link rel="stylesheet" href="/static/brief.css"><link rel="stylesheet" href="/static/context.css">
+<script src="/static/nav.js" defer></script><script src="/static/context.js" defer></script></head>
+<body>
+<a class="skip" href="#main">Skip to the brief</a>
+<header class="app-bar">
+<a class="app-brand" href="/" aria-label="Refresher home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M25 13A10 10 0 1 0 25 21M25 5v8h-8"/></svg>refresher<span class="dot">.</span><span class="page">Brief</span></a>
+<nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
+</header>
+<main id="main" class="wrap ce">
+  <nav class="ce-tabs" aria-label="Views of this subject"><a id="tab-brief" aria-current="page">Brief</a><a id="tab-sources">Sources</a><a id="tab-read" href="/read/">Read</a></nav>
+  <header class="ce-head">
+    <p class="eyebrow" id="kind">What survives to now</p>
+    <h1 id="title" class="serif">…</h1>
+    <p id="meta" class="quiet"></p>
+    <div class="ce-actions">
+      <button type="button" id="follow" class="ce-button" hidden>Follow this subject</button>
+      <button type="button" id="stamp" class="ce-button primary" hidden>Stamp: caught up through now</button>
+      <button type="button" id="write" class="ce-button" hidden>Write the brief</button>
+      <a id="export" class="ce-link">Markdown ↓</a>
+    </div>
+  </header>
+  <p id="notice" class="ce-notice" role="status">Reading what you know…</p>
+  <section id="since" class="ce-since" aria-labelledby="since-title" hidden>
+    <h2 id="since-title" class="serif"></h2>
+    <div id="critical"></div>
+    <div id="notes"></div>
+    <div id="noise"></div>
+  </section>
+  <div class="ce-grid" id="grid" hidden>
+    <div class="ce-main">
+      <h2 class="ce-section">The core</h2>
+      <div id="ideas"></div>
+      <section id="adjacent-box" hidden><h2 class="ce-section">Sources that lent facts</h2><ul id="adjacent" class="ce-list"></ul></section>
+      <section id="rewrites-box" hidden><h2 class="ce-section">Rewrites, collapsed</h2><ul id="rewrites" class="ce-list"></ul></section>
+      <section id="also-box" hidden><h2 class="ce-section">Also on this subject</h2><ul id="also" class="ce-list"></ul></section>
+      <section id="sources-box"><h2 class="ce-section">Sources</h2><ol id="sources" class="ce-sources"></ol></section>
+    </div>
+    <aside class="ce-side" aria-label="Map and people">
+      <section class="ce-panel"><h2 class="ce-section">Constellation</h2>
+        <svg id="constellation" role="img" aria-label="Major ideas as circles: the base at the centre, builders inside, sources lending facts outside"></svg>
+        <p class="legend"><span><i class="lg-base"></i>base</span><span><i class="lg-builder"></i>builds on it</span><span><i class="lg-lent"></i>lent facts</span><span><i class="lg-rewrite"></i>rewrite</span><span><i class="lg-old"></i>superseded</span></p>
+      </section>
+      <section class="ce-panel"><h2 class="ce-section">Whom to listen to here</h2>
+        <p class="small quiet">Authority comes from writing the base or building on it, and from being credited by those who did. Reach is how often a name comes up.</p>
+        <ol id="people" class="ce-people"></ol></section>
+      <section class="ce-panel" id="stamps-box" hidden><h2 class="ce-section">Your stamps on this thread</h2><ol id="stamps" class="ce-stamps"></ol></section>
+    </aside>
+  </div>
+  <dialog id="history" class="ce-dialog" aria-labelledby="history-title">
+    <header><h2 id="history-title" class="serif">How this idea developed</h2><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
+    <p id="history-idea" class="quiet"></p>
+    <ol id="history-steps" class="ce-history"></ol>
+  </dialog>
+  <dialog id="snapshot" class="ce-dialog" aria-labelledby="snapshot-title">
+    <header><h2 id="snapshot-title" class="serif">Stamp</h2><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
+    <div id="snapshot-body"></div>
+  </dialog>
+</main>
+</body></html>

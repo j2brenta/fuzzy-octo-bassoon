@@ -14,11 +14,15 @@
   <section class="hero" aria-labelledby="hero-title">
     <p class="eyebrow">Refresh a subject</p>
     <h1 id="hero-title">What do you want<br><em>to know again?</em></h1>
-    <p>Pick a topic, or type a subject. You get what you know about it, ranked by how many independent sources say it, how far you trust them and how fresh it is; what changed; what is contested; and what to read first.</p>
-    <form class="search" action="/topic/" method="get" role="search"><label class="sr-only" for="q" hidden>Subject</label>
+    <p>Type a subject or pick a topic. You get what has survived to now: the major ideas, the one source to read for each, what replaced what, and whom to listen to. Follow it, and next time you see only what arrived since.</p>
+    <form class="search" action="/brief/" method="get" role="search"><label class="sr-only" for="q" hidden>Subject</label>
       <input id="q" name="q" type="search" placeholder="A subject, e.g. hallucination" required maxlength="200" aria-label="Subject"><button type="submit">Refresh ↗</button></form>
   </section>
   <p id="error" class="empty" role="alert" hidden></p>
+  <section class="shelf" aria-labelledby="threads-title" id="threads-shelf" hidden>
+    <header><h2 id="threads-title">Your threads</h2><span class="small quiet">Subjects you follow: what arrived since your last stamp</span></header>
+    <div class="cards" id="threads"></div>
+  </section>
   <section class="shelf" aria-labelledby="topics-title" id="topics-shelf" hidden>
     <header><h2 id="topics-title">Topics you accepted</h2><span class="small quiet" id="topics-count"></span></header>
     <div class="cards" id="topics"></div>
