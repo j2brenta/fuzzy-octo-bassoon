@@ -11,44 +11,25 @@
 <nav class="app-nav" id="app-nav" aria-label="Refresher" hidden><a href="/" data-page="topics">Topics</a><a href="/atlas/" data-page="atlas">Atlas</a><a href="/read/" data-page="read">Read</a><a href="/atlas/#proposals">Review <span class="count" id="nav-waiting"></span></a><a href="/capture/" data-page="capture">Add source <span class="count" id="nav-count"></span></a></nav>
 </header>
 <main id="main" class="ce ce-full">
-  <nav class="ce-crumbs" aria-label="Where you are"><ol id="crumbs"></ol><span class="small quiet" id="esc-hint" hidden>Esc to step back</span></nav>
+  <nav class="ce-crumbs" aria-label="Where you are"><ol id="crumbs"></ol>
+    <span class="ce-crumbs-end"><span class="small quiet" id="esc-hint" hidden>Esc to step back</span>
+    <span class="ce-tabs" aria-label="Views of this subject"><a id="tab-brief" aria-current="page">Brief</a><a id="tab-sources">Sources</a><a id="tab-read" href="/read/">Read</a></span></span></nav>
   <p id="notice" class="ce-notice" role="status">Reading what you know…</p>
-  <!-- One grid, the same panels in two densities: the overview (brief | details) narrows into reading
-       (brief, compact | earlier sources as bars | the source | details of the source) -->
+  <!-- The top band stays in both states; below it one grid of three slots that keep their jobs:
+       the ideas (the brief, then a compact rail) | the source you read | a narrow panel about the centre -->
+  <header class="ce-top" id="top" hidden>
+    <h1 id="title" class="serif">…</h1>
+    <div id="keywords" class="ce-keywords" aria-label="Keywords"></div>
+    <div class="ce-meta"><span id="meta"></span>
+      <span class="ce-versions" id="versions-box" hidden><button type="button" id="versions" class="ce-quiet" aria-expanded="false" aria-controls="versions-list"></button>
+        <ol id="versions-list" class="ce-versions-list" hidden></ol></span>
+      <button type="button" id="save" class="ce-quiet">Save version</button>
+      <button type="button" id="write" class="ce-quiet" hidden>Write the brief</button>
+      <a id="export" class="ce-quiet">Markdown ↓</a></div>
+    <div id="since" class="ce-since" hidden></div>
+  </header>
   <div class="ce-grid" id="grid" hidden>
     <section id="brief-panel" class="ce-brief-panel" aria-label="The brief">
-      <div class="ce-overview-only">
-        <nav class="ce-tabs" aria-label="Views of this subject"><a id="tab-brief" aria-current="page">Brief</a><a id="tab-sources">Sources</a><a id="tab-read" href="/read/">Read</a></nav>
-        <header class="ce-head">
-          <p class="eyebrow" id="kind">What survives to now</p>
-          <h1 id="title" class="serif">…</h1>
-          <p id="meta" class="quiet"></p>
-          <div class="ce-actions">
-            <button type="button" id="follow" class="ce-button" hidden>Follow this subject</button>
-            <button type="button" id="stamp" class="ce-button primary" hidden>Stamp: caught up through now</button>
-            <button type="button" id="write" class="ce-button" hidden>Write the brief</button>
-            <a id="export" class="ce-link">Markdown ↓</a>
-          </div>
-        </header>
-        <section id="since" class="ce-since" aria-labelledby="since-title" hidden>
-          <h2 id="since-title" class="serif"></h2>
-          <div id="critical"></div>
-          <div id="notes"></div>
-          <div id="noise"></div>
-        </section>
-      </div>
-      <section class="ce-block" id="map-block">
-        <header class="ce-block-head">
-          <button type="button" class="ce-fold" aria-expanded="true" aria-controls="map-body">Map</button>
-          <div class="ce-toggle" role="group" aria-label="What the map shows"><button type="button" id="show-area" aria-pressed="true">This area</button><button type="button" id="show-full" aria-pressed="false">Full graph</button><button type="button" id="show-ideas" aria-pressed="false">Ideas</button></div>
-          <span class="small quiet" id="map-note"></span>
-        </header>
-        <div class="ce-block-body" id="map-body">
-          <div id="area-box"><div id="area" class="ce-area" role="img" aria-label="Map: topics hold clusters, dots are sources coloured by the idea they serve"></div><div id="peek" class="ce-peek" hidden></div></div>
-          <div id="ideas-box" hidden><svg id="constellation" role="img" aria-label="Major ideas as circles: the base at the centre, builders inside, sources lending facts outside"></svg></div>
-          <p class="legend"><span><i class="lg-base"></i>in the brief, coloured by its idea</span><span><i class="lg-rewrite"></i>elsewhere in the area</span><span><i class="lg-old"></i>a cluster beyond the brief</span></p>
-        </div>
-      </section>
       <section class="ce-block" id="ideas-block">
         <header class="ce-block-head"><button type="button" class="ce-fold" aria-expanded="true" aria-controls="ideas-body">The core</button><span class="small quiet" id="ideas-note"></span></header>
         <div class="ce-block-body" id="ideas-body">
@@ -60,16 +41,26 @@
         <header class="ce-block-head"><button type="button" class="ce-fold" aria-expanded="true" aria-controls="sources-body">Sources</button></header>
         <div class="ce-block-body" id="sources-body"><ol id="sources" class="ce-sources"></ol></div>
       </section>
+      <section class="ce-block" id="further-block">
+        <header class="ce-block-head"><button type="button" class="ce-fold ce-overview-only" aria-expanded="true" aria-controls="further-body">Further reading, and why</button>
+          <button type="button" id="further-open" class="ce-link-button ce-reading-only">Further reading ⧉</button></header>
+        <div class="ce-block-body ce-overview-only" id="further-body"><div id="further"></div></div>
+      </section>
     </section>
-    <div id="bars" class="ce-bars" aria-label="Sources you came through"></div>
     <section id="source" class="ce-source" aria-live="polite"></section>
-    <aside id="details" class="ce-details" aria-label="Details">
-      <p class="ce-scope"><span class="small quiet">Details for</span> <strong id="scope-label">the whole brief</strong></p>
-      <section class="ce-side-block"><h2 class="ce-section">People</h2><div id="people" class="ce-badges"></div></section>
-      <section class="ce-side-block"><h2 class="ce-section">Organizations</h2><div id="orgs" class="ce-badges orgs"></div></section>
-      <section class="ce-side-block"><h2 class="ce-section" id="claims-title">Claims</h2><div id="claims"></div></section>
-      <section class="ce-side-block"><h2 class="ce-section">Further reading, and why</h2><div id="next"></div></section>
-      <section class="ce-side-block ce-overview-only" id="stamps-box" hidden><h2 class="ce-section">Your stamps on this thread</h2><ol id="stamps" class="ce-stamps"></ol></section>
+    <aside id="side" class="ce-side" aria-label="About what you read">
+      <section class="ce-side-map" id="map-block">
+        <div class="ce-block-head">
+          <div class="ce-toggle" role="group" aria-label="What the map shows"><button type="button" id="show-area" aria-pressed="true">This area</button><button type="button" id="show-full" aria-pressed="false">Full graph</button><button type="button" id="show-ideas" aria-pressed="false">Ideas</button></div>
+          <button type="button" id="map-zoom" class="ce-zoom" aria-label="Open the map larger" title="Open the map larger">⤢</button>
+          <span class="small quiet" id="map-note"></span>
+        </div>
+        <div id="area-box"><div id="area" class="ce-area" role="img" aria-label="Map: topics hold clusters, dots are sources coloured by the idea they serve"></div><div id="peek" class="ce-peek" hidden></div></div>
+        <div id="ideas-box" hidden><svg id="constellation" role="img" aria-label="Major ideas as circles: the base at the centre, builders inside, sources lending facts outside"></svg></div>
+      </section>
+      <p class="ce-row"><span class="label">People</span> <span id="people" class="ce-badges"></span></p>
+      <p class="ce-row"><span class="label">Organizations</span> <span id="orgs" class="ce-badges orgs"></span></p>
+      <section class="ce-reading-only" id="claims-box"><h2 class="ce-section">What was extracted</h2><div id="claims"></div></section>
     </aside>
   </div>
   <dialog id="history" class="ce-dialog" aria-labelledby="history-title">
@@ -78,8 +69,16 @@
     <ol id="history-steps" class="ce-history"></ol>
   </dialog>
   <dialog id="snapshot" class="ce-dialog" aria-labelledby="snapshot-title">
-    <header><h2 id="snapshot-title" class="serif">Stamp</h2><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
+    <header><h2 id="snapshot-title" class="serif">Version</h2><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
     <div id="snapshot-body"></div>
+  </dialog>
+  <dialog id="map-dialog" class="ce-dialog ce-map-dialog" aria-labelledby="map-dialog-title">
+    <header><h2 id="map-dialog-title" class="serif">Map</h2><span class="small quiet" id="map-dialog-note"></span><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
+    <div class="ce-map-big"><div id="map-big" class="ce-area" role="img" aria-label="The map, larger"></div><div id="peek-big" class="ce-peek" hidden></div></div>
+  </dialog>
+  <dialog id="further-dialog" class="ce-dialog" aria-labelledby="further-title">
+    <header><h2 id="further-title" class="serif">Further reading</h2><button type="button" class="ce-close" data-close aria-label="Close">×</button></header>
+    <div id="further-from"></div>
   </dialog>
 </main>
 </body></html>
