@@ -889,19 +889,29 @@
     else if (key === 's') setState(current, 'skimmed');
   });
 
+  const slow = setTimeout(() => { $('notice').textContent = 'Still working: reading what you asked about can take a few seconds…'; }, 5000);
   fetch('/api/subject?' + subjectParams).then(async r => {
+    clearTimeout(slow);
     const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+    if (!r.ok) throw Object.assign(new Error(body.error || `HTTP ${r.status}`), {named: body.named || []});
     s = body;
     document.title = `Refresher — ${s.scope.title}`;
-    $('kind').textContent = {topic: 'A topic you accepted', cluster: 'A cluster of close Ideas', query: 'What you asked about'}[s.scope.kind];
+    $('kind').textContent = {topic: 'A topic you accepted', cluster: 'A cluster of close Ideas', query: 'What you asked about'}[s.scope.kind]
+      + (s.scope.note ? ` · ${s.scope.note}` : '');
     $('title').textContent = s.scope.kind === 'query' ? `“${s.scope.title}”` : s.scope.title;
     const main = s.clusters.find(c => c.band === 'main'); if (main) openBlocks.add(main.id);
     $('scope').append(...s.topics.map(t => { const o = el('option', short(t.title, 48)); o.value = t.id; return o; }));
     $('notice').hidden = true;
     route();
   }).catch(error => {
+    clearTimeout(slow);
     $('notice').textContent = '';
-    $('notice').append(el('p', error.message, 'serif'), el('p', 'Try another subject, or pick one of your topics.', 'quiet'), link('← All topics', '/'));
+    $('notice').append(el('p', error.message, 'serif'));
+    if (error.named?.length) {  // no Idea matches, but sources name who or what was asked about
+      const list = el('ul', null, 'named-list');
+      error.named.forEach(x => { const li = el('li'); li.append(link(x.title, '/read/?read=' + encodeURIComponent(x.id)), el('span', ` · ${x.source || ''} · names ${x.names.join(', ')}`, 'small quiet')); list.append(li); });
+      $('notice').append(el('p', `No Idea matches, but ${error.named.length === 1 ? 'one source names' : error.named.length + ' sources name'} what you asked about. What they say is about them (their profile), which a topic does not rank:`, 'quiet'), list);
+    }
+    $('notice').append(el('p', 'Try another subject, or pick one of your topics.', 'quiet'), link('← All topics', '/'));
   });
 })();

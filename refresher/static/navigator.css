@@ -172,3 +172,6 @@
 .stage.side .s-head { grid-template-columns: minmax(0, 1fr); }
 .stage.side .s-actions { justify-items: start; grid-template-columns: auto minmax(0, 260px) auto; align-items: center; }
 .stage.side .cover { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+
+/* --- nothing matched: the sources that name what was asked about --- */
+.named-list { margin: 8px 0 14px; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }

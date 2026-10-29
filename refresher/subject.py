@@ -228,7 +228,7 @@ def subject(store: MemoryStore, scope: dossier.Scope, at: datetime) -> dict:
             "placements": rows, "shares_with_main": with_main[cid]["count"] if cid in with_main else 0})
     shown = {c["id"] for c in cluster_rows}
     title_of = lambda i: store.idea(i).title
-    return {"scope": {"kind": scope.kind, "id": scope.key, "title": scope.title}, "at": at.isoformat(),
+    return {"scope": {"kind": scope.kind, "id": scope.key, "title": scope.title, "note": scope.note}, "at": at.isoformat(),
             "floor": floor, "clusters": cluster_rows,
             "edges": [e for e in edges if e["a"] in shown and e["b"] in shown],
             "links": navigator.links(store, items, claims, ideas_of, cluster_of, shared_pairs, when, title_of),

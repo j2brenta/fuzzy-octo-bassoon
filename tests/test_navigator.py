@@ -263,3 +263,69 @@ def test_the_reading_layout_is_the_atlas_with_a_gist_for_every_source(tmp_path):
         server.shutdown()
         server.server_close()
         workspace.worker.shutdown(wait=True)
+
+
+class _Unreachable:
+    """The configured embedder, except that a text it has not seen times out, as Nebius did on 29 October."""
+
+    def __init__(self, inner, known):
+        self.inner, self.known, self.name, self.thresholds = inner, set(known), "unreachable", inner.thresholds
+
+    def embed(self, texts):
+        from engine.llm import ModelError
+        if set(texts) - self.known:
+            raise ModelError("Could not reach Nebius within the request timeout.")
+        return self.inner.embed(texts)
+
+
+@pytest.fixture
+def unreachable():
+    from graph import embed
+    before = embed.current()
+    store_ = _store_with_a_bridge()
+    embed.use(_Unreachable(before, [i.title for i in store_.ideas()]))
+    yield store_
+    embed.use(before)
+
+
+def test_a_phrase_the_embedder_cannot_read_is_matched_by_its_words(unreachable):
+    scope = dossier.resolve(unreachable, query="hallucinations semantic")
+    assert scope.kind == "query" and scope.ideas and scope.note.startswith("Matched by its words")
+    s = subject.subject(unreachable, scope, AT)
+    assert s["scope"]["note"] == scope.note and any(x["ideas"] for x in s["sources"].values())
+
+
+def test_a_phrase_with_no_word_in_the_vault_says_why_instead_of_hanging(unreachable):
+    from engine.llm import ModelError
+    with pytest.raises(ModelError, match="no Idea in your knowledge holds a word"):
+        dossier.resolve(unreachable, query="layoffs zzzz")
+
+
+def test_the_app_answers_503_when_the_embedder_does_not(tmp_path):
+    from graph import embed
+    from tests.test_app import get
+    from tests.test_proposals import topical_vault
+    from refresher import app, vault as vault_mod
+    from refresher.web import Workspace
+    import json
+    import threading
+    from http.server import ThreadingHTTPServer
+    from urllib.error import HTTPError
+    v = topical_vault(tmp_path)
+    before = embed.current()
+    embed.use(_Unreachable(before, [i.title for i in vault_mod.replay(v, include_unreviewed=True).ideas()]))
+    workspace = Workspace(v, place=lambda item_id, client: {"item": item_id, "status": "placed"})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), app.handler(v, workspace, app.State(v), log=lambda m: None))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with pytest.raises(HTTPError) as error:
+            get(base + "/api/subject?q=layoffs+zzzz")
+        assert error.value.code == 503 and "Nebius" in json.loads(error.value.read())["error"]
+        s = json.loads(get(base + "/api/subject?q=hallucination+detection")[1])  # its words are in the vault
+        assert s["scope"]["note"].startswith("Matched by its words") and s["plan"]
+    finally:
+        embed.use(before)
+        server.shutdown()
+        server.server_close()
+        workspace.worker.shutdown(wait=True)

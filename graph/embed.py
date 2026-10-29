@@ -10,7 +10,9 @@ import logging
 import math
 import os
 import re
+import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -129,7 +131,7 @@ class NebiusEmbedder:
             chunk = todo[start:start + self.batch]
             started = time.monotonic()
             data = _nebius_request(self.api_key, self.base_url, "/embeddings",
-                                   {"model": self.model, "input": chunk}, 60)
+                                   {"model": self.model, "input": chunk}, getattr(_wait, "seconds", None) or 60)
             tokens = (data.get("usage") or {}).get("total_tokens") if isinstance(data.get("usage"), dict) else None
             logger.info("%s: embedded %d texts (%d cached), %s tokens, %.1f s", self.model, len(chunk),
                         len(texts) - len(todo), f"{tokens:,}" if isinstance(tokens, int) else "?",
@@ -148,6 +150,18 @@ class NebiusEmbedder:
 
 
 _current: Embedder = HashedEmbedder()
+_wait = threading.local()  # this thread's wait for the embeddings service, when shorter than a rebuild's
+
+
+@contextmanager
+def waiting(seconds: float):
+    """Wait at most this long for the embeddings service inside the block: a reader is waiting on a page."""
+    before = getattr(_wait, "seconds", None)
+    _wait.seconds = seconds
+    try:
+        yield
+    finally:
+        _wait.seconds = before
 
 
 def current() -> Embedder:

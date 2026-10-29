@@ -25,6 +25,7 @@ from pathlib import Path
 from threading import Lock, RLock, Thread
 from urllib.parse import parse_qs, urlsplit
 
+from engine.llm import ModelError
 from graph.memory import MemoryStore
 from refresher import consolidate, dossier, graphview, people_backfill, people_review, reading, subject, vault
 from refresher.web import STATIC, Workspace, read_json
@@ -130,6 +131,12 @@ class State:
                 scope = dossier.resolve(store, key, query)
                 self._subjects[(key, query)] = subject.subject(store, scope, datetime.now(timezone.utc)) if scope else None
             return self._subjects[(key, query)]
+
+    def named(self, query: str | None) -> list[dict]:
+        if not query:
+            return []
+        with self._lock:
+            return dossier.named(self.store(), query)
 
     def marks(self) -> dict[str, str]:
         return {i: v["state"] for i, v in reading.load(self.vault)["items"].items()}
@@ -268,6 +275,13 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             self._send(HTTPStatus.FOUND, b"", "text/plain", headers=[("Location", to)])
 
         def do_GET(self):
+            try:
+                return self._get()
+            except ModelError as error:  # a model or the embeddings service did not answer: say so, never hang up
+                logger.warning("GET %s: %s", urlsplit(self.path).path, error)
+                return self._json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(error)})
+
+        def _get(self):
             if not self._local():
                 return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
             url = urlsplit(self.path)
@@ -314,7 +328,8 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
             if path == "/api/subject":
                 s = state.subject(args.get("id") or None, args.get("q") or None)
                 if s is None:
-                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet."})
+                    return self._json(HTTPStatus.NOT_FOUND, {"error": "Nothing in your knowledge matches that yet.",
+                                                             "named": state.named(args.get("q") or None)})
                 return self._json(HTTPStatus.OK, {**s, **subject.plan(s, state.marks())})
             if path in ("/api/subject/results", "/api/path"):
                 s = state.subject(args.get("id") or None, args.get("q") or None)

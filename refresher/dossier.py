@@ -23,11 +23,13 @@ when every claim was superseded by a newer one; fading when its freshness has fa
 for the top of the rest; supporting for the others.
 """
 import math
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from engine.extract import source_passages
+from engine.llm import ModelError
 from graph import cluster as grouping
 from graph import embed
 from graph.memory import MemoryStore
@@ -50,6 +52,7 @@ WORDS_PER_MINUTE = 220
 TOP_PEOPLE = 5
 MAIN_TIES = ("leads", "founded", "works_at", "member_of", "studied_at", "affiliated", "published_at")
 QUERY_IDEAS = 40  # a phrase gathers at most this many Ideas
+QUERY_WAIT = 12  # seconds a phrase waits for its embedding before it is matched by its words instead
 TIERS = ("core", "supporting", "fading", "replaced", "noise")
 
 
@@ -63,6 +66,7 @@ class Scope:
     central: dict[str, float] = field(default_factory=dict)
     provisional: set[str] = field(default_factory=set)  # Ideas a topic took without your accepting them
     center: list[float] = field(default_factory=list)  # the subject as a vector: rings score every source against it
+    note: str = ""  # how it was matched, when not the usual way
 
 
 def _visible_ideas(store: MemoryStore) -> set[str]:
@@ -102,7 +106,11 @@ def resolve(store: MemoryStore, key: str | None = None, query: str | None = None
     if not query or not query.strip():
         return None
     candidates = sorted(visible)
-    vectors = embed.vectors([query.strip()] + [store.idea(i).title for i in candidates])
+    try:
+        with embed.waiting(QUERY_WAIT):
+            vectors = embed.vectors([query.strip()] + [store.idea(i).title for i in candidates])
+    except ModelError as error:
+        return _by_words(store, query, visible, str(error))
     close = {i: embed.cosine(v, vectors[0]) for i, v in zip(candidates, vectors[1:])}
     # A short phrase sits closer to a cluster's centre than to any one statement in it (measured on Qwen3,
     # 28 October: "hallucination" 0.62 to its cluster, 0.59 to the nearest Idea), so a close cluster comes whole,
@@ -118,6 +126,19 @@ def resolve(store: MemoryStore, key: str | None = None, query: str | None = None
         return None
     central = {i: max(0.0, min(1.0, close.get(i, 0.0) / th.topic_attach)) for i in ideas}
     return Scope("query", query.strip(), query.strip(), sorted(ideas), central, set(), vectors[0])
+
+
+def _by_words(store: MemoryStore, query: str, visible: set[str], why: str) -> Scope:
+    """A phrase the embeddings service could not read in time, matched by its words: the Ideas whose claims hold one,
+    the subject their centroid (their vectors are cached in the vault, so this makes no request)."""
+    words = re.findall(r"[^\W\d_]{3,}", query.casefold())
+    ideas = sorted({c.idea_id for c in store.claims_for(words, hops=0) if c.idea_id in visible})[:QUERY_IDEAS]
+    if not ideas:
+        raise ModelError(f"{why} Without it, no Idea in your knowledge holds a word of “{query.strip()}”.")
+    with embed.waiting(QUERY_WAIT):
+        center = grouping.centroid(embed.vectors([store.idea(i).title for i in ideas]))
+    return Scope("query", query.strip(), query.strip(), ideas, {i: 1.0 for i in ideas}, set(), center,
+                 note="Matched by its words: the embeddings service did not answer in time.")
 
 
 def _when(store: MemoryStore, item_id: str) -> datetime:
@@ -725,3 +746,29 @@ def catalog(store: MemoryStore, at: datetime) -> list[dict]:
                      "changed": len(d["changed"]), "contested": len(d["contested"]), "latest": latest.isoformat(),
                      "in_topics": sorted(topics_of.get(key, []))})
     return rows
+
+
+def named(store: MemoryStore, query: str) -> list[dict]:
+    """Sources naming a person or organization a word of the phrase names: what a phrase can still find when no Idea
+    matches it, as when everything a source says is a fact about a company (its profile, not an Idea)."""
+    words = {w[:max(4, len(w) - 2)] for w in re.findall(r"[^\W\d_]{3,}", query.casefold())}
+    org_facts = store.org_facts()
+    of_claim = {c.claim.claim_id: c.item_id for c in store.claims()}
+    found: dict[str, set[str]] = {}
+    entities = [(p.name, p.authored | p.mentioned_in | {of_claim[c] for c in p.facts if c in of_claim}) for p in store.people()]
+    entities += [(o.name, o.mentioned_in | {of_claim[c] for c in org_facts.get(o.org_id, ()) if c in of_claim})
+                 for o in store.organizations()]
+    for name, items in entities:
+        if any(w in part for w in words for part in re.findall(r"[^\W\d_]+", name.casefold())):
+            for item_id in items:
+                found.setdefault(item_id, set()).add(name)
+    rows = []
+    for item_id, names in found.items():
+        try:
+            item = store.item(item_id)
+        except KeyError:
+            continue
+        if not item.hidden:
+            rows.append({"id": item_id, "title": item.title, "source": item.source.source_name, "names": sorted(names),
+                         "time": item.source.event_time.isoformat()})
+    return sorted(rows, key=lambda r: r["time"], reverse=True)[:12]
