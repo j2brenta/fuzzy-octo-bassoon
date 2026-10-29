@@ -56,8 +56,9 @@ def homes(store, pool, items: set[str], fed: dict[str, Counter], group_of: dict[
     return out
 
 
-def area(store, context: dict, pool) -> dict:
-    """The topics, clusters, sources and links around a brief (see the module docstring)."""
+def area(store, context: dict, pool, full: bool = False) -> dict:
+    """The topics, clusters, sources and links around a brief (see the module docstring). With `full`, every cluster
+    you have, the brief's marked in_brief: the whole graph with the brief's area highlighted."""
     items = {i.item_id: i for i in store.items() if not i.hidden}
     clusters = {c.cluster_id: c for c in store.clusters()}
     colour, role, group_of = {}, {}, {}
@@ -105,6 +106,14 @@ def area(store, context: dict, pool) -> dict:
         for cid in t.clusters:
             topic_of.setdefault(cid, t.topic_id)
     shown = sorted(inside) + [far for far, _ in beyond]
+    if full:
+        rest = sorted((cid for cid in clusters if cid not in inside),
+                      key=lambda cid: (cid not in beyond_w, -len(members.get(cid, [])), cid))
+        shown = sorted(inside) + rest
+        listed = {(link["a"], link["b"]) for link in links}
+        for link in store.links("cluster"):
+            if link.a in shown and link.b in shown and (link.a, link.b) not in listed and (link.b, link.a) not in listed:
+                links.append({"a": link.a, "b": link.b, "weight": round(link.weight, 3), "beyond": True})
     titles = {x["id"]: x["title"] for x in context["major"]}
 
     def title_of(cid):
@@ -242,5 +251,78 @@ def reader(store, context: dict, around: dict, pool, item_id: str, marks: dict[s
     theses = [{"statement": t["statement"], "stance": t["stance"]} for t in pool.of_item.get(item_id, [])]
     roles = [{"idea": n, "title": x["title"], "role": x["sources"][item_id]} for n, x in enumerate(context["major"])
              if item_id in x["sources"]]
-    return {**doc, "marked": marked, "theses": theses, "roles": roles, "here": here,
+    kinds = {c.claim.claim_id: c.claim.kind for c in store.claims() if c.item_id == item_id}
+    own = details(store, {"sources": {item_id: {}}, "major": context["major"]})
+    badge = lambda rows: [{"id": r["id"], "name": r["name"], "relation": r["items"].get(item_id)} for r in rows]
+    return {**doc, "marked": marked, "kinds": kinds, "theses": theses, "roles": roles, "here": here,
+            "people": badge(own["people"]), "organizations": badge(own["organizations"]),
             "next": next_steps(store, context, around, pool, item_id, marks), "read": marks.get(item_id)}
+
+
+PERSON_RELATION = ("wrote", "quoted", "about", "mentioned")  # strongest first
+
+
+def details(store, context: dict) -> dict:
+    """The evidence behind a brief, as in the Atlas: every claim of its sources with its kind and passage, and the
+    people and organizations they involve (who wrote, who is quoted, who a claim is about, who is only named), each
+    with the claims that tie them in, so a click can light the passage up in the text."""
+    items = {i.item_id: i for i in store.items() if not i.hidden}
+    involved = [i for i in context["sources"] if i in items]
+    marked: dict[str, int] = {}
+    for n, x in enumerate(context["major"]):
+        for m in x["members"]:
+            for cid in m["claims"]:
+                marked.setdefault(cid, n)
+        for a in x.get("adjacent", []):
+            for f in a["facts"]:
+                marked.setdefault(f["claim"], n)
+    claims, who = [], {}
+
+    def tie(pid, kind, item_id, relation, claim_id=None):
+        if pid is None:
+            return
+        try:
+            name = store.person(pid).name if kind == "person" else store.organization(pid).name
+        except KeyError:
+            return
+        row = who.setdefault(pid, {"id": pid, "name": name, "kind": kind, "items": {}, "claims": []})
+        before = row["items"].get(item_id)
+        if before is None or PERSON_RELATION.index(relation) < PERSON_RELATION.index(before):
+            row["items"][item_id] = relation
+        if claim_id and claim_id not in row["claims"]:
+            row["claims"].append(claim_id)
+
+    wanted = set(involved)
+    for c in sorted(store.claims(), key=lambda c: (c.item_id, c.claim.claim_id)):
+        if c.item_id not in wanted:
+            continue
+        spans = [(max(0, s.start_char), s.end_char) for s in c.claim.spans if s.end_char > s.start_char]
+        claims.append({"id": c.claim.claim_id, "item": c.item_id, "statement": c.claim.statement, "kind": c.claim.kind,
+                       "spans": spans, "idea": marked.get(c.claim.claim_id), "superseded": bool(c.superseded_by)})
+        if c.speaker_id and c.attribution and c.attribution.kind == "quoted":
+            tie(c.speaker_id, "person", c.item_id, "quoted", c.claim.claim_id)
+        if c.subject_id:
+            tie(c.subject_id, "person" if c.subject_id.startswith("person:") else "organization", c.item_id, "about",
+                c.claim.claim_id)
+    for i in involved:
+        tie(items[i].author_id, "person", i, "wrote")
+    people = {p.person_id for p in store.people()}
+    orgs = {o.org_id for o in store.organizations()}
+    for e in store.edges():
+        if e.type == "MENTIONS" and e.src in wanted:
+            tie(e.dst, "person" if e.dst in people else "organization" if e.dst in orgs else None, e.src, "mentioned")
+    rows = sorted(who.values(), key=lambda r: (-len(r["claims"]) - 2 * sum(v == "wrote" for v in r["items"].values()),
+                                               -len(r["items"]), r["name"]))
+    return {"claims": claims, "people": [r for r in rows if r["kind"] == "person"],
+            "organizations": [r for r in rows if r["kind"] == "organization"]}
+
+
+def further(store, context: dict, around: dict, pool, marks: dict[str, str]) -> list[dict]:
+    """Further reading for the whole brief: sources outside it, grouped by where they sit, each with why."""
+    inside = set(context["sources"])
+    out = []
+    for g in next_steps(store, context, around, pool, "", marks):
+        rows = [r for r in g["rows"] if r["item"] not in inside]
+        if rows:
+            out.append({**g, "rows": rows})
+    return out

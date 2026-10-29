@@ -138,11 +138,15 @@ class State:
                 c = context_engine.build(store, key, query, now, pool, self._groups if at is None else None)
                 if c is not None:
                     c["area"] = area_engine.area(store, c, pool)
+                    c["area_full"] = area_engine.area(store, c, pool, full=True)
+                    c["details"] = area_engine.details(store, c)
                 self._contexts[cache] = c
             c = self._contexts[cache]
         if c is None:
             return None
-        return {**c, "written": brief.write(self.vault, c, None)}
+        with self._lock:
+            further = area_engine.further(self.store(), c, c["area"], self.pool(), self.marks())
+        return {**c, "written": brief.write(self.vault, c, None), "further": further}
 
     def brief_source(self, key: str | None, query: str | None, item_id: str) -> dict | None:
         """One source read inside its brief: text, passages by idea, where it sits, where to go next."""
