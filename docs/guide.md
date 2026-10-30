@@ -1,4 +1,4 @@
-# Refresher
+# Refresher: the full guide
 
 Personal knowledge engine for the Nebius x NVIDIA hackathon. Development is in
 progress. The application captures UTF-8 files and Telegram text, imports a
@@ -27,12 +27,12 @@ Open <http://127.0.0.1:8080/>. Home is the entry point; Library holds saved
 originals, Explore shows connections, and Add source captures new material.
 Use the same vault as the Telegram bot to see its captures. The read-only
 [prepared example](http://127.0.0.1:8080/example/) saves nothing and makes no model calls.
-See the [UX implementation and validation](docs/ux/implementation.md) for the
+See the [UX implementation and validation](ux/implementation.md) for the
 journeys, input limits, local setup and verification boundaries.
 
 ## Docker Compose
 
-See [the container guide](docs/docker.md) for the codebase analysis, service
+See [the container guide](docker.md) for the codebase analysis, service
 boundaries, offline commands, persistence, backups and troubleshooting.
 Requires Docker with Compose **2.24 or newer**.
 
@@ -105,7 +105,7 @@ python -m channels.importer eval/seed_corpus --vault .local-vault/seed
 The manifest describes nine originals: six supplied samples and a synthetic
 original/repost/correction sequence. Metadata enters the same capture function;
 expected labels remain separate for future evaluation. Repeating the import
-creates no additional records. See [the seed guide](eval/seed_corpus/README.md)
+creates no additional records. See [the seed guide](../eval/seed_corpus/README.md)
 for fixture provenance, simulated channel IDs and current limitations.
 
 ## Telegram text capture
@@ -728,7 +728,7 @@ is not a model ranking.
 
 ## License
 
-Apache-2.0; see [LICENSE](LICENSE).
+Apache-2.0; see [LICENSE](../LICENSE).
 
 ## The app: add sources, the Atlas, review
 
@@ -859,8 +859,8 @@ pastes retain all headers without pretending there is one original author/date.
 A copied-header-only parser refresh rebuilds handoff/placement artifacts while
 preserving valid paid text extraction/review caches.
 
-Validation reports: [nine-seed triage](docs/triage-v4-seed-evaluation-2026-10-23.md)
-and [reviewer token usage](docs/reviewer-token-usage-2026-10-23.md).
+Validation reports: [nine-seed triage](triage-v4-seed-evaluation-2026-10-23.md)
+and [reviewer token usage](reviewer-token-usage-2026-10-23.md).
 
 ## PDF uploads, links and local files
 
@@ -897,8 +897,8 @@ still need a separate downloader; supported image uploads already work.
 
 No new API key is required; scanned pages use `NEBIUS_API_KEY` and
 `NEBIUS_VISION_MODEL`. Install updated requirements (or `uv sync`) and restart the
-bot. Verification: [PDF validation report](docs/pdf-support-validation-2026-10-23.md).
+bot. Verification: [PDF validation report](pdf-support-validation-2026-10-23.md).
 
 ### People importance
 
-The graph's **People** mode ranks attributed speakers for an accepted topic or provisional cluster, with score components, source counts, and explanations. Only accepted, current, nonduplicate statements contribute. Unknown attribution stays unscored, missing professional profiles stay neutral, and unresolved disagreements are not automatic credibility penalties. See [people-scoring policy and migration](docs/people-scoring.md). New submissions collect source-grounded speaker attribution in the existing relation call; `refresher relate --vault VAULT` upgrades older relation records once and incurs model usage. Viewing/rebuilding remains offline.
+The graph's **People** mode ranks attributed speakers for an accepted topic or provisional cluster, with score components, source counts, and explanations. Only accepted, current, nonduplicate statements contribute. Unknown attribution stays unscored, missing professional profiles stay neutral, and unresolved disagreements are not automatic credibility penalties. See [people-scoring policy and migration](people-scoring.md). New submissions collect source-grounded speaker attribution in the existing relation call; `refresher relate --vault VAULT` upgrades older relation records once and incurs model usage. Viewing/rebuilding remains offline.
