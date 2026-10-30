@@ -21,9 +21,13 @@ class Pages:
             return self._json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(error)})
 
     def _get(self):
+        url = urlsplit(self.path)
+        if url.path == "/healthz":  # the container's healthcheck: no login, no vault
+            return self._json(HTTPStatus.OK, {"ok": True})
         if not self._local():
             return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
-        url = urlsplit(self.path)
+        if not self._authorized():
+            return self._ask_login()
         path, args = url.path, {k: v[-1] for k, v in parse_qs(url.query).items()}
         # Each group of routes answers (True) or passes (None) to the next.
         return self._get_pages(path, url, args) or self._get_subjects(path, args) or self._get_files(path, args) \

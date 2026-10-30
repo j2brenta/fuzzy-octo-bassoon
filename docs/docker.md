@@ -40,9 +40,11 @@ the app takes changes only from its own address, and compose allows that port fo
 `VAULT_DIR` overrides the shared host parent directory. The web PDF extra and
 static assets are installed in the application image; no Node build is needed.
 The server listens on all interfaces inside its container, while the published
-host port is restricted to localhost. This is a local demo without authentication.
-The healthcheck verifies the submissions API. Restarting or removing the
-container preserves the host vault.
+host port is restricted to localhost. Without `REFRESHER_LOGIN` it has no
+authentication: keep it local. With `REFRESHER_LOGIN=user:password` every page and
+API asks for that login (HTTP Basic, so only behind HTTPS), and the address in
+`REFRESHER_APP_URL` is answered as well. The healthcheck calls `/healthz`, the one
+path open without a login. Restarting or removing the container preserves the host vault.
 
 ## The hourly review
 
