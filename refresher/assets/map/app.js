@@ -17,12 +17,6 @@
   }
   const embedded = params.has('embed');
   if (embedded) document.body.classList.add('embedded');
-  if (!embedded && data.items.length === 0) {
-    $('atlas-content').hidden = true;
-    $('atlas-empty').hidden = false;
-    document.querySelector('.header-note').hidden = true;
-    return;
-  }
   // Review (/review/): this page with the proposals in front and the evidence beside them, no map or filters. Served,
   // Explore leaves the proposals to Review; opened from disk (wiki/graph/) there is no Review, so they stay here.
   const reviewing = location.pathname === '/review/' && !embedded;
@@ -34,7 +28,16 @@
     document.querySelector('.graph-summary .quiet').textContent = 'What the hourly review suggests: relations a later '
       + 'source changed, Ideas that say the same thing, new topics, and people to merge or split. Pick a claim to see '
       + 'where it comes from.';
+  } else if (data.served && !embedded && location.hash === '#review') {  // an old link to the proposals on Explore
+    location.replace('/review/');
+    return;
   } else if (data.served) $('review').hidden = true;
+  if (!embedded && data.items.length === 0) {
+    $('atlas-content').hidden = true;
+    $('atlas-empty').hidden = false;
+    document.querySelector('.header-note').hidden = true;
+    return;
+  }
   // The reading layout (/read/ = ?layout=read): the evidence on the left, the text of the source picked in the middle,
   // the map on the right. No timeline, and no source text in the evidence: a source there is its gist, and picking
   // it opens its text in the middle.
@@ -575,7 +578,7 @@
     const item = items.get(id); if (!item) return; show(selectItem, id, focus);
     state.detailItems = [id];
     state.selection = state.mode === 'claims' && item.claims.length ? focus || item.claims[0] : id;
-    if (!cy.getElementById(state.selection).length) renderGraph(filteredItems());
+    if (!reviewing && !cy.getElementById(state.selection).length) renderGraph(filteredItems());  // Review hides the map
     const ideaIds = item.stories, clusterIds = clustersOf(item), related = relatedSources(item);
     const chips = el('div', null, 'chips');
     chips.append(el('span', item.quality, 'chip' + (item.quality !== 'accepted' ? ' warn' : '')), el('span', item.repost_of ? 'repost' : 'first source', 'chip'));
@@ -706,10 +709,10 @@
     if (items.has(id)) return selectItem(id);
     if (!claims.has(id)) return;
     show(selectNode, id);
-    if (state.mode !== 'claims' && !reading) { state.mode = 'claims'; setMode(); refresh(); }  // reading, the map stays
+    if (state.mode !== 'claims' && !reading && !reviewing) { state.mode = 'claims'; setMode(); refresh(); }  // reading, the map stays
     state.selection = id;
     state.detailItems = [claims.get(id).item];
-    if (!cy.getElementById(id).length) renderGraph(filteredItems());
+    if (!reviewing && !cy.getElementById(id).length) renderGraph(filteredItems());
     const c = claims.get(id), item = items.get(c.item), story = c.idea && stories.get(c.idea);
     const cluster = story?.cluster, topicIds = [...new Set([...(story?.topics || []), ...(clusters.get(cluster)?.topics || [])])];
     const title = el('h3', c.statement, 'detail-title' + (c.superseded ? ' superseded' : '')); title.append(band(c));
@@ -762,10 +765,11 @@
       state.comparison = pair; renderComparison();
       $('detail').append(button('Go to the comparison ↓', () => $('comparison').scrollIntoView({behavior: 'smooth', block: 'start'})));
     }
-    if (edge.proposal && data.served && !reviewing) {
+    if (edge.basis === 'proposal' && data.served && !reviewing) {  // basis 'proposal': still waiting for you
       const decide = el('a', 'The review asked you about this relation: decide it in Review →', 'chip warn'); decide.href = '/review/';
       $('detail').append(decide);
-    } else if (edge.proposal) $('detail').append(el('p', 'The review asked you about this relation; see Updates & suggestions below.', 'chip warn'));
+    } else if (edge.basis === 'proposal') $('detail').append(el('p', reviewing ? 'The review asks you about this relation: decide it among the proposals.'
+      : 'The review asked you about this relation; see Updates & suggestions below.', 'chip warn'));
     state.selection = edge.source; highlight();
   }
   function contextTable(context, caption) {

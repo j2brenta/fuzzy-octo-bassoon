@@ -73,3 +73,9 @@ def test_actual_person_still_eligible_for_enrichment(tmp_path):
     store = MemoryStore()
     store.apply(ex, "Newton studied motion. Newton's third law describes forces.")
     assert person_id('Newton') in {p.person_id for p in pick_people(tmp_path, store, 10)}
+
+
+def test_a_full_name_inside_a_law_is_no_person_when_every_word_is_inflected():
+    from graph.memory import _eponym
+    assert _eponym('Исаак Ньютон', 'Объяснение третьего закона Исаака Ньютона.')
+    assert not _eponym('Исаак Ньютон', 'Исаак Ньютон изучал движение.')

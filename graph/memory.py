@@ -54,7 +54,9 @@ def _eponym(name: str | None, text: str) -> bool:
     may carry a case ending, so "Ньютон" finds "Ньютона"; a name not found at all is kept."""
     if not name or not name.strip():
         return False
-    return eponym_only(text, (m.span() for m in re.finditer(r"\b" + re.escape(name.strip()) + r"\w*", text)))
+    # Every word may be inflected: "Исаак Ньютон" finds "Исаака Ньютона".
+    pattern = r"\b" + r"\w*\s+".join(re.escape(w) for w in name.split()) + r"\w*"
+    return eponym_only(text, (m.span() for m in re.finditer(pattern, text)))
 
 
 def _name_rank(p: PersonNode):
@@ -170,7 +172,7 @@ class MemoryStore:
         if skipped:
             # A stub brings no source, people or mentions; the author id only decides independence.
             self.held_back[ex.item_id] = "skipped by triage"
-            item.author_id = person_id(src.author_hint.name) if author_name(src) else None
+            item.author_id = self.canonical_person(person_id(src.author_hint.name)) if author_name(src) else None
         else:
             key = f"source:{src.channel}:{src.source_name or src.source_id}"
             self._sources.setdefault(key, SourceNode(key, src.source_name or src.source_id, src.channel)).items.add(ex.item_id)
@@ -191,7 +193,7 @@ class MemoryStore:
                 if ent.kind == "person" and is_named_person(ent.name) and is_named_person(ent.base_name or ent.name):
                     # The nominative form, so "Кости Крестникова" here and "Костя Крестников" elsewhere are one id.
                     name = ent.base_name or ent.name
-                    pid = ids[ent.entity_id] = person_id(name)
+                    pid = ids[ent.entity_id] = self.canonical_person(person_id(name))  # a merged-away name: the kept one
                     if pid == item.author_id:
                         continue
                     self._person(name).mentioned_in.add(ex.item_id)
@@ -385,7 +387,7 @@ class MemoryStore:
                 node.speaker_id = first if node.speaker_id == compound else node.speaker_id
                 node.subject_id = first if node.subject_id == compound else node.subject_id
             bracket = name_core(gone.name)[1]
-            posts = self._posts_of(parts[0])
+            posts = self._posts_of(gone)  # the record's own posts, not older ones of a namesake
             known = [Affiliation(p.person_id, org_id(bracket), "affiliated", min(posts)) for p in parts] \
                 if bracket and org_id(bracket) in self._orgs and posts else []
             moved = [Affiliation(p.person_id, a.org_id, a.relation, a.item_id, a.url)
@@ -980,7 +982,10 @@ class MemoryStore:
                 continue
             (name_a, bracket_a), (name_b, bracket_b) = name_core(a.name), name_core(b.name)
             posts_a, posts_b = self._posts_of(a), self._posts_of(b)
-            if _words(name_a) == _words(name_b):
+            # "John Smith (Google)" and "John Smith (MIT)": the brackets tell two people apart, so only something
+            # they share can propose them as one.
+            clash = bracket_a and bracket_b and _words(bracket_a) != _words(bracket_b)
+            if _words(name_a) == _words(name_b) and not clash:
                 aside = [f"“{x}”" for x in (bracket_a, bracket_b) if x]
                 why = "have the same name" + (f" apart from {' and '.join(aside)}" if aside else "")
             elif posts_a & posts_b:

@@ -3,7 +3,8 @@
     /           the topics: pick a subject, or type one
     /topic/     a subject read cluster by cluster (refresher/subject.py): a plan, the clusters, a reader beside it
     /capture/   add a source and follow it through ingestion (Olga's workspace, refresher/web.py)
-    /atlas/     the map and the proposals waiting for you (Victor's viewer, refresher/assets/map/)
+    /atlas/     the map (Victor's viewer, refresher/assets/map/)
+    /review/    the same page with the proposals waiting for you
     /api/...    submissions and uploads, the map's data, topics and dossiers, proposals and decisions
 
 A web capture is placed in the graph like a Telegram one (refresher/place.py), so it shows on the map. Local only:

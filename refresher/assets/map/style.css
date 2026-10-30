@@ -181,7 +181,7 @@ body.review-layout .proposal-section .section-top { justify-content:flex-start; 
 body.review-layout .proposal-section, body.review-layout .compare-section { grid-column:1; }
 body[data-layout="atlas"].review-layout:not(.embedded) .workspace { display:block; grid-column:2; grid-row:2 / span 2; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; }
 body.review-layout .evidence-column { border:0; }
-body.review-layout .evidence-column #detail { max-height:none; }  /* the pane scrolls, not the list inside it */
+body.review-layout .evidence-column #detail { max-height:none; columns:auto; }  /* the pane scrolls, not the list inside it; one column */
 @media(max-width:1000px) {
   body[data-layout="atlas"].review-layout #atlas-content { grid-template-columns:minmax(0,1fr); }
   body[data-layout="atlas"].review-layout:not(.embedded) .workspace { grid-column:1; grid-row:3; position:static; max-height:none; }
