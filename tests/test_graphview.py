@@ -70,20 +70,23 @@ def test_cli_writes_a_page_that_opens_from_disk(tmp_path):
     page = (out / "index.html").read_text()
     assert "<!--MAP_DATA-->" not in page and '"items"' in page and "connect-src 'none'" in page
     assert json.loads((out / "graph.json").read_text())["snapshot_at"].startswith("2026-10-20")
-    for name in ("app.js", "style.css", "cytoscape.min.js", "CYTOSCAPE-LICENSE.txt"):
+    for name in (*graphview.ATLAS_SCRIPTS, "people.js", "style.css", "cytoscape.min.js", "CYTOSCAPE-LICENSE.txt"):
         assert (out / name).exists()
 
 
-def test_the_map_script_parses():
-    """A syntax error in app.js leaves the whole page blank; check it whenever Node is available."""
+def test_the_page_scripts_parse():
+    """A syntax error in any part of a page's script leaves the page blank; check them whenever Node is available."""
     import subprocess
     import pytest
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
-    script = Path(__file__).parents[1] / "refresher" / "assets" / "map" / "app.js"
-    result = subprocess.run([node, "--check", str(script)], capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
+    root = Path(__file__).parents[1] / "refresher"
+    scripts = [graphview.ASSETS / "map" / name for name in graphview.ATLAS_SCRIPTS]
+    scripts += sorted((root / "static" / "brief").glob("*.js")) + sorted((root / "static" / "topic").glob("*.js"))
+    for script in scripts:
+        result = subprocess.run([node, "--check", str(script)], capture_output=True, text=True)
+        assert result.returncode == 0, f"{script.name}: {result.stderr}"
 
 
 def test_web_article_titles_label_sources_without_merging_distinct_articles(tmp_path):

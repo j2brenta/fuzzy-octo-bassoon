@@ -25,7 +25,7 @@ The route contracts below were checked in source. No live browser session, live 
 | --- | --- | --- |
 | Unified app | `refresher/app.py`: `/` serves Topics; `/brief/`, `/topic/`, `/capture/`, `/atlas/` are separate surfaces | A common shell exists; use it as the foundation |
 | Home | `static/topics.html` and `topics.js`: search, topics, clusters and followed threads lead to `/brief/` | Good product entry, but the vocabulary exposes internal structure too early |
-| Brief | `static/context.html` and `context.js`: ideas, sources, inline reading, versions and subject context | Already close to the main experience; keep this as the default subject entry |
+| Brief | `static/context.html` and `static/brief/`: ideas, sources, inline reading, versions and subject context | Already close to the main experience; keep this as the default subject entry |
 | Source navigator | `static/dossier.html` and `dossier.js`: reading plan, cluster map, all-results view and reader | Useful deeper exploration, but overlaps with Brief reading |
 | Global Read | `app.py` redirects `/read/` to `/atlas/?layout=read`; subject tabs link to `/read/` without subject state | A reader can lose the subject they were following |
 | Navigation | `static/nav.js`: `/` and `/topic/` activate Topics, but `/brief/` does not; Consolidate is inserted into global navigation | The main destination loses its active indicator; maintenance competes with reading |
@@ -245,7 +245,7 @@ Acceptance: the user can save a source, leave, return to its receipt, read it, a
 
 Avoid a frontend rewrite, new framework, universal dashboard, mandatory onboarding wizard, new ranking algorithm or public deployment in this UX pass. Existing HTML/CSS/JavaScript and Python routes cover the initial changes.
 
-Likely touchpoints: `refresher/app.py`, `static/nav.js`, the four page templates, `static/topics.js`, `static/app.js`, `static/context.js`, `static/dossier.js`, `static/shell.css`, and the Atlas template. Library indexing and stable receipt routing need explicit backend work; they are not copy-only changes.
+Likely touchpoints: `refresher/app.py`, `static/nav.js`, the four page templates, `static/topics.js`, `static/app.js`, `static/brief/`, `static/topic/`, `static/shell.css`, and the Atlas template. Library indexing and stable receipt routing need explicit backend work; they are not copy-only changes.
 
 ## Validation before calling the experience complete
 

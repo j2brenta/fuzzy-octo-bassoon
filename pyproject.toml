@@ -30,7 +30,7 @@ build-backend = "setuptools.build_meta"
 include = ["refresher*", "channels*", "engine*", "store*", "graph*"]
 
 [tool.setuptools.package-data]
-refresher = ["assets/*", "assets/map/*", "static/*.html", "static/*.css", "static/*.js", "static/*.png"]
+refresher = ["assets/*", "assets/map/*", "static/*.html", "static/*.css", "static/*.js", "static/brief/*.js", "static/topic/*.js", "static/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

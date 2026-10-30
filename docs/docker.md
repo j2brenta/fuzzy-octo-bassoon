@@ -10,7 +10,7 @@
 | `channels/importer.py`, `channels/web.py`, `engine/*`, `refresher/cli.py` | Finite capture, processing, knowledge-base rebuild and evaluation commands | `cli` (`tools` profile) |
 | `refresher/viewer.py` | Interactive terminal evidence viewer using curses, jq and less | `viewer` (`tools` profile) |
 | `tests/` | Existing offline pytest and unittest suite and fixtures | `test` (`test` profile) |
-| `store/raw.py`, `refresher/vault.py`, `graph/memory.py` | Vault files are persistent truth; graph state is replayed into memory | Host vault bind mount |
+| `store/raw.py`, `refresher/vault.py`, `graph/memory/` | Vault files are persistent truth; graph state is replayed into memory | Host vault bind mount |
 | `engine/llm.py` | HTTPS client for external Nebius Token Factory models | Configured external API |
 | Neo4j Community | Persistent graph database for the planned graph adapter | `neo4j` |
 

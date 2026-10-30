@@ -267,3 +267,36 @@ def test_a_record_of_two_people_is_proposed_split_and_stays_split():
     people = {p.person_id: p for p in store.people()}
     assert split.payload["person"] not in people and "later" in people["person:esther-duflo"].mentioned_in
     assert not [p for p in store.review(datetime(2026, 10, 23, tzinfo=timezone.utc)).proposals if p.kind == "split_person"]
+
+
+def test_namesakes_with_different_affiliations_in_brackets_are_not_proposed_on_the_name_alone():
+    store = MemoryStore()
+    store.apply(post("one", 20, "Kirill R", [{"entity_id": "a", "name": "John Smith (Google)", "kind": "person"}]))
+    store.apply(post("two", 21, "Kirill R", [{"entity_id": "b", "name": "John Smith (MIT)", "kind": "person"}]))
+    assert merges_of(store) == []
+    store.apply(post("both", 22, "Kirill R", [{"entity_id": "a", "name": "John Smith (Google)", "kind": "person"},
+                                              {"entity_id": "b", "name": "John Smith (MIT)", "kind": "person"}]))
+    [merge] = merges_of(store)  # a post naming both is something they share
+    assert "appear together" in merge.rationale
+
+
+def test_a_split_ties_each_person_to_the_bracket_through_the_record_s_own_post():
+    store = MemoryStore()
+    store.apply(post("early", 19, "Abhijit Banerjee", []))  # an older post of a namesake sorts first
+    store.apply(post("panel", 20, "Kirill R", [
+        {"entity_id": "a", "name": "Abhijit Banerjee and Esther Duflo (MIT)", "kind": "person"},
+        {"entity_id": "m", "name": "MIT", "kind": "organization", "org_type": "university"}]))
+    store._splits["person:abhijit-banerjee-and-esther-duflo-mit"] = ["Abhijit Banerjee", "Esther Duflo"]
+    store._refresh()
+    ties = {(t.person_id, t.org_id, t.item_id) for t in store.affiliations()}
+    assert ties == {("person:abhijit-banerjee", "org:mit", "panel"), ("person:esther-duflo", "org:mit", "panel")}
+
+
+def test_a_post_placed_after_a_merge_names_the_kept_person():
+    store = MemoryStore()
+    store.apply(post("one", 20, "Kirill R", [{"entity_id": "a", "name": "Dani Rodrik", "kind": "person"}]))
+    store.apply(post("two", 21, "Kirill R", [{"entity_id": "b", "name": "Dani Rodrik (Harvard)", "kind": "person"}]))
+    store._merge_person("person:dani-rodrik-harvard", "person:dani-rodrik")
+    store.apply(post("three", 22, "Dani Rodrik", [{"entity_id": "b", "name": "Dani Rodrik (Harvard)", "kind": "person"}]))
+    assert not [e for e in store.edges() if e.dst == "person:dani-rodrik-harvard"]
+    assert not [e for e in store.edges() if e.src == "three" and e.type == "MENTIONS"]  # the author, not a mention

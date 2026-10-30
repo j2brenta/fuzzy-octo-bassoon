@@ -636,7 +636,7 @@ in the vault's `.cache/`). The thresholds are tuned for the offline embedder.
 ### The map
 
 Open `wiki/graph/index.html` in a browser; it works from disk with no server, or
-run `refresher serve` and open `/atlas/` to decide proposals on it. The map is Victor's News Atlas
+run `refresher serve` and open `/review/` to decide proposals on it. The map is Victor's News Atlas
 viewer from his news map branch, translated and fed from this graph: topics as
 regions, a timeline with filters, a Sources mode (items and how their claims
 relate), a Claims mode (claims inside their cluster's region inside their
@@ -746,7 +746,7 @@ Open **http://127.0.0.1:8080**:
   the rest by thread, a reader, a skim run, and graphs of the sources and the people on request.
   `&at=2026-12-01` shows it at another moment.
 - `/capture/` adds a source and follows it through ingestion (Olga's workspace).
-- `/atlas/` is the map, with the proposals that wait for you (Victor's viewer).
+- `/atlas/` is the map (Victor's viewer); `/review/` is the same page with the proposals that wait for you.
 
 Existing `.env` model settings apply. Capture returns after durable storage; one
 background worker runs the existing triage, extraction, quality review, entity and

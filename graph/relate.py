@@ -2,7 +2,8 @@
 
 A relator labels each claim against its candidates: SAME, UPDATES, CONFLICTS, ADDS_DETAIL or NONE (the default),
 and says whether the claim is about a person, an organization or the world. The label is all the relator decides:
-event time decides which claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES (graph/memory.py).
+event time decides which claim supersedes which, and provenance decides SUPPORTS versus DUPLICATES
+(graph/memory/resolution.py).
 
 A model's verdicts are not reproducible, so they are a vault stage, relations/<item_id>.json, written once by
 `refresher relate` and replayed by every rebuild. Items without a verdict file are related lexically on the fly,
