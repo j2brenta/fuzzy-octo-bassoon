@@ -1,7 +1,7 @@
 """Turning every verdict into relation edges, profile facts and Idea groups."""
 from graph.relate import jaccard as _jaccard, words as _words
-from graph.store import (ClaimNode, Edge)
-from graph.memory.common import (EDGE_FOR, REPOST_CLAIM_SIMILARITY, org_id, person_id)
+from graph.store import ClaimNode, Edge
+from graph.memory.common import EDGE_FOR, REPOST_CLAIM_SIMILARITY, org_id, person_id
 
 
 class Resolution:

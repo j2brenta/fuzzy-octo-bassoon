@@ -4,9 +4,9 @@ from contextlib import contextmanager
 from graph import relate
 from graph.attribution import author_name, is_named_person
 from graph.relate import jaccard as _jaccard
-from graph.store import (Affiliation, ClaimNode, Edge, ItemNode, Placement, SourceNode)
+from graph.store import Affiliation, ClaimNode, Edge, ItemNode, Placement, SourceNode
 from refresher.schemas import Attribution, Extraction, Relation
-from graph.memory.common import (RELATION_TYPES, REPOST_SIMILARITY, _eponym, _id_hash, _shingles, _title, person_id)
+from graph.memory.common import RELATION_TYPES, REPOST_SIMILARITY, _eponym, _id_hash, _shingles, _title, person_id
 
 
 class Placing:

@@ -3,10 +3,10 @@ import hashlib
 
 from graph.names import display_name
 from graph.relate import words as _words
-from graph.store import (Affiliation, OrgNode, PersonNode)
+from graph.store import Affiliation, OrgNode, PersonNode
 from refresher import scoring
 from refresher.schemas import Override
-from graph.memory.common import (org_id, person_id)
+from graph.memory.common import org_id, person_id
 
 
 class Profiles:

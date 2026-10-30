@@ -4,9 +4,9 @@ from datetime import datetime
 from graph import cluster, embed, proposals as proposal_stage
 from graph.names import core as name_core, same_person as _same_person, split_names, surname_keys
 from graph.relate import jaccard as _jaccard, words as _words
-from graph.store import (ClaimNode, Edge, PersonNode,
-                         ReviewReport)
-from graph.memory.common import (CONFIRM_DURABILITY, REVIEW_CLAIM_MATCH, REVIEW_DUPLICATE_SHARE, REVIEW_MIN_CLAIMS, _name_rank, _profile_pages, person_id)
+from graph.store import ClaimNode, Edge, PersonNode, ReviewReport
+from graph.memory.common import (CONFIRM_DURABILITY, REVIEW_CLAIM_MATCH, REVIEW_DUPLICATE_SHARE, REVIEW_MIN_CLAIMS,
+                                 _name_rank, _profile_pages, person_id)
 
 
 class Review:

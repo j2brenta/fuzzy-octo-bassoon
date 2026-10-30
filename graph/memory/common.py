@@ -7,7 +7,7 @@ from graph import relate
 from engine.entities import eponym_only
 from graph.names import core as name_core, display_name
 from graph.relate import words as _words
-from graph.store import (PersonNode)
+from graph.store import PersonNode
 
 REPOST_SIMILARITY = 0.8  # item text, word 3-gram Jaccard
 REPOST_CLAIM_SIMILARITY = 0.6  # word-set Jaccard: a repost's claim and its match in the original

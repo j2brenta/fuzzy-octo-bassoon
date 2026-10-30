@@ -3,10 +3,10 @@ from datetime import datetime
 from typing import Iterable
 
 from graph.relate import words as _words
-from graph.store import (Affiliation, ClaimNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode)
+from graph.store import Affiliation, ClaimNode, Edge, IdeaNode, ItemNode, Link, OrgNode, PersonNode
 from refresher import scoring
 from refresher.schemas import Verdict
-from graph.memory.common import (person_id)
+from graph.memory.common import person_id
 
 
 class Reads:

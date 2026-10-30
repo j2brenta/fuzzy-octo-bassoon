@@ -2,8 +2,8 @@
 from graph.names import core as name_core
 from graph.attribution import author_name
 from graph.relate import Candidate
-from graph.store import (Affiliation, Edge, ReviewReport)
-from graph.memory.common import (org_id)
+from graph.store import Affiliation, Edge, ReviewReport
+from graph.memory.common import org_id
 
 
 class Decisions:

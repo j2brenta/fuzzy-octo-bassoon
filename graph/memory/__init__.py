@@ -7,6 +7,9 @@ so the result does not depend on the order items arrive in.
 
 The package: common.py (ids, names, constants), store.py (MemoryStore and its state) and one module per part
 of the class (placing, decisions, resolution, grouping, profiles, reads, review)."""
-from graph.memory.common import (CONFIRM_DURABILITY, RELATION_TYPES, _eponym, _title, cluster_fingerprint, org_id,  # noqa: F401
+from graph.memory.common import (CONFIRM_DURABILITY, RELATION_TYPES, _eponym, _title, cluster_fingerprint, org_id,
                                  person_id)
-from graph.memory.store import MemoryStore  # noqa: F401
+from graph.memory.store import MemoryStore
+
+__all__ = ["CONFIRM_DURABILITY", "RELATION_TYPES", "MemoryStore", "_eponym", "_title", "cluster_fingerprint", "org_id",
+           "person_id"]

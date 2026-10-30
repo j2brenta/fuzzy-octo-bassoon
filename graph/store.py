@@ -1,6 +1,6 @@
 """GraphStore: the one interface ingest, KM and retrieval use. Draft for Victor to own.
 
-MemoryStore (graph/memory.py) implements it for development and tests; the Neo4j store will
+MemoryStore (graph/memory/) implements it for development and tests; the Neo4j store will
 implement the same methods, so callers never depend on Neo4j directly.
 """
 from dataclasses import dataclass, field

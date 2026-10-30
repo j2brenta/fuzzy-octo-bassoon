@@ -2,8 +2,8 @@
 import hashlib
 
 from graph import cluster, embed
-from graph.store import (ClusterNode, Edge, IdeaNode, Link, TopicNode)
-from graph.memory.common import (DURABILITY_RANK, LINK_RELATIONS, cluster_fingerprint)
+from graph.store import ClusterNode, Edge, IdeaNode, Link, TopicNode
+from graph.memory.common import DURABILITY_RANK, LINK_RELATIONS, cluster_fingerprint
 
 
 class Grouping:
