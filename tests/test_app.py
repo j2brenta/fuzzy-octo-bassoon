@@ -7,7 +7,7 @@ from urllib.request import Request, urlopen
 
 import pytest
 
-from refresher import app, vault
+from refresher import app, graphview, vault
 from refresher.web import Workspace
 from tests.test_extract import TEXT
 from tests.test_proposals import AT, topical_vault, write
@@ -46,13 +46,25 @@ def post(base, pid, body, headers=None):
     return send(base, f"/api/proposals/{pid}", body, headers)
 
 
+def assert_loads_in_order(html, tags):
+    """Every part of a page's script is on the page, core first and main last: each reads what the earlier ones made."""
+    assert all(tag in html for tag in tags), [tag for tag in tags if tag not in html]
+    assert [html.index(tag) for tag in tags] == sorted(html.index(tag) for tag in tags)
+
+
 def test_both_pages_are_served_with_their_assets_and_one_shell(served):
     v, base, _ = served
     status, html, headers = get(base + "/atlas/")
     assert status == 200 and "connect-src 'self'" in html and '"served": true' in html
     assert "'unsafe-inline'" in headers["Content-Security-Policy"]
-    for name in ("app.js", "style.css", "cytoscape.min.js", "shell.css", "nav.js"):
+    for name in (*graphview.ATLAS_SCRIPTS, "style.css", "cytoscape.min.js", "shell.css", "nav.js"):
         assert get(f"{base}/atlas/{name}")[0] == 200
+    assert_loads_in_order(html, [f'src="{name}"' for name in graphview.ATLAS_SCRIPTS])
+    for page, folder, parts in (("/brief/", "brief", ("core", "ideas", "versions", "area", "source", "side", "reading", "who", "main")),
+                                ("/topic/", "topic", ("core", "graph", "map", "results", "reading", "text", "panel", "main"))):
+        for part in parts:
+            assert get(f"{base}/static/{folder}/{part}.js")[0] == 200
+        assert_loads_in_order(get(base + page)[1], [f'src="/static/{folder}/{part}.js"' for part in parts])
     status, html, headers = get(base + "/capture/")
     assert status == 200 and 'href="shell.css"' in html and 'id="app-nav"' in html
     assert "style-src 'self'" in headers["Content-Security-Policy"] and "unsafe-inline" not in headers["Content-Security-Policy"]
@@ -60,7 +72,7 @@ def test_both_pages_are_served_with_their_assets_and_one_shell(served):
         assert get(f"{base}/capture/{name}")[0] == 200
     assert 'src="/static/topics.js"' in get(base + "/")[1]  # / is the topics
     assert "frame-ancestors 'self'" in get(base + "/atlas/")[2]["Content-Security-Policy"]  # a dossier embeds it
-    for name in ("brief.css", "topics.js", "dossier.js", "shell.css", "nav.js"):
+    for name in ("brief.css", "topics.js", "topic/core.js", "brief/main.js", "shell.css", "nav.js"):
         assert get(f"{base}/static/{name}")[0] == 200
     for path in ("/app.js", "/capture/../../.env", "/atlas/index.html", "/static/x"):
         with pytest.raises(HTTPError) as error:
@@ -196,9 +208,9 @@ def test_topics_and_dossiers_are_served(served):
     accepted = next(r for r in rows if r["kind"] == "topic")
     assert accepted["title"] == topic["title"] and accepted["counts"]["ideas"] >= 3
     status, page, headers = get(f"{base}/topic/?id={accepted['id']}")
-    assert status == 200 and 'src="/static/dossier.js"' in page and 'id="reading"' in page
+    assert status == 200 and 'src="/static/topic/main.js"' in page and 'id="reading"' in page
     assert "frame-ancestors 'none'" in headers["Content-Security-Policy"]
-    for name in ("dossier.js", "reading.css", "brief.css", "cytoscape.min.js"):
+    for name in ("topic/main.js", "reading.css", "brief.css", "cytoscape.min.js"):
         assert get(f"{base}/static/{name}")[0] == 200
     d = json.loads(get(f"{base}/api/dossier?topic={accepted['id']}")[1])
     assert d["scope"]["id"] == accepted["id"] and d["ideas"][0]["tier"] == "core" and d["sources"]

@@ -21,7 +21,9 @@ from refresher.people_scoring import subjects as scoring_subjects
 from refresher.vault import note_names
 
 ASSETS = Path(__file__).parent / "assets"
-MAP_ASSETS = ("index.html", "app.js", "style.css", "people.js")
+# The Atlas script, one file per part, in the order index.html loads them: app.js first, main.js last.
+ATLAS_SCRIPTS = ("app.js", "proposals.js", "graph.js", "slice.js", "evidence.js", "select.js", "claim.js", "compare.js", "main.js")
+MAP_ASSETS = ("index.html", *ATLAS_SCRIPTS, "style.css", "people.js")
 VENDOR = ("cytoscape.min.js", "CYTOSCAPE-LICENSE.txt")
 SHELL_DIR, SHELL = Path(__file__).parent / "static", ("shell.css", "nav.js")  # the bar every page shares
 CLAIM_RELATIONS = ("SUPERSEDES", "CONTRADICTS", "SUPPORTS", "ELABORATES", "DUPLICATES")

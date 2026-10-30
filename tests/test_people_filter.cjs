@@ -3,7 +3,8 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const source=fs.readFileSync('refresher/assets/map/app.js','utf8');
+// The Atlas script's parts, one after another: each function is cut out of it by name.
+const source=['app.js','graph.js','slice.js'].map(name=>fs.readFileSync('refresher/assets/map/'+name,'utf8')).join('\n');
 const implementation=source.slice(source.indexOf('function rankedPeople('),source.indexOf('  function peopleSummary'));
 function rank(subject='') {
   const people=new Map([
