@@ -15,7 +15,7 @@ class Processing:
         from engine.triage import triage_capture
         from engine.extract import extract_capture
         from engine.quality import quality_capture
-        from engine.entities import entity_client_from_environment, extract_entities, review_entities
+        from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities
         from engine.package import build_extraction
         from engine.placement import apply_storage_stub
         from engine.results import write_item_note
@@ -79,8 +79,14 @@ class Processing:
                     entity_client = entity_client_from_environment()
                     if entity_client:
                         stage("Reading people and organizations")
-                        entities = extract_entities(path, entity_client)
-                        review_entities(path, entity_client, entities)
+                        try:
+                            entities = extract_entities(path, entity_client)
+                            review_entities(path, entity_client, entities)
+                        except EntityError as error:
+                            # People are an extra; the claims are checked and still get placed.
+                            logger.warning("submission %s · item %s: people left pending: %s", job["id"][:10],
+                                           path.stem[:10], error)
+                            job.setdefault("entities_pending", []).append(path.stem)
                 stage("Saving results")
                 packaged = build_extraction(path)
                 apply_storage_stub(packaged.path)

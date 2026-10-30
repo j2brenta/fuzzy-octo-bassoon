@@ -84,6 +84,31 @@ def test_the_review_judges_every_tie_and_a_rejected_tie_stays_out(raw):
     assert supported_affiliations(result.affiliations, None) == [tie]
 
 
+def test_an_entry_still_wrong_after_the_retry_is_left_out_with_its_tie(raw):
+    ghost = {"name": "Маши Ивановой", "aliases": []}  # named nowhere in the source
+    reply = {**REPLY, "people": REPLY["people"] + [ghost],
+             "affiliations": REPLY["affiliations"] + [{"person": "Маши Ивановой", "organization": "Сбер", "relation": "works_at"}]}
+    model = FakeModel([ModelReply(reply), ModelReply(reply)])
+    result = extract_entities(raw.path, model)
+    assert len(model.calls) == 2
+    assert sorted(e["name"] for e in result.entities) == ["NeurIPS", "Кости Крестникова", "Сбер"]
+    assert [a["relation"] for a in result.affiliations] == ["published_at"]
+    record = json.loads(result.path.read_text(encoding="utf-8"))
+    assert any(r.get("name") == "Маши Ивановой" and r["reason"].startswith("dropped") for r in record["reference_repairs"])
+
+
+def test_a_tie_the_review_skips_or_repeats_stays_out_without_failing_the_review(raw):
+    result = extract(raw, REPLY)
+    rows = [{"entity_id": e["entity_id"], "verdict": "supported", "reason": "ok"} for e in result.entities]
+    for ties in ([], [{"affiliation_id": result.affiliations[0]["affiliation_id"], "verdict": "supported", "reason": "ok"}] * 2,
+                 [{"affiliation_id": "unknown", "verdict": "supported", "reason": "ok"}]):
+        data = {"entities": rows, "omitted_entities": [], "summary": "ok", "affiliations": ties}
+        review = validate_entity_review(data, result.entities, TEXT, raw.item_id, f"{raw.item_id}:section:1", result.affiliations)
+        kept = supported_affiliations(result.affiliations, review)
+        assert kept == (result.affiliations if ties and ties[0]["affiliation_id"] != "unknown" else [])
+        assert len(review["affiliations"]) <= 1
+
+
 def test_citation_authors_are_read_first_name_first():
     page = b'<html><head><meta name="citation_author" content="Krestnikov, Konstantin" />' \
            b'<meta name="citation_author" content="Gal, Yarin" /><meta name="citation_author" content="Plato" /></head></html>'
