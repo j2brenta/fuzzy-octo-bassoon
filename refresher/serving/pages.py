@@ -25,6 +25,7 @@ class Pages:
         if url.path == "/healthz":  # the container's healthcheck: no login, no vault
             return self._json(HTTPStatus.OK, {"ok": True})
         if not self._local():
+            self.log(f"serve: refused Host {self.headers.get('Host', '')[:100]!r}")
             return self._json(HTTPStatus.FORBIDDEN, {"error": "Open the app through 127.0.0.1 or localhost."})
         if not self._authorized():
             return self._ask_login()

@@ -125,8 +125,8 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     if not args.vault:
         ap.error("pass --vault or set REFRESHER_VAULT")
-    if not (args.vault / "processed").is_dir():
-        ap.error(f"{args.vault} has no processed/ folder; run ingestion first")
+    if not args.vault.is_dir():  # an empty vault is fine: the tools find nothing until something is captured
+        ap.error(f"{args.vault} is not a folder")
     from dotenv import load_dotenv
 
     from refresher.cli import _embedder, _language

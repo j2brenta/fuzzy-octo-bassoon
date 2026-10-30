@@ -106,6 +106,9 @@ def main(argv=None) -> int:
         return _eval_context(args.manifest, args.out, _at(args.at))
     if not args.vault:
         ap.error("pass --vault or set REFRESHER_VAULT")
+    if args.command == "consolidate" and args.if_due and not (args.vault / "processed").is_dir():
+        print("consolidate: skipped, nothing captured yet")  # a scheduled run on a new vault is not an error
+        return 0
     if args.command != "serve" and not (args.vault / "processed").is_dir():  # the app may start an empty vault
         ap.error(f"{args.vault} has no processed/ folder; run ingestion first")
     at = _at(args.at)

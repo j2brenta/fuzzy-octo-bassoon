@@ -17,7 +17,7 @@ def app_url(item_id: str) -> str | None:
         url = urlsplit(base)
     except ValueError:
         return None
-    if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password or url.query or url.fragment or url.path or any(c.isspace() for c in base):
+    if url.scheme not in {"http", "https"} or not url.hostname or "*" in url.hostname or url.username or url.password or url.query or url.fragment or url.path or any(c.isspace() for c in base):
         return None
     return f"{base}/library/?source={quote(item_id, safe='')}"
 

@@ -39,6 +39,13 @@ def test_the_tools_answer_a_subject_from_the_vault(reviewed):
         tools["brief"]()
 
 
+def test_an_empty_vault_answers_with_nothing(tmp_path):
+    tools = mcp_server.tools(tmp_path)
+    assert tools["list_topics"]()["topics"] == []
+    assert tools["brief"](query="anything")["found"] is False
+    assert tools["find_sources"](query="anything")["sources"] == []
+
+
 def test_every_answer_says_it_is_data_not_instructions(reviewed):
     tools = mcp_server.tools(reviewed)
     topic = tools["list_topics"]()["topics"][0]["id"]
