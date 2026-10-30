@@ -7,7 +7,7 @@ WORKDIR /app
 # Cache dependencies separately from application changes; never re-resolve the lock.
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra web --no-dev --no-install-project
+    uv sync --locked --extra web --extra mcp --no-dev --no-install-project
 COPY refresher/ refresher/
 COPY channels/ channels/
 COPY engine/ engine/
@@ -15,7 +15,7 @@ COPY graph/ graph/
 COPY store/ store/
 # uv keys its cached wheel of the project on pyproject.toml only; rebuild it so code changes are not lost.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra web --no-dev --no-editable --reinstall-package refresher
+    uv sync --locked --extra web --extra mcp --no-dev --no-editable --reinstall-package refresher
 
 FROM python:3.12-slim-bookworm AS runtime
 ENV PATH="/app/.venv/bin:$PATH" \
@@ -39,7 +39,7 @@ CMD ["python", "-m", "channels.telegram", "--vault", "/data/telegram"]
 # Install locked development tools only in the test environment.
 FROM builder AS test-builder
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra web --no-editable
+    uv sync --locked --extra web --extra mcp --no-editable
 
 # Tests run without credentials, external networking, or access to the real vault.
 FROM runtime AS test
