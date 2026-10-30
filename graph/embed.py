@@ -142,10 +142,14 @@ class NebiusEmbedder:
             fresh = {self._key(t): _unit([float(x) for x in r["embedding"]]) for t, r in zip(chunk, rows)}
             self._known.update(fresh)
             if self.cache is not None:
-                self.cache.parent.mkdir(parents=True, exist_ok=True)
-                with self.cache.open("a", encoding="utf-8") as f:
-                    for key, vector in fresh.items():
-                        f.write(json.dumps({"model": self.model, "key": key, "vector": vector}) + "\n")
+                try:
+                    self.cache.parent.mkdir(parents=True, exist_ok=True)
+                    with self.cache.open("a", encoding="utf-8") as f:
+                        for key, vector in fresh.items():
+                            f.write(json.dumps({"model": self.model, "key": key, "vector": vector}) + "\n")
+                except OSError as error:  # a read-only vault (the MCP server): keep the vectors in memory only
+                    logger.warning("embeddings cache not written (%s); keeping vectors in memory", type(error).__name__)
+                    self.cache = None
         return [self._known[self._key(t)] for t in texts]
 
 

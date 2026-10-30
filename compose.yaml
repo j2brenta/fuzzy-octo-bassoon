@@ -94,6 +94,22 @@ services:
     volumes:
       - *vault
 
+  mcp:
+    <<: [*runtime, *config]
+    # The vault for other agents over MCP, read only: the mount is read-only and every request needs MCP_TOKEN.
+    # Its own profile, as it needs a token: docker compose --profile mcp up -d mcp
+    profiles: [mcp]
+    command: ["refresher-mcp", "--http", "--host", "0.0.0.0", "--port", "8081"]
+    environment:  # replaces x-config's mapping, so the vault is named again
+      REFRESHER_VAULT: ${REFRESHER_VAULT:-/data/telegram}
+      MCP_TOKEN: ${MCP_TOKEN:-}
+    ports:
+      - "127.0.0.1:${MCP_PORT:-8081}:8081"
+    restart: "on-failure:3"
+    volumes:
+      - <<: *vault
+        read_only: true
+
   cli:
     <<: [*runtime, *config]
     profiles: [tools]

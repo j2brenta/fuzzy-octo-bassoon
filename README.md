@@ -775,6 +775,29 @@ No API key is sent to the browser. AI-disabled, blocked-link and interrupted/err
 states preserve originals. This is a single shared local demo workspace; public
 hosting/authentication is separate work.
 
+## The vault for other agents (MCP, read only)
+
+`refresher-mcp` lets another agent (Claude Code, Claude Desktop, any MCP client) read your
+vault: `list_topics`, `brief` (a subject's major ideas citing numbered sources),
+`find_sources`, `read_source` and `list_threads`. No tool writes or asks a model to write;
+a typed subject is matched by embedding when `NEBIUS_EMBED_MODEL` is set. Every answer is
+marked as material from your sources, so the agent treats it as data, not instructions.
+
+On this machine, over stdio (no token):
+
+```bash
+claude mcp add refresher -- uv run --extra mcp refresher-mcp --vault VAULT
+```
+
+Over HTTP, every request needs `Authorization: Bearer $MCP_TOKEN` (`openssl rand -hex 32`
+into `.env`); the server does not start without it. In Docker the vault is mounted read-only:
+
+```bash
+docker compose --profile mcp up -d mcp
+claude mcp add --transport http refresher http://127.0.0.1:8081/mcp \
+  --header "Authorization: Bearer $MCP_TOKEN"
+```
+
 ## Pictures from Telegram
 
 Send a photo, screenshot, or still JPEG/PNG/WebP image document to the private

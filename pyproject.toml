@@ -18,6 +18,7 @@ refresher = "refresher.cli:main"
 refresher-import = "channels.importer:main"
 refresher-seed-raw = "channels.seed_raw:main"
 refresher-view = "refresher.viewer:main"
+refresher-mcp = "refresher.mcp_server:main"
 
 [dependency-groups]
 dev = ["pytest>=8"]
@@ -37,3 +38,4 @@ testpaths = ["tests"]
 
 [project.optional-dependencies]
 web = ["pypdfium2>=4,<6"]
+mcp = ["mcp==2.3.0"]  # refresher-mcp: the vault for other agents, read only
