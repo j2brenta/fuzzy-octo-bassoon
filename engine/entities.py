@@ -502,6 +502,23 @@ def repair_entity_references(data: dict, text: str) -> tuple[dict, list[dict]]:
     return fixed, changes
 
 
+def drop_unverified_entities(data: dict, text: str) -> tuple[dict, list[dict]]:
+    """Leave out entries whose names or passages the source still does not bear out after the repair retry. The
+    rest of the reply is good, so one bad entry in a long paper does not cost the item; its ties drop with it."""
+    if not isinstance(data, dict) or not isinstance(data.get("entities"), list):
+        return data, []
+    kept, changes = [], []
+    for row in data["entities"]:
+        try:
+            validate_entities({"entities": [row]}, text, "item", "section")
+        except EntityError as error:
+            name = row.get("name") if isinstance(row, dict) else None
+            changes.append({"name": name if isinstance(name, str) else None, "reason": f"dropped: {error}"})
+            continue
+        kept.append(row)
+    return {**data, "entities": kept}, changes
+
+
 def extract_entities(raw_path: Path, client: JsonModel) -> EntityResult:
     raw_path = Path(raw_path)
     raw, document = _source(raw_path)
@@ -537,12 +554,15 @@ def extract_entities(raw_path: Path, client: JsonModel) -> EntityResult:
             failed_data = reply.data
             data, ties = _model_entities(reply.data)
             normalized, reference_repairs = repair_entity_references(data, text)
-            if isinstance(normalized, dict) and isinstance(normalized.get("entities"), list):
+            if attempt == 0 and isinstance(normalized, dict) and isinstance(normalized.get("entities"), list):
                 for index, row in enumerate(normalized["entities"], 1):
                     try:
                         validate_entities({"entities": [row]}, text, raw["item_id"], section)
                     except EntityError as error:
                         raise EntityError(f"Entity entry {index}: {error}") from None
+            elif attempt == 1:
+                normalized, dropped = drop_unverified_entities(normalized, text)
+                reference_repairs += dropped
             entities = validate_entities(normalized, text, raw["item_id"], section)
             # A name only inside a law or theorem is no person here: left out, so it cannot hold the item back.
             entities = [e for e in entities if not (e["kind"] == "person" and _eponym_only(e, text))]
@@ -592,23 +612,24 @@ def validate_entity_review(data: dict, entities: list[dict], text: str, item_id:
             raise EntityError("Entity review reason is invalid.")
     ties = data.get("affiliations", [])
     expected = {a["affiliation_id"] for a in affiliations}
-    if not isinstance(ties, list) or len(ties) != len(expected):
-        raise EntityError("Entity review must cover every affiliation exactly once.")
-    seen = set()
+    if not isinstance(ties, list):
+        raise EntityError("Entity review affiliations must be a list.")
+    # A tie the review skips, repeats or garbles has no verdict, so it stays out of the graph
+    # (supported_affiliations); like a rejected tie, it does not hold the item back.
+    judged, seen = [], set()
     for row in ties:
-        if not isinstance(row, dict) or set(row) != {"affiliation_id", "verdict", "reason"}:
-            raise EntityError("Affiliation review row is invalid.")
-        if row["affiliation_id"] not in expected or row["affiliation_id"] in seen:
-            raise EntityError("Entity review contains an unknown or repeated affiliation ID.")
+        if (not isinstance(row, dict) or set(row) != {"affiliation_id", "verdict", "reason"}
+                or row["affiliation_id"] not in expected or row["affiliation_id"] in seen
+                or row["verdict"] not in {"supported", "needs_revision"}
+                or not isinstance(row["reason"], str) or not row["reason"].strip() or len(row["reason"]) > 600):
+            continue
         seen.add(row["affiliation_id"])
-        if row["verdict"] not in {"supported", "needs_revision"}:
-            raise EntityError("Affiliation review verdict is invalid.")
-        if not isinstance(row["reason"], str) or not row["reason"].strip() or len(row["reason"]) > 600:
-            raise EntityError("Affiliation review reason is invalid.")
-
+        judged.append(row)
 
     rows = [dict(row) for row in rows]
     data = {**data, "entities": rows}
+    if "affiliations" in data:
+        data["affiliations"] = judged
     by_id = {entity["entity_id"]: entity for entity in entities}
     for index, row in enumerate(rows):
         entity = by_id[row["entity_id"]]

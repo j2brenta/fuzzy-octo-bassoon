@@ -23,6 +23,13 @@ class PdfError(ValueError):
     """Safe PDF failure; original files are retained."""
 
 
+def cut_notice(read: int, total: int, *, whole: bool = True) -> str:
+    """What a reader is told when a long PDF was read only up to the limits."""
+    part = f"pages 1–{read} of {total} were" if whole else f"the start of page 1 of {total} was"
+    return (f"This PDF is longer than Refresher reads ({MAX_PAGES} pages, {MAX_TEXT_CHARACTERS:,} characters), "
+            f"so only {part} analyzed. The full original is saved.")
+
+
 def pdf_signature(content: bytes) -> bool:
     return b"%PDF-" in content[:1024]
 
@@ -46,11 +53,10 @@ def read_pdf(path: Path, cache: Path, *, reader=None) -> dict:
             ) from None
         try:
             count = len(document)
-            if not 1 <= count <= MAX_PAGES:
-                raise PdfError(
-                    f"PDF has {count} pages; this version supports up to {MAX_PAGES}. Split it into smaller PDFs; original retained."
-                )
-            for index in range(count):
+            if count < 1:
+                raise PdfError("PDF has no pages; original retained.")
+            whole = True
+            for index in range(min(count, MAX_PAGES)):
                 number = index + 1
                 cached = cache / f"page-{number}.json"
                 result = None
@@ -75,12 +81,14 @@ def read_pdf(path: Path, cache: Path, *, reader=None) -> dict:
                     try:
                         textpage = page.get_textpage()
                         try:
-                            if textpage.count_chars() > MAX_TEXT_CHARACTERS:
-                                raise PdfError(
-                                    f"Page {number} exceeds the text limit; original retained without truncation."
-                                )
+                            # A page over the whole limit cannot fit: the reading ends before it, or
+                            # starts with as much of it as fits.
+                            over = textpage.count_chars() > MAX_TEXT_CHARACTERS
+                            if over and pages:
+                                break
                             native = (
-                                textpage.get_text_range().replace("\r\n", "\n").strip()
+                                textpage.get_text_range(count=MAX_TEXT_CHARACTERS if over else -1)
+                                .replace("\r\n", "\n").strip()
                             )
                         finally:
                             textpage.close()
@@ -143,14 +151,14 @@ def read_pdf(path: Path, cache: Path, *, reader=None) -> dict:
                         result["text"].encode()
                     ).hexdigest()
                     atomic_json(cached, result)
-                if text:
-                    text += "\n\n"
-                start = len(text)
-                text += f"PDF page {number}:\n" + result["text"]
-                if len(text) > MAX_TEXT_CHARACTERS:
-                    raise PdfError(
-                        "PDF exceeds the 50,000-character limit; split it into smaller files. Original and completed page readings retained; nothing truncated."
-                    )
+                page_text = f"PDF page {number}:\n" + result["text"]
+                start = len(text) + (2 if text else 0)
+                if start + len(page_text) > MAX_TEXT_CHARACTERS:
+                    # Whole pages only, unless even the first page is longer than the limit.
+                    if pages:
+                        break
+                    page_text, whole = page_text[:MAX_TEXT_CHARACTERS], False
+                text += ("\n\n" if text else "") + page_text
                 pages.append(
                     {
                         **{k: v for k, v in result.items() if k != "text"},
@@ -162,10 +170,13 @@ def read_pdf(path: Path, cache: Path, *, reader=None) -> dict:
             document.close()
     if not any(page["method"] != "blank" for page in pages):
         raise PdfError("PDF contains no readable content; original retained.")
-    return {
+    reading = {
         "text": text,
         "pages": pages,
-        "page_count": count,
+        "page_count": len(pages),
         "parser_version": PDF_VERSION,
         "sha256": digest,
     }
+    if len(pages) < count or not whole:
+        reading.update(pdf_pages=count, cut=cut_notice(len(pages), count, whole=whole))
+    return reading

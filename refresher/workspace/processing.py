@@ -15,7 +15,7 @@ class Processing:
         from engine.triage import triage_capture
         from engine.extract import extract_capture
         from engine.quality import quality_capture
-        from engine.entities import entity_client_from_environment, extract_entities, review_entities
+        from engine.entities import EntityError, entity_client_from_environment, extract_entities, review_entities
         from engine.package import build_extraction
         from engine.placement import apply_storage_stub
         from engine.results import write_item_note
@@ -79,8 +79,14 @@ class Processing:
                     entity_client = entity_client_from_environment()
                     if entity_client:
                         stage("Reading people and organizations")
-                        entities = extract_entities(path, entity_client)
-                        review_entities(path, entity_client, entities)
+                        try:
+                            entities = extract_entities(path, entity_client)
+                            review_entities(path, entity_client, entities)
+                        except EntityError as error:
+                            # People are an extra; the claims are checked and still get placed.
+                            logger.warning("submission %s · item %s: people left pending: %s", job["id"][:10],
+                                           path.stem[:10], error)
+                            job.setdefault("entities_pending", []).append(path.stem)
                 stage("Saving results")
                 packaged = build_extraction(path)
                 apply_storage_stub(packaged.path)
@@ -92,7 +98,8 @@ class Processing:
             failed = [row for row in links if row.get("status") != "captured"]
             logger.info("submission %s · finished in %.1f s: %d items, %d links unread", job["id"][:10],
                         time.monotonic() - started, len(paths), len(failed))
-            job.update(status="complete", stage="Processing finished", message="Some links could not be read. See their status below." if failed else "Your original and available results are saved.")
+            message = "Some links could not be read. See their status below." if failed else "Your original and available results are saved."
+            job.update(status="complete", stage="Processing finished", message=" ".join(filter(None, [job.get("cut"), message])))
             if job["kind"] == "link" and not any(row.get("status") == "captured" for row in links):
                 job.update(status="pending", stage="Link needs attention", recovery="paste", message="The URL is saved, but article text was not available. Paste the article text to continue.")
         except Exception as error:

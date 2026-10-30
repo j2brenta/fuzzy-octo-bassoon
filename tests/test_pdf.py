@@ -147,14 +147,22 @@ class PdfTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ValueError, "PDF provenance"):
             parse_capture(result.path)
 
-    async def test_limits_fail_explicitly_and_do_not_silently_truncate(self):
+    async def test_a_long_pdf_is_read_up_to_the_limits_and_says_so(self):
         receipt = await self.capture()
-        with patch("engine.parse.pdf.MAX_PAGES", 1):
-            with self.assertRaisesRegex(PdfError, "pages"):
-                interpret_pdf(receipt)
-        with patch("engine.parse.pdf.MAX_TEXT_CHARACTERS", 10):
-            with self.assertRaisesRegex(PdfError, "limit"):
-                interpret_pdf(receipt)
+        for limit, value, pages, notice in (("MAX_PAGES", 1, 1, "pages 1–1 of 2 were analyzed"),
+                                            ("MAX_TEXT_CHARACTERS", 30, 1, "the start of page 1 of 2 was analyzed")):
+            with self.subTest(limit=limit), patch(f"engine.parse.pdf.{limit}", value):
+                result = interpret_pdf(receipt)
+                raw = json.loads(result.path.read_text())
+                ref = raw["channel_metadata"]["pdf_reading"]
+                self.assertEqual((ref["page_count"], ref["pdf_pages"]), (pages, 2))
+                self.assertIn(notice, ref["cut"])
+                self.assertNotIn("PDF page 2:", raw["text"])
+                parse_capture(result.path)  # page provenance still holds for what was read
+                result.path.unlink()
+        reading = json.loads(interpret_pdf(receipt).path.read_text())["channel_metadata"]["pdf_reading"]
+        self.assertEqual(reading["page_count"], 2)
+        self.assertNotIn("cut", reading)
 
     async def test_unauthorized_sender_never_downloads_pdf(self):
         with (

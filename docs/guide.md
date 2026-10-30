@@ -765,7 +765,8 @@ with an `X-Refresher` header.
 - Paste text, conversations, newsletter content or transcripts (60,000 characters).
 - Submit public article URLs using the existing bounded, public-address-only fetcher.
 - Upload UTF-8 `.txt`, `.md`, `.csv`, `.json`, `.log`, `.eml` files or native-text PDFs.
-  PDF extras are required; limits are 20 pages and 50,000 extracted characters.
+  PDF extras are required; a longer PDF is read to 20 pages and 50,000 extracted characters,
+  and the receipt says which pages were analyzed.
 - Every nonempty file up to 20 MB can be retained and downloaded unchanged.
   Images, scanned PDFs, audio/video and other formats explicitly remain pending:
   their specialized parsers are absent from this checkout. Paste text/transcripts
@@ -871,7 +872,8 @@ also supported:
 python -m channels.importer path/to/document.pdf --vault .local-vault/imports
 ```
 
-Limits: **20 MB, 20 pages and 50,000 extracted characters**. The original PDF and
+Limits: **20 MB**; a longer PDF is read to **20 pages and 50,000 extracted characters**, whole pages
+only, and the reply says which pages were analyzed. The original PDF and
 capture receipt are saved in `raw/pdfs/` before parsing. Native page text is read
 locally; pages with little/no usable text are rendered for the existing Nebius
 vision model. Completed page readings are cached for retry. The derived text goes
