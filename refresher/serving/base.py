@@ -2,7 +2,8 @@
 
 REFRESHER_LOGIN=user:password puts every page and API behind HTTP Basic auth (only /healthz stays open); serve it
 over HTTPS only. With a login set, the address in REFRESHER_APP_URL is answered too, as a Host and as an Origin:
-a public address is answered only behind a login."""
+a public address is answered only behind a login. Its host may start with "*." for any one name under a domain, as
+a Nebius endpoint's URL is known only once it runs: https://*.tunnel.applications.eu-west1.nebius.cloud"""
 import base64
 import binascii
 import hashlib
@@ -25,11 +26,19 @@ def login() -> str:
 
 
 def public() -> tuple[str, str] | None:
-    """(host, origin) of REFRESHER_APP_URL when a login guards it; None otherwise."""
+    """(host, scheme) of REFRESHER_APP_URL when a login guards it; None otherwise."""
     url = urlsplit(os.environ.get("REFRESHER_APP_URL", "").strip())
     if not login() or url.scheme not in ("http", "https") or not url.netloc:
         return None
-    return url.netloc, f"{url.scheme}://{url.netloc}"
+    return url.netloc.lower(), url.scheme
+
+
+def matches(host: str, pattern: str) -> bool:
+    host = host.lower()
+    if pattern.startswith("*."):
+        name, _, domain = host.partition(".")
+        return bool(name) and domain == pattern[2:]
+    return host == pattern
 
 
 class Base(BaseHTTPRequestHandler):
@@ -45,16 +54,19 @@ class Base(BaseHTTPRequestHandler):
 
     def _hosts(self) -> set[str]:
         port = self.server.server_address[1]
-        address = public()
         return {f"{h}:{port}" for h in ("127.0.0.1", "localhost")} | \
-            {h if ":" in h else f"{h}:{port}" for h in self.allow_hosts} | ({address[0]} if address else set())
+            {h if ":" in h else f"{h}:{port}" for h in self.allow_hosts}
+
+    def _public(self) -> str | None:
+        """The request's origin when its Host is the public address, else None."""
+        address, host = public(), self.headers.get("Host", "")
+        return f"{address[1]}://{host.lower()}" if address and matches(host, address[0]) else None
 
     def _origins(self) -> set[str]:
-        address = public()
-        return {f"http://{h}" for h in self._hosts()} | ({address[1]} if address else set())
+        return {f"http://{h}" for h in self._hosts()} | ({self._public()} - {None})
 
     def _local(self) -> bool:
-        return self.headers.get("Host", "") in self._hosts()
+        return self.headers.get("Host", "") in self._hosts() or self._public() is not None
 
     def _from_app(self) -> bool:
         """A change from the app's own page: a known Host, the X-Refresher header and, when the browser sends one,

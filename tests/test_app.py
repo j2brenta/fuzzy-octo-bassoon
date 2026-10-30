@@ -184,6 +184,22 @@ def test_the_public_address_is_answered_only_behind_a_login(served, monkeypatch)
                 {**public, "Origin": "https://evil.example", "Authorization": auth})[0] == 403
 
 
+def test_a_public_address_may_name_any_one_host_under_a_domain(served, monkeypatch):
+    _, base, workspace = served
+    monkeypatch.setenv("REFRESHER_APP_URL", "https://*.tunnel.example")
+    monkeypatch.setenv("REFRESHER_LOGIN", "judge:s3cret")
+    auth = basic("judge:s3cret")
+    assert get(base + "/atlas/", Host="port8080-abc.tunnel.example", Authorization=auth)[0] == 200
+    for host in ("tunnel.example", "a.b.tunnel.example", "port8080-abc.tunnel.example.evil"):
+        with pytest.raises(HTTPError) as error:
+            get(base + "/atlas/", Host=host, Authorization=auth)
+        assert error.value.code == 403
+    mine = {"Host": "port8080-abc.tunnel.example", "Authorization": auth}
+    with patch.object(workspace.worker, "submit"):
+        assert send(base, "/api/submissions", {"text": "hi"}, {**mine, "Origin": "https://port8080-abc.tunnel.example"})[0] == 202
+    assert send(base, "/api/submissions", {"text": "hi"}, {**mine, "Origin": "https://port8080-other.tunnel.example"})[0] == 403
+
+
 def test_a_capture_goes_into_the_same_vault_as_the_map(served):
     v, base, workspace = served
     with patch.object(workspace.worker, "submit"):
