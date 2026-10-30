@@ -183,7 +183,7 @@ async def handle_message(message: Message, vault_path: Path, owner_id: int | Non
                 "with --owner-id followed by your ID."
             )
         elif message.from_user.id == owner_id:
-            await message.answer("Refresher is ready. Send text, a link, a picture or a PDF (up to 20 MB / 20 pages).")
+            await message.answer("Refresher is ready. Send text, a link, a picture or a PDF (up to 20 MB; longer PDFs are read to 20 pages).")
         else:
             await message.answer("This bot accepts notes only from its configured owner.")
         return
@@ -309,8 +309,9 @@ async def handle_pdf(message: Message, vault_path: Path) -> None:
         await message.answer("PDF processing could not finish. Any saved original is retained; resend it to retry.")
         return
     raw = json.loads(result.path.read_text())
-    pages = raw['channel_metadata']['pdf_reading']['page_count']
-    await message.answer(f"PDF prepared: {pages} page(s). Page references are saved with the extracted text.")
+    reading = raw['channel_metadata']['pdf_reading']
+    await message.answer(f"PDF prepared: {reading['page_count']} page(s). Page references are saved with the extracted text."
+                         + (f"\n{reading['cut']}" if reading.get('cut') else ""))
     await process_capture(message, result)
 
 

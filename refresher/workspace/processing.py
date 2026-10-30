@@ -98,7 +98,8 @@ class Processing:
             failed = [row for row in links if row.get("status") != "captured"]
             logger.info("submission %s · finished in %.1f s: %d items, %d links unread", job["id"][:10],
                         time.monotonic() - started, len(paths), len(failed))
-            job.update(status="complete", stage="Processing finished", message="Some links could not be read. See their status below." if failed else "Your original and available results are saved.")
+            message = "Some links could not be read. See their status below." if failed else "Your original and available results are saved."
+            job.update(status="complete", stage="Processing finished", message=" ".join(filter(None, [job.get("cut"), message])))
             if job["kind"] == "link" and not any(row.get("status") == "captured" for row in links):
                 job.update(status="pending", stage="Link needs attention", recovery="paste", message="The URL is saved, but article text was not available. Paste the article text to continue.")
         except Exception as error:

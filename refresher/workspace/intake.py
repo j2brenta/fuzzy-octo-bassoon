@@ -93,14 +93,13 @@ class Intake:
         elif path.read_bytes()[:5] == b"%PDF-":
             try:
                 import pypdfium2 as pdfium
+                from engine.parse.pdf import MAX_PAGES, MAX_TEXT_CHARACTERS, cut_notice
             except ImportError:
                 raise ValueError("Original saved. Install the web extras to read PDFs.") from None
             document = pdfium.PdfDocument(str(path))
             try:
-                if len(document) > 20:
-                    raise ValueError("Original saved. PDF processing supports up to 20 pages.")
-                pages = []
-                for index in range(len(document)):
+                pages, total, cut, whole = [], len(document), False, True
+                for index in range(min(total, MAX_PAGES)):
                     page = document[index]
                     textpage = page.get_textpage()
                     try:
@@ -110,9 +109,18 @@ class Intake:
                         page.close()
                     if len(page_text.strip()) < 15:
                         raise ValueError("Original saved. Scanned PDF pages need OCR; upload a text PDF or paste the transcript.")
-                    pages.append(f"[PDF page {index + 1}]\n{page_text}")
-                    if sum(map(len, pages)) > 50_000:
-                        raise ValueError("Original saved. PDF text exceeds 50,000 characters; split the document.")
+                    page_text = f"[PDF page {index + 1}]\n{page_text}"
+                    room = MAX_TEXT_CHARACTERS - sum(len(p) + 2 for p in pages)
+                    if len(page_text) > room:
+                        # Whole pages only, unless even the first page is longer than the limit.
+                        cut = True
+                        if not pages:
+                            pages.append(page_text[:room])
+                            whole = False
+                        break
+                    pages.append(page_text)
+                if cut or len(pages) < total:
+                    job["cut"] = cut_notice(len(pages), total, whole=whole)
                 text = "\n\n".join(pages)
             finally:
                 document.close()
