@@ -1,0 +1,62 @@
+# The hourly review of the Nebius demo vault, as a Nebius Serverless Job (scripts/nebius/review-job.sh). The app is
+# asked first whether a review is due and something new was placed, so a machine starts only when there is work.
+name: Nebius review
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Start the job even when the app says nothing is due
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nebius-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Is a review due?
+        id: due
+        env:
+          APP_URL: ${{ secrets.NEBIUS_APP_URL }}
+          LOGIN: ${{ secrets.REFRESHER_LOGIN }}
+          FORCE: ${{ inputs.force || false }}
+        run: |
+          status=$(curl -fsS --max-time 60 -u "$LOGIN" "$APP_URL/api/consolidate")
+          echo "$status" | jq -c '{pending, running, last: .last.at}'
+          start=$(echo "$status" | jq -r '.pending and (.running | not)')
+          [ "$FORCE" = true ] && start=true
+          echo "start=$start" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.due.outputs.start == 'true'
+
+      - name: Install the Nebius CLI
+        if: steps.due.outputs.start == 'true'
+        run: |
+          curl -sSL https://storage.eu-north1.nebius.cloud/cli/install.sh | bash
+          echo "$HOME/.nebius/bin" >> "$GITHUB_PATH"
+
+      - name: Log in as the service account
+        if: steps.due.outputs.start == 'true'
+        env:
+          CREDENTIALS: ${{ secrets.NEBIUS_SA_CREDENTIALS }}
+        run: |
+          umask 077
+          printf '%s' "$CREDENTIALS" > "$RUNNER_TEMP/sa.json"
+          source scripts/nebius/config.sh
+          nebius profile create --profile ci --endpoint api.nebius.cloud \
+            --service-account-file-path "$RUNNER_TEMP/sa.json" --parent-id "$PROJECT"
+
+      - name: Start the review job
+        if: steps.due.outputs.start == 'true'
+        run: NEBIUS=nebius scripts/nebius/review-job.sh
