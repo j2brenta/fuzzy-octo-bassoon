@@ -52,6 +52,8 @@ FROM runtime AS production
 # Nebius Serverless (scripts/nebius/): starts as root only to hand the vault folder on the shared filesystem to the
 # app user, then runs the command as that user.
 FROM production AS nebius
+ARG BUILD=dev
+ENV REFRESHER_BUILD=$BUILD
 USER root
 COPY scripts/nebius/entrypoint.sh /usr/local/bin/refresher-entrypoint
 COPY scripts/nebius/app-and-mcp.sh /usr/local/bin/refresher-app-and-mcp

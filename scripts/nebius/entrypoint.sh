@@ -7,7 +7,7 @@ vault="${REFRESHER_VAULT:-/data/telegram}"
 as_app="setpriv --reuid=10001 --regid=10001 --init-groups"
 mkdir -p "$vault" 2>/dev/null
 chown 10001:10001 "$vault" 2>/dev/null || chmod 0777 "$vault" 2>/dev/null
-echo "refresher-entrypoint: $vault is $(stat -c '%U:%G %a' "$vault" 2>&1)" >&2
+echo "refresher-entrypoint: build ${REFRESHER_BUILD:-dev}; $vault is $(stat -c '%U:%G %a' "$vault" 2>&1)" >&2
 if [ "${REFRESHER_READ_ONLY:-0}" = 1 ]; then check="-r"; else check="-w"; fi
 if $as_app test $check "$vault" -a -x "$vault"; then
     exec $as_app "$@"
