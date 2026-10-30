@@ -74,7 +74,9 @@ FILES = {
     "/atlas/style.css": (graphview.ASSETS / "map" / "style.css", CSS),
     "/atlas/cytoscape.min.js": (graphview.ASSETS / "cytoscape.min.js", JS),
 }
-for _page in ("/static/", "/capture/", "/atlas/"):  # the shared shell sits beside every page, as in wiki/graph/
+for _name in ("people.js", "app.js", "style.css", "cytoscape.min.js"):  # Review is the Atlas page in its review layout
+    FILES["/review/" + _name] = FILES["/atlas/" + _name]
+for _page in ("/static/", "/capture/", "/atlas/", "/review/"):  # the shared shell sits beside every page, as in wiki/graph/
     FILES[_page + "shell.css"] = (STATIC / "shell.css", CSS)
     FILES[_page + "nav.js"] = (STATIC / "nav.js", JS)
 BASE_CSP = "default-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; " \
@@ -368,9 +370,9 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                 return self._redirect("/atlas/?layout=read" + (f"&{url.query}" if url.query else ""))
             if path == "/graph" or path.startswith("/graph/"):
                 return self._redirect("/atlas/" + path.removeprefix("/graph").lstrip("/") + (f"?{url.query}" if url.query else ""))
-            if path in ("/atlas", "/capture", "/topic", "/brief", "/library", "/example", "/timeline"):
+            if path in ("/atlas", "/review", "/capture", "/topic", "/brief", "/library", "/example", "/timeline"):
                 return self._redirect(path + "/" + (f"?{url.query}" if url.query else ""))
-            if path == "/atlas/":
+            if path in ("/atlas/", "/review/"):  # app.js lays the page out by its path
                 html = graphview.page(state.map())
                 html = html.replace("connect-src 'none'", "connect-src 'self'")  # the page may post decisions back
                 return self._send(HTTPStatus.OK, html.encode(), HTML, CSP["atlas"])
@@ -495,7 +497,7 @@ def handler(vault_path: Path, workspace: Workspace, state: State, allow_hosts=()
                                   headers=[("Content-Disposition", 'attachment; filename="original-upload"')])
             if path in FILES:
                 file, kind = FILES[path]
-                csp = "atlas" if path.startswith("/atlas/") else "topic" if path in ("/topic/", "/brief/") else "page"
+                csp = "atlas" if path.startswith(("/atlas/", "/review/")) else "topic" if path in ("/topic/", "/brief/") else "page"
                 return self._send(HTTPStatus.OK, file.read_bytes(), kind, CSP[csp])
             return self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
 

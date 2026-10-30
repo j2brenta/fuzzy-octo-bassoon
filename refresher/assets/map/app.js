@@ -21,9 +21,20 @@
     $('atlas-content').hidden = true;
     $('atlas-empty').hidden = false;
     document.querySelector('.header-note').hidden = true;
-    document.querySelector('.nav-more').hidden = true;
     return;
   }
+  // Review (/review/): this page with the proposals in front and the evidence beside them, no map or filters. Served,
+  // Explore leaves the proposals to Review; opened from disk (wiki/graph/) there is no Review, so they stay here.
+  const reviewing = location.pathname === '/review/' && !embedded;
+  if (reviewing) {
+    document.body.classList.add('review-layout');
+    document.title = 'Refresher Review';
+    document.querySelector('.app-brand .page').textContent = 'Review';
+    $('graph-heading').textContent = 'Review';
+    document.querySelector('.graph-summary .quiet').textContent = 'What the hourly review suggests: relations a later '
+      + 'source changed, Ideas that say the same thing, new topics, and people to merge or split. Pick a claim to see '
+      + 'where it comes from.';
+  } else if (data.served) $('review').hidden = true;
   // The reading layout (/read/ = ?layout=read): the evidence on the left, the text of the source picked in the middle,
   // the map on the right. No timeline, and no source text in the evidence: a source there is its gist, and picking
   // it opens its text in the middle.
@@ -135,7 +146,8 @@
       const list = el('ul');
       for (const c of p.claims) {
         const li = el('li');
-        li.append(c.item ? button(c.statement, () => selectNode(c.id)) : el('span', c.statement));
+        li.append(c.item ? button(c.statement, () => { selectNode(c.id); if (reviewing && matchMedia('(max-width: 1000px)').matches) showDetail(); })
+          : el('span', c.statement));
         list.append(li);
       }
       card.append(list);
@@ -405,8 +417,9 @@
       () => e.kind === 'LINK' ? selectLink(e) : ['WROTE', 'CONTRIBUTES'].includes(e.kind) ? selectPerson(e.source) : selectEdge(e))));
     highlight();
   }
+  // The slice on the timeline (it lives in the Library): same topic, filters and selected source, and a way back here.
   function updateTimelineLink() {
-    const link = $('open-timeline'); if (!link) return;
+    const link = $('open-timeline');
     const q = new URLSearchParams();
     const fields = {topic: state.topic, idea: state.story, cluster: state.drill || '', mode: state.mode,
       quality: $('quality-filter').value, freshness: $('band-filter').value, from: $('date-filter').value,
@@ -414,9 +427,9 @@
     const selected = items.has(state.selection) ? state.selection : claims.get(state.selection)?.item;
     if (selected) fields.item = selected;
     for (const [key, value] of Object.entries(fields)) if (value) q.set(key, value);
+    q.set('via', 'atlas');
     link.href = '/timeline/?' + q;
-    link.hidden = embedded;
-    if (!data.served) link.hidden = true;
+    link.hidden = embedded || reviewing || !data.served;
   }
   function highlight() {
     updateTimelineLink();
@@ -749,7 +762,10 @@
       state.comparison = pair; renderComparison();
       $('detail').append(button('Go to the comparison ↓', () => $('comparison').scrollIntoView({behavior: 'smooth', block: 'start'})));
     }
-    if (edge.proposal) $('detail').append(el('p', 'The review asked you about this relation; see Waiting for you above.', 'chip warn'));
+    if (edge.proposal && data.served && !reviewing) {
+      const decide = el('a', 'The review asked you about this relation: decide it in Review →', 'chip warn'); decide.href = '/review/';
+      $('detail').append(decide);
+    } else if (edge.proposal) $('detail').append(el('p', 'The review asked you about this relation; see Updates & suggestions below.', 'chip warn'));
     state.selection = edge.source; highlight();
   }
   function contextTable(context, caption) {
@@ -852,7 +868,7 @@
     const story = stories.get(state.story)?.title || 'All Ideas';
     const scope = `${topic} / ${story.slice(0, 60)} · ${visible.length} items · quality: ${$('quality-filter').value || 'any'} · freshness: ${$('band-filter').value || 'any'} · from: ${$('date-filter').value || 'any date'}`;
     const scoringLabel = state.mode === 'people' ? `Scoring subject: ${data.people_subjects?.find(s => s.id === scoreSubject())?.title || 'All subjects'} · ` : '';
-    $('reading-scope').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
+    $('reading-scope-text').textContent = scoringLabel + scope; $('compare-scope').textContent = 'Same slice: ' + scope;
     renderGraph(visible); renderComparison(); updateTimelineLink();
     if (reading && !state.view) clearDetail();  // the sources of the new slice
   }

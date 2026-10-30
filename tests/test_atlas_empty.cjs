@@ -12,5 +12,5 @@ test('empty Atlas shows the next step without initializing map controls',()=>{
   assert.equal(elements['atlas-content'].hidden,true);
   assert.equal(elements['atlas-empty'].hidden,false);
   assert.equal(elements['.header-note'].hidden,true);
-  assert.equal(elements['.nav-more'].hidden,true);
+  assert.equal(elements['.nav-more'].hidden,false);  // More holds the Library, which works without a graph
 });
