@@ -110,6 +110,19 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(record['reviews']['claims']['status'], 'accepted')
         self.assertEqual(len(judge.calls), 1)
 
+    def test_a_people_step_that_times_out_leaves_the_claims_saved(self):
+        from engine.llm import ModelError
+        client = FakeModel([ModelReply(LABELS), response()])
+        judge = FakeModel([ModelReply({'claims': [
+            {'claim_id': f'C{i}', 'verdict': 'supported', 'issues': [], 'reason': 'Source supports this.'}
+            for i in (1, 2)], 'omitted_concepts': [], 'summary': 'Both claims match the source.'})])
+        job = self.submit({'text': TEXT})
+        with patch('engine.llm.client_from_environment', return_value=client), patch('engine.llm.judge_client_from_environment', return_value=judge), patch('engine.entities.entity_client_from_environment', return_value=judge), patch('engine.entities.extract_entities', side_effect=ModelError('Could not reach Nebius within the request timeout.')), patch.dict('os.environ', {'WEB_FETCH':'off'}):
+            self.workspace.process(job)
+        detail = self.workspace.detail(job['id'])
+        self.assertEqual(detail['status'], 'complete')
+        self.assertEqual(detail['entities_pending'], job['items'])
+
     def test_people_that_fail_twice_leave_the_claims_saved(self):
         client = FakeModel([ModelReply(LABELS), response()])
         judge = FakeModel([ModelReply({'claims': [

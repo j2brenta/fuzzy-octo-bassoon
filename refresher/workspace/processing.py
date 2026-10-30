@@ -11,7 +11,7 @@ class Processing:
     def process(self, job):
         from channels.web import fetch_linked_articles
         from engine.parse import parse_capture
-        from engine.llm import client_from_environment, judge_client_from_environment
+        from engine.llm import ModelError, client_from_environment, judge_client_from_environment
         from engine.triage import triage_capture
         from engine.extract import extract_capture
         from engine.quality import quality_capture
@@ -82,7 +82,7 @@ class Processing:
                         try:
                             entities = extract_entities(path, entity_client)
                             review_entities(path, entity_client, entities)
-                        except EntityError as error:
+                        except (EntityError, ModelError) as error:
                             # People are an extra; the claims are checked and still get placed.
                             logger.warning("submission %s · item %s: people left pending: %s", job["id"][:10],
                                            path.stem[:10], error)
@@ -105,7 +105,6 @@ class Processing:
         except Exception as error:
             logger.exception("Submission %s stopped", job["id"])
             # Do not expose API payloads, credentials or filesystem internals.
-            from engine.llm import ModelError
             message = str(error) if isinstance(error, ModelError) or type(error) is ValueError else "Processing stopped. The original is retained; check the server log for details."
             job.update(status="pending", stage="Needs attention", message=message,
                        recovery="format" if type(error) is ValueError and job.get("attachment") and job.get("stage") == "Preparing source" else "retry")
