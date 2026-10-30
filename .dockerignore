@@ -19,6 +19,9 @@
 !eval/seed_corpus/**
 !tests/
 !tests/**
+!scripts/
+!scripts/nebius/
+!scripts/nebius/entrypoint.sh
 **/__pycache__/
 **/*.pyc
 **/.env

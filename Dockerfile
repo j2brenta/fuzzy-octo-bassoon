@@ -48,3 +48,11 @@ COPY tests/ tests/
 CMD ["python", "-m", "pytest", "-p", "no:cacheprovider", "-q"]
 
 FROM runtime AS production
+
+# Nebius Serverless (scripts/nebius/): starts as root only to hand the vault folder on the shared filesystem to the
+# app user, then runs the command as that user.
+FROM production AS nebius
+USER root
+COPY scripts/nebius/entrypoint.sh /usr/local/bin/refresher-entrypoint
+ENTRYPOINT ["refresher-entrypoint"]
+CMD ["refresher", "serve", "--host", "0.0.0.0", "--port", "8080"]
