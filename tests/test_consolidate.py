@@ -227,3 +227,20 @@ def test_a_scheduled_run_on_a_new_vault_skips_without_an_error(tmp_path, capsys)
     assert "nothing captured yet" in capsys.readouterr().out
     with pytest.raises(SystemExit):  # asked for by hand, an empty vault is still a mistake
         cli.main(["consolidate", "--vault", str(tmp_path)])
+
+
+def test_the_review_service_keeps_checking_a_new_vault(tmp_path, monkeypatch, capsys):
+    """--every on a vault with nothing captured yet waits for the first capture instead of exiting: compose does not
+    restart a service that exits cleanly."""
+    from refresher import cli
+
+    class Stop(Exception):
+        pass
+
+    def sleep(seconds):
+        raise Stop
+    monkeypatch.setattr("time.sleep", sleep)
+    monkeypatch.setattr("refresher.cli._language", lambda: None)
+    with pytest.raises(Stop):
+        cli.main(["consolidate", "--vault", str(tmp_path), "--if-due", "--every", "600", "--lexical"])
+    assert "checking every 600 s" in capsys.readouterr().out
