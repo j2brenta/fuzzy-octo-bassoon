@@ -24,13 +24,13 @@ logger = logging.getLogger("refresher.app")
 
 class Posts:
     """Every change the page sends. Taken only from the app itself: a local Host, the X-Refresher header and,
-    when the browser sends one, a same-origin Origin."""
+    when the browser sends one, a same-origin Origin; behind the login when one is set."""
 
     def do_POST(self):
-        origin = self.headers.get("Origin")
-        if not self._local() or self.headers.get("X-Refresher") != "1" or \
-                (origin is not None and origin not in {f"http://{h}" for h in self._hosts()}):
+        if not self._from_app():
             return self._json(HTTPStatus.FORBIDDEN, {"error": "Changes are taken only from the app itself."})
+        if not self._authorized():
+            return self._ask_login()
         path = urlsplit(self.path).path
         if path == "/api/consolidate":  # no body: the button only says "now"
             started = self.review.start()
