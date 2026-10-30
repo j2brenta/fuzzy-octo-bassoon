@@ -34,7 +34,11 @@ if (typeof document !== 'undefined') (() => {
     if (!rows.some(r => r.id === query.get('item'))) query.delete('item');
     const href = '/timeline/' + (query.size ? '?' + query : '');
     history.replaceState(null, '', href);
-    $('timeline-back').href = '/atlas/' + (query.size ? '?' + query : '');
+    if (query.get('via') === 'atlas') {  // opened from Explore: back to the same slice there
+      const slice = new URLSearchParams(query); slice.delete('via');
+      $('timeline-back').href = '/atlas/' + (slice.size ? '?' + slice : '');
+      $('timeline-back').textContent = '← Back to Explore';
+    }
     $('timeline-count').textContent = `${rows.length} of ${data.items.length} connected sources`;
     const cluster = (data.clusters || []).find(c => c.id === query.get('cluster'));
     $('timeline-scope').textContent = cluster ? `Within ${cluster.title}. Clear filters to see all connected sources.` : '';

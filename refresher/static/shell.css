@@ -105,6 +105,7 @@
 .nav-more { position: relative; font-size: 13px; }
 .nav-more > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; min-height: 44px; padding: 8px 14px; color: var(--r-muted); border: 1px solid var(--r-line); border-radius: 24px; }
 .nav-more > summary::after { content: '⌄'; }
+.nav-more.has-current > summary { border-color: #bcb6a8; color: var(--r-ink); }
 .nav-menu { position: absolute; z-index: 50; right: 0; top: calc(100% + 8px); width: 260px; display: grid; gap: 6px; padding: 10px; background: var(--r-paper); border: 1px solid var(--r-line); border-radius: 12px; box-shadow: 0 10px 30px #25251f22; }
 .nav-menu a, .nav-menu .nav-run { justify-content: start; min-height: 44px; border-radius: 8px; }
 :where(a, button, input, select, summary):focus-visible { outline: 3px solid var(--r-brand); outline-offset: 3px; }

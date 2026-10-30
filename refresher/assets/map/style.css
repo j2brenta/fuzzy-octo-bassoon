@@ -146,17 +146,14 @@ body.read-layout .claim-list>*{width:auto;min-width:0}
 .atlas-peek .peek-close { position: absolute; top: 2px; right: 6px; border: 0; background: transparent; font-size: 20px; cursor: pointer; }
 .atlas-peek .detail-title { padding-right: 22px; }
 .atlas-peek[hidden] { display: none; }
-/* Chronology has its own page; Explore stays focused on map and evidence. */
-.atlas-actions { display:flex; gap:12px; margin:16px 0; }
-.open-timeline { display:inline-flex; align-items:center; min-height:44px; padding:10px 20px; border:1px solid var(--r-brand); border-radius:24px; color:var(--r-brand); text-decoration:none; background:var(--r-paper); }
-.open-timeline:hover { background:var(--r-soft); }
+/* Chronology lives in the Library (the timeline page); Explore stays focused on map and evidence. */
 .atlas-filters { margin:16px 0; padding:0 16px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
 .atlas-filters summary { cursor:pointer; min-height:44px; padding:12px 0; }
 .atlas-filter-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; padding-bottom:12px; align-items:end; }
 .atlas-filter-fields .field { margin:0; font-size:12px; }
 .atlas-filter-fields input, .atlas-filter-fields select { min-height:44px; font-size:13px; }
 body:not(.embedded):not(.read-layout) .workspace { grid-template-columns:minmax(0,1fr) minmax(280px,360px); }
-body.embedded .atlas-filters, body.embedded .atlas-actions { display:none; }
+body.embedded .atlas-filters { display:none; }
 @media(max-width:760px) {
   body:not(.embedded):not(.read-layout) .workspace { display:grid; grid-template-columns:minmax(0,1fr); }
   body:not(.embedded):not(.read-layout) .evidence-column { grid-column:auto; }
@@ -175,3 +172,18 @@ body.embedded .atlas-filters, body.embedded .atlas-actions { display:none; }
 .atlas-empty-actions a:hover { text-decoration:underline; text-underline-offset:4px; }
 .atlas-empty-actions .empty-add { background:var(--r-brand); color:white; padding:10px 22px; border-radius:24px; }
 @media(max-width:600px) { .atlas-empty { padding:36px 0 44px; } }
+/* Review (/review/): the proposals and the comparison on the left, the evidence of a claim picked in them on the right. */
+body[data-layout="atlas"].review-layout #atlas-content { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,360px); gap:0 24px; align-items:start; }
+body.review-layout .graph-summary { grid-column:1 / -1; }
+body.review-layout :is(#stats, #return-to-reading, .topic-section, #reading-scope, .atlas-filters, .map-column, .reader-column, .proposal-section .section-top > div) { display:none; }
+body.review-layout .proposal-section { padding-top:0; }
+body.review-layout .proposal-section .section-top { justify-content:flex-start; margin-bottom:4px; }
+body.review-layout .proposal-section, body.review-layout .compare-section { grid-column:1; }
+body[data-layout="atlas"].review-layout:not(.embedded) .workspace { display:block; grid-column:2; grid-row:2 / span 2; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; }
+body.review-layout .evidence-column { border:0; }
+body.review-layout .evidence-column #detail { max-height:none; }  /* the pane scrolls, not the list inside it */
+@media(max-width:1000px) {
+  body[data-layout="atlas"].review-layout #atlas-content { grid-template-columns:minmax(0,1fr); }
+  body[data-layout="atlas"].review-layout:not(.embedded) .workspace { grid-column:1; grid-row:3; position:static; max-height:none; }
+  body.review-layout .compare-section { grid-row:4; }  /* one column: the proposals, then the evidence of a pick */
+}

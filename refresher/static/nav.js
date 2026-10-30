@@ -1,6 +1,6 @@
-/* The shared bar: marks the current page, shows how many proposals wait, and holds the Consolidate button with the
-   last review's results. A review that finishes elsewhere (the hourly one, the bot) updates the count within a
-   minute, so new proposals show on Review without a reload. Opened from disk (wiki/graph/) there is no app behind
+/* The shared bar: marks the current page, shows on Review how many proposals wait, and keeps Library and the
+   Consolidate button (with the last review's results) under More. A review that finishes elsewhere (the hourly one,
+   the bot) updates the count within a minute, so new proposals show on Review without a reload. Opened from disk (wiki/graph/) there is no app behind
    the page, so the links stay hidden and nothing is fetched. */
 'use strict';
 (() => {
@@ -15,9 +15,12 @@
   const nav = document.getElementById('app-nav');
   if (!nav || !/^https?:$/.test(location.protocol)) return;
   nav.hidden = false;
-  const here = ['/', '/topic/', '/brief/'].includes(location.pathname) ? 'home' : location.pathname === '/timeline/' ? 'atlas' : location.pathname.split('/')[1];
+  // The timeline is part of the Library; a page under More marks More as well, so the bar always shows where you are.
+  const here = ['/', '/topic/', '/brief/'].includes(location.pathname) ? 'home' : location.pathname === '/timeline/' ? 'library' : location.pathname.split('/')[1];
   for (const link of nav.querySelectorAll('a[data-page]')) {
-    if (link.dataset.page === here) link.setAttribute('aria-current', 'page');
+    if (link.dataset.page !== here) continue;
+    link.setAttribute('aria-current', 'page');
+    link.closest('.nav-more')?.classList.add('has-current');
   }
   const waiting = document.getElementById('nav-waiting');
   const countWaiting = () => {
@@ -26,6 +29,7 @@
       const n = rows.filter(p => p.status === 'proposed').length;
       waiting.textContent = n ? String(n) : '';
       waiting.classList.toggle('waiting', n > 0);
+      waiting.closest('a').setAttribute('aria-label', n ? `Review, ${n} waiting for you` : 'Review');
     }).catch(() => { /* the count is a convenience; the page works without it */ });
   };
   countWaiting();
@@ -119,7 +123,7 @@
       body.append(list);
       if (l.waiting) {
         const link = el('a', 'run-link', `Decide the ${l.waiting} waiting proposal${l.waiting === 1 ? '' : 's'} ↗`);
-        link.href = '/atlas/#review';
+        link.href = '/review/';
         body.append(link);
       }
       for (const note of l.notes || []) body.append(el('p', 'run-note', note));

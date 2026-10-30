@@ -73,7 +73,8 @@ def test_public_pages_and_receipt_bookmarks_keep_the_same_shell(served):
         status, html, headers = get(base + route)
         assert status == 200 and 'data-page="library"' in html
         assert 'data-workspace="' in html
-        assert 'data-page="read"' not in html and 'href="/atlas/#review"' in html
+        assert 'data-page="read"' not in html and '<a href="/review/" data-page="review">Review <span class="count" id="nav-waiting">' in html
+        assert '<div class="nav-menu"><a href="/library/" data-page="library">Library</a></div>' in html
         assert "default-src 'self'" in headers["Content-Security-Policy"]
     assert get(base + "/library")[2].get("Content-Type", "").startswith("text/html")
     assert get(base + "/example")[0] == 200
@@ -115,10 +116,12 @@ def test_unparsed_media_is_visible_and_downloaded_with_integrity_checks(served):
     assert error.value.code == 409
 
 
-def test_timeline_is_a_separate_page_and_atlas_keeps_only_map_filters(served):
+def test_timeline_is_reached_from_the_library_and_atlas_keeps_only_map_filters(served):
     _, base, _ = served
     _, atlas, _ = get(base + '/atlas/?item=item-h1')
-    assert 'id="open-timeline" href="/timeline/"' in atlas
+    assert '<a id="open-timeline" hidden>' in atlas  # app.js fills in the slice and shows it when served
+    assert 'id="open-timeline" href="/timeline/"' in get(base + '/library/')[1]
+    assert 'id="timeline-back" href="/library/"' in get(base + '/timeline/')[1]
     assert 'class="timeline-column"' not in atlas and 'id="timeline"' not in atlas
     assert '<summary>Filter map</summary>' in atlas and 'id="story-filter"' in atlas
     for path in ('/timeline/', '/timeline?topic=unassigned&search=example'):
@@ -129,6 +132,16 @@ def test_timeline_is_a_separate_page_and_atlas_keeps_only_map_filters(served):
     assert get(base + '/static/timeline.js')[0] == 200
     data = json.loads(get(base + '/api/data')[1])
     assert data['items'] and all('time_basis' in item for item in data['items'])
+
+
+def test_review_is_its_own_page_on_the_atlas(served):
+    _, base, _ = served
+    status, html, headers = get(base + '/review/')
+    assert status == 200 and 'id="review"' in html and 'id="proposals"' in html
+    assert '"served": true' in html and "connect-src 'self'" in headers['Content-Security-Policy']
+    assert get(base + '/review')[0] == 200  # the redirect lands on the page
+    for name in ('app.js', 'people.js', 'style.css', 'cytoscape.min.js', 'shell.css', 'nav.js'):
+        assert get(base + '/review/' + name)[0] == 200, name
 
 
 def test_link_receipt_and_fetched_article_share_one_library_row(tmp_path):
