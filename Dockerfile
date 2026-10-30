@@ -54,5 +54,6 @@ FROM runtime AS production
 FROM production AS nebius
 USER root
 COPY scripts/nebius/entrypoint.sh /usr/local/bin/refresher-entrypoint
+COPY scripts/nebius/app-and-mcp.sh /usr/local/bin/refresher-app-and-mcp
 ENTRYPOINT ["refresher-entrypoint"]
-CMD ["refresher", "serve", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["refresher-app-and-mcp"]

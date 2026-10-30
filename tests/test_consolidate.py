@@ -219,3 +219,11 @@ def test_a_profile_found_in_a_run_meets_its_namesakes_in_the_same_run(tmp_path, 
     job.consolidate(v, FakeModel(), search=object(), at=AT)
     merges = [p for p in vault.load_proposals(v) if p.kind == "merge_people"]
     assert ["person:a-lee", "person:ann-lee"] in [p.payload["people"] for p in merges]
+
+
+def test_a_scheduled_run_on_a_new_vault_skips_without_an_error(tmp_path, capsys):
+    from refresher import cli
+    assert cli.main(["consolidate", "--vault", str(tmp_path), "--if-due"]) == 0
+    assert "nothing captured yet" in capsys.readouterr().out
+    with pytest.raises(SystemExit):  # asked for by hand, an empty vault is still a mistake
+        cli.main(["consolidate", "--vault", str(tmp_path)])
