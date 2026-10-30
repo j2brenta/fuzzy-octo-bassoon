@@ -11,6 +11,25 @@ from tests.test_extract import TEXT, response
 from tests.test_triage import FakeModel, LABELS
 
 
+def one_page_pdf():
+    stream = b'BT /F1 12 Tf 50 700 Td (Keep exact source evidence in knowledge notes.) Tj ET'
+    objects = [b'<< /Type /Catalog /Pages 2 0 R >>',
+               b'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+               b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+               b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+               b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream']
+    content = b'%PDF-1.4\n'
+    offsets = [0]
+    for index, obj in enumerate(objects, 1):
+        offsets.append(len(content))
+        content += f'{index} 0 obj\n'.encode() + obj + b'\nendobj\n'
+    start = len(content)
+    content += b'xref\n0 6\n0000000000 65535 f \n'
+    content += b''.join(f'{offset:010} 00000 n \n'.encode() for offset in offsets[1:])
+    content += f'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{start}\n%%EOF'.encode()
+    return content
+
+
 class WorkspaceTests(unittest.TestCase):
     def setUp(self):
         folder = TemporaryDirectory()
@@ -110,21 +129,7 @@ class WorkspaceTests(unittest.TestCase):
             import pypdfium2  # noqa: F401
         except ImportError:
             self.skipTest('Optional PDF extra is not installed.')
-        stream = b'BT /F1 12 Tf 50 700 Td (Keep exact source evidence in knowledge notes.) Tj ET'
-        objects = [b'<< /Type /Catalog /Pages 2 0 R >>',
-                   b'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-                   b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
-                   b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-                   b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream']
-        content = b'%PDF-1.4\n'
-        offsets = [0]
-        for index, obj in enumerate(objects, 1):
-            offsets.append(len(content))
-            content += f'{index} 0 obj\n'.encode() + obj + b'\nendobj\n'
-        start = len(content)
-        content += b'xref\n0 6\n0000000000 65535 f \n'
-        content += b''.join(f'{offset:010} 00000 n \n'.encode() for offset in offsets[1:])
-        content += f'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{start}\n%%EOF'.encode()
+        content = one_page_pdf()
         job = self.submit({'kind':'file', 'filename':'evidence.pdf', 'content':base64.b64encode(content).decode()})
         with patch('engine.llm.client_from_environment', return_value=None), patch.dict('os.environ', {'WEB_FETCH':'off'}):
             self.workspace.process(job)
@@ -133,6 +138,27 @@ class WorkspaceTests(unittest.TestCase):
         self.assertIn('[PDF page 1]', result['results'][0]['text'])
         self.assertIn('Keep exact source evidence', result['results'][0]['text'])
         self.assertEqual((self.workspace.vault / 'uploads' / job['attachment']['sha256']).read_bytes(), content)
+
+    def test_a_long_pdf_is_read_up_to_the_limit_and_the_receipt_says_so(self):
+        try:
+            import pypdfium2  # noqa: F401
+        except ImportError:
+            self.skipTest('Optional PDF extra is not installed.')
+        job = self.submit({'kind':'file', 'filename':'long.pdf', 'content':base64.b64encode(one_page_pdf()).decode()})
+        with patch('engine.parse.pdf.MAX_TEXT_CHARACTERS', 30), patch('engine.llm.client_from_environment', return_value=None), patch.dict('os.environ', {'WEB_FETCH':'off'}):
+            self.workspace.process(job)
+        result = self.workspace.detail(job['id'])
+        self.assertEqual(result['stage'], 'Ready for analysis')
+        self.assertEqual(len(result['results'][0]['text']), 30)
+        self.assertIn('the start of page 1 of 1 was analyzed', result['cut'])
+
+    def test_a_pdf_stopped_by_the_old_limits_can_be_retried(self):
+        job = self.submit({'kind':'file', 'filename':'long.pdf', 'content':base64.b64encode(one_page_pdf()).decode()})
+        job.update(status='pending', stage='Needs attention', recovery='format', message='Original saved. PDF processing supports up to 20 pages.')
+        self.workspace.save(job)
+        self.assertEqual(self.workspace.detail(job['id'])['recovery'], 'retry')
+        with patch.object(self.workspace.worker, 'submit'):
+            self.assertEqual(self.workspace.retry(job['id'])['status'], 'queued')
 
     def test_triage_skip_is_a_result_not_a_processing_error(self):
         client = FakeModel([ModelReply({**LABELS, 'keep':False})])

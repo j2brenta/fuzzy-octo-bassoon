@@ -51,6 +51,7 @@ function renderProgressReceipt(job){
   if(!complete){const progress=node('span',undefined,'receipt-progress');progress.setAttribute('role','progressbar');progress.setAttribute('aria-label','Analyzing source');body.replaceChildren(progress,heading);}
   else body.replaceChildren(heading);
   body.append(node('p',complete?'Your original and available results are saved.':'Your original is saved. You can leave this page—we’ll keep working.','detail-message'));
+  if(job.cut)body.append(node('p',job.cut,'detail-message'));
   const actions=node('div',undefined,'journey-actions');
   const result=(job.results||[]).find(r=>r.processed?.claims?.length)||(job.results||[]).find(r=>r.url)||job.results?.[0];
   const open=node('a',complete?'Open source':'Back to Library','journey-primary');
