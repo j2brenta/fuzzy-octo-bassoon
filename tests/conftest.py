@@ -12,6 +12,13 @@ def offline_embeddings(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_login(monkeypatch):
+    """Tests serve without a login or a public address, whatever .env says; test_app turns them on."""
+    monkeypatch.delenv("REFRESHER_LOGIN", raising=False)
+    monkeypatch.delenv("REFRESHER_APP_URL", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def no_live_translation(monkeypatch):
     """Tests never call the translation model; a test that wants a translator passes its own."""
     monkeypatch.setattr("refresher.translate.client_from_environment", lambda env=None: None)

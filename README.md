@@ -772,8 +772,21 @@ with an `X-Refresher` header.
   to analyze those sources. No successful OCR or transcription is implied.
 
 No API key is sent to the browser. AI-disabled, blocked-link and interrupted/error
-states preserve originals. This is a single shared local demo workspace; public
-hosting/authentication is separate work.
+states preserve originals. This is a single shared workspace.
+
+### Hosting it behind a login
+
+Without a login the app is for localhost only. To publish it (for example, the demo for judges):
+
+- Set `REFRESHER_LOGIN=user:password`. Every page and API then asks for it (HTTP Basic); only
+  `/healthz` stays open for health checks. Generate the password with `openssl rand -base64 18`.
+- Serve it **over HTTPS only**: Basic auth sends the password with every request.
+- Set `REFRESHER_APP_URL=https://your.host` to the public address. The app answers that Host and
+  takes changes from that Origin only while a login is set.
+- Give the demo its own Nebius key so it can be revoked, and keep the per-run caps
+  (`REFRESHER_RUN_TOKENS`, `REFRESHER_RUN_SECONDS`): everyone with the login can add sources,
+  which calls the models.
+- Use a demo vault, never your own, and no Telegram bot token on that host.
 
 ## Pictures from Telegram
 

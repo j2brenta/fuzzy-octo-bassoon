@@ -1,3 +1,4 @@
+import base64
 import json
 import threading
 from http.server import ThreadingHTTPServer
@@ -142,6 +143,45 @@ def test_a_published_host_is_accepted_only_when_allowed(tmp_path):
         server.shutdown()
         server.server_close()
         workspace.worker.shutdown(wait=True)
+
+
+def basic(login):
+    return "Basic " + base64.b64encode(login.encode()).decode()
+
+
+def test_a_login_guards_every_page_and_api_but_healthz(served, monkeypatch):
+    _, base, workspace = served
+    monkeypatch.setenv("REFRESHER_LOGIN", "judge:s3cret")
+    for path in ("/", "/example/", "/atlas/", "/api/submissions"):
+        with pytest.raises(HTTPError) as error:
+            get(base + path)
+        assert error.value.code == 401
+        assert error.value.headers["WWW-Authenticate"].startswith("Basic ")
+        with pytest.raises(HTTPError) as error:
+            get(base + path, Authorization=basic("judge:wrong"))
+        assert error.value.code == 401
+        assert get(base + path, Authorization=basic("judge:s3cret"))[0] == 200
+    assert get(base + "/healthz")[0] == 200
+    assert send(base, "/api/submissions", {"text": "hello"})[0] == 401
+    with patch.object(workspace.worker, "submit"):
+        assert send(base, "/api/submissions", {"text": "hello"}, {"Authorization": basic("judge:s3cret")})[0] == 202
+
+
+def test_the_public_address_is_answered_only_behind_a_login(served, monkeypatch):
+    _, base, workspace = served
+    monkeypatch.setenv("REFRESHER_APP_URL", "https://demo.example")
+    public = {"Host": "demo.example", "Origin": "https://demo.example"}
+    with pytest.raises(HTTPError) as error:  # no login: the public address is not answered
+        get(base + "/atlas/", Host="demo.example")
+    assert error.value.code == 403
+    assert send(base, "/api/submissions", {"text": "hello"}, public)[0] == 403
+    monkeypatch.setenv("REFRESHER_LOGIN", "judge:s3cret")
+    auth = basic("judge:s3cret")
+    assert get(base + "/atlas/", Host="demo.example", Authorization=auth)[0] == 200
+    with patch.object(workspace.worker, "submit"):
+        assert send(base, "/api/submissions", {"text": "hello"}, {**public, "Authorization": auth})[0] == 202
+    assert send(base, "/api/submissions", {"text": "hello"},
+                {**public, "Origin": "https://evil.example", "Authorization": auth})[0] == 403
 
 
 def test_a_capture_goes_into_the_same_vault_as_the_map(served):
